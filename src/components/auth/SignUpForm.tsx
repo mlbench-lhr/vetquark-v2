@@ -1,191 +1,275 @@
 "use client";
-import Checkbox from "@/components/form/input/Checkbox";
-import Input from "@/components/form/input/InputField";
-import Label from "@/components/form/Label";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
-import Link from "next/link";
+
 import React, { useState } from "react";
+import { Eye, EyeOff, ArrowLeft, Shield, Users, ChevronDown } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function SignUpForm() {
+  const router= useRouter();
+  const [profileType, setProfileType] = useState<"veterinarian" | "guardian">("guardian");
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
-  return (
-    <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
-      <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700  "
-        >
-          <ChevronLeftIcon />
-          Back to dashboard
-        </Link>
-      </div>
-      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
-        <div>
-          <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm  sm:text-title-md">
-              Sign Up
-            </h1>
-            <p className="text-sm text-gray-500 ">
-              Enter your email and password to sign up!
-            </p>
-          </div>
-          <div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
-              <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800   ">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M18.7511 10.1944C18.7511 9.47495 18.6915 8.94995 18.5626 8.40552H10.1797V11.6527H15.1003C15.0011 12.4597 14.4654 13.675 13.2749 14.4916L13.2582 14.6003L15.9087 16.6126L16.0924 16.6305C17.7788 15.1041 18.7511 12.8583 18.7511 10.1944Z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M10.1788 18.75C12.5895 18.75 14.6133 17.9722 16.0915 16.6305L13.274 14.4916C12.5201 15.0068 11.5081 15.3666 10.1788 15.3666C7.81773 15.3666 5.81379 13.8402 5.09944 11.7305L4.99473 11.7392L2.23868 13.8295L2.20264 13.9277C3.67087 16.786 6.68674 18.75 10.1788 18.75Z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.10014 11.7305C4.91165 11.186 4.80257 10.6027 4.80257 9.99992C4.80257 9.3971 4.91165 8.81379 5.09022 8.26935L5.08523 8.1534L2.29464 6.02954L2.20333 6.0721C1.5982 7.25823 1.25098 8.5902 1.25098 9.99992C1.25098 11.4096 1.5982 12.7415 2.20333 13.9277L5.10014 11.7305Z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M10.1789 4.63331C11.8554 4.63331 12.9864 5.34303 13.6312 5.93612L16.1511 3.525C14.6035 2.11528 12.5895 1.25 10.1789 1.25C6.68676 1.25 3.67088 3.21387 2.20264 6.07218L5.08953 8.26943C5.81381 6.15972 7.81776 4.63331 10.1789 4.63331Z"
-                    fill="#EB4335"
-                  />
-                </svg>
-                Sign up with Google
-              </button>
-              <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800   ">
-                <svg
-                  width="21"
-                  className="fill-current"
-                  height="20"
-                  viewBox="0 0 21 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M15.6705 1.875H18.4272L12.4047 8.75833L19.4897 18.125H13.9422L9.59717 12.4442L4.62554 18.125H1.86721L8.30887 10.7625L1.51221 1.875H7.20054L11.128 7.0675L15.6705 1.875ZM14.703 16.475H16.2305L6.37054 3.43833H4.73137L14.703 16.475Z" />
-                </svg>
-                Sign up with X
-              </button>
-            </div>
-            <div className="relative py-3 sm:py-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 "></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="p-2 text-gray-400 bg-white  sm:px-5 sm:py-2">
-                  Or
-                </span>
-              </div>
-            </div>
-            <form>
-              <div className="space-y-5">
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  {/* <!-- First Name --> */}
-                  <div className="sm:col-span-1">
-                    <Label>
-                      First Name<span className="text-error-500">*</span>
-                    </Label>
-                    <Input
-                      type="text"
-                      id="fname"
-                      name="fname"
-                      placeholder="Enter your first name"
-                    />
-                  </div>
-                  {/* <!-- Last Name --> */}
-                  <div className="sm:col-span-1">
-                    <Label>
-                      Last Name<span className="text-error-500">*</span>
-                    </Label>
-                    <Input
-                      type="text"
-                      id="lname"
-                      name="lname"
-                      placeholder="Enter your last name"
-                    />
-                  </div>
-                </div>
-                {/* <!-- Email --> */}
-                <div>
-                  <Label>
-                    Email<span className="text-error-500">*</span>
-                  </Label>
-                  <Input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="Enter your email"
-                  />
-                </div>
-                {/* <!-- Password --> */}
-                <div>
-                  <Label>
-                    Password<span className="text-error-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      placeholder="Enter your password"
-                      type={showPassword ? "text" : "password"}
-                    />
-                    <span
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-                    >
-                      {showPassword ? (
-                        <EyeIcon className="fill-gray-500 " />
-                      ) : (
-                        <EyeCloseIcon className="fill-gray-500 d" />
-                      )}
-                    </span>
-                  </div>
-                </div>
-                {/* <!-- Checkbox --> */}
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    className="w-5 h-5"
-                    checked={isChecked}
-                    onChange={setIsChecked}
-                  />
-                  <p className="inline-block font-normal text-gray-500 ">
-                    By creating an account means you agree to the{" "}
-                    <span className="text-gray-800 ">
-                      Terms and Conditions,
-                    </span>{" "}
-                    and our{" "}
-                    <span className="text-gray-800 ">
-                      Privacy Policy
-                    </span>
-                  </p>
-                </div>
-                {/* <!-- Button --> */}
-                <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Sign Up
-                  </button>
-                </div>
-              </div>
-            </form>
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    mobile: "",
+    password: "",
+    confirmPassword: "",
+    nationalId: "",
+    dateOfBirth: "",
+    postcode: "",
+    number: "",
+    state: "",
+    city: "",
+    acceptTerms: false,
+  });
 
-            <div className="mt-5">
-              <p className="text-sm font-normal text-center text-gray-700  sm:text-start">
-                Already have an account?
-                <Link
-                  href="/signin"
-                  className="text-brand-500 hover:text-brand-600 "
-                >
-                  Sign In
-                </Link>
-              </p>
-            </div>
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submitted:", { profileType, ...formData });
+    router.push("/professional_registration");
+    // Add your form submission logic here
+  };
+
+  return (
+    <div className="w-full bg-white rounded-3xl shadow-lg p-4">
+      {/* Header */}
+      <div className="flex items-center mb-8">
+        <button className="mr-4 text-gray-600 hover:text-gray-800 bg-gray-100 p-2 rounded-full" onClick={() => router.back()}>
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-2xl font-bold text-primary">Create account</h1>
+      </div>
+      {/* form */}
+      <form onSubmit={handleSubmit}>
+        {/* Profile Type Selection */}
+        <div className="mb-6">
+          <label className="block text-gray-700 font-medium mb-3">
+            Select profile type:
+          </label>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setProfileType("veterinarian")}
+              className={`flex-1 py-1 px-4 rounded-full border-2 transition-all flex items-center justify-center gap-2 ${profileType === "veterinarian"
+                ? "border-primary  text-primary"
+                : "border-gray-300 hover:border-gray-400"
+                }`}
+            >
+              {profileType === 'veterinarian' ? (
+                <Image
+                  src="/images/auth/sheild-active.svg"
+                  alt="user"
+                  width={16}
+                  height={16} />
+              ) : (
+                <Image
+                  src="/images/auth/shield.svg"
+                  alt="user"
+                  width={16}
+                  height={16} />
+              )}
+              <span className="font-medium">Veterinarian</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setProfileType("guardian")}
+              className={`flex-1 py-1 px-4 rounded-full border-2 transition-all flex items-center justify-center gap-2 ${profileType === "guardian"
+                ? "border-primary  text-primary"
+                : "border-gray-300 hover:border-gray-400"
+                }`}
+            >
+              {profileType === 'guardian' ? (
+                <Image
+                  src="/images/auth/user-active.svg"
+                  alt="user"
+                  width={16}
+                  height={16} />
+              ) : (
+                <Image
+                  src="/images/auth/user.svg"
+                  alt="user"
+                  width={16}
+                  height={16} />
+              )}
+              <span className="font-medium">Guardian</span>
+            </button>
           </div>
         </div>
-      </div>
+
+        {/* Form Fields */}
+        <div className="space-y-4">
+          {/* Full Name */}
+          <input
+            type="text"
+            name="fullName"
+            placeholder="Full name *"
+            required
+            value={formData.fullName}
+            onChange={handleInputChange}
+            className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          {/* Email */}
+          <input
+            type="email"
+            name="email"
+            placeholder="Email *"
+            required
+            value={formData.email}
+            onChange={handleInputChange}
+            className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          {/* Mobile */}
+          <input
+            type="tel"
+            name="mobile"
+            placeholder="Mobile"
+            value={formData.mobile}
+            onChange={handleInputChange}
+            className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          {/* Password */}
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+
+          {/* Confirm Password */}
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Confirm password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+            >
+              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+
+          {/* National ID and Date of Birth */}
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="text"
+              name="nationalId"
+              placeholder="National ID"
+              value={formData.nationalId}
+              onChange={handleInputChange}
+              className="px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              name="dateOfBirth"
+              placeholder="Date of Birth"
+              value={formData.dateOfBirth}
+              onChange={handleInputChange}
+              className="px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Postcode and Number */}
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="text"
+              name="postcode"
+              placeholder="Postcode"
+              value={formData.postcode}
+              onChange={handleInputChange}
+              className="px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              name="number"
+              placeholder="Number"
+              value={formData.number}
+              onChange={handleInputChange}
+              className="px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* State and City */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="relative">
+              <select
+                name="state"
+                value={formData.state}
+                onChange={handleInputChange}
+                className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 appearance-none pr-12"
+              >
+                <option value="">State</option>
+                <option value="punjab">Punjab</option>
+                <option value="sindh">Sindh</option>
+                <option value="kpk">KPK</option>
+                <option value="balochistan">Balochistan</option>
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+            </div>
+            <input
+              type="text"
+              name="city"
+              placeholder="City"
+              value={formData.city}
+              onChange={handleInputChange}
+              className="px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* Terms Checkbox */}
+        <div className="flex items-start gap-3 mt-6">
+          <input
+            type="checkbox"
+            name="acceptTerms"
+            id="terms"
+            checked={formData.acceptTerms}
+            onChange={handleInputChange}
+            className="mt-1 w-4 h-4 text-primary rounded"
+          />
+          <label htmlFor="terms" className="text-sm text-gray-600">
+            I accept the terms and conditions and LGPD/ Privacy
+          </label>
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="w-full mt-8 py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg"
+        >
+          Continue
+        </button>
+      </form>
+
     </div>
   );
 }

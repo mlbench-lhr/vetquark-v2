@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
     const body = await req.json();
     try {
-        const backendRes = await fetch(process.env.NEXT_PUBLIC_LIVE_URL + "/admin/login", {
+        const backendRes = await fetch(process.env.NEXT_PUBLIC_LOCAL_URL + "/admin/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

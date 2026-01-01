@@ -134,6 +134,11 @@
 
   --color-theme-purple-500: #7a5af8;
 
+  /* custom */
+  --color-primary: #3F78D8;
+  --color-secondary: #4F5464;
+
+
     /* --primary:#FFFFFF;
   --accent:#4958E9;
   --background:#F9FAFB;

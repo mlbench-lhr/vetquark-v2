@@ -5,12 +5,20 @@ import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { UserProvider } from '@/context/authContext';
 import { ToastContainer } from 'react-toastify';
+import { Metadata } from 'next';
 
 
 const outfit = Outfit({
   subsets: ["latin"],
 });
 
+export const metadata: Metadata = {
+  title: "Vertix",
+  description: "Mobile website for Vetinarians and Pet Owners",
+  icons: {
+    icon: "/logo.png"
+  },
+};
 
 
 export default function RootLayout({
