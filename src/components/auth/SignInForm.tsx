@@ -14,6 +14,7 @@ export default function SignInForm() {
 
   const handleSubmit = () => {
     console.log('Login attempt:', { profile, email, password });
+    router.push('/Guardian');
     // Add your login logic here
   };
 
