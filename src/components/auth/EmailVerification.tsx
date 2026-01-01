@@ -57,7 +57,7 @@ export default function EmailVerification() {
 
     if (step === "success") {
         return (
-            <div className="w-full min-h-screen p-6 flex flex-col">
+            <div className="w-full min-h-[100dvh] p-6 flex flex-col">
                 {/* Header */}
                 <div className="flex items-center mb-8">
                     <button className="mr-4 text-gray-600 hover:text-gray-800" onClick={() => router.back()}>
@@ -109,7 +109,7 @@ export default function EmailVerification() {
     }
 
     return (
-        <div className="w-full flex flex-col min-h-screen p-6">
+        <div className="w-full flex flex-col min-h-[100dvh] p-6">
             {/* Header */}
             <div className="flex items-center mb-8">
                 <button className="mr-4 text-gray-600 hover:text-gray-800" onClick={() => router.back()}>
