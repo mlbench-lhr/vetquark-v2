@@ -1,17 +1,35 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  eslint: {
-    ignoreDuringBuilds: true, // <-- This allows build to pass even with ESLint errors
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: [
+          {
+            loader: "@svgr/webpack",
+            options: { icon: true },
+          },
+        ],
+        as: "*.js",
+      },
+    },
   },
-  images: {
-    domains: ["213.159.6.36"], // ✅ Add your image server's IP/domain here
-  },
-  webpack(config) {
+  webpack: (config) => {
+    const fileLoaderRule = (config.module.rules as any[]).find(
+      (rule) => rule.test?.test?.(".svg")
+    );
+    if (fileLoaderRule) {
+      fileLoaderRule.exclude = /\.svg$/i;
+    }
     config.module.rules.push({
-      test: /\.svg$/,
-      use: ["@svgr/webpack"],
+      test: /\.svg$/i,
+      issuer: { and: [/\.(js|ts)x?$/] },
+      use: [
+        {
+          loader: "@svgr/webpack",
+          options: { icon: true },
+        },
+      ],
     });
     return config;
   },
