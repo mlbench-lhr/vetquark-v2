@@ -10,8 +10,7 @@ import { useModal } from "@/hooks/useModal";
 import { toast } from "react-toastify";
 import { EditProfileModal } from "./EditProfileModal";
 import { ChangePasswordModal } from "./ChangePasswordModal";
-import { ref, set, onValue } from "firebase/database";
-import { database } from "@/utils/firebase";
+
 
 export default function UserDropdown() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -25,7 +24,7 @@ export default function UserDropdown() {
     openModal: openChangePassword,
     closeModal: closeChangePassword
   } = useModal();
-  const [enabled, setEnabled] = useState<boolean>(false);
+
   const { logout, user, session_id, setUser } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
 
@@ -94,26 +93,9 @@ export default function UserDropdown() {
     toast.success(message);
   };
 
-  useEffect(() => {
-    if (!user?.id) return; // wait until user is available
 
-    const toggleRef = ref(database, `${user.id}/settings/notificationsEnabled`);
 
-    // Subscribe to changes
-    const unsubscribe = onValue(toggleRef, (snapshot) => {
-      setEnabled(snapshot.val() ?? false);
-    });
 
-    // Cleanup on unmount
-    return () => unsubscribe();
-  }, [user?.id]);
-
-  const handleToggle = () => {
-    if (!user?.id) return;
-
-    const toggleRef = ref(database, `${user.id}/settings/notificationsEnabled`);
-    set(toggleRef, !enabled);
-  };
   return (
     <div className="relative">
 
@@ -195,30 +177,7 @@ export default function UserDropdown() {
               Change Password
             </DropdownItem>
           </li>
-          <li>
-            <div className="flex items-center justify-between py-2 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700">
-              <div className="flex items-center gap-3">
-                <Image src="/images/bell.svg" alt="bell" width={24} height={24} />
-                Enable Notification
-              </div>
 
-              {/* Toggle Switch */}
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={enabled}
-                  onChange={handleToggle}
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full 
-            peer peer-checked:after:translate-x-full peer-checked:after:border-white 
-            after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
-            after:bg-white after:border-gray-300 after:border after:rounded-full 
-            after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
-                </div>
-              </label>
-            </div>
-          </li>
         </ul>
         <div
           onClick={handleLogoutSubmit}

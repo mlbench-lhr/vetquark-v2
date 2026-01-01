@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase, ref, get } from "firebase/database";
-import { database } from "@/utils/firebase";
+
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const snapshot = await get(ref(database, `${body.data.userId}/settings/notificationsEnabled`));
-        const enabled = snapshot.val();
 
-        if (!enabled) {
-            return NextResponse.json({ data: [], message: "Notifications disabled" },{ status: 200 });
-        }
         const sessionId = req.headers.get("session");
         if (!sessionId) {
             throw new Error("No session ID provided");
