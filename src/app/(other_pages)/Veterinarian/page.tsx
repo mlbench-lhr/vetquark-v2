@@ -17,9 +17,9 @@ export default async function Ecommerce() {
   const cookieStore = await cookies(); // use await
   const sessionId = cookieStore.get("session_id")?.value;
 
-  if (!sessionId) {
-    redirect("/signin"); 
-  }
+  // if (!sessionId) {
+  //   redirect("/signin"); 
+  // }
   return (
     // <div className="grid grid-cols-12 gap-4 md:gap-6 xl:gap-8">
     //   <div className="col-span-12 space-y-6 xl:col-span-7">
@@ -37,6 +37,6 @@ export default async function Ecommerce() {
     //     <TotalGuestsChart />
     //   </div>
     // </div>
-    <Index sessionId={sessionId}/>
+    <div>hello</div>
   );
 }

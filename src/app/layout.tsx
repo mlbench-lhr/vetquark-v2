@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "Vertix",
   description: "Mobile website for Vetinarians and Pet Owners",
   icons: {
-    icon: "/logo.png"
+    icon: "/logo.pg"
   },
 };
 

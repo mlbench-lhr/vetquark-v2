@@ -1,36 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 // Bottom navigation tab data
-const tabs = [
-    { id: "start", label: "Start", icon: "/images/tabs/home.svg", icon_active: "/images/tabs/home-active.svg" },
-    { id: "patient", label: "+ Patient", icon: "/images/tabs/paw.svg", icon_active: "/images/tabs/paw-active.svg" },
-    { id: "patient", label: "", icon: "/images/tabs/paw.svg", icon_active: "/images/tabs/paw-active.svg" },
-    { id: "reading", label: "New reading", icon: "/images/tabs/analysis.svg", icon_active: "/images/tabs/analysis-active.svg" },
-    { id: "history", label: "History", icon: "/images/tabs/clock.svg", icon_active: "/images/tabs/clock-active.svg" },
-    { id: "registrations", label: "Registrations", icon: "/images/tabs/cat.svg", icon_active: "/images/tabs/cat-active.svg" },
+const VETERINARIAN_TABS = [
+    { id: "start", label: "Start", icon: "/images/tabs/home.svg", icon_active: "/images/tabs/home-active.svg", href: "/Veterinarian/home" },
+    { id: "patient", label: "+ Patient", icon: "/images/tabs/paw.svg", icon_active: "/images/tabs/paw-active.svg", href: "/Veterinarian/patient" },
+    { id: "patient", label: "", icon: "/images/tabs/paw.svg", icon_active: "/images/tabs/paw-active.svg", href: "/Veterinarian/patient" },
+    { id: "reading", label: "New reading", icon: "/images/tabs/analysis.svg", icon_active: "/images/tabs/analysis-active.svg", href: "/Veterinarian/new-reading" },
+    { id: "history", label: "History", icon: "/images/tabs/clock.svg", icon_active: "/images/tabs/clock-active.svg", href: "/Veterinarian/history" },
+    { id: "registrations", label: "Registrations", icon: "/images/tabs/cat.svg", icon_active: "/images/tabs/cat-active.svg", href: "/Veterinarian/registrations" },
+];
+
+const GUARDIAN_TABS = [
+    { id: "start", label: "Start", icon: "/images/tabs/home.svg", icon_active: "/images/tabs/home-active.svg", href: "/Guardian/home" },
+    { id: "history", label: "History", icon: "/images/tabs/clock.svg", icon_active: "/images/tabs/clock-active.svg", href: "/Guardian/history" },
+    { id: "glossary", label: "Glossary", icon: "/images/tabs/glossary.svg", icon_active: "/images/tabs/glossary-active.svg", href: "/Guardian/glossary" },
+    { id: "help", label: "Help", icon: "/images/tabs/help.svg", icon_active: "/images/tabs/help-active.svg", href: "/Guardian/help" },
 ];
 
 export default function BottomTabs() {
-    const [activeTab, setActiveTab] = useState("start");
+    
+    const pathname = usePathname();
+    const isGuardianRoute = pathname?.toLowerCase().includes("guardian");
+    const tabs = isGuardianRoute ? GUARDIAN_TABS : VETERINARIAN_TABS;
 
     return (
         <nav className="fixed left-1/2 -translate-x-1/2 bottom-[calc(env(safe-area-inset-bottom)+16px)] w-[calc(100%-2rem)] max-w-2xl bg-gray-100 border border-gray-200 rounded-full shadow-theme-lg">
             <div className="flex items-center justify-between px-2 sm:px-4 py-2 relative">
                 {tabs.map((tab, index) => {
-                    const isActive = activeTab === tab.id;
+                    const isActive = pathname?.toLowerCase().startsWith(tab.href.toLowerCase()) ?? false;
                     const Icon = isActive ? tab.icon_active : tab.icon;
                     const isReading = tab.id === "reading";
 
                     return (
-                        <button
+                        <Link href={tab.href}
                             key={`${tab.id}-${index}`}
-                            onClick={() => setActiveTab(tab.id)}
                             className={`flex flex-col items-center justify-center min-w-0 transition-all ${isReading
-                                    ? "absolute left-1/2 -translate-x-1/2 -top-2 sm:-top-4 z-10"
-                                    : "flex-1 gap-1 sm:gap-1.5 py-1.5 sm:py-2"
+                                ? "absolute left-1/2 -translate-x-1/2 -top-2 sm:-top-4 z-10"
+                                : "flex-1 gap-1 sm:gap-1.5 py-1.5 sm:py-2"
                                 }`}
                         >
                             {isReading ? (
@@ -68,7 +79,7 @@ export default function BottomTabs() {
                                     </span>
                                 </>
                             )}
-                        </button>
+                        </Link>
                     );
                 })}
             </div>
