@@ -1,8 +1,12 @@
 // components/SearchBar.tsx
+'use client'
+import StoreModal from '@/components/Modals/StoreModal';
+import { useModal } from '@/hooks/useModal';
 import { ShoppingCartIcon } from 'lucide-react';
 import React from 'react';
 
 const SearchBar: React.FC = () => {
+  const { isOpen, openModal, closeModal } = useModal();
   return (
     <div className="mt-2 flex items-center gap-3">
       <div className="flex-1 relative">
@@ -21,10 +25,15 @@ const SearchBar: React.FC = () => {
           <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </div>
-      <button className="px-4 py-3 border border-blue-200 rounded-xl flex items-center gap-2 bg-white">
+      <button className="px-4 py-3 border border-blue-200 rounded-xl flex items-center gap-2 bg-white" onClick={openModal}>
         <ShoppingCartIcon className="w-5 h-5 text-primary" />
         <span className="text-primary font-medium">Store</span>
       </button>
+      <StoreModal
+        isOpen={isOpen}
+        onClose={() => closeModal()}
+        onUpdated={() => console.log('Store updated')}
+      />
     </div>
   );
 };
