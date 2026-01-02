@@ -69,12 +69,11 @@ export const Modal: React.FC<ModalProps> = ({
         ${contentClasses} ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {showCloseButton && (
+        {/* {showCloseButton && (
           <button
             onClick={onClose}
             className="absolute right-3 top-3 z-[999] flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 sm:right-6 sm:top-6 sm:h-11 sm:w-11"
           >
-            {/* Close Icon */}
             <svg
               width="24"
               height="24"
@@ -90,7 +89,7 @@ export const Modal: React.FC<ModalProps> = ({
               />
             </svg>
           </button>
-        )}
+        )} */}
         <div>{children}</div>
       </div>
     </div>

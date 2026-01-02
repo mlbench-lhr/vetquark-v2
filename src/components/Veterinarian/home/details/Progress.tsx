@@ -49,6 +49,32 @@ function Progress() {
                     dogsLabel="Leukocytes"
                 />
             </div>
+
+            <div className=" bg-white rounded-2xl p-4 border border-gray-200 mt-3">
+                <div className="flex items-center justify-between mb-2">
+                    <div>
+                        <h4 className="text-sm font-bold text-gray-800">Leukocytes</h4>
+                        <p className="text-xs text-gray-500">Normal: Negative</p>
+                    </div>
+                    <button className="px-3 py-1 border border-gray-300 rounded-lg text-xs flex items-center gap-2 bg-gray-100">
+                        <Download size={14} />
+                        Export
+                    </button>
+                </div>
+                <AttendanceChart
+                    months={["Jan", "Feb", "Mar", "Apr", "May"]}
+                    dogs={[20, 75, 40, 95, 45]}
+                    showLegend={false}
+                    showCounters={false}
+                    hideHeader={true}
+                    yTickStep={10}
+                    ySuffix="%"
+                    hRef={90}
+                    vRefIndex={2}
+                    interactive={true}
+                    dogsLabel="Leukocytes"
+                />
+            </div>
         </div>
     )
 }
