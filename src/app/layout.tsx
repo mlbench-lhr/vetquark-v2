@@ -35,7 +35,7 @@ export default function RootLayout({
         <UserProvider>
           <ThemeProvider>
             <ToastContainer
-              position="bottom-right"
+              position="top-right"
               autoClose={3000}
               hideProgressBar={false}
               newestOnTop={false}
