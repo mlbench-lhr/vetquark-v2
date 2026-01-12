@@ -1,0 +1,177 @@
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import connectMongo from "@/lib/mongodb";
+import User, { IUser } from "@/lib/models/User";
+import { sendVerificationEmail } from "@/lib/email";
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    const {
+      fullName,
+      email,
+      phone,
+      password,
+      taxId,
+      dateOfBirth,
+      address,
+      city,
+      state,
+      postalCode,
+      crmv,
+      crmvState,
+      mapaRegistration,
+      operateHow,
+      expertise,
+      acceptTerms,
+      profileType,
+      mode,
+    } = body || {};
+
+    const normalizedProfile = profileType
+      ? (profileType === "veterinarian" ? "Veterinarian" : profileType === "tutor" ? "Guardian" : profileType)
+      : undefined;
+
+    await connectMongo();
+
+    if (mode === "init") {
+      if (!fullName || !email || !password) {
+        return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      }
+
+      const existing = await User.findOne({ email }).lean();
+      if (existing && existing.emailVerified) {
+        return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      const otp = String(Math.floor(10000 + Math.random() * 90000));
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+      let created: any;
+      if (existing) {
+        created = await User.findOneAndUpdate(
+          { email },
+          {
+            fullName,
+            phone,
+            passwordHash,
+            verificationOtp: otp,
+            verificationOtpExpiresAt: expiresAt,
+            verificationOtpAttempts: 0,
+            verificationOtpLastSentAt: new Date(),
+            emailVerified: false,
+            profileType: normalizedProfile,
+            role: normalizedProfile,
+          },
+          { new: true }
+        ).lean();
+      } else {
+        const doc: Partial<IUser> = {
+          fullName,
+          email,
+          phone,
+          passwordHash,
+          acceptTerms: !!acceptTerms,
+          emailVerified: false,
+          verificationOtp: otp,
+          verificationOtpExpiresAt: expiresAt,
+          verificationOtpAttempts: 0,
+          verificationOtpLastSentAt: new Date(),
+          profileType: normalizedProfile,
+          role: normalizedProfile,
+        };
+        try {
+          created = await User.create(doc);
+        } catch (e: any) {
+          throw e
+        }
+      }
+
+      try {
+        await sendVerificationEmail(email, otp);
+      } catch (e) {
+        return NextResponse.json({ id: created._id, message: "OTP generated, email send failed" }, { status: 202 });
+      }
+
+      return NextResponse.json({ id: created._id, message: "OTP sent" }, { status: 201 });
+    }
+
+    if (mode === "complete") {
+      if (!email) {
+        return NextResponse.json({ error: "Email is required" }, { status: 400 });
+      }
+      const existing = await User.findOne({ email: String(email).toLowerCase() }).lean();
+      if (!existing) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+      if (!existing.emailVerified) {
+        return NextResponse.json({ error: "Email not verified" }, { status: 400 });
+      }
+      const update: Partial<IUser> = {
+        fullName,
+        phone,
+        taxId,
+        dateOfBirth,
+        address,
+        city,
+        state,
+        postalCode,
+        crmv,
+        crmvState,
+        mapaRegistration,
+        operateHow,
+        expertise,
+        acceptTerms: acceptTerms === true,
+        profileType: normalizedProfile,
+        role: normalizedProfile,
+      };
+      const updated = await User.findOneAndUpdate({ email }, update, { new: true }).lean();
+      return NextResponse.json({ id: updated?._id, message: "Profile completed" }, { status: 200 });
+    }
+
+    if (!fullName || !email || !password) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+    if (acceptTerms !== true) {
+      return NextResponse.json({ error: "Terms must be accepted" }, { status: 400 });
+    }
+
+    const existing = await User.findOne({ email: String(email).toLowerCase() }).lean();
+    if (existing) {
+      return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const doc: Partial<IUser> = {
+      fullName,
+      email,
+      phone,
+      passwordHash,
+      taxId,
+      dateOfBirth,
+      address,
+      city,
+      state,
+      postalCode,
+      crmv,
+      crmvState,
+      mapaRegistration,
+      operateHow,
+      expertise,
+      acceptTerms: true,
+      profileType: normalizedProfile,
+      role: normalizedProfile,
+    };
+
+    const created = await User.create(doc);
+
+    return NextResponse.json({ id: created._id }, { status: 201 });
+  } catch (error) {
+    console.error("Signup error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
