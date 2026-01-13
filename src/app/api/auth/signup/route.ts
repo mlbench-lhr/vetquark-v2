@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import connectMongo from "@/lib/mongodb";
 import User, { IUser } from "@/lib/models/User";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendVerificationEmail, sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,6 +34,50 @@ export async function POST(req: NextRequest) {
       : undefined;
 
     await connectMongo();
+
+    if (mode === 'vet_create_guardian') {
+      if (!fullName || !email) {
+        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      }
+
+      const existing = await User.findOne({ email: String(email).toLowerCase() }).lean();
+      if (existing) {
+        return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+      }
+
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+      let tempPassword = '';
+      for (let i = 0; i < 12; i++) tempPassword += chars[Math.floor(Math.random() * chars.length)];
+      const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+      const doc: Partial<IUser> = {
+        fullName,
+        email: String(email).toLowerCase(),
+        phone,
+        passwordHash,
+        taxId,
+        dateOfBirth,
+        address,
+        city,
+        state,
+        postalCode,
+        acceptTerms: true,
+        profileType: 'Guardian',
+        role: 'Guardian',
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+      };
+
+      const created = await User.create(doc);
+
+      try {
+        await sendWelcomeEmail(email, email, tempPassword);
+      } catch (e) {
+        return NextResponse.json({ id: created._id, message: 'Guardian created; welcome email failed' }, { status: 202 });
+      }
+
+      return NextResponse.json({ id: created._id, message: 'Guardian created' }, { status: 201 });
+    }
 
     if (mode === "init") {
       if (!fullName || !email || !password) {

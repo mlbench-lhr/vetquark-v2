@@ -1,10 +1,9 @@
 'use client'
 import Header from "@/components/common/header";
-import { CheckCircle2, Download, Edit, Edit2, Eye, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { PatientInfoCard, ReportsHistory } from "./Information";
 import { Report } from "../types";
-import AttendanceChart from "../AttendanceChart";
 import Progress from "./Progress";
 
 interface TabsProps {
@@ -49,20 +48,47 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange }) => {
 // Main Page Component
 const PatientProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('information');
+  const params = useParams<{ patient_id: string }>();
+  const patientId = params?.patient_id;
 
-  const patientData = {
-    name: 'Buddy',
-    type: 'Dog',
-    breed: 'Golden Retriever',
-    image: 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=800&h=600&fit=crop',
-    sex: 'Male',
-    age: '3 years',
-    gender: 'Male',
-  };
+  const [patient, setPatient] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const reports: Report[] = [
-    { id: '1', date: '22/05/2024', status: 'signed' },
-  ];
+  useEffect(() => {
+    (async () => {
+      if (!patientId) return;
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/patient/get_patient_details?patientId=${encodeURIComponent(patientId)}`);
+        const data = await res.json();
+        if (res.ok) {
+          setPatient(data.item);
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [patientId]);
+
+  const patientData = useMemo(() => {
+    const dob = patient?.dateOfBirth ? new Date(patient.dateOfBirth) : null;
+    const now = new Date();
+    const ageYears = dob && !Number.isNaN(dob.getTime())
+      ? Math.max(0, now.getFullYear() - dob.getFullYear() - (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0))
+      : null;
+
+    return {
+      name: patient?.animalName ?? "",
+      type: patient?.species ?? "",
+      breed: patient?.breed ?? "",
+      image: patient?.photo || "/logo.png",
+      sex: patient?.sex ?? "",
+      age: ageYears === null ? "" : `${ageYears} years`,
+      gender: patient?.sex ?? "",
+    };
+  }, [patient]);
+
+  const reports: Report[] = [];
 
   return (
     <div className="pb-5">

@@ -25,17 +25,24 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
         </div>
       </div>
       <div className="flex items-center gap-3" onClick={() => openModal()}>
-        <div className="grid grid-cols-2 border-2 border-blue-300 rounded-full overflow-hidden text-sm w-fit">
-          <span className="px-3 py-1 bg-[#3F78D829] text-primary font-semibold text-center">
+        <div className="bg-gray-100 flex flex-col text-sm py-0.5 pl-2 pr-4 rounded-lg">
+          <span className="text-tertiary text-xs">
             Balance
           </span>
           <span className="py-1 text-primary font-bold text-center">
-            {balance}
+            R{balance}
           </span>
         </div>
 
-        <button className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-          <span className="text-white text-sm"><Bell size={20} /></span>
+        <button className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+          <span className="text-white text-sm">
+            <Image
+              src={"/images/home/bell.svg"}
+              alt="Bell icon"
+              width={24}
+              height={24}
+            />
+          </span>
         </button>
       </div>
       <WithdrawModal

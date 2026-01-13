@@ -13,7 +13,7 @@ const SearchBar: React.FC = () => {
         <input
           type="text"
           placeholder="Search for patient or exam..."
-          className="w-full px-4 py-3 pl-12  rounded-xl focus:outline-none focus:border-primary bg-white"
+          className="w-full px-4 py-3 pl-12  rounded-xl focus:outline-none focus:border-primary bg-gray-100"
         />
         <svg
           className="w-5 h-5 text-primary absolute left-4 top-1/2 -translate-y-1/2"
@@ -25,9 +25,9 @@ const SearchBar: React.FC = () => {
           <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </div>
-      <button className="px-4 py-3 border border-blue-200 rounded-xl flex items-center gap-2 bg-white" onClick={openModal}>
+      <button className="px-4 py-3 border border-blue-200 rounded-xl flex items-center gap-2 bg-gray-100" onClick={openModal}>
         <ShoppingCartIcon className="w-5 h-5 text-primary" />
-        <span className="text-primary font-medium">Store</span>
+        <span className="text-black font-light">Store</span>
       </button>
       <StoreModal
         isOpen={isOpen}
