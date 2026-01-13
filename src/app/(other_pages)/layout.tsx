@@ -43,7 +43,7 @@ export default function Layout({
 }) {
   return (
     <MobileOnly>
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col bg-white">
         {/* Main Content Area - with padding for bottom nav */}
         <main className="flex-1 overflow-auto pb-20">
           {children}

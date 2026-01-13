@@ -12,8 +12,9 @@ import { toast } from "react-toastify";
 
 
 export default function ForgetForm() {
+    const OTP_LENGTH = 5;
     const [isApiSent, setIsApiSent] = useState(false);
-    const [otp, setOtp] = useState(Array(5).fill(""));
+    const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const [isOTPLoading, setIsOTPLoading] = useState(false);
     const [isVerificationLoading, setIsVerificationLoading] = useState(false);
@@ -34,15 +35,13 @@ export default function ForgetForm() {
     }, [cooldown]);
 
     const handleOtpChange = (index: number, value: string) => {
-        if (!/^[0-9]?$/.test(value)) return; // only allow single digit numbers
+        if (!/^[0-9]?$/.test(value)) return;
 
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
-        const length = 5
-        // Move to next input if not last and input is not empty
-        if (value && index < length - 1) {
-            // Use setTimeout to ensure state update is complete before focusing
+
+        if (value && index < OTP_LENGTH - 1) {
             setTimeout(() => {
                 inputRefs.current[index + 1]?.focus();
             }, 0);
@@ -67,30 +66,26 @@ export default function ForgetForm() {
             }
         } else if (e.key === "ArrowLeft" && index > 0) {
             inputRefs.current[index - 1]?.focus();
-        } else if (e.key === "ArrowRight" && index < length - 1) {
+        } else if (e.key === "ArrowRight" && index < OTP_LENGTH - 1) {
             inputRefs.current[index + 1]?.focus();
         }
     };
 
     const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        const raw = e.clipboardData.getData("text");
+        const digits = raw.replace(/\D/g, "").slice(0, OTP_LENGTH).split("");
+        if (digits.length === 0) return;
+
         e.preventDefault();
-        const paste = e.clipboardData.getData("text").slice(0, length);
-        if (!/^\d+$/.test(paste)) return; // allow only digits
 
-        const newOtp = [...otp];
-        const pasteArray = paste.split("");
-
-        // Fill the OTP array with pasted digits
-        for (let i = 0; i < length; i++) {
-            newOtp[i] = pasteArray[i] || "";
+        const newOtp = Array(OTP_LENGTH).fill("");
+        for (let i = 0; i < digits.length; i++) {
+            newOtp[i] = digits[i];
         }
 
         setOtp(newOtp);
 
-        // Focus the next empty field or the last field
-        const nextEmptyIndex = newOtp.findIndex((digit, idx) => !digit && idx > 0);
-        const focusIndex = nextEmptyIndex !== -1 ? nextEmptyIndex : Math.min(paste.length, length - 1);
-
+        const focusIndex = digits.length >= OTP_LENGTH ? OTP_LENGTH - 1 : digits.length;
         setTimeout(() => {
             inputRefs.current[focusIndex]?.focus();
         }, 0);
@@ -116,10 +111,10 @@ export default function ForgetForm() {
             });
             const result = await response.json();
             if (!response.ok) {
-                toast.error(typeof result.error === 'string' ? result.error : 'Failed to send OTP');
+                toast.error(typeof result.message === "string" ? result.message : "Failed to send OTP");
                 return;
             }
-            toast.success(result.message ?? 'OTP sent to your email');
+            toast.success(result.message ?? "OTP sent to your email");
             setIsApiSent(true);
             setCooldown(35);
         } catch (error) {
@@ -132,31 +127,37 @@ export default function ForgetForm() {
 
     const verifyOTP = async () => {
         setIsVerificationLoading(true);
-        const token = otp.join('')
-
-        const payload = buildRequestBody({ email, token });
+        const token = otp.join("");
 
         try {
-            // const response = await fetch("/api/auth/forget", {
-            //     method: "POST",
-            //     headers: {
-            //         "Content-Type": "application/json"
-            //     },
-            //     body: JSON.stringify(payload)
-            // });
+            if (token.length !== 5) {
+                toast.error("Please enter the 5-digit code");
+                return;
+            }
 
-            // const result = await response.json();
+            const response = await fetch("/api/auth/verify-otp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, otp: token, purpose: "reset" })
+            });
 
-            // if (!response.ok) {
-            //     console.error("Server Error:", result.message);
-            //     return;
-            // }
-            sessionStorage.setItem("email", email)
-            sessionStorage.setItem("token", token)
-            router.push("/reset-password")
+            const result = await response.json();
 
+            if (!response.ok) {
+                toast.error(typeof result.error === "string" ? result.error : "Verification failed");
+                return;
+            }
 
+            sessionStorage.setItem("email", email);
+            if (typeof result.reset_token === "string" && result.reset_token.trim()) {
+                sessionStorage.setItem("reset_token", result.reset_token);
+            }
+            sessionStorage.setItem("token", token);
+            router.push("/reset-password");
         } catch (error) {
+            toast.error("Network error while verifying OTP");
             console.error("Network Error:", error);
         } finally {
             setIsVerificationLoading(false);
@@ -220,13 +221,13 @@ export default function ForgetForm() {
                                         <div>
                                             <button className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 rounded-full transition-colors cursor-pointer border-0 mt-6" disabled={isOTPLoading}>
                                                 {isOTPLoading ? (
-                                                    <>
+                                                    <div className="flex items-center justify-center">
                                                         <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                         </svg>
                                                         Sending OTP Link
-                                                    </>
+                                                    </div>
                                                 ) : (
                                                     'Send Reset Link'
                                                 )}
@@ -269,13 +270,13 @@ export default function ForgetForm() {
 
                                         <button className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 rounded-full transition-colors cursor-pointer border-0 mt-6" type="submit" disabled={isVerificationLoading}>
                                             {isVerificationLoading ? (
-                                                <>
+                                                <div className="flex items-center justify-center">
                                                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                     </svg>
                                                     Verifying...
-                                                </>
+                                                </div>
                                             ) : (
                                                 'Verify OTP'
                                             )}

@@ -209,7 +209,8 @@ export default function SignInForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!email || !password) {
       toast.error('Please enter email and password');
       return;
@@ -219,6 +220,7 @@ export default function SignInForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
+        credentials: 'include',
       });
       const data = await res.json();
       if (!res.ok) {
@@ -227,7 +229,9 @@ export default function SignInForm() {
         return;
       }
       toast.success('Logged in successfully');
+      console.log('Login response:', profile);
       if (profile === 'veterinarian') {
+        console.log('Veterinarian profile:', data);
         router.push('/Veterinarian/home');
       } else {
         router.push('/Guardian/home');
@@ -311,7 +315,7 @@ export default function SignInForm() {
         </div>
 
         {/* Login Form */}
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-gray-900 font-medium mb-2">
               Email
@@ -349,6 +353,7 @@ export default function SignInForm() {
 
           <div className="text-right">
             <button
+              type="button"
               onClick={handleForgotPassword}
               className="text-primary hover:text-blue-700 text-sm font-medium bg-transparent border-0 cursor-pointer"
             >
@@ -357,12 +362,12 @@ export default function SignInForm() {
           </div>
 
           <button
-            onClick={handleSubmit}
+            type='submit'
             className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 mt-6"
           >
             Login
           </button>
-        </div>
+        </form>
       </div>
 
       {/* Footer */}

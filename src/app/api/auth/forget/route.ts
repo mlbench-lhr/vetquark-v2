@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const user = await User.findOne({ email: String(email).toLowerCase() }).lean();
     if (!user) {
       // Do not leak existence of emails; respond as if OK
-      return NextResponse.json({ message: "If this email exists, a code was sent" }, { status: 200 });
+      return NextResponse.json({ message: "User not found" }, { status: 400 });
     }
 
     const otp = String(Math.floor(10000 + Math.random() * 90000)); // 5-digit

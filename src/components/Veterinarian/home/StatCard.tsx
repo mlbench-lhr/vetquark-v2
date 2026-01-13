@@ -10,16 +10,17 @@ interface StatCardProps {
 
 const StatCard: React.FC<StatCardProps> = ({ number, label, sublabel, variant = 'primary' }) => {
   return (
-    <div className={`rounded-2xl border-2 h-full`}>
-      <div className="flex items-center gap-3 h-full">
-        <div className={`text-4xl font-semibold text-primary pl-2 py-3`}>
+    <div className={`rounded-2xl border-2 h-full bg-gray-100`}>
+      <div className="flex flex-col p-2 h-full">
+        <p className="text-sm font-">{label}</p>
+        <div className={`text-4xl font-semibold text-primary gap-3 flex`}>
           {number}
+          <div className='p-1'>
+
+            {sublabel && <p className="text-xs font-light bg-[#EBF2FF] text-primary rounded-full p-1 mt-1 text-center">{sublabel}</p>}
+          </div>
         </div>
-        <div className='w-0.25 h-full bg-primary'></div>
-        <div className='pr-1 py-2'>
-          <p className="text-sm font-semibold text-primary">{label}</p>
-          {sublabel && <p className="text-[10px] text-primary border border-primary rounded-full p-1 mt-1 text-center">{sublabel}</p>}
-        </div>
+
       </div>
     </div>
   );

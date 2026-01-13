@@ -1,20 +1,37 @@
+'use client'
 // app/page.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from './Header';
 import SearchBar from './SearchBar';
 import StatCard from './StatCard';
 import PatientCard from './PatientCard';
 import AttendanceChart from './AttendanceChart';
 import { Patient } from './types';
+import { useRouter } from 'next/navigation';
 
-const patients: Patient[] = [
-    { id: '1', name: 'Cashew', owner: 'Gabriel Bulhões', image: '/logo.png' },
-    { id: '2', name: 'Buddy', owner: 'John Silva', image: '/logo.png' },
-    { id: '3', name: 'Buddy', owner: 'John Silva', image: '/logo.png' },
-    { id: '4', name: 'Buddy', owner: 'John Silva', image: '/logo.png' },
-];
+
 
 export default function Home() {
+    const router = useRouter();
+    const [patients, setPatients] = useState<Patient[]>([]);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/patient/get_patients');
+                const data = await res.json();
+                if (res.ok && Array.isArray(data.items)) {
+                    setPatients(data.items.map((p: any) => ({
+                        id: String(p.id || p._id),
+                        name: p.name,
+                        owner: p.owner,
+                        image: p.image || '/logo.png',
+                    })));
+                }
+            } catch (e) {
+            }
+        })();
+    }, []);
     return (
         <div className="px-3 py-5">
             <Header userName="Jackson Miro" balance="$ 925,00" />
@@ -26,19 +43,28 @@ export default function Home() {
             </div>
 
             <div className="mt-2">
-                <h2 className="text-base font-bold text-gray-800 mb-3">Recent Patients</h2>
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-base font-bold text-gray-800">Recent Patients</h2>
+                    <button
+                        type="button"
+                        className="text-primary font-medium"
+                        onClick={() => router.push('/Veterinarian/home/patients')}
+                    >
+                        View All
+                    </button>
+                </div>
                 <div className="space-y-3">
-                    {patients.map((patient, index) => (
+                    {patients.slice(0, 3).map((patient, index) => (
                         <PatientCard key={patient.id} patient={patient} featured={index === 0} />
                     ))}
                 </div>
 
-                <button className="w-full mt-4 py-3 bg-primary text-white font-semibold rounded-2xl flex items-center justify-center gap-2">
+                <button className="w-full mt-4 py-3 bg-primary text-white font-semibold rounded-2xl flex items-center justify-center gap-2" onClick={()=> router.push("/Veterinarian/patient")}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="10" strokeWidth="2" />
                         <path d="M12 8v8m-4-4h8" strokeWidth="2" strokeLinecap="round" />
                     </svg>
-                    New test
+                    New Patient
                 </button>
             </div>
 

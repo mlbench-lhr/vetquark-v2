@@ -23,6 +23,7 @@
     "chart.js": "^4.5.0",
     "flatpickr": "^4.6.13",
     "js-cookie": "^3.0.5",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.562.0",
     "mongoose": "^9.1.2",
     "next": "^16.1.1",
@@ -39,7 +40,8 @@
     "react-spinners": "^0.17.0",
     "react-toastify": "^11.0.5",
     "swiper": "^11.2.0",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "v": "^0.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -47,6 +49,7 @@
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/js-cookie": "^3.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.5",
     "@types/react": "^19",
