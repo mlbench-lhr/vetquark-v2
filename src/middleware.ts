@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const config = {
-  matcher: ["/api/:path*", "/((?!api|_next/static|_next/image|favicon.ico|signin|signup|forget-password|verify_email|reset-password).*)"],
+  matcher: ["/api/:path*", "/((?!api|_next/static|_next/image|favicon.ico|signin|signup|forget-password|verify_email|reset-password|upload-profile-picture).*)"],
 };
 
 function base64UrlToBase64(s: string) {
@@ -10,9 +10,9 @@ function base64UrlToBase64(s: string) {
   return t;
 }
 
-function decodeJson(b64url: string): any {
+function decodeJson<T = unknown>(b64url: string): T {
   const json = atob(base64UrlToBase64(b64url));
-  return JSON.parse(json);
+  return JSON.parse(json) as T;
 }
 
 function toBase64Url(buffer: ArrayBuffer): string {
@@ -27,7 +27,7 @@ async function verifyHS256(token: string, secret: string) {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   const [h, p, s] = parts;
-  const header = decodeJson(h);
+  const header = decodeJson<{ alg?: string }>(h);
   if (header?.alg !== "HS256") return null;
 
   const key = await crypto.subtle.importKey(
@@ -42,7 +42,7 @@ async function verifyHS256(token: string, secret: string) {
   const expected = toBase64Url(sig);
   if (expected !== s) return null;
 
-  const payload = decodeJson(p);
+  const payload = decodeJson<{ exp?: number; sub?: string }>(p);
   const now = Math.floor(Date.now() / 1000);
   if (typeof payload.exp === "number" && now >= payload.exp) return null;
   return payload;
@@ -50,7 +50,7 @@ async function verifyHS256(token: string, secret: string) {
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/api/auth")) {
+  if (pathname.startsWith("/api/auth") ||pathname.includes("cloudinary")) {
     return NextResponse.next();
   }
 

@@ -26,9 +26,15 @@ export async function POST(req: NextRequest) {
       expertise,
       acceptTerms,
       profileType,
+      clinicLogoUrl,
+      tradeName,
+      cnpjIe,
+      reportHeaderAddress,
+      reportFooter,
       mode,
     } = body || {};
 
+    const emailLower = email ? String(email).toLowerCase() : "";
     const normalizedProfile = profileType
       ? (profileType === "veterinarian" ? "Veterinarian" : profileType === "tutor" ? "Guardian" : profileType)
       : undefined;
@@ -40,7 +46,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
       }
 
-      const existing = await User.findOne({ email: String(email).toLowerCase() }).lean();
+      const existing = await User.findOne({ email: emailLower }).lean();
       if (existing) {
         return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
       }
@@ -52,7 +58,7 @@ export async function POST(req: NextRequest) {
 
       const doc: Partial<IUser> = {
         fullName,
-        email: String(email).toLowerCase(),
+        email: emailLower,
         phone,
         passwordHash,
         taxId,
@@ -72,11 +78,11 @@ export async function POST(req: NextRequest) {
 
       try {
         await sendWelcomeEmail(email, email, tempPassword);
-      } catch (e) {
-        return NextResponse.json({ id: created._id, message: 'Guardian created; welcome email failed' }, { status: 202 });
+      } catch {
+      return NextResponse.json({ id: String(created._id), message: 'Guardian created; welcome email failed' }, { status: 202 });
       }
 
-      return NextResponse.json({ id: created._id, message: 'Guardian created' }, { status: 201 });
+      return NextResponse.json({ id: String(created._id), message: 'Guardian created' }, { status: 201 });
     }
 
     if (mode === "init") {
@@ -84,7 +90,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
       }
 
-      const existing = await User.findOne({ email }).lean();
+      const existing = await User.findOne({ email: emailLower }).lean();
       if (existing && existing.emailVerified) {
         return NextResponse.json({ error: "Email already registered" }, { status: 409 });
       }
@@ -94,10 +100,11 @@ export async function POST(req: NextRequest) {
       const otp = String(Math.floor(10000 + Math.random() * 90000));
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-      let created: any;
+      type CreatedRef = { _id: unknown };
+      let created: CreatedRef | null = null;
       if (existing) {
         created = await User.findOneAndUpdate(
-          { email },
+          { email: emailLower },
           {
             fullName,
             phone,
@@ -115,7 +122,7 @@ export async function POST(req: NextRequest) {
       } else {
         const doc: Partial<IUser> = {
           fullName,
-          email,
+          email: emailLower,
           phone,
           passwordHash,
           acceptTerms: !!acceptTerms,
@@ -127,27 +134,27 @@ export async function POST(req: NextRequest) {
           profileType: normalizedProfile,
           role: normalizedProfile,
         };
-        try {
-          created = await User.create(doc);
-        } catch (e: any) {
-          throw e
-        }
+        created = (await User.create(doc)) as unknown as CreatedRef;
+      }
+
+      if (!created?._id) {
+        return NextResponse.json({ error: "Failed to start signup" }, { status: 500 });
       }
 
       try {
-        await sendVerificationEmail(email, otp);
-      } catch (e) {
-        return NextResponse.json({ id: created._id, message: "OTP generated, email send failed" }, { status: 202 });
+        await sendVerificationEmail(emailLower, otp);
+      } catch {
+        return NextResponse.json({ id: String(created?._id ?? ""), message: "OTP generated, email send failed" }, { status: 202 });
       }
 
-      return NextResponse.json({ id: created._id, message: "OTP sent" }, { status: 201 });
+      return NextResponse.json({ id: String(created?._id ?? ""), message: "OTP sent" }, { status: 201 });
     }
 
     if (mode === "complete") {
       if (!email) {
         return NextResponse.json({ error: "Email is required" }, { status: 400 });
       }
-      const existing = await User.findOne({ email: String(email).toLowerCase() }).lean();
+      const existing = await User.findOne({ email: emailLower }).lean();
       if (!existing) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
@@ -171,9 +178,17 @@ export async function POST(req: NextRequest) {
         acceptTerms: acceptTerms === true,
         profileType: normalizedProfile,
         role: normalizedProfile,
+        clinicLogoUrl,
+        tradeName,
+        cnpjIe,
+        reportHeaderAddress,
+        reportFooter,
       };
-      const updated = await User.findOneAndUpdate({ email }, update, { new: true }).lean();
-      return NextResponse.json({ id: updated?._id, message: "Profile completed" }, { status: 200 });
+      const updated = await User.findOneAndUpdate({ email: emailLower }, update, { new: true }).lean();
+      if (!updated?._id) {
+        return NextResponse.json({ error: "Failed to complete profile" }, { status: 500 });
+      }
+      return NextResponse.json({ id: String(updated._id), message: "Profile completed" }, { status: 200 });
     }
 
     if (!fullName || !email || !password) {
@@ -183,7 +198,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Terms must be accepted" }, { status: 400 });
     }
 
-    const existing = await User.findOne({ email: String(email).toLowerCase() }).lean();
+    const existing = await User.findOne({ email: emailLower }).lean();
     if (existing) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     }
@@ -192,7 +207,7 @@ export async function POST(req: NextRequest) {
 
     const doc: Partial<IUser> = {
       fullName,
-      email,
+      email: emailLower,
       phone,
       passwordHash,
       taxId,
@@ -209,11 +224,16 @@ export async function POST(req: NextRequest) {
       acceptTerms: true,
       profileType: normalizedProfile,
       role: normalizedProfile,
+      clinicLogoUrl,
+      tradeName,
+      cnpjIe,
+      reportHeaderAddress,
+      reportFooter,
     };
 
     const created = await User.create(doc);
 
-    return NextResponse.json({ id: created._id }, { status: 201 });
+    return NextResponse.json({ id: String(created._id) }, { status: 201 });
   } catch (error) {
     console.error("Signup error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

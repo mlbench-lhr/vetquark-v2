@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, EyeOff, ArrowLeft, Calendar, Check, ChevronLeft } from "lucide-react";
-import Image from "next/image";
+import { Eye, EyeOff, Calendar, Check, ChevronLeft } from "lucide-react";
 import MultiSelect from "@/components/form/MultiSelect";
 import DropdownSelect from "@/components/form/DropdownSelect";
 import { toast } from "react-toastify";
@@ -28,6 +27,11 @@ type SignUpFormData = {
   operateHow: string;
   expertise: string[];
   acceptTerms: boolean;
+  clinicLogoUrl: string;
+  tradeName: string;
+  cnpjIe: string;
+  reportHeaderAddress: string;
+  reportFooter: string;
 };
 
 export default function SignUpForm() {
@@ -48,6 +52,7 @@ export default function SignUpForm() {
   }, [step, countdown]);
   const dobRef = useRef<HTMLInputElement | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingClinicLogo, setUploadingClinicLogo] = useState(false);
 
   const expertiseOptions = [
     { value: "acupuncture", text: "Acupuncture", selected: false },
@@ -142,23 +147,85 @@ export default function SignUpForm() {
     operateHow: "",
     expertise: [],
     acceptTerms: false,
+    clinicLogoUrl: "",
+    tradeName: "",
+    cnpjIe: "",
+    reportHeaderAddress: "",
+    reportFooter: "",
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const target = e.target;
-    const name = (target as HTMLInputElement | HTMLSelectElement).name;
-    let nextValue: any;
+    const name = (target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as keyof SignUpFormData;
+    let nextValue: SignUpFormData[keyof SignUpFormData];
     if ((target as HTMLInputElement).type === "checkbox") {
-      nextValue = (target as HTMLInputElement).checked;
+      nextValue = (target as HTMLInputElement).checked as SignUpFormData[keyof SignUpFormData];
     } else if (target instanceof HTMLSelectElement && target.multiple) {
-      nextValue = Array.from(target.selectedOptions).map((o) => o.value);
+      nextValue = Array.from(target.selectedOptions).map((o) => o.value) as SignUpFormData[keyof SignUpFormData];
     } else {
-      nextValue = (target as HTMLInputElement | HTMLSelectElement).value;
+      nextValue = (target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value as SignUpFormData[keyof SignUpFormData];
       if (name === "password" || name === "confirmPassword") {
-        nextValue = (nextValue as string).trim();
+        nextValue = (nextValue as string).trim() as SignUpFormData[keyof SignUpFormData];
       }
     }
     setFormData((prev) => ({ ...prev, [name]: nextValue }));
+  };
+
+  const handleClinicLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+    if (!CLOUD_NAME || !API_KEY) {
+      toast.error("Cloudinary is not configured");
+      return;
+    }
+
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File too large (max 10MB)");
+      return;
+    }
+
+    setUploadingClinicLogo(true);
+    try {
+      const signRes = await fetch(`/api/cloudinary/upload?folder=clinic_logos`);
+      const signJson = await signRes.json();
+      
+      if (!signRes.ok) {
+        toast.error("Failed to prepare upload");
+        console.error("Cloudinary signature error:", signJson);
+        return;
+      }
+      const { timestamp, signature } = signJson;
+
+      const data = new FormData();
+      data.append("file", file);
+      data.append("api_key", API_KEY);
+      data.append("timestamp", String(timestamp));
+      data.append("signature", signature);
+      data.append("folder", "clinic_logos");
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: data,
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error("Upload failed");
+        console.error("Cloudinary upload failed:", json);
+        return;
+      }
+      const url = json.secure_url || json.url;
+      if (url) {
+        setFormData((prev) => ({ ...prev, clinicLogoUrl: url }));
+      }
+    } catch (err) {
+      toast.error("Upload failed");
+      console.error("Cloudinary upload error:", err);
+    } finally {
+      setUploadingClinicLogo(false);
+      e.target.value = "";
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -244,15 +311,19 @@ export default function SignUpForm() {
   };
 
   const handleNext = async () => {
-    const finalStep = profileType === "veterinarian" ? 5 : 3;
+    const finalStep = profileType === "veterinarian" ? 6 : 3;
     if (step < finalStep) {
       setStep(step + 1);
       return;
     }
+    if (profileType === "veterinarian" && !formData.clinicLogoUrl) {
+      toast.error("Please upload your clinic logo");
+      return;
+    }
     try {
       setSubmitting(true);
-      const payload: any = {
-        mode: "complete",
+      const basePayload = {
+        mode: "complete" as const,
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
@@ -268,11 +339,19 @@ export default function SignUpForm() {
         profileType,
         role: profileType,
       };
-      if (profileType === "veterinarian") {
-        payload.crmv = formData.crmv;
-        payload.crmvState = formData.crmvState;
-        payload.mapaRegistration = formData.mapaRegistration;
-      }
+      const payload = profileType === "veterinarian"
+        ? {
+          ...basePayload,
+          crmv: formData.crmv,
+          crmvState: formData.crmvState,
+          mapaRegistration: formData.mapaRegistration,
+          clinicLogoUrl: formData.clinicLogoUrl,
+          tradeName: formData.tradeName,
+          cnpjIe: formData.cnpjIe || undefined,
+          reportHeaderAddress: formData.reportHeaderAddress,
+          reportFooter: formData.reportFooter,
+        }
+        : basePayload;
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -285,8 +364,12 @@ export default function SignUpForm() {
         return;
       }
       toast.success("Account created");
-      console.log("Signup success:", data);
-      router.push("/signin");
+      const id = (data?.id ? String(data.id) : "").trim();
+      if (id) {
+        router.push(`/upload-profile-picture?userId=${encodeURIComponent(id)}`);
+      } else {
+        router.push("/signin");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -394,30 +477,26 @@ export default function SignUpForm() {
               <button
                 type="button"
                 onClick={() => setProfileType("veterinarian")}
-                className={`w-full p-4 rounded-2xl transition-all flex items-center justify-between ${profileType === "veterinarian"
-                  ? "bg-primary text-white border-2 border-primary"
-                  : "bg-gray-50 text-gray-700 border-2 border-transparent"
+                className={`w-full p-4 transition-all flex items-center justify-between ${profileType === "veterinarian"
+                  ? "bg-[#EBF2FF] text-primary rounded-full"
+                  : "bg-gray-50 text-gray-700 rounded-2xl"
                   }`}
               >
                 <div className="flex items-center gap-3">
                   {profileType === 'veterinarian' ? (
-                    <Image
-                      src="/images/auth/paw-active.svg"
-                      alt="user"
-                      width={16}
-                      height={16} />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M6.65289 6.79678C7.49169 6.65278 8.11449 5.88958 8.20809 4.97878C8.30529 4.04998 8.52129 0.320381 7.12089 0.557981C3.48849 1.17358 3.74409 7.28998 6.65289 6.79678ZM11.4301 6.79678C14.3389 7.28998 14.5945 1.17358 10.9621 0.557981C9.56169 0.320381 9.77769 4.04998 9.87489 4.97878C9.96849 5.89318 10.5913 6.65638 11.4301 6.79678ZM5.15889 9.68038C5.15889 9.19438 4.98609 8.75518 4.70529 8.43478C4.24809 7.83358 2.78649 6.62398 2.43009 6.93358C1.68129 7.58518 1.70649 9.18358 2.15649 10.3464C2.38689 10.9944 2.94849 11.448 3.60009 11.448C4.46049 11.448 5.15889 10.656 5.15889 9.68038ZM15.6493 6.93358C15.2929 6.62398 13.8313 7.83718 13.3741 8.43478C13.0969 8.75518 12.9205 9.19438 12.9205 9.68038C12.9205 10.656 13.6189 11.448 14.4793 11.448C15.1345 11.448 15.6925 10.9944 15.9229 10.3464C16.3729 9.18358 16.3981 7.58518 15.6493 6.93358ZM12.7189 12.4344C11.3941 11.7756 11.4373 10.5048 11.1349 9.34558C10.8973 8.42038 10.0477 7.73638 9.03969 7.73638C8.05329 7.73638 7.21809 8.39158 6.95889 9.28798C6.63849 10.3968 6.82929 11.6892 5.38929 12.4272C4.21929 12.8088 3.74409 13.3668 3.74409 14.6844C3.74409 15.7536 4.66209 16.902 5.85009 17.0424C7.17489 17.2404 8.20449 16.9812 9.04329 16.506C9.87849 16.9812 10.9117 17.244 12.2365 17.0424C13.4209 16.8984 14.3425 15.7572 14.3425 14.6844C14.3425 13.338 13.8961 12.8376 12.7225 12.4344H12.7189ZM11.1565 14.0436H9.78489L9.78849 15.4836H8.29089L8.29449 14.0436H6.84009V12.6036H8.29809L8.29449 11.1636H9.79209V12.6036H11.1637V14.0436H11.1565Z" fill="#3F78D8" />
+                    </svg>
                   ) : (
-                    <Image
-                      src="/images/auth/paw.svg"
-                      alt="user"
-                      width={16}
-                      height={16} />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M6.65289 6.79678C7.49169 6.65278 8.11449 5.88958 8.20809 4.97878C8.30529 4.04998 8.52129 0.320381 7.12089 0.557981C3.48849 1.17358 3.74409 7.28998 6.65289 6.79678ZM11.4301 6.79678C14.3389 7.28998 14.5945 1.17358 10.9621 0.557981C9.56169 0.320381 9.77769 4.04998 9.87489 4.97878C9.96849 5.89318 10.5913 6.65638 11.4301 6.79678ZM5.15889 9.68038C5.15889 9.19438 4.98609 8.75518 4.70529 8.43478C4.24809 7.83358 2.78649 6.62398 2.43009 6.93358C1.68129 7.58518 1.70649 9.18358 2.15649 10.3464C2.38689 10.9944 2.94849 11.448 3.60009 11.448C4.46049 11.448 5.15889 10.656 5.15889 9.68038ZM15.6493 6.93358C15.2929 6.62398 13.8313 7.83718 13.3741 8.43478C13.0969 8.75518 12.9205 9.19438 12.9205 9.68038C12.9205 10.656 13.6189 11.448 14.4793 11.448C15.1345 11.448 15.6925 10.9944 15.9229 10.3464C16.3729 9.18358 16.3981 7.58518 15.6493 6.93358ZM12.7189 12.4344C11.3941 11.7756 11.4373 10.5048 11.1349 9.34558C10.8973 8.42038 10.0477 7.73638 9.03969 7.73638C8.05329 7.73638 7.21809 8.39158 6.95889 9.28798C6.63849 10.3968 6.82929 11.6892 5.38929 12.4272C4.21929 12.8088 3.74409 13.3668 3.74409 14.6844C3.74409 15.7536 4.66209 16.902 5.85009 17.0424C7.17489 17.2404 8.20449 16.9812 9.04329 16.506C9.87849 16.9812 10.9117 17.244 12.2365 17.0424C13.4209 16.8984 14.3425 15.7572 14.3425 14.6844C14.3425 13.338 13.8961 12.8376 12.7225 12.4344H12.7189ZM11.1565 14.0436H9.78489L9.78849 15.4836H8.29089L8.29449 14.0436H6.84009V12.6036H8.29809L8.29449 11.1636H9.79209V12.6036H11.1637V14.0436H11.1565Z" fill="black" />
+                    </svg>
                   )}
                   <span className="font-medium">Veterinary Surgeon</span>
                 </div>
                 {profileType === "veterinarian" && (
-                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                    <Check size={16} className="text-primary" />
+                  <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
+                    <Check size={16} className="text-white" />
                   </div>
                 )}
               </button>
@@ -425,16 +504,15 @@ export default function SignUpForm() {
               <button
                 type="button"
                 onClick={() => setProfileType("tutor")}
-                className={`w-full p-4 rounded-2xl transition-all flex items-center justify-between ${profileType === "tutor"
-                  ? "bg-primary text-white border-2 border-primary"
-                  : "bg-gray-50 text-gray-700 border-2 border-transparent"
+                className={`w-full p-4 transition-all flex items-center justify-between ${profileType === "tutor"
+                  ? "bg-[#EBF2FF] text-primary rounded-full"
+                  : "bg-gray-50 text-gray-700 rounded-2xl"
                   }`}
               >
                 <div className="flex items-center gap-3">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
-                  </svg>
-                  <span className="font-medium">Tutor (a)</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M9 9C7.9 9 6.95833 8.60833 6.175 7.825C5.39167 7.04167 5 6.1 5 5C5 3.9 5.39167 2.95833 6.175 2.175C6.95833 1.39167 7.9 1 9 1C10.1 1 11.0417 1.39167 11.825 2.175C12.6083 2.95833 13 3.9 13 5C13 6.1 12.6083 7.04167 11.825 7.825C11.0417 8.60833 10.1 9 9 9ZM1 15V14.2C1 13.6333 1.146 13.1127 1.438 12.638C1.73 12.1633 2.11733 11.8007 2.6 11.55C3.63333 11.0333 4.68333 10.646 5.75 10.388C6.81667 10.13 7.9 10.0007 9 10C10.1 9.99933 11.1833 10.1287 12.25 10.388C13.3167 10.6473 14.3667 11.0347 15.4 11.55C15.8833 11.8 16.271 12.1627 16.563 12.638C16.855 13.1133 17.0007 13.634 17 14.2V15C17 15.55 16.8043 16.021 16.413 16.413C16.0217 16.805 15.5507 17.0007 15 17H3C2.45 17 1.97933 16.8043 1.588 16.413C1.19667 16.0217 1.00067 15.5507 1 15Z" fill={profileType === 'tutor' ? "#3F78D8" : "#2B2B2B"} />
+                  </svg>                  <span className="font-medium">Guardian</span>
                 </div>
                 {profileType === "tutor" && (
                   <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
@@ -448,7 +526,7 @@ export default function SignUpForm() {
 
       case 2:
 
-      return (
+        return (
           <form id="signup-step-2" onSubmit={(e) => { e.preventDefault(); handleStep2Submit(e) }} className="pt-8">
             <div className="space-y-4">
               <div>
@@ -628,7 +706,7 @@ export default function SignUpForm() {
               Verify
             </button>
             <p className="text-center text-gray-600 mt-4">
-              Didn't get the code?{" "}
+              Didn&apos;t get the code?{" "}
               <button onClick={handleResendOtp} disabled={countdown > 0} className="text-primary hover:text-blue-700 font-medium bg-transparent border-0 cursor-pointer disabled:opacity-50">
                 {countdown > 0 ? `Resend in 00:${countdown.toString().padStart(2, '0')}` : 'Send again'}
               </button>
@@ -675,7 +753,7 @@ export default function SignUpForm() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
                     size={20}
                     onClick={() => {
-                      const el = dobRef.current as any;
+                      const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
                       if (!el) return;
                       if (typeof el.showPicker === "function") el.showPicker();
                       else el.click();
@@ -838,18 +916,103 @@ export default function SignUpForm() {
                   name="expertise"
                   required
                 />
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-2 flex flex-wrap gap-2 bg-gray-50 p-5 rounded-[12px]">
                   {formData.expertise.length === 0 ? (
                     <span className="text-sm text-gray-500">No expertise selected</span>
                   ) : (
                     formData.expertise.map((v) => {
                       const opt = expertiseOptions.find((o) => o.value === v);
                       return (
-                        <span key={v} className="inline-flex items-center rounded-full bg-gray-100 text-gray-800 text-sm px-3 py-1">{opt ? opt.text : v}</span>
+                        <span key={v} className="inline-flex items-center rounded-full bg-primary text-white text-sm px-3 py-1">{opt ? opt.text : v}</span>
                       );
                     })
                   )}
                 </div>
+              </div>
+            </div>
+          </form>
+        );
+
+      case 6:
+        return (
+          <form id="signup-step-6" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="pt-8">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">Clinic Logo</label>
+                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                  {formData.clinicLogoUrl ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <img src={formData.clinicLogoUrl} alt="Clinic logo" className="w-32 h-32 object-contain rounded-lg bg-white" />
+                      <label className="inline-block">
+                        <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
+                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? "Uploading..." : "Change Logo"}</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="text-gray-600 text-sm">Upload your clinic logo</div>
+                      <label className="inline-block">
+                        <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
+                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? "Uploading..." : "Select File"}</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">Trade Name</label>
+                <input
+                  type="text"
+                  name="tradeName"
+                  placeholder="Enter your trade name"
+                  value={formData.tradeName}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">
+                  CNPJ/IE <span className="text-gray-500 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  name="cnpjIe"
+                  placeholder="Enter your CNPJ/IE"
+                  value={formData.cnpjIe}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, cnpjIe: e.target.value.replace(/\D/g, "") }))}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">Address (for header)</label>
+                <input
+                  type="text"
+                  name="reportHeaderAddress"
+                  placeholder="Enter your address for the report header"
+                  value={formData.reportHeaderAddress}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">Footer of the Report</label>
+                <textarea
+                  name="reportFooter"
+                  placeholder="Enter the footer text for reports"
+                  value={formData.reportFooter}
+                  onChange={handleInputChange}
+                  rows={4}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 resize-none"
+                />
               </div>
             </div>
           </form>
@@ -877,10 +1040,11 @@ export default function SignUpForm() {
           {step === 3 && ""}
           {step === 4 && "Tax & Address Info"}
           {step === 5 && "Professional Registration"}
+          {step === 6 && "Clinic & Reports"}
         </h2>
 
         <div className="text-primary font-medium text-sm">
-          Step {step}/{profileType === "veterinarian" ? "5" : "3"}
+          Step {step}/{profileType === "veterinarian" ? "6" : "3"}
         </div>
       </div>
 
@@ -890,16 +1054,16 @@ export default function SignUpForm() {
       </div>
 
       {/* Footer */}
-      {(step === 1 || step === 2 || step === 4 || step === 5) && (
+      {(step === 1 || step === 2 || step === 4 || step === 5 || step === 6) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4">
           <button
             type="submit"
             form={`signup-step-${step}`}
             onClick={step === 1 ? handleNext : undefined}
-            disabled={submitting}
+            disabled={submitting || uploadingClinicLogo}
             className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {step === (profileType === "veterinarian" ? 5 : 3) ? (submitting ? "Creating..." : "Create Account") : "Next"}
+            {step === (profileType === "veterinarian" ? 6 : 3) ? (submitting ? "Creating..." : "Create Account") : "Next"}
           </button>
           {(step === 1 || step === 2) && (
             <p className="text-center text-gray-600 mt-4">
