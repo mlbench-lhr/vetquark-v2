@@ -11,7 +11,7 @@ import { Metadata } from 'next';
 const outfit = Outfit({
   subsets: ["latin"],
 });
-
+ 
 export const metadata: Metadata = {
   title: "Vertix",
   description: "Mobile website for Vetinarians and Pet Owners",
