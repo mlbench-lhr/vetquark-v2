@@ -22,6 +22,12 @@ export interface IUser {
   acceptTerms: boolean;
   profileType?: ProfileType;
   role?: ProfileType;
+  clinicLogoUrl?: string;
+  tradeName?: string;
+  cnpjIe?: string;
+  reportHeaderAddress?: string;
+  reportFooter?: string;
+  profileImageUrl?: string;
   // Account verification
   emailVerified?: boolean;
   emailVerifiedAt?: Date;
@@ -63,6 +69,12 @@ const UserSchema = new Schema<IUser>(
     acceptTerms: { type: Boolean, required: true },
     profileType: { type: String, enum: ["Veterinarian", "Guardian"] },
     role: { type: String, enum: ["Veterinarian", "Guardian"] },
+    clinicLogoUrl: { type: String },
+    tradeName: { type: String, trim: true },
+    cnpjIe: { type: String },
+    reportHeaderAddress: { type: String },
+    reportFooter: { type: String },
+    profileImageUrl: { type: String },
     // Account verification
     emailVerified: { type: Boolean, default: false },
     emailVerifiedAt: { type: Date },

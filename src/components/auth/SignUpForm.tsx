@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, EyeOff, ArrowLeft, Calendar, Check, ChevronLeft } from "lucide-react";
-import Image from "next/image";
+import { Eye, EyeOff, Calendar, Check, ChevronLeft } from "lucide-react";
 import MultiSelect from "@/components/form/MultiSelect";
 import DropdownSelect from "@/components/form/DropdownSelect";
 import { toast } from "react-toastify";
@@ -28,6 +27,11 @@ type SignUpFormData = {
   operateHow: string;
   expertise: string[];
   acceptTerms: boolean;
+  clinicLogoUrl: string;
+  tradeName: string;
+  cnpjIe: string;
+  reportHeaderAddress: string;
+  reportFooter: string;
 };
 
 export default function SignUpForm() {
@@ -48,6 +52,7 @@ export default function SignUpForm() {
   }, [step, countdown]);
   const dobRef = useRef<HTMLInputElement | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingClinicLogo, setUploadingClinicLogo] = useState(false);
 
   const expertiseOptions = [
     { value: "acupuncture", text: "Acupuncture", selected: false },
@@ -142,23 +147,85 @@ export default function SignUpForm() {
     operateHow: "",
     expertise: [],
     acceptTerms: false,
+    clinicLogoUrl: "",
+    tradeName: "",
+    cnpjIe: "",
+    reportHeaderAddress: "",
+    reportFooter: "",
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const target = e.target;
-    const name = (target as HTMLInputElement | HTMLSelectElement).name;
-    let nextValue: any;
+    const name = (target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as keyof SignUpFormData;
+    let nextValue: SignUpFormData[keyof SignUpFormData];
     if ((target as HTMLInputElement).type === "checkbox") {
-      nextValue = (target as HTMLInputElement).checked;
+      nextValue = (target as HTMLInputElement).checked as SignUpFormData[keyof SignUpFormData];
     } else if (target instanceof HTMLSelectElement && target.multiple) {
-      nextValue = Array.from(target.selectedOptions).map((o) => o.value);
+      nextValue = Array.from(target.selectedOptions).map((o) => o.value) as SignUpFormData[keyof SignUpFormData];
     } else {
-      nextValue = (target as HTMLInputElement | HTMLSelectElement).value;
+      nextValue = (target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value as SignUpFormData[keyof SignUpFormData];
       if (name === "password" || name === "confirmPassword") {
-        nextValue = (nextValue as string).trim();
+        nextValue = (nextValue as string).trim() as SignUpFormData[keyof SignUpFormData];
       }
     }
     setFormData((prev) => ({ ...prev, [name]: nextValue }));
+  };
+
+  const handleClinicLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+    if (!CLOUD_NAME || !API_KEY) {
+      toast.error("Cloudinary is not configured");
+      return;
+    }
+
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File too large (max 10MB)");
+      return;
+    }
+
+    setUploadingClinicLogo(true);
+    try {
+      const signRes = await fetch(`/api/cloudinary/upload?folder=clinic_logos`);
+      const signJson = await signRes.json();
+      
+      if (!signRes.ok) {
+        toast.error("Failed to prepare upload");
+        console.error("Cloudinary signature error:", signJson);
+        return;
+      }
+      const { timestamp, signature } = signJson;
+
+      const data = new FormData();
+      data.append("file", file);
+      data.append("api_key", API_KEY);
+      data.append("timestamp", String(timestamp));
+      data.append("signature", signature);
+      data.append("folder", "clinic_logos");
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: data,
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error("Upload failed");
+        console.error("Cloudinary upload failed:", json);
+        return;
+      }
+      const url = json.secure_url || json.url;
+      if (url) {
+        setFormData((prev) => ({ ...prev, clinicLogoUrl: url }));
+      }
+    } catch (err) {
+      toast.error("Upload failed");
+      console.error("Cloudinary upload error:", err);
+    } finally {
+      setUploadingClinicLogo(false);
+      e.target.value = "";
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -244,15 +311,19 @@ export default function SignUpForm() {
   };
 
   const handleNext = async () => {
-    const finalStep = profileType === "veterinarian" ? 5 : 3;
+    const finalStep = profileType === "veterinarian" ? 6 : 3;
     if (step < finalStep) {
       setStep(step + 1);
       return;
     }
+    if (profileType === "veterinarian" && !formData.clinicLogoUrl) {
+      toast.error("Please upload your clinic logo");
+      return;
+    }
     try {
       setSubmitting(true);
-      const payload: any = {
-        mode: "complete",
+      const basePayload = {
+        mode: "complete" as const,
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
@@ -268,11 +339,19 @@ export default function SignUpForm() {
         profileType,
         role: profileType,
       };
-      if (profileType === "veterinarian") {
-        payload.crmv = formData.crmv;
-        payload.crmvState = formData.crmvState;
-        payload.mapaRegistration = formData.mapaRegistration;
-      }
+      const payload = profileType === "veterinarian"
+        ? {
+          ...basePayload,
+          crmv: formData.crmv,
+          crmvState: formData.crmvState,
+          mapaRegistration: formData.mapaRegistration,
+          clinicLogoUrl: formData.clinicLogoUrl,
+          tradeName: formData.tradeName,
+          cnpjIe: formData.cnpjIe || undefined,
+          reportHeaderAddress: formData.reportHeaderAddress,
+          reportFooter: formData.reportFooter,
+        }
+        : basePayload;
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -285,8 +364,12 @@ export default function SignUpForm() {
         return;
       }
       toast.success("Account created");
-      console.log("Signup success:", data);
-      router.push("/signin");
+      const id = (data?.id ? String(data.id) : "").trim();
+      if (id) {
+        router.push(`/upload-profile-picture?userId=${encodeURIComponent(id)}`);
+      } else {
+        router.push("/signin");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -623,7 +706,7 @@ export default function SignUpForm() {
               Verify
             </button>
             <p className="text-center text-gray-600 mt-4">
-              Didn't get the code?{" "}
+              Didn&apos;t get the code?{" "}
               <button onClick={handleResendOtp} disabled={countdown > 0} className="text-primary hover:text-blue-700 font-medium bg-transparent border-0 cursor-pointer disabled:opacity-50">
                 {countdown > 0 ? `Resend in 00:${countdown.toString().padStart(2, '0')}` : 'Send again'}
               </button>
@@ -670,7 +753,7 @@ export default function SignUpForm() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
                     size={20}
                     onClick={() => {
-                      const el = dobRef.current as any;
+                      const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
                       if (!el) return;
                       if (typeof el.showPicker === "function") el.showPicker();
                       else el.click();
@@ -850,6 +933,91 @@ export default function SignUpForm() {
           </form>
         );
 
+      case 6:
+        return (
+          <form id="signup-step-6" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="pt-8">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">Clinic Logo</label>
+                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                  {formData.clinicLogoUrl ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <img src={formData.clinicLogoUrl} alt="Clinic logo" className="w-32 h-32 object-contain rounded-lg bg-white" />
+                      <label className="inline-block">
+                        <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
+                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? "Uploading..." : "Change Logo"}</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="text-gray-600 text-sm">Upload your clinic logo</div>
+                      <label className="inline-block">
+                        <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
+                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? "Uploading..." : "Select File"}</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">Trade Name</label>
+                <input
+                  type="text"
+                  name="tradeName"
+                  placeholder="Enter your trade name"
+                  value={formData.tradeName}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">
+                  CNPJ/IE <span className="text-gray-500 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  name="cnpjIe"
+                  placeholder="Enter your CNPJ/IE"
+                  value={formData.cnpjIe}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, cnpjIe: e.target.value.replace(/\D/g, "") }))}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">Address (for header)</label>
+                <input
+                  type="text"
+                  name="reportHeaderAddress"
+                  placeholder="Enter your address for the report header"
+                  value={formData.reportHeaderAddress}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-900 font-medium mb-2">Footer of the Report</label>
+                <textarea
+                  name="reportFooter"
+                  placeholder="Enter the footer text for reports"
+                  value={formData.reportFooter}
+                  onChange={handleInputChange}
+                  rows={4}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 resize-none"
+                />
+              </div>
+            </div>
+          </form>
+        );
+
       default:
         return null;
     }
@@ -872,10 +1040,11 @@ export default function SignUpForm() {
           {step === 3 && ""}
           {step === 4 && "Tax & Address Info"}
           {step === 5 && "Professional Registration"}
+          {step === 6 && "Clinic & Reports"}
         </h2>
 
         <div className="text-primary font-medium text-sm">
-          Step {step}/{profileType === "veterinarian" ? "5" : "3"}
+          Step {step}/{profileType === "veterinarian" ? "6" : "3"}
         </div>
       </div>
 
@@ -885,16 +1054,16 @@ export default function SignUpForm() {
       </div>
 
       {/* Footer */}
-      {(step === 1 || step === 2 || step === 4 || step === 5) && (
+      {(step === 1 || step === 2 || step === 4 || step === 5 || step === 6) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4">
           <button
             type="submit"
             form={`signup-step-${step}`}
             onClick={step === 1 ? handleNext : undefined}
-            disabled={submitting}
+            disabled={submitting || uploadingClinicLogo}
             className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {step === (profileType === "veterinarian" ? 5 : 3) ? (submitting ? "Creating..." : "Create Account") : "Next"}
+            {step === (profileType === "veterinarian" ? 6 : 3) ? (submitting ? "Creating..." : "Create Account") : "Next"}
           </button>
           {(step === 1 || step === 2) && (
             <p className="text-center text-gray-600 mt-4">
