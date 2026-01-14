@@ -25,7 +25,7 @@ export default function ReportStep({ onBack, onComplete }: Props) {
           <div><span className="font-semibold">Paciente:</span> Buddy</div>
           <div><span className="font-semibold">Raça:</span> Golden Retriever</div>
           <div><span className="font-semibold">Espécie:</span> Cão</div>
-          <div><span className="font-semibold">Tutor:</span> João Silva</div>
+          <div><span className="font-semibold">Guardian:</span> João Silva</div>
           <div><span className="font-semibold">Atendimento:</span> 05/12/2025</div>
         </div>
 
