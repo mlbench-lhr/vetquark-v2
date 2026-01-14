@@ -1,18 +1,30 @@
+'use client';
+
 // app/page.tsx
 import { Bell, ChevronRight, FileText, Search } from 'lucide-react';
 import { CurrentHealthProps, HeaderProps, PetSelectorProps, RecentHistoryProps, TrendsProps } from './types';
-import Image from 'next/image';
+import { useAppSelector } from '@/store/hooks';
+import type { RootState } from '@/store/store';
 
 function Header({ name }: HeaderProps) {
+    const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     return (
         <header className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
                 <div className="w-12 h-12 border rounded-full flex items-center justify-center">
-                    <span className="text-2xl">👨</span>
+                    {profile?.profileImageUrl ? (
+                        <img
+                            src={profile.profileImageUrl}
+                            alt="Profile"
+                            className="w-12 h-12 rounded-full object-cover"
+                        />
+                    ) : (
+                        <span className="text-2xl">👨</span>
+                    )}
                 </div>
                 <div>
                     <p className="text-sm text-gray-500">Welcome,</p>
-                    <h1 className="text-sm font-semibold text-gray-800">Jackson</h1>
+                    <h1 className="text-sm font-semibold text-gray-800">{name}</h1>
                 </div>
             </div>
             <div className="flex items-center gap-3" >
@@ -140,6 +152,7 @@ function RecentHistory({ reportDate, reportTitle }: RecentHistoryProps) {
 }
 
 export default function Home() {
+    const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     const pets = [
         { id: 1, name: 'Lola', image: '/lola.jpg', active: true },
         { id: 2, name: 'Buddy', image: '/buddy.jpg', active: false },
@@ -154,7 +167,7 @@ export default function Home() {
     return (
         <main className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-md mx-auto">
-                <Header name="Jackson Miro" />
+                <Header name={profile?.fullName || 'User'} />
                 <PetSelector pets={pets} />
                 <CurrentHealth
                     lastTestDate="24/05/2024"

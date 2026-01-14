@@ -3,6 +3,8 @@ import React, { createContext, useState, useEffect, ReactNode } from "react";
 import Cookies from "js-cookie";
 import { usePathname, useRouter } from "next/navigation";
 import { buildRequestBody } from "@/utils/apiWrapper";
+import { store } from "@/store/store";
+import { clearProfile } from "@/store/userProfileSlice";
 
 // Types
 export interface User {
@@ -107,6 +109,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const logout = () => {
     Cookies.remove("session_id");
     localStorage.removeItem("session_id");
+    localStorage.removeItem("user_profile_v1");
+    store.dispatch(clearProfile());
     setSession_id("");
     setUser(null);
     router.push("/signin");

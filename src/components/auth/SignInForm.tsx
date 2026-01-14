@@ -196,15 +196,17 @@
 'use client'
 import React, { useState } from 'react';
 import { Eye } from 'lucide-react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import { useAppDispatch } from '@/store/hooks';
+import { setProfile as setUserProfile } from '@/store/userProfileSlice';
 
 type ProfileType = 'veterinarian' | 'tutor';
 
 export default function SignInForm() {
   const router = useRouter();
-  const [profile, setProfile] = useState<ProfileType>('veterinarian');
+  const dispatch = useAppDispatch();
+  const [profile, setProfileType] = useState<ProfileType>('veterinarian');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -228,6 +230,9 @@ export default function SignInForm() {
         console.error('Login error:', data.error || data);
         return;
       }
+      if (data?.profile) {
+        dispatch(setUserProfile(data.profile));
+      }
       toast.success('Logged in successfully');
       console.log('Login response:', profile);
       if (profile === 'veterinarian') {
@@ -240,10 +245,6 @@ export default function SignInForm() {
       toast.error('Network error during login');
       console.error('Login network error:', err);
     }
-  };
-
-  const handleBack = () => {
-    console.log('Go back');
   };
 
   const handleSignUp = () => {
@@ -278,7 +279,7 @@ export default function SignInForm() {
         <div className="flex gap-3 mb-8 text-sm">
           <button
             type="button"
-            onClick={() => setProfile('veterinarian')}
+            onClick={() => setProfileType('veterinarian')}
             className={`flex-1 py-3 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 font-medium whitespace-nowrap ${profile === 'veterinarian'
               ? 'bg-[#EBF2FF] text-primary'
               : 'bg-gray-50 text-gray-700 hover:bg-gray-200'
@@ -297,7 +298,7 @@ export default function SignInForm() {
           </button>
           <button
             type="button"
-            onClick={() => setProfile('tutor')}
+            onClick={() => setProfileType('tutor')}
             className={`flex-1 py-3 px-4 rounded-full transition-all flex items-center justify-center gap-2 font-medium ${profile === 'tutor'
               ? 'bg-[#EBF2FF] text-primary'
               : 'bg-gray-50 text-gray-700 hover:bg-gray-200'
@@ -369,7 +370,7 @@ export default function SignInForm() {
       {/* Footer */}
       <div className="text-center pb-8 px-6">
         <p className="text-gray-600">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <button
             onClick={handleSignUp}
             className="text-primary hover:text-blue-700 font-semibold bg-transparent border-0 cursor-pointer"

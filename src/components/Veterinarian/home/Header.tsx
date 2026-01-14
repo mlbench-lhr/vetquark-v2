@@ -2,26 +2,37 @@
 'use client';
 import React from 'react';
 import Image from 'next/image';
-import { Bell } from 'lucide-react';
 import WithdrawModal from '@/components/Modals/WithdrawModal';
 import { useModal } from '@/hooks/useModal';
+import { useAppSelector } from '@/store/hooks';
+import type { RootState } from '@/store/store';
 
 interface HeaderProps {
-  userName: string;
+  userName?: string;
   balance: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
   const { isOpen, openModal, closeModal } = useModal();
+  const profile = useAppSelector((s: RootState) => s.userProfile.profile);
+  const resolvedName = profile?.fullName || userName || 'User';
   return (
     <header className="flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 border rounded-full flex items-center justify-center">
-          <span className="text-2xl">👨</span>
+          {profile?.profileImageUrl ? (
+            <img
+              src={profile.profileImageUrl}
+              alt="Profile"
+              className="w-12 h-12 rounded-full object-cover"
+            />
+          ) : (
+            <span className="text-2xl">👨</span>
+          )}
         </div>
         <div>
           <p className="text-sm text-gray-500">Welcome,</p>
-          <h1 className="text-sm font-semibold text-gray-800">{userName}</h1>
+          <h1 className="text-sm font-semibold text-gray-800">{resolvedName}</h1>
         </div>
       </div>
       <div className="flex items-center gap-3" onClick={() => openModal()}>

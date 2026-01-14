@@ -8,11 +8,14 @@ import PatientCard from './PatientCard';
 import AttendanceChart from './AttendanceChart';
 import { Patient } from './types';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/store/hooks';
+import type { RootState } from '@/store/store';
 
 
 
 export default function Home() {
     const router = useRouter();
+    const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     const [patients, setPatients] = useState<Patient[]>([]);
 
     useEffect(() => {
@@ -21,20 +24,22 @@ export default function Home() {
                 const res = await fetch('/api/patient/get_patients');
                 const data = await res.json();
                 if (res.ok && Array.isArray(data.items)) {
-                    setPatients(data.items.map((p: any) => ({
-                        id: String(p.id || p._id),
-                        name: p.name,
-                        owner: p.owner,
-                        image: p.image || '/logo.png',
-                    })));
+                    setPatients(
+                        data.items.map((p: { id?: unknown; _id?: unknown; name?: unknown; owner?: unknown; image?: unknown }) => ({
+                            id: String(p.id || p._id),
+                            name: typeof p.name === 'string' ? p.name : '',
+                            owner: typeof p.owner === 'string' ? p.owner : '',
+                            image: typeof p.image === 'string' ? p.image : '/logo.png',
+                        }))
+                    );
                 }
-            } catch (e) {
+            } catch {
             }
         })();
     }, []);
     return (
         <div className="px-3 py-5">
-            <Header userName="Jackson Miro" balance="$ 925,00" />
+            <Header userName={profile?.fullName} balance="$ 925,00" />
             <SearchBar />
 
             <div className="mt-2 grid grid-cols-2 gap-3">
