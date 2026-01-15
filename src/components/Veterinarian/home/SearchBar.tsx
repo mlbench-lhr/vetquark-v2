@@ -3,6 +3,7 @@
 import StoreModal from '@/components/Modals/StoreModal';
 import { useModal } from '@/hooks/useModal';
 import { ShoppingCartIcon } from 'lucide-react';
+import Link from 'next/link';
 import React from 'react';
 
 const SearchBar: React.FC = () => {
@@ -25,15 +26,11 @@ const SearchBar: React.FC = () => {
           <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </div>
-      <button className="px-4 py-3 border border-blue-200 rounded-xl flex items-center gap-2 bg-gray-100" onClick={openModal}>
+      <Link href={"/Veterinarian/store"} className="px-4 py-3 border border-blue-200 rounded-xl flex items-center gap-2 bg-gray-100" >
         <ShoppingCartIcon className="w-5 h-5 text-primary" />
         <span className="text-black font-light">Store</span>
-      </button>
-      <StoreModal
-        isOpen={isOpen}
-        onClose={() => closeModal()}
-        onUpdated={() => console.log('Store updated')}
-      />
+      </Link>
+     
     </div>
   );
 };

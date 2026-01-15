@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
@@ -70,65 +69,38 @@ function toSafeProfile(user: LeanUser) {
   };
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const { email, password } = await req.json();
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get("auth_token")?.value || req.cookies.get("session_id")?.value;
+  const authSecret = process.env.AUTH_SECRET;
 
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
-    }
-
-    await connectMongo();
-
-    const user = await User.findOne({ email: String(email).toLowerCase() }).lean();
-    if (!user) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-    }
-
-    if (!user.emailVerified) {
-      return NextResponse.json({ error: "Email not verified" }, { status: 403 });
-    }
-
-    const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-    }
-
-    const authSecret = process.env.AUTH_SECRET;
-    if (!authSecret) {
-      return NextResponse.json({ error: "Server auth misconfigured" }, { status: 500 });
-    }
-
-    const token = jwt.sign(
-      { sub: String(user._id), role: user.role, email: user.email },
-      authSecret,
-      { algorithm: "HS256", expiresIn: "7d" }
-    );
-
-    const profile = toSafeProfile(user as unknown as LeanUser);
-    const res = NextResponse.json(
-      {
-        message: "Logged in",
-        id: profile.id,
-        fullName: profile.fullName,
-        email: profile.email,
-        profileType: profile.profileType,
-        role: profile.role,
-        profile,
-      },
-      { status: 200 }
-    );
-
-    res.cookies.set("session_id", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    });
-
-    return res;
-  } catch (e) {
-    console.log(e)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!authSecret) {
+    return NextResponse.json({ error: "Server auth misconfigured" }, { status: 500 });
+  }
+
+  let userId: string | null = null;
+  try {
+    const decoded = jwt.verify(token, authSecret);
+    if (decoded && typeof decoded === "object" && "sub" in decoded) {
+      const sub = (decoded as { sub?: unknown }).sub;
+      if (typeof sub === "string" && sub.trim()) userId = sub;
+    }
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await connectMongo();
+  const user = await User.findById(userId).lean();
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ profile: toSafeProfile(user as unknown as LeanUser) }, { status: 200 });
 }
+

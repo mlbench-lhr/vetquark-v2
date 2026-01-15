@@ -32,7 +32,7 @@ export default function BottomTabs() {
 
 
     return (
-        <nav className="fixed left-1/2 -translate-x-1/2 bottom-[calc(env(safe-area-inset-bottom)+16px)] w-[calc(100%-2rem)] max-w-2xl bg-gray-100 border border-gray-200 rounded-full shadow-theme-lg">
+        <nav className="fixed left-1/2 -translate-x-1/2 bottom-[calc(env(safe-area-inset-bottom)+0px)] w-full bg-white border border-gray-200 rounded- shadow-theme-lg">
             <div className="flex items-center justify-between px-2 sm:px-4 py-2 relative">
                 {tabs.map((tab, index) => {
                     const isActive = pathname?.toLowerCase().startsWith(tab.href.toLowerCase()) ?? false;
