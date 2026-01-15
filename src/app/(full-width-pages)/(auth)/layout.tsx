@@ -4,7 +4,7 @@ import ThemeTogglerTwo from "@/components/common/ThemeTogglerTwo";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { Suspense } from "react";
 
 export default function AuthLayout({
   children,
@@ -12,11 +12,12 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative  bg-white z-1  sm:p-0">
-      <ThemeProvider>
-        <div className="relative flex lg:flex-row w-full justify-center flex-col sm:p-0 p-4">
-          {children}
-          {/* <div className="lg:w-1/2 w-full h-full  bg-[#4958E9] lg:grid items-center hidden">
+    <Suspense fallback={null}>
+      <div className="relative  bg-white z-1  sm:p-0">
+        <ThemeProvider>
+          <div className="relative flex lg:flex-row w-full justify-center flex-col sm:p-0 p-4">
+            {children}
+            {/* <div className="lg:w-1/2 w-full h-full  bg-[#4958E9] lg:grid items-center hidden">
             <div className="relative items-center justify-center  flex z-1">
               <GridShape />
               <div className="flex flex-col items-center max-w-md">
@@ -35,11 +36,13 @@ export default function AuthLayout({
               </div>
             </div>
           </div> */}
-          {/* <div className="fixed bottom-6 right-6 z-50 hidden sm:block">
+            {/* <div className="fixed bottom-6 right-6 z-50 hidden sm:block">
             <ThemeTogglerTwo />
           </div> */}
-        </div>
-      </ThemeProvider>
-    </div>
+          </div>
+        </ThemeProvider>
+      </div>
+    </Suspense>
+
   );
 }
