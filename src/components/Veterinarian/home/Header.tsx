@@ -6,6 +6,7 @@ import WithdrawModal from '@/components/Modals/WithdrawModal';
 import { useModal } from '@/hooks/useModal';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
+import { User, User2 } from 'lucide-react';
 
 interface HeaderProps {
   userName?: string;
@@ -27,7 +28,9 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
-            <span className="text-2xl">👨</span>
+            <div className='flex justify-center items-center w-12 h-12 rounded-full bg-gray-100'>
+              <User2/>
+            </div>
           )}
         </div>
         <div>

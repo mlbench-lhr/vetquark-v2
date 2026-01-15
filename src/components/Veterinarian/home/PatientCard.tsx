@@ -13,7 +13,7 @@ interface PatientCardProps {
 const PatientCard: React.FC<PatientCardProps> = ({ patient, onClickNavigate }) => {
   const router = useRouter();
   return (
-    <div className="group flex items-center justify-between p-4 rounded-2xl border-2 bg-gray-100 border-gray-200 hover:bg-primary hover:border-primary transition-colors duration-200"  onClick={() => router.push(onClickNavigate || `/Veterinarian/home/patientDetails/${patient.id}`)}>
+    <div className="group flex items-center justify-between p-4 rounded-2xl border- bg-gray-100 border-gray-200 hover:bg-primary hover:border-primary transition-colors duration-200"  onClick={() => router.push(onClickNavigate || `/Veterinarian/home/patientDetails/${patient.id}`)}>
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
           <img
