@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SlidersHorizontal, ArrowUpDown, PawPrint, User, ChevronRight, Plus, Keyboard, History, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "next/link";
 
 type TabType = "patients" | "guardians";
 
@@ -82,7 +83,7 @@ export default function RegistrationsList({
 
   return (
     <div className="h-[100dvh] w-full bg-white">
-      <div className="mx-auto w-full max-w-[520px] h-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)] ">
+      <div className="mx-auto w-full h-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)] ">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4 px-4">
@@ -209,12 +210,11 @@ export default function RegistrationsList({
                       <p className="text-sm text-black/70">ID: {guardian.idNumber}</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => onGuardianClick?.(guardian.id)}
+                  <Link href={"/Veterinarian/home/guardianDetails/696a0f6594ead5ed65b46f8a"}
                     className="text-black hover:text-foreground transition-colors p-1"
                   >
                     <ChevronRight className="h-5 w-5 text-primary" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))
