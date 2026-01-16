@@ -7,6 +7,7 @@ import { useModal } from '@/hooks/useModal';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import { User, User2 } from 'lucide-react';
+import Link from 'next/link';
 
 interface HeaderProps {
   userName?: string;
@@ -20,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
   return (
     <header className="flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 border rounded-full flex items-center justify-center">
+        <Link href={"/Veterinarian/Menu"} className="w-12 h-12 border rounded-full flex items-center justify-center ">
           {profile?.profileImageUrl ? (
             <img
               src={profile.profileImageUrl}
@@ -29,10 +30,10 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
             />
           ) : (
             <div className='flex justify-center items-center w-12 h-12 rounded-full bg-gray-100'>
-              <User2/>
+              <User2 />
             </div>
           )}
-        </div>
+        </Link>
         <div>
           <p className="text-sm text-gray-500">Welcome,</p>
           <h1 className="text-sm font-semibold text-gray-800">{resolvedName}</h1>
