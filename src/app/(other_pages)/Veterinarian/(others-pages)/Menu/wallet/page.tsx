@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/common/header";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface Transaction {
     id: string;
@@ -73,49 +74,43 @@ export default function WalletCard({
         <div className="bg-background min-h-screen">
             <Header title="Wallet" />
             {/* Balance Card */}
-            <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-br from-[#4F8CFF] to-[#3B6FE8] p-5 text-white">
-                <p className="text-sm opacity-90 mb-1">Available Balance</p>
-                <p className="text-3xl font-bold mb-4">
+            <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5 text-white">
+                <p className="text-sm opacity-90 mb-1 text-black">Available Balance</p>
+                <p className="text-3xl font-bold text-primary">
                     {currency} {balance}
                 </p>
-                <div className="flex gap-3">
-                    <Button
-                        onClick={onWithdraw}
-                        variant="secondary"
-                        className="flex-1 h-10 rounded-full bg-white text-foreground font-medium hover:bg-white/90"
-                    >
-                        Withdraw
-                    </Button>
-                    <Button
-                        onClick={() => {
-                            router.push("/Veterinarian/Menu/wallet/bankDetails")
-                        }}
-                        variant="outline"
-                        className="flex-1 h-10 rounded-full border-white/40 bg-transparent text-white font-medium hover:bg-white/10"
-                    >
-                        Bank Details
-                    </Button>
-                </div>
+            </div>
+            <div className="flex gap-3 mx-4 mt-4">
+                <Button
+                    onClick={onWithdraw}
+                    variant="secondary"
+                    className="flex-1 h-12 rounded-full bg-[#F5F6F6] text-foreground font-medium hover:bg-white/90"
+                >
+                    Withdraw
+                </Button>
+                <Button
+                    onClick={() => {
+                        router.push("/Veterinarian/Menu/wallet/bankDetails")
+                    }}
+                    variant="outline"
+                    className="flex-1 h-12 rounded-full border-white/40 bg-[#F5F6F6] text-black font-medium hover:bg-white/10"
+                >
+                    Bank Details
+                </Button>
             </div>
 
             {/* PIX Info */}
-            <div className="mx-4 mt-4 flex items-center gap-3 p-4 bg-muted/30 rounded-2xl">
+            <div className="mx-4 mt-4 flex items-center gap-3 p-4 bg-[#F5F6F6] rounded-2xl">
                 <div className="w-10 h-10 rounded-full bg-[#00D4AA]/10 flex items-center justify-center">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path
-                            d="M12.5 3.5L7.5 8.5M12.5 3.5L17.5 8.5M12.5 3.5V15.5M7.5 15.5L12.5 20.5L17.5 15.5"
-                            stroke="#00D4AA"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
+                    <Image src={"/images/pixLogo.svg"} alt="" width={20} height={20} />
                 </div>
                 <div>
                     <p className="font-medium text-foreground text-sm">PIX (CPF/CNPJ)</p>
                     <p className="text-xs text-muted-foreground">{pixNumber}</p>
                 </div>
             </div>
+
+            <div className="h-2 w-full bg-[#F5F6F6] mt-6"></div>
 
             {/* Statement Section */}
             <div className="mx-4 mt-6">
@@ -126,10 +121,9 @@ export default function WalletCard({
                             <button
                                 key={p}
                                 onClick={() => setPeriod(p)}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${period === p
-                                    ? "bg-muted text-foreground"
-                                    : "text-muted-foreground hover:bg-muted/50"
-                                    }`}
+                                className={`px-4 py-2 text-xs font-medium rounded-[8px] transition-colors ${period === p
+                                    ? "bg-[#EBF2FF] text-primary"
+                                    : "bg-[#F5F6F6] text-foreground hover:bg-muted/50"}`}
                             >
                                 {p}
                             </button>
@@ -149,8 +143,8 @@ export default function WalletCard({
                             key={f.key}
                             onClick={() => setFilter(f.key)}
                             className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${filter === f.key
-                                ? "bg-muted text-foreground"
-                                : "text-muted-foreground hover:bg-muted/50"
+                                ? "bg-[#EBF2FF] text-primary"
+                                : "bg-[#F5F6F6] text-foreground hover:bg-muted/50"
                                 }`}
                         >
                             {f.label}
@@ -167,15 +161,7 @@ export default function WalletCard({
                         >
                             {transaction.isPix ? (
                                 <div className="w-10 h-10 rounded-full bg-[#00D4AA]/10 flex items-center justify-center flex-shrink-0">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                        <path
-                                            d="M12.5 3.5L7.5 8.5M12.5 3.5L17.5 8.5M12.5 3.5V15.5M7.5 15.5L12.5 20.5L17.5 15.5"
-                                            stroke="#00D4AA"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                    </svg>
+                                    <Image src={"/images/pixLogo.svg"} alt="" width={20} height={20} />
                                 </div>
                             ) : (
                                 <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
