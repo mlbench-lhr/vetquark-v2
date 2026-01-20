@@ -224,13 +224,13 @@ import Link from "next/link";
 
 type ViewMode = "graph" | "table";
 
-interface ParameterData {
+interface ParameterProgressData {
     name: string;
     normalValue: string;
     data: { month: string; value: number }[];
 }
 
-const parameters: Record<string, ParameterData> = {
+const parameters: Record<string, ParameterProgressData> = {
     color: {
         name: "Color",
         normalValue: "Pale Yellow",

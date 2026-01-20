@@ -46,7 +46,7 @@ export default function ReportStep({ onBack, onComplete }: Props) {
       </div>
 
       <div className="mt-4">
-        <div className="text-sm text-gray-900 mb-2">Veterinarian's Notes:</div>
+        <div className="text-sm text-gray-900 mb-2">Veterinarian&apos;s Notes:</div>
         <textarea
           value={vetNotes}
           onChange={(e) => setVetNotes(e.target.value)}

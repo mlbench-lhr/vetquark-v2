@@ -159,7 +159,7 @@ export default function PaymentMethodCard({ onSave }: PaymentMethodCardProps) {
                     {/* Account Holder's CPF/CNPJ */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Account Holder's CPF/CNPJ
+                            Account Holder&apos;s CPF/CNPJ
                         </label>
                         <input
                             type="text"
@@ -244,7 +244,7 @@ export default function PaymentMethodCard({ onSave }: PaymentMethodCardProps) {
                     {/* Holder's CPF/CNPJ */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Holder's CPF/CNPJ
+                            Holder&apos;s CPF/CNPJ
                         </label>
                         <input
                             type="text"

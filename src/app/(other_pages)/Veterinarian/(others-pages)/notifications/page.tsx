@@ -7,6 +7,7 @@ import {
     Clock,
     XCircle,
 } from "lucide-react";
+import Header from "@/components/common/header";
 
 type NotificationType =
     | "new-patient"
@@ -187,6 +188,17 @@ export function NotificationList({
                     </div>
                 </div>
             ))}
+        </div>
+    );
+}
+
+export default function NotificationsPage() {
+    return (
+        <div className="bg-background min-h-screen flex flex-col">
+            <Header title="Notifications" />
+            <div className="px-5 pb-8">
+                <NotificationList />
+            </div>
         </div>
     );
 }
