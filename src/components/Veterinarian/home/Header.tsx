@@ -39,8 +39,9 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
           <h1 className="text-sm font-semibold text-gray-800">{resolvedName}</h1>
         </div>
       </div>
-      <div className="flex items-center gap-3" onClick={() => openModal()}>
-        <div className="bg-gray-100 flex flex-col text-sm py-0.5 pl-2 pr-4 rounded-lg">
+      <div className="flex items-center gap-3" >
+        <div className="bg-gray-100 flex flex-col text-sm py-0.5 pl-2 pr-4 rounded-lg cursor-pointer"
+          onClick={() => openModal()}>
           <span className="text-tertiary text-xs">
             Balance
           </span>
@@ -49,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
           </span>
         </div>
 
-        <button className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+        <Link href={"/Veterinarian/notifications"} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
           <span className="text-white text-sm">
             <Image
               src={"/images/home/bell.svg"}
@@ -58,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
               height={24}
             />
           </span>
-        </button>
+        </Link>
       </div>
       <WithdrawModal
         isOpen={isOpen}

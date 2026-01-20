@@ -154,6 +154,8 @@ export default function SignUpForm() {
     reportFooter: "",
   });
 
+  const finalStep = profileType === "veterinarian" ? 6 : 4;
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const target = e.target;
     const name = (target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).name as keyof SignUpFormData;
@@ -190,7 +192,7 @@ export default function SignUpForm() {
     try {
       const signRes = await fetch(`/api/cloudinary/upload?folder=clinic_logos`);
       const signJson = await signRes.json();
-      
+
       if (!signRes.ok) {
         toast.error("Failed to prepare upload");
         console.error("Cloudinary signature error:", signJson);
@@ -311,7 +313,6 @@ export default function SignUpForm() {
   };
 
   const handleNext = async () => {
-    const finalStep = profileType === "veterinarian" ? 6 : 3;
     if (step < finalStep) {
       setStep(step + 1);
       return;
@@ -515,8 +516,8 @@ export default function SignUpForm() {
                   </svg>                  <span className="font-medium">Guardian</span>
                 </div>
                 {profileType === "tutor" && (
-                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                    <Check size={16} className="text-primary" />
+                  <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
+                    <Check size={16} className="text-white" />
                   </div>
                 )}
               </button>
@@ -720,8 +721,8 @@ export default function SignUpForm() {
           <form id="signup-step-4" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="pt-8">
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-900 font-medium mb-2">
-                  Tax Identification Number
+                <label className="block text-gray-900 text-sm mb-2">
+                  {profileType === "tutor" ? "Enter National ID" : "Tax Identification Number"}
                 </label>
                 <input
                   type="text"
@@ -735,10 +736,25 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">
+                <label className="block text-gray-900 text-sm mb-2">
                   Date Of Birth
                 </label>
                 <div className="relative">
+                  {profileType === "tutor" && (
+                    <input
+                      type="text"
+                      placeholder="Select date of birth"
+                      value={formData.dateOfBirth}
+                      readOnly
+                      onClick={() => {
+                        const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
+                        if (!el) return;
+                        if (typeof el.showPicker === "function") el.showPicker();
+                        else el.click();
+                      }}
+                      className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 pr-12 cursor-pointer"
+                    />
+                  )}
                   <input
                     ref={dobRef}
                     type="date"
@@ -746,7 +762,9 @@ export default function SignUpForm() {
                     value={formData.dateOfBirth}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12 [&::-webkit-calendar-picker-indicator]:opacity-0"
+                    className={profileType === "tutor"
+                      ? "absolute inset-0 opacity-0 pointer-events-none"
+                      : "w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12 [&::-webkit-calendar-picker-indicator]:opacity-0"}
                     style={{ colorScheme: 'light' }}
                   />
                   <Calendar
@@ -763,7 +781,7 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">
+                <label className="block text-gray-900 text-sm mb-2">
                   Address
                 </label>
                 <input
@@ -778,7 +796,7 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">
+                <label className="block text-gray-900 text-sm mb-2">
                   City
                 </label>
                 <input
@@ -793,20 +811,37 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <DropdownSelect
-                  label="State"
-                  options={brazilianStateOptions}
-                  value={formData.state}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, state: value }))}
-                  placeholder="Select a state"
-                  placement="up"
-                  name="state"
-                  required
-                />
+                {profileType === "tutor" ? (
+                  <>
+                    <label className="block text-gray-900 text-sm mb-2">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      name="state"
+                      placeholder="Enter your state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
+                    />
+                  </>
+                ) : (
+                  <DropdownSelect
+                    label="State"
+                    options={brazilianStateOptions}
+                    value={formData.state}
+                    onChange={(value) => setFormData((prev) => ({ ...prev, state: value }))}
+                    placeholder="Select a state"
+                    placement="up"
+                    name="state"
+                    required
+                  />
+                )}
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">
+                <label className="block text-gray-900 text-sm mb-2">
                   Postal Code
                 </label>
                 <input
@@ -1038,13 +1073,13 @@ export default function SignUpForm() {
           {step === 1 && "Create Account"}
           {step === 2 && "Personal Details"}
           {step === 3 && ""}
-          {step === 4 && "Tax & Address Info"}
+          {step === 4 && (profileType === "tutor" ? "ID & Address Info" : "Tax & Address Info")}
           {step === 5 && "Professional Registration"}
           {step === 6 && "Clinic & Reports"}
         </h2>
 
         <div className="text-primary font-medium text-sm">
-          Step {step}/{profileType === "veterinarian" ? "6" : "3"}
+          Step {step}/{finalStep}
         </div>
       </div>
 
@@ -1063,7 +1098,7 @@ export default function SignUpForm() {
             disabled={submitting || uploadingClinicLogo}
             className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {step === (profileType === "veterinarian" ? 6 : 3) ? (submitting ? "Creating..." : "Create Account") : "Next"}
+            {profileType === "veterinarian" && step === finalStep ? (submitting ? "Creating..." : "Create Account") : "Next"}
           </button>
           {(step === 1 || step === 2) && (
             <p className="text-center text-gray-600 mt-4">

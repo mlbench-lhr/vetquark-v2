@@ -18,8 +18,8 @@ export default function ReportStep({ onBack, onComplete }: Props) {
 
       <div className="mt-6 rounded-3xl border border-gray-200 overflow-hidden bg-white p-4">
         <div className="text-center font-bold text-gray-900 text-lg">XEILXTE</div>
-        <div className="text-center text-sm text-gray-700 mt-1">StripScan - Laboratório Veterinário</div>
-        <div className="text-center text-xs text-gray-500 mt-2">Rua Fictícia, 123 · Cidade, Estado · CEP 00000-000</div>
+        <div className="text-center text-sm text-gray-700">StripScan - Laboratório Veterinário</div>
+        <div className="text-center text-xs text-gray-500 mt-1">Rua Fictícia, 123 · Cidade, Estado · CEP 00000-000</div>
 
         <div className="mt-4 border-t border-gray-200 pt-3 text-sm space-y-1">
           <div><span className="font-semibold">Paciente:</span> Buddy</div>
@@ -29,33 +29,51 @@ export default function ReportStep({ onBack, onComplete }: Props) {
           <div><span className="font-semibold">Atendimento:</span> 05/12/2025</div>
         </div>
 
-        <div className="mt-4 border-t border-gray-200 pt-3 text-xs text-gray-500 text-center">
+        <div className="mt-4 border-t border-gray-200 pt-3 text-xs text-foreground font-semibold text-center">
           Conferido, liberado e assinado.
+          <br />
+          <span className='text-xs font-normal'>A interpretação dos exames laboratoriais deverá ser realizada pelo médico veterinário responsável, mediante a sintomatologia clínica do animal.</span>
         </div>
       </div>
 
       <div className="mt-6">
-        <div className="text-sm text-gray-900 mb-2">Other Information</div>
+        <div className="text-sm text-gray-900 mb-2">Summary and Interpretation</div>
         <textarea
-          value={otherInfo}
-          onChange={(e) => setOtherInfo(e.target.value)}
-          placeholder="Enter any other info"
-          rows={4}
+          value={vetNotes}
+          onChange={(e) => setVetNotes(e.target.value)}
+          placeholder="Enter your summary and interpretation"
+          rows={2}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
         />
       </div>
 
       <div className="mt-4">
-        <div className="text-sm text-gray-900 mb-2">Veterinarian's Notes:</div>
+        <div className="text-sm text-gray-900 mb-2">Other Information</div>
         <textarea
-          value={vetNotes}
-          onChange={(e) => setVetNotes(e.target.value)}
-          placeholder="Enter your veterinarian's notes"
-          rows={4}
+          value={otherInfo}
+          onChange={(e) => setOtherInfo(e.target.value)}
+          placeholder="Enter any other info"
+          rows={2}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
         />
       </div>
 
+      <div className="mt-4">
+        <div className="text-sm text-gray-900 mb-2">Veterinarian&apos;s Notes:</div>
+        <textarea
+          value={vetNotes}
+          onChange={(e) => setVetNotes(e.target.value)}
+          placeholder="Enter your veterinarian's notes"
+          rows={2}
+          className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
+        />
+      </div>
+      <div className="bg-[#F5F6F6] w-[100vw] -ms-4 h-2 my-4"></div>
+      <div className="w-full bg-red-30 flex justify-start items-center flex-col gap-0 px-4">
+        <h1 className="text-[18px] font-medium">Dr. Vet</h1>
+        <h2 className="text-[14px] font-normal">CRMV-SP 12345</h2>
+        <p className="text-[14px] font-normal text-black/60">Report generated on 05/12/2025, 11:12:47</p>
+      </div>
       <div className="mt-6 space-y-3">
         <button onClick={onComplete} className="w-full py-4 rounded-full bg-primary text-white font-medium">
           Sign & Complete

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from "react";
 import { Pencil } from "lucide-react";
+import Header from "@/components/common/header";
 
 interface BasePriceCardProps {
     initialAmount?: number;
@@ -43,6 +44,8 @@ export default function BasePriceCard({
     return (
         <div className="w-full bg-background min-h-screen flex flex-col px-5 py-6">
             {/* Header */}
+            <Header title="Pricing" />
+
             <div className="mb-4">
                 <h1 className="text-[18px] font-semibold text-foreground mb-2">
                     Base Price Per Exam

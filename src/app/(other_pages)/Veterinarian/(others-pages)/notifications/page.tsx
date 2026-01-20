@@ -1,12 +1,16 @@
+'use client'
+
 import {
-    UserPlus,
-    Stethoscope,
-    FileText,
-    FileCheck,
-    CreditCard,
-    Clock,
-    XCircle,
+  ChevronLeft,
+  Clock,
+  CreditCard,
+  FileCheck,
+  FileText,
+  Stethoscope,
+  UserPlus,
+  XCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type NotificationType =
     | "new-patient"
@@ -31,44 +35,44 @@ interface NotificationGroup {
 }
 
 const notificationConfig: Record<
-    NotificationType,
-    { icon: typeof UserPlus; colorClass: string; bgClass: string }
+  NotificationType,
+  { icon: typeof UserPlus; iconColor: string; bgColor: string }
 > = {
-    "new-patient": {
-        icon: UserPlus,
-        colorClass: "text-blue-500",
-        bgClass: "bg-blue-50",
-    },
-    "exam-assigned": {
-        icon: Stethoscope,
-        colorClass: "text-green-500",
-        bgClass: "bg-green-50",
-    },
-    "report-finalised": {
-        icon: FileText,
-        colorClass: "text-slate-500",
-        bgClass: "bg-slate-50",
-    },
-    "report-signed": {
-        icon: FileCheck,
-        colorClass: "text-green-600",
-        bgClass: "bg-green-50",
-    },
-    "payment-received": {
-        icon: CreditCard,
-        colorClass: "text-blue-500",
-        bgClass: "bg-blue-50",
-    },
-    "payment-pending": {
-        icon: Clock,
-        colorClass: "text-amber-500",
-        bgClass: "bg-amber-50",
-    },
-    "payment-expired": {
-        icon: XCircle,
-        colorClass: "text-red-500",
-        bgClass: "bg-red-50",
-    },
+  "new-patient": {
+    icon: UserPlus,
+    iconColor: "#3F78D8",
+    bgColor: "#EBF2FF",
+  },
+  "exam-assigned": {
+    icon: Stethoscope,
+    iconColor: "#3F78D8",
+    bgColor: "#EBF2FF",
+  },
+  "report-finalised": {
+    icon: FileText,
+    iconColor: "#3F78D8",
+    bgColor: "#EBF2FF",
+  },
+  "report-signed": {
+    icon: FileCheck,
+    iconColor: "#22C55E",
+    bgColor: "#ECFDF5",
+  },
+  "payment-received": {
+    icon: CreditCard,
+    iconColor: "#22C55E",
+    bgColor: "#ECFDF5",
+  },
+  "payment-pending": {
+    icon: Clock,
+    iconColor: "#F59E0B",
+    bgColor: "#FFF7ED",
+  },
+  "payment-expired": {
+    icon: XCircle,
+    iconColor: "#EF4444",
+    bgColor: "#FEF2F2",
+  },
 };
 
 const sampleData: NotificationGroup[] = [
@@ -138,24 +142,27 @@ function NotificationItem({ notification }: { notification: Notification }) {
     const Icon = config.icon;
 
     return (
-        <div className="flex items-start gap-3 py-4 border-b border-border last:border-b-0">
-            <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${config.bgClass}`}
-            >
-                <Icon className={`w-5 h-5 ${config.colorClass}`} />
-            </div>
-            <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-foreground text-sm">
-                    {notification.title}
-                </h4>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                    {notification.description}
-                </p>
-            </div>
-            <span className="text-xs text-muted-foreground flex-shrink-0">
-                {notification.time}
-            </span>
+      <div className="flex items-start gap-3 py-4 border-b border-[#F3F4F6] last:border-b-0">
+        <div
+          className="h-11 w-11 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: config.bgColor }}
+        >
+          <Icon className="h-5 w-5" style={{ color: config.iconColor }} />
         </div>
+
+        <div className="flex-1 min-w-0 pr-2">
+          <div className="text-[14px] leading-[18px] font-semibold text-[#111827]">
+            {notification.title}
+          </div>
+          <div className="mt-1 text-[12px] leading-[16px] text-[#9CA3AF]">
+            {notification.description}
+          </div>
+        </div>
+
+        <div className="text-[12px] leading-[16px] text-[#9CA3AF] flex-shrink-0 pt-0.5">
+          {notification.time}
+        </div>
+      </div>
     );
 }
 
@@ -167,26 +174,45 @@ export function NotificationList({
     groups = sampleData,
 }: NotificationListProps) {
     return (
-        <div className="bg-card rounded-2xl shadow-sm border border-border">
-            {groups.map((group, groupIndex) => (
-                <div key={group.label}>
-                    <div
-                        className={`px-4 pt-4 ${groupIndex > 0 ? "mt-2" : ""}`}
-                    >
-                        <span className="text-xs font-medium text-muted-foreground">
-                            {group.label}
-                        </span>
-                    </div>
-                    <div className="px-4">
-                        {group.notifications.map((notification) => (
-                            <NotificationItem
-                                key={notification.id}
-                                notification={notification}
-                            />
-                        ))}
-                    </div>
-                </div>
-            ))}
+      <div>
+        {groups.map((group, groupIndex) => (
+          <div key={group.label} className={groupIndex > 0 ? "mt-6" : ""}>
+            <div className="text-[14px] leading-[18px] font-medium text-[#9CA3AF]">
+              {group.label}
+            </div>
+            <div className="mt-3">
+              {group.notifications.map((notification) => (
+                <NotificationItem key={notification.id} notification={notification} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+}
+
+export default function NotificationsPage() {
+    const router = useRouter();
+    return (
+      <div className="min-h-[100dvh] bg-white">
+        <div className="px-5 pt-[calc(env(safe-area-inset-top)+14px)] pb-4">
+          <div className="relative flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="absolute left-0 top-1/2 -translate-y-1/2 p-1"
+            >
+              <ChevronLeft className="h-6 w-6 text-[#111827]" />
+            </button>
+            <div className="text-[16px] leading-[20px] font-medium text-[#111827]">
+              Notifications
+            </div>
+          </div>
         </div>
+
+        <div className="px-5 pb-8">
+          <NotificationList />
+        </div>
+      </div>
     );
 }

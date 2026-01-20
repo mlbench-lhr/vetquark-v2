@@ -69,8 +69,8 @@ export default function PaymentMethodCard({ onSave }: PaymentMethodCardProps) {
                 <button
                     onClick={() => setActiveTab("pix")}
                     className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "pix"
-                        ? "bg-[#4A7BF7] text-white"
-                        : "bg-[#F0F1F3] text-[#6B7280]"
+                        ? "bg-[#EBF2FF] text-primary"
+                        : "bg-[#F0F1F3] text-foreground"
                         }`}
                 >
                     Pix (Recommended)
@@ -78,8 +78,8 @@ export default function PaymentMethodCard({ onSave }: PaymentMethodCardProps) {
                 <button
                     onClick={() => setActiveTab("bank")}
                     className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "bank"
-                        ? "bg-[#4A7BF7] text-white"
-                        : "bg-[#F0F1F3] text-[#6B7280]"
+                        ? "bg-[#EBF2FF] text-primary"
+                        : "bg-[#F0F1F3] text-foreground"
                         }`}
                 >
                     Bank Account
@@ -159,7 +159,7 @@ export default function PaymentMethodCard({ onSave }: PaymentMethodCardProps) {
                     {/* Account Holder's CPF/CNPJ */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Account Holder's CPF/CNPJ
+                            Account Holder&apos;s CPF/CNPJ
                         </label>
                         <input
                             type="text"
@@ -244,7 +244,7 @@ export default function PaymentMethodCard({ onSave }: PaymentMethodCardProps) {
                     {/* Holder's CPF/CNPJ */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Holder's CPF/CNPJ
+                            Holder&apos;s CPF/CNPJ
                         </label>
                         <input
                             type="text"

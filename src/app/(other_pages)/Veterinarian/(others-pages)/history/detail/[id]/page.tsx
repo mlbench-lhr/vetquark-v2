@@ -202,7 +202,7 @@ export default function Page() {
           <p className="text-[14px] font-normal">The interpretation of the report is a support tool and does not replace the clinical assessment of the responsible veterinarian.</p>
           <span className="text-[14px] font-normal mt-3">Other Information</span>
           <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">Other Information</div>
-          <span className="text-[14px] font-normal mt-3">Veterinarian's Notes</span>
+          <span className="text-[14px] font-normal mt-3">Veterinarian&apos;s Notes</span>
           <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">need checkup next month</div>
 
         </div>

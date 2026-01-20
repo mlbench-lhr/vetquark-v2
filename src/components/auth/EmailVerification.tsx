@@ -144,7 +144,7 @@ export default function EmailVerification() {
 
             {/* Resend Code Section */}
             <div className="text-center mb-8">
-                <p className="text-primary font-semibold mb-2">Didn't receive the code?</p>
+                <p className="text-primary font-semibold mb-2">Didn&apos;t receive the code?</p>
                 {timer > 0 ? (
                     <p className="text-gray-500">
                         Request a new code in {formatTime(timer)}.

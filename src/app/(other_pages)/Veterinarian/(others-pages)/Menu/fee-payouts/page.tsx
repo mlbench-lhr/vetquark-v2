@@ -130,7 +130,7 @@ export default function PricingInfoCard({
                     <p>Withdrawals are requested on the Wallet screen for your registered payment method.</p>
                     <p>The minimum withdrawal amount is {minWithdrawal}.</p>
                     <p>The processing time is up to 1 business day.</p>
-                    <p>If a tutor's payment is reversed, the amount is deducted from your balance.</p>
+                    <p>If a tutor&apos;s payment is reversed, the amount is deducted from your balance.</p>
                 </div>
                 <button
                     onClick={onGoToWallet}

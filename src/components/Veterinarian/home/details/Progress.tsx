@@ -39,15 +39,18 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
                 <p className="text-xs text-muted-foreground">Normal: {param.normal}</p>
             </div>
             <div className="flex items-center gap-3">
-                <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                            width: `${param.barWidth}%`,
-                            backgroundColor: param.barColor,
-                        }}
-                    />
-                </div>
+
+                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="24" viewBox="0 0 60 24" fill="none">
+                    <g clip-path="url(#clip0_761_5785)">
+                        <path d="M0.967529 23.0647L15.4775 15.6841L29.9874 12.7318L44.4974 8.30345L59.0073 0.922852" stroke="#F59E0B" stroke-width="1.88978" stroke-linecap="round" stroke-linejoin="round" />
+                    </g>
+                    <defs>
+                        <clipPath id="clip0_761_5785">
+                            <rect width="59.9872" height="23.9921" fill="white" />
+                        </clipPath>
+                    </defs>
+                </svg>
+
                 <div className="w-12 text-right">
                     <p className="text-sm font-semibold text-foreground">{param.value}</p>
                     <div className={`flex items-center justify-end gap-0.5 text-xs ${getChangeColor()}`}>
@@ -224,13 +227,13 @@ import Link from "next/link";
 
 type ViewMode = "graph" | "table";
 
-interface ParameterData {
+interface ParameterProgressData {
     name: string;
     normalValue: string;
     data: { month: string; value: number }[];
 }
 
-const parameters: Record<string, ParameterData> = {
+const parameters: Record<string, ParameterProgressData> = {
     color: {
         name: "Color",
         normalValue: "Pale Yellow",

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, ChevronDown, ChevronRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import LinkGenerated from './LinkGenerated'
 import { PatientListItem } from './types'
 
@@ -10,6 +11,7 @@ type Props = {
 }
 
 export default function IdentificationStep({ onNext }: Props) {
+  const router = useRouter()
   const [patients, setPatients] = useState<PatientListItem[]>([])
   const [patientId, setPatientId] = useState('')
   const [collectionMethod, setCollectionMethod] = useState('')
@@ -41,6 +43,13 @@ export default function IdentificationStep({ onNext }: Props) {
     })()
   }, [])
 
+  useEffect(() => {
+    if (patientId) return
+    if (typeof window === 'undefined') return
+    const selected = (new URLSearchParams(window.location.search).get('patientId') || '').trim()
+    if (selected) setPatientId(selected)
+  }, [patientId])
+
   const canProceed = useMemo(() => {
     return !!patientId && !!collectionMethod && !!collectionAt && !!stripLot && !!stripExpiry
   }, [patientId, collectionMethod, collectionAt, stripLot, stripExpiry])
@@ -63,22 +72,24 @@ export default function IdentificationStep({ onNext }: Props) {
         <div>
           <div className="text-sm text-gray-900 mb-2">Patient</div>
           <div className="w-full flex justify-start items-center gap-2 relative">
-            <div className="relative w-[calc(100%-64px)]">
-              <select
-                value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
-                className="w-full px-4 py-4 bg-gray-100 rounded-2xl appearance-none text-gray-700"
-              >
-                <option value="">Select a patient</option>
-                {patients.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}{p.owner ? ` — ${p.owner}` : ''}
-                  </option>
-                ))}
-              </select>
-              <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
-            </div>
-            <div className='w-[56px] h-[56px] flex justify-center items-center bg-[#EBF2FF] rounded-[20px]'>
+            <button
+              type="button"
+              onClick={() => router.push(`/Veterinarian/new-reading/select-patient${patientId ? `?selected=${encodeURIComponent(patientId)}` : ''}`)}
+              className="relative w-[calc(100%-64px)] px-4 py-4 bg-gray-100 rounded-2xl text-left text-gray-700"
+            >
+              {patientId
+                ? (() => {
+                  const p = patients.find((x) => x.id === patientId)
+                  return p ? `${p.name}${p.owner ? ` — ${p.owner}` : ''}` : 'Select a patient'
+                })()
+                : 'Select a patient'}
+              <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/Veterinarian/patient')}
+              className='w-[56px] h-[56px] flex justify-center items-center bg-[#EBF2FF] rounded-[20px]'
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27" fill="none">
                 <g clip-path="url(#clip0_517_6337)">
                   <path d="M14.5121 7.42969L15.5949 0.928125C15.6839 0.39375 16.148 0 16.6917 0C17.0433 0 17.3714 0.164062 17.5824 0.445312L18.3746 1.5H20.8167C21.4121 1.5 21.9839 1.73906 22.4058 2.16094L23.2496 3H25.8746C26.498 3 26.9996 3.50156 26.9996 4.125V5.25C26.9996 7.32188 25.3214 9 23.2496 9H20.0011L19.7621 10.4297L14.5121 7.42969ZM19.4996 12.0047V22.5C19.4996 23.3297 18.8292 24 17.9996 24H16.4996C15.6699 24 14.9996 23.3297 14.9996 22.5V17.1C13.8746 17.6766 12.5996 18 11.2496 18C9.89955 18 8.62455 17.6766 7.49955 17.1V22.5C7.49955 23.3297 6.82924 24 5.99955 24H4.49955C3.66987 24 2.99955 23.3297 2.99955 22.5V11.7094C1.64955 11.1984 0.59018 10.0547 0.224555 8.59219L0.0464297 7.86563C-0.155133 7.06406 0.332367 6.24844 1.13862 6.04688C1.94487 5.84531 2.7558 6.33281 2.95737 7.13906L3.14018 7.86563C3.30424 8.53125 3.90424 9 4.5933 9H14.2402L19.4996 12.0047ZM21.7496 3.75C21.7496 3.55109 21.6705 3.36032 21.5299 3.21967C21.3892 3.07902 21.1985 3 20.9996 3C20.8006 3 20.6099 3.07902 20.4692 3.21967C20.3286 3.36032 20.2496 3.55109 20.2496 3.75C20.2496 3.94891 20.3286 4.13968 20.4692 4.28033C20.6099 4.42098 20.8006 4.5 20.9996 4.5C21.1985 4.5 21.3892 4.42098 21.5299 4.28033C21.6705 4.13968 21.7496 3.94891 21.7496 3.75Z" fill="#3F78D8" />
@@ -90,7 +101,7 @@ export default function IdentificationStep({ onNext }: Props) {
                   </clipPath>
                 </defs>
               </svg>
-            </div>
+            </button>
           </div>
         </div>
 
