@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { ChevronLeft, Camera } from "lucide-react";
+import { ChevronLeft, Camera, User } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -120,13 +120,16 @@ export default function UploadProfilePicturePage() {
 
         <div className="mt-14 flex justify-center">
           <div className="relative">
-            <div className="w-56 h-56 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-              {profileImageUrl ? (
+            {profileImageUrl ? (
+              <div className="w-50 h-50 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                 <img src={profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-28 h-28 rounded-full bg-gray-300" />
-              )}
-            </div>
+              </div>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">
+                <path d="M200 99.9993C200 128.365 188.191 153.971 169.219 172.169C151.254 189.407 126.864 200 100 200C73.1359 200 48.7459 189.407 30.7807 172.169C11.809 153.971 0 128.365 0 99.9993C0 44.7713 44.7716 0 100 0C155.228 0 200 44.7712 200 99.9993Z" fill="#F5F6F6" />
+                <path d="M169.219 172.169C151.254 189.407 126.864 200 100 200C73.136 200 48.7459 189.407 30.7808 172.169C40.6465 143.428 67.911 122.771 100 122.771C110.103 122.771 119.726 124.818 128.48 128.521C147.531 136.579 162.46 152.476 169.219 172.169Z" fill="#D9D9D9" />
+                <path d="M99.9998 114.271C120.221 114.271 136.613 97.8793 136.613 77.6586C136.613 57.4379 120.221 41.0458 99.9998 41.0458C79.7789 41.0458 63.3867 57.4379 63.3867 77.6586C63.3867 97.8793 79.7789 114.271 99.9998 114.271Z" fill="#D9D9D9" />
+              </svg>)}
             <label className="absolute bottom-3 right-3">
               <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               <span className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center cursor-pointer">

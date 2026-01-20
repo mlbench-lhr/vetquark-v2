@@ -16,9 +16,10 @@ const VETERINARIAN_TABS = [
 
 const GUARDIAN_TABS = [
     { id: "start", label: "Start", icon: "/images/tabs/home.svg", icon_active: "/images/tabs/home-active.svg", href: "/Guardian/home" },
+    { id: "pets", label: "Pets", icon: "/images/tabs/paw.svg", icon_active: "/images/tabs/paw-active.svg", href: "/Guardian/home/pets" },
     { id: "history", label: "History", icon: "/images/tabs/clock.svg", icon_active: "/images/tabs/clock-active.svg", href: "/Guardian/history" },
     { id: "glossary", label: "Glossary", icon: "/images/tabs/glossary.svg", icon_active: "/images/tabs/glossary-active.svg", href: "/Guardian/glossary" },
-    { id: "help", label: "Help", icon: "/images/tabs/help.svg", icon_active: "/images/tabs/help-active.svg", href: "/Guardian/help" },
+    { id: "payment", label: "Payment", icon: "/images/tabs/payment.svg", icon_active: "/images/tabs/payment-active.svg", href: "/Guardian/payment" },
 ];
 
 export default function BottomTabs() {
@@ -56,7 +57,7 @@ export default function BottomTabs() {
                                     />
                                 </div>
                                 <span
-                                    className={`text-[10px] sm:text-[11px] md:text-xs transition-colors truncate w-full text-center px-0.5 ${isActive ? "text-blue-500 font-medium" : "text-gray-500"
+                                    className={`text-[10px] sm:text-[11px] md:text-xs transition-colors truncate w-full text-center px-0.5 ${isActive ? "text-[#3F78D8] font-medium" : "text-gray-500"
                                         }`}
                                 >
                                     {tab.label}

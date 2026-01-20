@@ -50,7 +50,7 @@ export function ReportCard({
   onDetails,
 }: ReportCardProps) {
   return (
-    <div className="w-full bg-[#F5F6F6] rounded-2xl p-4 shadow-sm border border-border">
+    <div className="w-full bg-[#F5F6F6] rounded-2xl p-4 border-border">
       <div className="flex items-start gap-3">
         {/* Avatar */}
         <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">

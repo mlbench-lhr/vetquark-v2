@@ -50,9 +50,10 @@ export default function Layout({
     if (role === "guardian") {
       return [
         "/guardian/home",
+        "/guardian/home/pets",
         "/guardian/history",
         "/guardian/glossary",
-        "/guardian/help",
+        "/guardian/payment",
       ].includes(normalizedPath);
     }
 
