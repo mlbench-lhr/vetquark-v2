@@ -327,7 +327,7 @@ function RegistrationsListContent({
         <div className="">
           <Button
             onClick={activeTab === "patients" ? onAddPatient : onAddGuardian}
-            className="rounded-full h-11 px-6 bg-primary gap-2 absolute bottom-40 right-4 z-100 hover:bg-primary/90 text-primary-foreground font-medium shadow-md"
+            className="rounded-full h-11 px-6 bg-primary gap-2 absolute bottom-40 right-4 z-10 hover:bg-primary/90 text-primary-foreground font-medium shadow-md"
           >
             <Plus className="h-4 w-4 mr-2" />
             {activeTab === "patients" ? "Add New Patient" : "Add Guardian"}
@@ -344,7 +344,7 @@ function RegistrationsListContent({
         >
           <div className="absolute inset-0 bg-black/30" />
           <div
-            className="absolute inset-x-0 bottom-0 rounded-t-[24px] bg-white pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3"
+            className="absolute inset-x-0 bottom-0 z-[1000]! rounded-t-[24px] bg-white pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto h-[5px] w-[44px] rounded-full bg-[#E5E7EB]" />
@@ -375,15 +375,13 @@ function RegistrationsListContent({
                     key={opt.id}
                     type="button"
                     onClick={() => setSortParam(opt.id)}
-                    className={`flex h-[52px] w-full items-center justify-between rounded-[14px] px-4 text-[14px] font-medium transition-colors ${
-                      active ? "bg-[#EEF4FF] text-[#111827]" : "bg-[#F5F6F6] text-[#111827]"
-                    }`}
+                    className={`flex h-[52px] w-full items-center justify-between rounded-[14px] px-4 text-[14px] font-medium transition-colors ${active ? "bg-[#EEF4FF] text-[#111827]" : "bg-[#F5F6F6] text-[#111827]"
+                      }`}
                   >
                     <span>{opt.label}</span>
                     <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-[8px] ${
-                        active ? "bg-[#3F78D8]" : "bg-transparent"
-                      }`}
+                      className={`flex h-6 w-6 items-center justify-center rounded-[8px] ${active ? "bg-[#3F78D8]" : "bg-transparent"
+                        }`}
                     >
                       {active ? (
                         <svg
