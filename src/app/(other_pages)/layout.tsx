@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import BottomTabs from "@/layout/BottomTabs"; // adjust path as needed
-import { usePathname } from "next/navigation";
 
 // Mobile detection wrapper
 function MobileOnly({ children }: { children: React.ReactNode }) {
@@ -42,44 +41,16 @@ export default function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const normalizedPath = (pathname ?? "").replace(/\/$/, "").toLowerCase();
-  const role = normalizedPath.split("/")[1] ?? "";
-
-  const showBottomTabs = (() => {
-    if (role === "guardian") {
-      return [
-        "/guardian/home",
-        "/guardian/home/pets",
-        "/guardian/history",
-        "/guardian/glossary",
-        "/guardian/payment",
-      ].includes(normalizedPath);
-    }
-
-    if (role === "veterinarian") {
-      return [
-        "/veterinarian/home",
-        "/veterinarian/patient",
-        "/veterinarian/new-reading",
-        "/veterinarian/history",
-        "/veterinarian/registrations",
-      ].includes(normalizedPath);
-    }
-
-    return false;
-  })();
-
   return (
     <MobileOnly>
       <div className="min-h-screen flex flex-col bg-white">
         {/* Main Content Area - with padding for bottom nav */}
-        <main className={`flex-1 overflow-auto ${showBottomTabs ? "pb-20" : ""}`}>
+        <main className="flex-1 overflow-auto pb-20">
           {children}
         </main>
 
         {/* Bottom Navigation */}
-        {showBottomTabs ? <BottomTabs /> : null}
+        <BottomTabs />
       </div>
     </MobileOnly>
   );

@@ -54,7 +54,18 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
     };
 
     const handleProceedToPurchase = () => {
-        setStep('checkout');
+        if (step === "cart") {
+            setStep("checkout");
+            return;
+        }
+
+        if (step === "checkout") {
+            handleClose();
+            router.push("/Guardian/payment/1/pix");
+            return;
+        }
+
+        setStep("checkout");
     };
 
     const handleViewCart = () => {

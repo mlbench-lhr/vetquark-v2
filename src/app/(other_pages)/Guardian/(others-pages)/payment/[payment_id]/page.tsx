@@ -127,6 +127,7 @@ export default function Page() {
       <div className="mt-10 px-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <button
           type="button"
+          onClick={() => router.push(`/Guardian/payment/${encodeURIComponent(payment.id)}/pix`)}
           className="h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
         >
           Proceed Payment

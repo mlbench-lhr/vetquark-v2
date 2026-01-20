@@ -34,11 +34,11 @@ export const PatientInfoCard: React.FC<PatientInfoCardProps> = ({
         </div>
       </div>
       <div className="px-4 w-full grid grid-cols-3 gap-2 h-10">
-        <button className="px-4 py-1 h-full bg-primary col-span-2 text-white font-medium text-sm flex items-center justify-center  gap-2 hover:bg-blue-700 rounded-full">
+        <button className="px-4 py-1 h-full bg-primary col-span-2 text-white font-medium text-sm flex items-center justify-center  gap-2 rounded-full">
           <Plus size={18} />
           New Test
         </button>
-        <button className="px-4 py-1 bg-[#EBF2FF] col-span-1 text-primary font-medium text-sm flex items-center justify-center  gap-2 hover:bg-blue-700 rounded-full">
+        <button className="px-4 py-1 bg-[#EBF2FF] col-span-1 text-primary font-medium text-sm flex items-center justify-center  gap-2 rounded-full">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M5.345 13.2417L13.7967 4.79002L12.6183 3.61169L4.16667 12.0634V13.2417H5.345ZM6.03583 14.9084H2.5V11.3725L12.0292 1.84335C12.1854 1.68713 12.3974 1.59937 12.6183 1.59937C12.8393 1.59937 13.0512 1.68713 13.2075 1.84335L15.565 4.20085C15.7212 4.35713 15.809 4.56905 15.809 4.79002C15.809 5.01099 15.7212 5.22291 15.565 5.37919L6.03583 14.9084ZM2.5 16.575H17.5V18.2417H2.5V16.575Z" fill="#3F78D8" />
           </svg>
@@ -227,11 +227,11 @@ export const GuardianInfoCard: React.FC<PatientInfoCardProps> = ({
         </div>
       </div>
       <div className="px-4 w-full grid grid-cols-3 gap-2 h-10">
-        <button className="px-4 py-1 h-full bg-primary col-span-2 text-white font-medium text-sm flex items-center justify-center  gap-2 hover:bg-blue-700 rounded-full">
+        <button className="px-4 py-1 h-full bg-primary col-span-2 text-white font-medium text-sm flex items-center justify-center  gap-2 rounded-full">
           <Plus size={18} />
           Add New Patient
         </button>
-        <button className="px-4 py-1 bg-[#EBF2FF] col-span-1 text-primary font-medium text-sm flex items-center justify-center  gap-2 hover:bg-blue-700 rounded-full">
+        <button className="px-4 py-1 bg-[#EBF2FF] col-span-1 text-primary font-medium text-sm flex items-center justify-center  gap-2 rounded-full">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M5.345 13.2417L13.7967 4.79002L12.6183 3.61169L4.16667 12.0634V13.2417H5.345ZM6.03583 14.9084H2.5V11.3725L12.0292 1.84335C12.1854 1.68713 12.3974 1.59937 12.6183 1.59937C12.8393 1.59937 13.0512 1.68713 13.2075 1.84335L15.565 4.20085C15.7212 4.35713 15.809 4.56905 15.809 4.79002C15.809 5.01099 15.7212 5.22291 15.565 5.37919L6.03583 14.9084ZM2.5 16.575H17.5V18.2417H2.5V16.575Z" fill="#3F78D8" />
           </svg>
@@ -302,7 +302,7 @@ export const ReportsHistory: React.FC<ReportsHistoryProps> = ({ petName, reports
         <div>
           {/* <h3 className="text-lg font-bold text-gray-800 ">Reports History</h3> */}
         </div>
-        <button className="px-4 py-1 bg-primary text-white font-medium text-sm flex items-center justify-center  gap-2 hover:bg-blue-700 rounded-full">
+        <button className="px-4 py-1 bg-primary text-white font-medium text-sm flex items-center justify-center  gap-2 rounded-full">
           <Plus size={18} />
           New Test
         </button>

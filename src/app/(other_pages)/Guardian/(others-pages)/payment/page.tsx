@@ -36,7 +36,7 @@ export default function Page() {
           </p>
         </div>
         <Link
-          href="/Guardian/history"
+          href="/Guardian/payment/history"
           className="text-[14px] font-medium leading-[18px] text-[#3F78D8]"
         >
           History
