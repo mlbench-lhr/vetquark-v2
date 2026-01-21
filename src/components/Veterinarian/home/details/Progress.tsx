@@ -294,11 +294,11 @@ export function ParameterProgress() {
     const currentParam = parameters[selectedParameter];
 
     return (
-        <div className="w-full max-w-2xl bg-card rounded-2xl p-6 shadow-sm border border-border">
+        <div className="w-full max-w-2xl bg-card rounded-2xl p-4 shadow-sm border border-border">
             {/* Header */}
             <div className="flex items-start justify-between mb-6">
                 <div>
-                    <h2 className="text-xl font-semibold text-card-foreground">
+                    <h2 className="text-base font-semibold text-card-foreground">
                         Parameter Progress
                     </h2>
                     <p className="text-sm text-muted-foreground mt-0.5">
@@ -330,9 +330,9 @@ export function ParameterProgress() {
             </div>
 
             {/* Controls Row */}
-            <div className="flex gap-3 mb-6 grid grid-cols-2">
+            <div className="flex gap-3 mb-6 grid grid-cols-5">
                 <Select value={selectedParameter} onValueChange={setSelectedParameter}>
-                    <SelectTrigger className=" bg-secondary border-0 rounded-lg">
+                    <SelectTrigger className="text-[12px]! col-span-2 bg-secondary border-0 rounded-lg">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border border-border shadow-lg z-50">
@@ -342,8 +342,8 @@ export function ParameterProgress() {
                     </SelectContent>
                 </Select>
 
-                <Popover >
-                    <PopoverTrigger asChild>
+                <Popover>
+                    <PopoverTrigger className="col-span-3 text-[12px]!" asChild>
                         <Button
                             variant="secondary"
                             className="bg-secondary border-0 rounded-lg font-normal"
@@ -361,7 +361,7 @@ export function ParameterProgress() {
                                 className="ml-2 h-4 w-4 text-muted-foregroun" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-popover border border-border shadow-lg z-50" align="start">
+                    <PopoverContent className=" w-auto p-0 bg-popover border border-border shadow-lg z-50 me-2" align="start">
                         <CalendarComponent
                             mode="range"
                             selected={{ from: dateRange.from, to: dateRange.to }}
@@ -377,7 +377,7 @@ export function ParameterProgress() {
             {/* Parameter Info & Export */}
             <div className="flex items-start justify-between mb-6">
                 <div>
-                    <h3 className="text-lg font-semibold text-card-foreground">
+                    <h3 className="text-base font-semibold text-card-foreground">
                         {currentParam.name}
                     </h3>
                     <p className="text-sm text-muted-foreground">
