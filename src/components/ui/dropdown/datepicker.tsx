@@ -166,12 +166,12 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
                     key={day}
                     onClick={() => !isFuture && handleDateClick(day)}
                     className={`text-center py-2 text-sm rounded-lg transition-colors ${isFuture
-                            ? 'text-gray-300 cursor-not-allowed'
-                            : isSelected
-                                ? 'bg-primary text-white font-semibold cursor-pointer'
-                                : isToday
-                                    ? 'bg-blue-100 text-primary font-semibold cursor-pointer hover:bg-blue-200'
-                                    : 'cursor-pointer hover:bg-gray-100'
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : isSelected
+                            ? 'bg-primary text-white font-semibold cursor-pointer'
+                            : isToday
+                                ? 'bg-blue-100 text-primary font-semibold cursor-pointer hover:bg-blue-200'
+                                : 'cursor-pointer hover:bg-gray-100'
                         }`}
                 >
                     {day}
@@ -203,12 +203,12 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
                     key={month}
                     onClick={() => !isFutureMonth && handleMonthClick(index)}
                     className={`text-center py-3 rounded-lg transition-colors font-medium ${isFutureMonth
-                            ? 'text-gray-300 cursor-not-allowed'
-                            : isSelectedMonth
-                                ? 'bg-primary text-white cursor-pointer'
-                                : isCurrentMonth
-                                    ? 'bg-blue-100 text-primary cursor-pointer hover:bg-blue-200'
-                                    : 'cursor-pointer hover:bg-gray-100'
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : isSelectedMonth
+                            ? 'bg-primary text-white cursor-pointer'
+                            : isCurrentMonth
+                                ? 'bg-blue-100 text-primary cursor-pointer hover:bg-blue-200'
+                                : 'cursor-pointer hover:bg-gray-100'
                         }`}
                 >
                     {month}
@@ -230,12 +230,12 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
                     key={year}
                     onClick={() => !isFutureYear && handleYearClick(year)}
                     className={`text-center py-3 rounded-lg transition-colors font-medium ${isFutureYear
-                            ? 'text-gray-300 cursor-not-allowed'
-                            : isSelectedYear
-                                ? 'bg-primary text-white cursor-pointer'
-                                : isCurrentYear
-                                    ? 'bg-blue-100 text-primary cursor-pointer hover:bg-blue-200'
-                                    : 'cursor-pointer hover:bg-gray-100'
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : isSelectedYear
+                            ? 'bg-primary text-white cursor-pointer'
+                            : isCurrentYear
+                                ? 'bg-blue-100 text-primary cursor-pointer hover:bg-blue-200'
+                                : 'cursor-pointer hover:bg-gray-100'
                         }`}
                 >
                     {year}
@@ -314,7 +314,8 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
                     className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 pr-12 cursor-pointer"
                 />
                 <Calendar
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                    color='#3F78D8'
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
                     size={20}
                     onClick={() => setIsOpen(!isOpen)}
                 />

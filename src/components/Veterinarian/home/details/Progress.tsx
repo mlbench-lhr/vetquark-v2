@@ -356,7 +356,9 @@ export function ParameterProgress() {
                                     )}`
                                     : "Select dates"}
                             </span>
-                            <Calendar className="ml-2 h-4 w-4 text-muted-foreground" />
+                            <Calendar
+                                color='#3F78D8'
+                                className="ml-2 h-4 w-4 text-muted-foregroun" />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-popover border border-border shadow-lg z-50" align="start">

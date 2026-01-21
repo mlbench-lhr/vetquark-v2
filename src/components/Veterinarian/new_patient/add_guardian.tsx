@@ -263,7 +263,8 @@ export default function GuardianRegistration() {
                                     style={{ colorScheme: 'light' }}
                                 />
                                 <Calendar
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer"
+                                    color='#3F78D8'
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
                                     onClick={() => {
                                         const el = dobRef.current as any;
                                         if (!el) return;

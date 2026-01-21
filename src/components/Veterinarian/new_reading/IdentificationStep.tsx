@@ -161,7 +161,8 @@ export default function IdentificationStep({ onNext }: Props) {
               style={{ colorScheme: 'light' }}
             />
             <Calendar
-              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 cursor-pointer"
+              color='#3F78D8'
+              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-00 cursor-pointer"
             />
           </div>
         </div>
@@ -193,7 +194,8 @@ export default function IdentificationStep({ onNext }: Props) {
                 style={{ colorScheme: 'light' }}
               />
               <Calendar
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 cursor-pointer"
+                color='#3F78D8'
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-00 cursor-pointer"
                 onClick={() => {
                   const el = stripExpiryRef.current as any
                   if (!el) return
