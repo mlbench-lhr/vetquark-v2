@@ -21,29 +21,29 @@ export default function Page() {
 
   useEffect(() => {
     setSelectedId((new URLSearchParams(window.location.search).get('selected') || '').trim())
-    ; (async () => {
-      try {
-        setLoading(true)
-        const res = await fetch('/api/patient/get_patients')
-        const data = await res.json()
-        if (res.ok && Array.isArray(data.items)) {
-          setPatients(
-            data.items.map((p: any) => ({
-              id: String(p.id || p._id),
-              name: String(p.name || p.animalName || ''),
-              owner: String(p.owner || ''),
-              image: String(p.image || p.photo || '/logo.png'),
-            }))
-          )
-        } else {
+      ; (async () => {
+        try {
+          setLoading(true)
+          const res = await fetch('/api/patient/get_patients')
+          const data = await res.json()
+          if (res.ok && Array.isArray(data.items)) {
+            setPatients(
+              data.items.map((p: any) => ({
+                id: String(p.id || p._id),
+                name: String(p.name || p.animalName || ''),
+                owner: String(p.owner || ''),
+                image: String(p.image || p.photo),
+              }))
+            )
+          } else {
+            setPatients([])
+          }
+        } catch {
           setPatients([])
+        } finally {
+          setLoading(false)
         }
-      } catch {
-        setPatients([])
-      } finally {
-        setLoading(false)
-      }
-    })()
+      })()
   }, [])
 
   const filtered = useMemo(() => {

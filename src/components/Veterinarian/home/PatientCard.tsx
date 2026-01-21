@@ -3,6 +3,8 @@
 import React from 'react';
 import { Patient } from './types';
 import { useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dog, User } from 'lucide-react';
 
 interface PatientCardProps {
   patient: Patient;
@@ -13,14 +15,16 @@ interface PatientCardProps {
 const PatientCard: React.FC<PatientCardProps> = ({ patient, onClickNavigate }) => {
   const router = useRouter();
   return (
-    <div className="group flex items-center justify-between p-4 rounded-2xl border- bg-gray-100 border-gray-200 hover:bg-primary hover:border-primary transition-colors duration-200"  onClick={() => router.push(onClickNavigate || `/Veterinarian/home/patientDetails/${patient.id}`)}>
+    <div className="group flex items-center justify-between p-4 rounded-2xl border- bg-gray-100 border-gray-200 hover:bg-primary hover:border-primary transition-colors duration-200" onClick={() => router.push(onClickNavigate || `/Veterinarian/home/patientDetails/${patient.id}`)}>
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
-          <img
-            src={patient.image}
-            alt={patient.name}
-            className="w-full h-full object-cover"
-          />
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={patient.image} alt={patient.name} />
+            <AvatarFallback className="bg-muted text-black text-sm">
+              <Dog />
+            </AvatarFallback>
+          </Avatar>
+
         </div>
 
         <div>

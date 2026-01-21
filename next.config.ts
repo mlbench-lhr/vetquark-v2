@@ -1,6 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
+
   turbopack: {
     rules: {
       "*.svg": {
@@ -14,13 +27,16 @@ const nextConfig: NextConfig = {
       },
     },
   },
+
   webpack: (config) => {
     const fileLoaderRule = (config.module.rules as any[]).find(
       (rule) => rule.test?.test?.(".svg")
     );
+
     if (fileLoaderRule) {
       fileLoaderRule.exclude = /\.svg$/i;
     }
+
     config.module.rules.push({
       test: /\.svg$/i,
       issuer: { and: [/\.(js|ts)x?$/] },
@@ -31,6 +47,7 @@ const nextConfig: NextConfig = {
         },
       ],
     });
+
     return config;
   },
 };

@@ -23,7 +23,9 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
       <div className="flex items-center gap-3">
         <Link href={"/Veterinarian/Menu"} className="w-12 h-12 border rounded-full flex items-center justify-center ">
           {profile?.profileImageUrl ? (
-            <img
+            <Image
+              width={58}
+              height={58}
               src={profile.profileImageUrl}
               alt="Profile"
               className="w-12 h-12 rounded-full object-cover"

@@ -26,7 +26,7 @@ export default function Page() {
                             id: String(p.id || p._id),
                             name: p.name,
                             owner: p.owner,
-                            image: p.image || '/logo.png',
+                            image: p.image,
                         }))
                     );
                 } else {
@@ -89,13 +89,13 @@ export default function Page() {
                     ))
                 )}
             </div>
-            <button className="w-fit px-5 mt-4 py-3 bg-primary text-white font-semibold rounded-full flex items-center justify-center gap-2 absolute bottom-24 right-4 z-100" onClick={()=> router.push("/Veterinarian/patient")}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                        <path d="M12 8v8m-4-4h8" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                    New Patient
-                </button>
+            <button className="w-fit px-5 mt-4 py-3 bg-primary text-white font-semibold rounded-full flex items-center justify-center gap-2 absolute bottom-24 right-4 z-100" onClick={() => router.push("/Veterinarian/patient")}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                    <path d="M12 8v8m-4-4h8" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                New Patient
+            </button>
         </div>
     );
 }

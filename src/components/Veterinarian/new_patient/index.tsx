@@ -29,7 +29,7 @@ export default function AddPatientGuardian() {
                     id: String(u._id),
                     name: u.fullName,
                     owner: u.taxId ? `National ID: ${u.taxId}` : 'National ID: N/A',
-                    image: '/logo.png',
+                    image: '',
                 })));
             }
         } finally {

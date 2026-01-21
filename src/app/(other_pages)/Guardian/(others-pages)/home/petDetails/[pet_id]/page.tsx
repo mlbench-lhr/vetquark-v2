@@ -85,7 +85,7 @@ export default function Page() {
       name: pet?.animalName ?? '',
       type: pet?.species ?? '',
       breed: pet?.breed ?? '',
-      image: pet?.photo || '/logo.png',
+      image: pet?.photo,
       sex: pet?.sex ?? '',
       age: ageYears === null ? '' : `${ageYears} years`,
       gender: pet?.sex ?? '',
