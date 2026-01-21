@@ -4,6 +4,7 @@ import Patient from "@/lib/models/Patient";
 import User from "@/lib/models/User";
 import { parsePagination, toPaginationMeta } from "@/lib/utils";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -43,9 +44,18 @@ export async function GET(req: NextRequest) {
     if (!veterinarianId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (!mongoose.Types.ObjectId.isValid(veterinarianId)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const url = new URL(req.url);
     const q = (url.searchParams.get("q") || "").trim();
+    const species = (url.searchParams.get("species") || "").trim();
+    const gender = (url.searchParams.get("gender") || "").trim();
+    const age = (url.searchParams.get("age") || "").trim();
+    const lastExam = (url.searchParams.get("lastExam") || "").trim();
+    const sort = (url.searchParams.get("sort") || "recent").trim();
+    const guardianId = (url.searchParams.get("guardianId") || "").trim();
     const { page, pageSize, skip, limit } = parsePagination(url.searchParams, {
       defaultPageSize: 50,
       maxPageSize: 100,
@@ -58,25 +68,204 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const filter: any = { veterinarian: veterinarianId };
-    if (q) {
-      filter.animalName = { $regex: escapeRegex(q), $options: "i" };
+    const now = new Date();
+    const veterinarianObjectId = new mongoose.Types.ObjectId(veterinarianId);
+    const baseMatch: any = { veterinarian: veterinarianObjectId };
+
+    if (guardianId) {
+      if (!mongoose.Types.ObjectId.isValid(guardianId)) {
+        return NextResponse.json({ error: "Invalid guardianId" }, { status: 400 });
+      }
+      baseMatch.guardian = new mongoose.Types.ObjectId(guardianId);
     }
-    const [total, docs] = await Promise.all([
-      Patient.countDocuments(filter),
-      Patient.find(filter)
-        .populate("guardian", "fullName")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-    ]);
+    if (species) baseMatch.species = species;
+    if (gender) baseMatch.sex = gender;
+
+    const pipeline: any[] = [{ $match: baseMatch }];
+
+    pipeline.push({
+      $lookup: {
+        from: "users",
+        localField: "guardian",
+        foreignField: "_id",
+        as: "guardianUser",
+      },
+    });
+
+    pipeline.push({
+      $addFields: {
+        guardianName: {
+          $ifNull: [{ $arrayElemAt: ["$guardianUser.fullName", 0] }, ""],
+        },
+      },
+    });
+
+    if (q) {
+      const qRegex = new RegExp(escapeRegex(q), "i");
+      pipeline.push({
+        $match: {
+          $or: [{ animalName: { $regex: qRegex } }, { guardianName: { $regex: qRegex } }],
+        },
+      });
+    }
+
+    pipeline.push({
+      $addFields: {
+        dobDate: {
+          $dateFromString: {
+            dateString: "$dateOfBirth",
+            onError: null,
+            onNull: null,
+          },
+        },
+      },
+    });
+
+    pipeline.push({
+      $addFields: {
+        dobSortAsc: { $ifNull: ["$dobDate", new Date("9999-12-31T00:00:00.000Z")] },
+        dobSortDesc: { $ifNull: ["$dobDate", new Date("1970-01-01T00:00:00.000Z")] },
+        ageYears: {
+          $cond: [
+            { $ne: ["$dobDate", null] },
+            {
+              $trunc: {
+                $divide: [{ $subtract: [now, "$dobDate"] }, 31557600000],
+              },
+            },
+            null,
+          ],
+        },
+      },
+    });
+
+    if (age) {
+      const minYears = Number.parseInt(age.replace("+", ""), 10);
+      if (!Number.isNaN(minYears) && minYears > 0) {
+        const cutoff = new Date(now);
+        cutoff.setFullYear(cutoff.getFullYear() - minYears);
+        pipeline.push({
+          $match: {
+            $or: [{ dobDate: null }, { dobDate: { $lte: cutoff } }],
+          },
+        });
+      }
+    }
+
+    pipeline.push({
+      $lookup: {
+        from: "readings",
+        let: { patientId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$patient", "$$patientId"] },
+                  { $eq: ["$veterinarian", veterinarianObjectId] },
+                ],
+              },
+            },
+          },
+          { $project: { signedAt: 1, createdAt: 1 } },
+          {
+            $addFields: {
+              examAt: { $ifNull: ["$signedAt", "$createdAt"] },
+            },
+          },
+          { $sort: { examAt: -1 } },
+          { $limit: 1 },
+          { $project: { examAt: 1 } },
+        ],
+        as: "lastReading",
+      },
+    });
+
+    pipeline.push({
+      $addFields: {
+        lastExamAt: { $arrayElemAt: ["$lastReading.examAt", 0] },
+      },
+    });
+
+    if (lastExam) {
+      const maxDays =
+        lastExam === "1day" ? 1 : lastExam === "1week" ? 7 : lastExam === "1month" ? 30 : null;
+      if (typeof maxDays === "number") {
+        const cutoff = new Date(now.getTime() - maxDays * 86400000);
+        pipeline.push({ $match: { lastExamAt: { $gte: cutoff } } });
+      }
+    }
+
+    pipeline.push({
+      $addFields: {
+        lastExamDaysAgo: {
+          $cond: [
+            { $ne: ["$lastExamAt", null] },
+            {
+              $trunc: {
+                $divide: [{ $subtract: [now, "$lastExamAt"] }, 86400000],
+              },
+            },
+            null,
+          ],
+        },
+      },
+    });
+
+    const sortStage: any =
+      sort === "name_az"
+        ? { animalName: 1, _id: 1 }
+        : sort === "age_lh"
+          ? { dobSortDesc: -1, animalName: 1, _id: 1 }
+          : sort === "age_hl"
+            ? { dobSortAsc: 1, animalName: 1, _id: 1 }
+            : { createdAt: -1, _id: 1 };
+
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: "total" }],
+        items: [
+          { $sort: sortStage },
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              _id: 1,
+              animalName: 1,
+              photo: 1,
+              species: 1,
+              breed: 1,
+              sex: 1,
+              dateOfBirth: 1,
+              createdAt: 1,
+              guardian: 1,
+              guardianName: 1,
+              ageYears: 1,
+              lastExamDaysAgo: 1,
+            },
+          },
+        ],
+      },
+    });
+
+    const agg = await Patient.aggregate(pipeline);
+    const meta = agg?.[0]?.metadata?.[0] ?? null;
+    const total = typeof meta?.total === "number" ? meta.total : 0;
+    const docs = Array.isArray(agg?.[0]?.items) ? agg[0].items : [];
 
     const items = docs.map((p: any) => ({
       id: String(p._id),
       name: p.animalName,
-      owner: p.guardian?.fullName ?? "N/A",
+      owner: p.guardianName || "N/A",
       image: p.photo,
+      species: p.species ?? "",
+      breed: p.breed ?? "",
+      gender: p.sex ?? "",
+      dateOfBirth: p.dateOfBirth ?? null,
+      createdAt: p.createdAt ?? null,
+      ageYears: typeof p.ageYears === "number" ? p.ageYears : null,
+      lastExamDaysAgo: typeof p.lastExamDaysAgo === "number" ? p.lastExamDaysAgo : null,
+      guardianId: p.guardian ? String(p.guardian) : "",
     }));
 
     return NextResponse.json(
