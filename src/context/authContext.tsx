@@ -21,7 +21,7 @@ interface UserContextType {
   session_id: string;
   setUser: (user: User | null) => void;
   login: (session_id: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
@@ -35,7 +35,7 @@ export const UserContext = createContext<UserContextType>({
   setUser: () => {},
   session_id: "",
   login: () => {},
-  logout: () => {},
+  logout: async () => {},
   loading: true,
 });
 
@@ -106,7 +106,20 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     console.log("login", sessionId);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      const headerSessionId = localStorage.getItem("session_id") || session_id;
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(headerSessionId ? { Session: headerSessionId } : {}),
+        },
+        body: JSON.stringify({}),
+      });
+    } catch {}
+
     Cookies.remove("session_id");
     localStorage.removeItem("session_id");
     localStorage.removeItem("user_profile_v1");
