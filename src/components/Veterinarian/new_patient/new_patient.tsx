@@ -178,8 +178,8 @@ export default function AddPatientMultiStep() {
       </div>
       {/* Progress Tabs */}
       <div className="bg-white ">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between relative">
+          <div className="flex items-center gap-3 bg-white z-1 pe-2.5">
             <div className="w-10 h-10 bg-[#EBF2FF] rounded-full flex items-center justify-center">
               <Image
                 src={"/images/new_patient/user-active.svg"}
@@ -188,11 +188,11 @@ export default function AddPatientMultiStep() {
                 height={24}
               />
             </div>
-            <span className="text-xs font-medium">Guardian</span>
+            <span className="text-xs font-medium text-gray-900">Guardian</span>
           </div>
-          <div className="w-28 h-1 bg-primary rounded-full ml-2"></div>
+          <div className="w-32 h-1 bg-primary rounded-full w-[100%] absolute left-0 top-1/2 z-0"></div>
 
-          <div className="flex items-center gap-1 ">
+          <div className="flex items-center gap-3 ps-2.5 z-1 bg-white">
             <div className="w-10 h-10 bg-[#EBF2FF] rounded-full flex items-center justify-center">
               <Image
                 src={"/images/new_patient/paw-active.svg"}
@@ -201,7 +201,7 @@ export default function AddPatientMultiStep() {
                 height={24}
               />
             </div>
-            <span className="text-xs font-medium whitespace-nowrap">Patient Details</span>
+            <span className="text-xs font-medium text-gray-500">Patient Details</span>
           </div>
         </div>
       </div>
@@ -209,7 +209,7 @@ export default function AddPatientMultiStep() {
       {/* Guardian Info */}
       <div className="">
         <p className="text-sm text-gray-500 mb-3">Linked Guardian</p>
-        <div className="flex items-center justify-between bg-gray-100 p-2">
+        <div className="flex items-center justify-between bg-gray-100 p-2 rounded-[12px]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-orange-300 to-orange-400 rounded-full"></div>
             <div>
@@ -223,7 +223,7 @@ export default function AddPatientMultiStep() {
           </button>
         </div>
 
-        <div className="flex items-center justify-between bg-gray-100 p-2 mt-2">
+        <div className="flex items-center justify-between bg-gray-100 p-2 mt-2 rounded-[12px]">
           <div>
             <p className="font-medium text-gray-900 text-sm">Animal Status</p>
             <p className="text-xs text-tertiary">Is the animal alive?</p>

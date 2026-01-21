@@ -26,7 +26,7 @@ export default function IdentificationStep({ onNext }: Props) {
   useEffect(() => {
     ; (async () => {
       try {
-        const res = await fetch('/api/patient/get_patients')
+        const res = await fetch('/api/patient/get_patients?page=1&pageSize=50')
         const data = await res.json()
         if (res.ok && Array.isArray(data.items)) {
           setPatients(
@@ -49,6 +49,32 @@ export default function IdentificationStep({ onNext }: Props) {
     const selected = (new URLSearchParams(window.location.search).get('patientId') || '').trim()
     if (selected) setPatientId(selected)
   }, [patientId])
+
+  useEffect(() => {
+    if (!patientId) return
+    if (patients.some((p) => p.id === patientId)) return
+
+    ; (async () => {
+      try {
+        const res = await fetch(
+          `/api/patient/get_patient_details?patientId=${encodeURIComponent(patientId)}`,
+        )
+        const data = await res.json()
+        const item = data?.item
+        if (!res.ok || !item) return
+
+        const row: PatientListItem = {
+          id: String(item.id || item._id || patientId),
+          name: String(item.animalName || ''),
+          owner: String(item.guardian?.fullName || ''),
+          image: item.photo,
+        }
+
+        setPatients((prev) => (prev.some((p) => p.id === row.id) ? prev : [row, ...prev]))
+      } catch {
+      }
+    })()
+  }, [patientId, patients])
 
   const canProceed = useMemo(() => {
     return !!patientId && !!collectionMethod && !!collectionAt && !!stripLot && !!stripExpiry

@@ -26,11 +26,11 @@ const SearchBar: React.FC = () => {
           <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </div>
-      <Link href={"/Veterinarian/store"} className="px-4 py-3 border border-blue-200 rounded-xl flex items-center gap-2 bg-gray-100" >
+      <Link href={"/Veterinarian/store"} className="px-4 py-3 rounded-xl flex items-center gap-2 bg-gray-100" >
         <ShoppingCartIcon className="w-5 h-5 text-primary" />
         <span className="text-black font-light">Store</span>
       </Link>
-     
+
     </div>
   );
 };

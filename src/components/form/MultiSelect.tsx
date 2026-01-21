@@ -15,6 +15,7 @@ interface MultiSelectProps {
   placeholder?: string;
   showInlineChips?: boolean;
   showDoneButton?: boolean;
+  maxSelected?: number;
   name?: string;
   required?: boolean;
 }
@@ -28,11 +29,12 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   placeholder = "Select option",
   showInlineChips = true,
   showDoneButton = false,
+  maxSelected,
   name,
   required,
 }) => {
   const [selectedOptions, setSelectedOptions] =
-    useState<string[]>(defaultSelected);
+    useState<string[]>(maxSelected ? defaultSelected.slice(0, maxSelected) : defaultSelected);
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleDropdown = () => {
@@ -41,6 +43,10 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   };
 
   const handleSelect = (optionValue: string) => {
+    if (!selectedOptions.includes(optionValue) && maxSelected !== undefined && selectedOptions.length >= maxSelected) {
+      return;
+    }
+
     const newSelectedOptions = selectedOptions.includes(optionValue)
       ? selectedOptions.filter((value) => value !== optionValue)
       : [...selectedOptions, optionValue];
@@ -107,8 +113,17 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                 {options.map((option, index) => (
                   <div key={index}>
                     <div
-                      className={`hover:bg-primary/5 w-full cursor-pointer rounded-t border-b border-gray-200 `}
-                      onClick={() => handleSelect(option.value)}
+                      className={[
+                        "w-full rounded-t border-b border-gray-200",
+                        selectedOptions.includes(option.value) || maxSelected === undefined || selectedOptions.length < maxSelected
+                          ? "cursor-pointer hover:bg-primary/5"
+                          : "cursor-not-allowed opacity-60",
+                      ].join(" ")}
+                      onClick={
+                        selectedOptions.includes(option.value) || maxSelected === undefined || selectedOptions.length < maxSelected
+                          ? () => handleSelect(option.value)
+                          : undefined
+                      }
                     >
                       <div
                         className={`relative flex w-full items-center p-2 pl-2 ${

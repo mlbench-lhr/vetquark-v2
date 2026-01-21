@@ -5,7 +5,6 @@ import { MoreDotIcon } from "@/icons";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { useEffect, useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { ClipLoader } from "react-spinners";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -132,17 +131,16 @@ export default function TotalGuestsChart({ scan, manually, tck }: GuestProps) {
 
       <div className="max-w-full overflow-x-auto custom-scrollbar">
         <div className="-ml-5 min-w-[650px] xl:min-w-full pl-2">
-          {loading && (
-            <div className="flex justify-center items-center h-[200px]">
-              <ClipLoader color="#465fff" size={30} />
-            </div>
+          {loading ? (
+            <div className="h-[280px] w-full rounded-2xl bg-gray-100 animate-pulse" />
+          ) : (
+            <ReactApexChart
+              options={options}
+              series={series}
+              type="bar"
+              height={280}
+            />
           )}
-          <ReactApexChart
-            options={options}
-            series={series}
-            type="bar"
-            height={280}
-          />
         </div>
       </div>
     </div>

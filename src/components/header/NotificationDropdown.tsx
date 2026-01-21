@@ -196,41 +196,55 @@ export default function NotificationDropdown() {
           </button>
         </div>
         <ul className="flex flex-col h-auto overflow-y-auto custom-scrollbar">
-          {/* Example notification items */}
-          {notifications?.map((notification, index) => (
-            <li key={index}>
-              <DropdownItem
-                onItemClick={() => markAsRead([notification.id])}
-                className="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 items-start"
-              >
-                <span className="relative block w-8 h-8 rounded-full z-1 max-w-10">
-                  <Image
-                    src={notification.profile_image_url}
-                    alt="User"
-                    width={32}
-                    height={32}
-                    className="rounded-full h-full w-full object-cover"
-                  />
-                  <span className="absolute bottom-0 right-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white bg-success-500 "></span>
-                </span>
-
-                <span className="block">
-                  <span
-                    className="mb-1.5 block text-sm text-gray-500"
-                    dangerouslySetInnerHTML={{ __html: notification.message }}
-                  />
-
-                  <span className="flex items-center gap-2 text-gray-500 text-theme-xs ">
-                    <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                    <span>{timeAgo(notification.created_at)}</span>
-
+          {loading ? (
+            <>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <li key={i} className="animate-pulse">
+                  <div className="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 items-start">
+                    <div className="h-8 w-8 rounded-full bg-gray-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-5/6 rounded bg-gray-200" />
+                      <div className="h-3 w-2/3 rounded bg-gray-200" />
+                      <div className="h-3 w-28 rounded bg-gray-200" />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </>
+          ) : (
+            notifications?.map((notification, index) => (
+              <li key={index}>
+                <DropdownItem
+                  onItemClick={() => markAsRead([notification.id])}
+                  className="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 items-start"
+                >
+                  <span className="relative block w-8 h-8 rounded-full z-1 max-w-10">
+                    <Image
+                      src={notification.profile_image_url}
+                      alt="User"
+                      width={32}
+                      height={32}
+                      className="rounded-full h-full w-full object-cover"
+                    />
+                    <span className="absolute bottom-0 right-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white bg-success-500 "></span>
                   </span>
-                </span>
-              </DropdownItem>
-            </li>
-          ))}
 
-          {/* Add more items as needed */}
+                  <span className="block">
+                    <span
+                      className="mb-1.5 block text-sm text-gray-500"
+                      dangerouslySetInnerHTML={{ __html: notification.message }}
+                    />
+
+                    <span className="flex items-center gap-2 text-gray-500 text-theme-xs ">
+                      <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                      <span>{timeAgo(notification.created_at)}</span>
+
+                    </span>
+                  </span>
+                </DropdownItem>
+              </li>
+            ))
+          )}
         </ul>
         <button
           onClick={() => markAsRead(notifications.map(n => n.id))}

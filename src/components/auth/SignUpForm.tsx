@@ -936,6 +936,7 @@ export default function SignUpForm() {
                   placeholder="Select options"
                   showInlineChips={false}
                   showDoneButton={true}
+                  maxSelected={5}
                   name="expertise"
                   required
                 />

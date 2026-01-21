@@ -10,7 +10,7 @@ interface StatCardProps {
 
 const StatCard: React.FC<StatCardProps> = ({ number, label, sublabel, variant = 'primary' }) => {
   return (
-    <div className={`rounded-2xl border-2 h-full bg-gray-100`}>
+    <div className={`rounded-2xl border- h-full bg-gray-100`}>
       <div className="flex flex-col p-2 h-full">
         <p className="text-sm font-">{label}</p>
         <div className={`text-4xl font-semibold text-primary gap-3 flex`}>
