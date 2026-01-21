@@ -120,49 +120,93 @@ const GuardianProfilePage: React.FC = () => {
     },
   ];
 
+  const GuardianDetailsSkeleton = () => (
+    <div className="px-4 animate-pulse space-y-4">
+      <div className="rounded-2xl bg-[#F5F6F6] p-4">
+        <div className="flex items-center gap-4">
+          <div className="h-16 w-16 rounded-full bg-gray-300" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-4 w-40 rounded bg-gray-300" />
+            <div className="h-3 w-28 rounded bg-gray-300" />
+          </div>
+        </div>
+        <div className="mt-4 space-y-2">
+          <div className="h-3 w-full rounded bg-gray-300" />
+          <div className="h-3 w-5/6 rounded bg-gray-300" />
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="h-4 w-16 rounded bg-gray-300" />
+        <div className="h-4 w-20 rounded bg-gray-300" />
+      </div>
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-2xl bg-[#F5F6F6] px-3 p-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-full bg-gray-300" />
+                <div className="space-y-2">
+                  <div className="h-4 w-32 rounded bg-gray-300" />
+                  <div className="h-3 w-24 rounded bg-gray-300" />
+                </div>
+              </div>
+              <div className="h-5 w-5 rounded bg-gray-300" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="pb-5">
       <Header title="Guardian Detail" />
-      {activeTab === 'information' && (
+      {loading ? (
+        <GuardianDetailsSkeleton />
+      ) : (
         <>
-          <GuardianInfoCard {...patientData} />
-        </>
-      )}
-      <div className="px-4 mt-4 flex flex-col grid grid-cols-1 gap-2">
-        <div className="flex mb-2 justify-between items-center" >
-          <h1 className="col-span-1 text-base font-normal">Pets</h1>
-          <Link href={"/Veterinarian/home/guardianPatients/4"} className="col-span-1 text-base text-primary font-normal">View All</Link>
-        </div>
-        {
-          guardians.map((guardian) => (
-            <div
-              key={guardian.id}
-              className="bg-[#F5F6F6] rounded-2xl px-3 p-2"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-11 w-11">
-                    <AvatarImage src={guardian.avatarUrl} alt={guardian.name} />
-                    <AvatarFallback className="bg-muted text-black text-sm">
-                      {guardian.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-foreground text-[15px]">{guardian.name}</h3>
-                    <p className="text-sm text-black/70">ID: {guardian.idNumber}</p>
+          {activeTab === 'information' && (
+            <>
+              <GuardianInfoCard {...patientData} />
+            </>
+          )}
+          <div className="px-4 mt-4 flex flex-col grid grid-cols-1 gap-2">
+            <div className="flex mb-2 justify-between items-center" >
+              <h1 className="col-span-1 text-base font-normal">Pets</h1>
+              <Link href={"/Veterinarian/home/guardianPatients/4"} className="col-span-1 text-base text-primary font-normal">View All</Link>
+            </div>
+            {
+              guardians.map((guardian) => (
+                <div
+                  key={guardian.id}
+                  className="bg-[#F5F6F6] rounded-2xl px-3 p-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-11 w-11">
+                        <AvatarImage src={guardian.avatarUrl} alt={guardian.name} />
+                        <AvatarFallback className="bg-muted text-black text-sm">
+                          {guardian.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-foreground text-[15px]">{guardian.name}</h3>
+                        <p className="text-sm text-black/70">ID: {guardian.idNumber}</p>
+                      </div>
+                    </div>
+                    <button
+                      // onClick={() => onGuardianClick?.(guardian.id)}
+                      className="text-black hover:text-foreground transition-colors p-1"
+                    >
+                      <ChevronRight className="h-5 w-5 text-primary" />
+                    </button>
                   </div>
                 </div>
-                <button
-                  // onClick={() => onGuardianClick?.(guardian.id)}
-                  className="text-black hover:text-foreground transition-colors p-1"
-                >
-                  <ChevronRight className="h-5 w-5 text-primary" />
-                </button>
-              </div>
-            </div>
-          ))
-        }
-      </div>
+              ))
+            }
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react'
+import Pagination from '@/components/tables/Pagination'
 
 type PatientRow = {
   id: string
@@ -18,33 +19,43 @@ export default function Page() {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [patients, setPatients] = useState<PatientRow[]>([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
+  const pageSize = 10
+  const skeletonRows = useMemo(() => Array.from({ length: 8 }, (_, i) => i), [])
 
   useEffect(() => {
     setSelectedId((new URLSearchParams(window.location.search).get('selected') || '').trim())
-      ; (async () => {
-        try {
-          setLoading(true)
-          const res = await fetch('/api/patient/get_patients')
-          const data = await res.json()
-          if (res.ok && Array.isArray(data.items)) {
-            setPatients(
-              data.items.map((p: any) => ({
-                id: String(p.id || p._id),
-                name: String(p.name || p.animalName || ''),
-                owner: String(p.owner || ''),
-                image: String(p.image || p.photo),
-              }))
-            )
-          } else {
-            setPatients([])
-          }
-        } catch {
-          setPatients([])
-        } finally {
-          setLoading(false)
-        }
-      })()
   }, [])
+
+  useEffect(() => {
+    ; (async () => {
+      try {
+        setLoading(true)
+        const res = await fetch(`/api/patient/get_patients?page=${page}&pageSize=${pageSize}`)
+        const data = await res.json()
+        if (res.ok && Array.isArray(data.items)) {
+          setPatients(
+            data.items.map((p: any) => ({
+              id: String(p.id || p._id),
+              name: String(p.name || p.animalName || ''),
+              owner: String(p.owner || ''),
+              image: String(p.image || p.photo),
+            }))
+          )
+          setTotalPages(Number(data.pagination?.totalPages || 0))
+        } else {
+          setPatients([])
+          setTotalPages(0)
+        }
+      } catch {
+        setPatients([])
+        setTotalPages(0)
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [page])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -72,7 +83,10 @@ export default function Page() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#3F78D8]" />
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setPage(1)
+            }}
             placeholder="Search by patient or guardian name"
             className="h-[48px] w-full rounded-2xl bg-[#F3F4F6] pl-12 pr-4 text-[14px] leading-[18px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
           />
@@ -80,7 +94,21 @@ export default function Page() {
 
         <div className="mt-4 space-y-3 pb-28">
           {loading ? (
-            <div className="text-[14px] leading-[18px] text-[#6B7280]">Loading...</div>
+            skeletonRows.map((k) => (
+              <div key={k} className="animate-pulse w-full rounded-2xl bg-[#F3F4F6] px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-200" />
+                    <div className="min-w-0 space-y-2">
+                      <div className="h-4 w-40 rounded bg-gray-200" />
+                      <div className="h-3 w-28 rounded bg-gray-200" />
+                      <div className="h-3 w-24 rounded bg-gray-200" />
+                    </div>
+                  </div>
+                  <div className="h-5 w-5 rounded bg-gray-200" />
+                </div>
+              </div>
+            ))
           ) : filtered.length === 0 ? (
             <div className="text-[14px] leading-[18px] text-[#6B7280]">No patients found.</div>
           ) : (
@@ -111,6 +139,19 @@ export default function Page() {
             })
           )}
         </div>
+
+        {!loading && totalPages > 1 ? (
+          <div className="mt-4 flex justify-center">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(nextPage) => {
+                const clamped = Math.max(1, Math.min(totalPages, nextPage))
+                setPage(clamped)
+              }}
+            />
+          </div>
+        ) : null}
       </div>
 
       <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+24px)] right-4">

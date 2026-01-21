@@ -22,7 +22,7 @@ export default function Home() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch('/api/patient/get_patients');
+                const res = await fetch('/api/patient/get_patients?page=1&pageSize=3');
                 const data = await res.json();
                 if (res.ok && Array.isArray(data.items)) {
                     setPatients(
@@ -43,7 +43,7 @@ export default function Home() {
             <Header userName={profile?.fullName} balance="$ 925,00" />
             <SearchBar />
 
-            <div className="mt-2 grid grid-cols-2 gap-3">
+            <div className="mt-3 grid grid-cols-2 gap-3">
                 <StatCard number={3} label="Exams Today" sublabel="1 completed" variant="primary" />
                 <StatCard number={6} label="Active Patients" sublabel="+2 new this month" variant="secondary" />
             </div>
@@ -66,7 +66,7 @@ export default function Home() {
                     </div>
                     <button
                         type="button"
-                        className="px-3 py-1 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100"
+                        className="px-3 py-2 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100"
                         onClick={() => router.push('/Veterinarian/home/patients')}
                     >
                         View All

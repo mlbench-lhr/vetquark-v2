@@ -97,18 +97,43 @@ const PatientProfilePage: React.FC = () => {
 
   const reports: Report[] = [];
 
+  const PatientDetailsSkeleton = () => (
+    <div className="px-4 animate-pulse space-y-4">
+      <div className="rounded-2xl bg-[#F5F6F6] p-4">
+        <div className="flex items-center gap-4">
+          <div className="h-16 w-16 rounded-full bg-gray-300" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-4 w-44 rounded bg-gray-300" />
+            <div className="h-3 w-32 rounded bg-gray-300" />
+          </div>
+        </div>
+        <div className="mt-4 space-y-2">
+          <div className="h-3 w-full rounded bg-gray-300" />
+          <div className="h-3 w-5/6 rounded bg-gray-300" />
+          <div className="h-3 w-2/3 rounded bg-gray-300" />
+        </div>
+      </div>
+      <div className="rounded-2xl bg-[#F5F6F6] p-4">
+        <div className="h-4 w-28 rounded bg-gray-300" />
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-10 rounded-xl bg-gray-300" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="pb-5">
       <Header title="Patient Profile" />
       <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {activeTab === 'information' && (
-        <>
-          <PatientInfoCard {...patientData} />
-        </>
-      )}
-
-      {activeTab === 'progress' && (
+      {loading ? (
+        <PatientDetailsSkeleton />
+      ) : activeTab === 'information' ? (
+        <PatientInfoCard {...patientData} />
+      ) : (
         <Progress />
       )}
     </div>

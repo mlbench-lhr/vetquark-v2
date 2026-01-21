@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import Patient from "@/lib/models/Patient";
 import User from "@/lib/models/User";
+import { parsePagination, toPaginationMeta } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,6 +10,12 @@ export async function GET(req: NextRequest) {
     if (!guardianId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const url = new URL(req.url);
+    const { page, pageSize, skip, limit } = parsePagination(url.searchParams, {
+      defaultPageSize: 50,
+      maxPageSize: 100,
+    });
 
     await connectMongo();
 
@@ -18,11 +25,16 @@ export async function GET(req: NextRequest) {
     // }
 
     // const docs = await Patient.find({ guardian: guardianId })
-    const docs = await Patient.find()
-      .populate("veterinarian", "fullName tradeName")
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .lean();
+    const filter = {};
+    const [total, docs] = await Promise.all([
+      Patient.countDocuments(filter),
+      Patient.find(filter)
+        .populate("veterinarian", "fullName tradeName")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
 
     const items = docs.map((p: any) => ({
       id: String(p._id),
@@ -31,9 +43,11 @@ export async function GET(req: NextRequest) {
       image: p.photo,
     }));
 
-    return NextResponse.json({ items }, { status: 200 });
+    return NextResponse.json(
+      { items, pagination: toPaginationMeta({ page, pageSize, total }) },
+      { status: 200 }
+    );
   } catch (e) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Header from '@/components/common/header';
 import PatientCard from '@/components/Veterinarian/home/PatientCard';
 import { Patient } from '@/components/Veterinarian/home/types';
+import Pagination from '@/components/tables/Pagination';
 import { ChevronLeft, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -13,12 +14,17 @@ export default function Page() {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const pageSize = 10;
+
+    const skeletonCards = useMemo(() => Array.from({ length: 6 }, (_, i) => i), []);
 
     useEffect(() => {
         (async () => {
             try {
                 setLoading(true);
-                const res = await fetch('/api/patient/get_patients');
+                const res = await fetch(`/api/patient/get_patients?page=${page}&pageSize=${pageSize}`);
                 const data = await res.json();
                 if (res.ok && Array.isArray(data.items)) {
                     setPatients(
@@ -29,14 +35,16 @@ export default function Page() {
                             image: p.image,
                         }))
                     );
+                    setTotalPages(Number(data.pagination?.totalPages || 0));
                 } else {
                     setPatients([]);
+                    setTotalPages(0);
                 }
             } finally {
                 setLoading(false);
             }
         })();
-    }, []);
+    }, [page]);
 
     const filteredPatients = useMemo(() => {
         const q = searchQuery.trim().toLowerCase();
@@ -73,14 +81,27 @@ export default function Page() {
                     type="text"
                     placeholder="Search by patient or guardian name..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setPage(1);
+                    }}
                     className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
             </div>
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-3 pb-36">
                 {loading ? (
-                    <div className="text-tertiary text-sm">Loading...</div>
+                    skeletonCards.map((k) => (
+                        <div key={k} className="animate-pulse rounded-2xl bg-[#F5F6F6] px-4 py-3">
+                            <div className="flex items-center gap-3">
+                                <div className="h-12 w-12 rounded-full bg-gray-200" />
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-4 w-1/2 rounded bg-gray-200" />
+                                    <div className="h-3 w-1/3 rounded bg-gray-200" />
+                                </div>
+                            </div>
+                        </div>
+                    ))
                 ) : filteredPatients.length === 0 ? (
                     <div className="text-tertiary text-sm">No patients found.</div>
                 ) : (
@@ -89,6 +110,20 @@ export default function Page() {
                     ))
                 )}
             </div>
+
+            {!loading && totalPages > 1 ? (
+                <div className="mt-4 flex justify-center">
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={(nextPage) => {
+                            const clamped = Math.max(1, Math.min(totalPages, nextPage));
+                            setPage(clamped);
+                        }}
+                    />
+                </div>
+            ) : null}
+
             <button className="w-fit px-5 mt-4 py-3 bg-primary text-white font-semibold rounded-full flex items-center justify-center gap-2 absolute bottom-24 right-4 z-100" onClick={() => router.push("/Veterinarian/patient")}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" strokeWidth="2" />

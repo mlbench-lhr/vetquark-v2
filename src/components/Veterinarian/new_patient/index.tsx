@@ -4,6 +4,7 @@ import { Search, Bell, ChevronRight, Plus, Link, Link2 } from 'lucide-react';
 import Image from 'next/image';
 import PatientCard from '../home/PatientCard';
 import { useRouter } from 'next/navigation';
+import Pagination from '@/components/tables/Pagination';
 
 interface Guardian {
     id: string;
@@ -18,11 +19,16 @@ export default function AddPatientGuardian() {
 
     const [guardians, setGuardians] = useState<Guardian[]>([]);
     const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const pageSize = 10;
 
-    async function handleSearch(q: string) {
+    async function handleSearch(q: string, pageToFetch: number) {
         try {
             setLoading(true);
-            const res = await fetch(`/api/guardians/get-guardians?q=${encodeURIComponent(q)}`);
+            const res = await fetch(
+                `/api/guardians/get-guardians?q=${encodeURIComponent(q)}&page=${pageToFetch}&pageSize=${pageSize}`
+            );
             const data = await res.json();
             if (res.ok) {
                 setGuardians((data.items || []).map((u: any) => ({
@@ -31,6 +37,10 @@ export default function AddPatientGuardian() {
                     owner: u.taxId ? `National ID: ${u.taxId}` : 'National ID: N/A',
                     image: '',
                 })));
+                setTotalPages(Number(data.pagination?.totalPages || 0));
+            } else {
+                setGuardians([]);
+                setTotalPages(0);
             }
         } finally {
             setLoading(false);
@@ -38,12 +48,34 @@ export default function AddPatientGuardian() {
     }
 
     useEffect(() => {
-        handleSearch('');
-    }, []);
+        handleSearch(searchQuery, page);
+    }, [page, searchQuery]);
 
     const filteredGuardians = guardians.filter(guardian =>
         guardian.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         guardian.owner.includes(searchQuery)
+    );
+
+    const GuardiansSkeleton = () => (
+        <div className="space-y-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                    key={i}
+                    className="w-full rounded-2xl bg-[#F5F6F6] p-4 animate-pulse"
+                >
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="h-11 w-11 rounded-full bg-gray-300" />
+                            <div className="min-w-0 space-y-2">
+                                <div className="h-4 w-40 rounded bg-gray-300" />
+                                <div className="h-3 w-28 rounded bg-gray-300" />
+                            </div>
+                        </div>
+                        <div className="h-5 w-5 rounded bg-gray-300" />
+                    </div>
+                </div>
+            ))}
+        </div>
     );
 
     return (
@@ -65,8 +97,8 @@ export default function AddPatientGuardian() {
 
             {/* Progress Tabs */}
             <div className="bg-white ">
-                <div className="flex items-center ">
-                    <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between relative">
+                    <div className="flex items-center gap-3 bg-white z-1 pe-2.5">
                         <div className="w-10 h-10 bg-[#EBF2FF] rounded-full flex items-center justify-center">
                             <Image
                                 src={"/images/new_patient/user-active.svg"}
@@ -76,16 +108,18 @@ export default function AddPatientGuardian() {
                             />
                         </div>
                         <span className="text-xs font-medium text-gray-900">Guardian</span>
-                        <div className="w-32 h-1 bg-primary rounded-full ml-2"></div>
                     </div>
+                    <div className="w-32 h-1 bg-primary rounded-full w-[100%] absolute left-0 top-1/2 z-0"></div>
 
-                    <div className="flex items-center gap-3 opacity-40">
-                        <Image
-                            src={"/images/new_patient/paw.svg"}
-                            alt="User icon"
-                            width={24}
-                            height={24}
-                        />
+                    <div className="flex items-center gap-3 ps-2.5 z-1 bg-white">
+                        <div className="w-10 h-10 bg-[#F5F6F6] rounded-full flex items-center justify-center">
+                            <Image
+                                src={"/images/new_patient/paw.svg"}
+                                alt="User icon"
+                                width={24}
+                                height={24}
+                            />
+                        </div>
                         <span className="text-xs font-medium text-gray-500">Patient Details</span>
                     </div>
                 </div>
@@ -107,14 +141,22 @@ export default function AddPatientGuardian() {
                         type="text"
                         placeholder="Search by name or national ID..."
                         value={searchQuery}
-                        onChange={(e) => { const v = e.target.value; setSearchQuery(v); handleSearch(v); }}
+                        onChange={(e) => {
+                            const v = e.target.value;
+                            setSearchQuery(v);
+                            setPage(1);
+                        }}
                         className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                 </div>
 
                 {/* Guardian List */}
                 <div className="space-y-3 mb-6">
-                    {filteredGuardians.map((guardian) => (
+                    {loading ? (
+                        <GuardiansSkeleton />
+                    ) : filteredGuardians.length === 0 ? (
+                        <div className="text-tertiary text-sm">No guardians found.</div>
+                    ) : filteredGuardians.map((guardian) => (
                         <PatientCard
                             key={guardian.id}
                             patient={guardian}
@@ -135,6 +177,19 @@ export default function AddPatientGuardian() {
                         // </button>
                     ))}
                 </div>
+
+                {!loading && totalPages > 1 ? (
+                    <div className="mt-4 flex justify-center">
+                        <Pagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            onPageChange={(nextPage) => {
+                                const clamped = Math.max(1, Math.min(totalPages, nextPage));
+                                setPage(clamped);
+                            }}
+                        />
+                    </div>
+                ) : null}
 
                 {/* Action Buttons */}
                 <div className="space-y-3">

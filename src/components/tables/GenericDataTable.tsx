@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { FaSearch } from "react-icons/fa";
-import { ClipLoader } from "react-spinners"
 
 // Reusable column definition
 export interface Column<T> {
@@ -144,8 +143,34 @@ function GenericDataTable<T extends { id: string; tab?: string }>({
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-[200px]">
-          <ClipLoader color="#465fff" size={30} />
+        <div className="animate-pulse">
+          <div className="overflow-x-auto border-t border-gray-200">
+            <div className="px-4 py-3">
+              <div className="h-4 w-40 rounded bg-gray-200" />
+            </div>
+            <div className="space-y-2 px-4 pb-4">
+              {Array.from({ length: Math.min(6, pageSize) }).map((_, rowIdx) => (
+                <div
+                  key={rowIdx}
+                  className="grid gap-3 rounded-lg bg-gray-50 px-3 py-3"
+                  style={{ gridTemplateColumns: `repeat(${Math.max(columns.length, 1)}, minmax(0, 1fr))` }}
+                >
+                  {Array.from({ length: Math.max(columns.length, 1) }).map((__, colIdx) => (
+                    <div key={colIdx} className="h-4 w-full rounded bg-gray-200" />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between">
+            <div className="h-9 w-24 rounded bg-gray-200" />
+            <div className="flex gap-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-8 w-8 rounded bg-gray-200" />
+              ))}
+            </div>
+            <div className="h-9 w-24 rounded bg-gray-200" />
+          </div>
         </div>
       ) : !loading && isEmpty ? (
         <div className="flex flex-col items-center justify-center py-20">
