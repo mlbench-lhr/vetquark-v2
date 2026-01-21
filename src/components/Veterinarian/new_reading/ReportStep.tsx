@@ -1,15 +1,29 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
+import { ReportDraft } from './types'
 
 type Props = {
+  patientPreview: {
+    animalName: string
+    breed: string
+    species: string
+    guardianName: string
+  } | null
+  collectionAt: string
+  report: ReportDraft
+  onChangeReport: (patch: Partial<ReportDraft>) => void
   onBack: () => void
-  onComplete: () => void
+  onComplete: () => void | Promise<void>
+  submitting?: boolean
 }
 
-export default function ReportStep({ onBack, onComplete }: Props) {
-  const [otherInfo, setOtherInfo] = useState('')
-  const [vetNotes, setVetNotes] = useState('')
+export default function ReportStep({ patientPreview, collectionAt, report, onChangeReport, onBack, onComplete, submitting }: Props) {
+  const patientName = patientPreview?.animalName || '—'
+  const breed = patientPreview?.breed || '—'
+  const species = patientPreview?.species || '—'
+  const guardianName = patientPreview?.guardianName || '—'
+  const appointment = collectionAt ? new Date(collectionAt).toLocaleString() : '—'
 
   return (
     <div className="">
@@ -22,11 +36,11 @@ export default function ReportStep({ onBack, onComplete }: Props) {
         <div className="text-center text-xs text-gray-500 mt-1">Rua Fictícia, 123 · Cidade, Estado · CEP 00000-000</div>
 
         <div className="mt-4 border-t border-gray-200 pt-3 text-sm space-y-1">
-          <div><span className="font-semibold">Paciente:</span> Buddy</div>
-          <div><span className="font-semibold">Raça:</span> Golden Retriever</div>
-          <div><span className="font-semibold">Espécie:</span> Cão</div>
-          <div><span className="font-semibold">Guardian:</span> João Silva</div>
-          <div><span className="font-semibold">Atendimento:</span> 05/12/2025</div>
+          <div><span className="font-semibold">Paciente:</span> {patientName}</div>
+          <div><span className="font-semibold">Raça:</span> {breed}</div>
+          <div><span className="font-semibold">Espécie:</span> {species}</div>
+          <div><span className="font-semibold">Guardian:</span> {guardianName}</div>
+          <div><span className="font-semibold">Atendimento:</span> {appointment}</div>
         </div>
 
         <div className="mt-4 border-t border-gray-200 pt-3 text-xs text-foreground font-semibold text-center">
@@ -39,8 +53,8 @@ export default function ReportStep({ onBack, onComplete }: Props) {
       <div className="mt-6">
         <div className="text-sm text-gray-900 mb-2">Summary and Interpretation</div>
         <textarea
-          value={vetNotes}
-          onChange={(e) => setVetNotes(e.target.value)}
+          value={report.summaryAndInterpretation}
+          onChange={(e) => onChangeReport({ summaryAndInterpretation: e.target.value })}
           placeholder="Enter your summary and interpretation"
           rows={2}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
@@ -50,8 +64,8 @@ export default function ReportStep({ onBack, onComplete }: Props) {
       <div className="mt-4">
         <div className="text-sm text-gray-900 mb-2">Other Information</div>
         <textarea
-          value={otherInfo}
-          onChange={(e) => setOtherInfo(e.target.value)}
+          value={report.otherInformation}
+          onChange={(e) => onChangeReport({ otherInformation: e.target.value })}
           placeholder="Enter any other info"
           rows={2}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
@@ -61,8 +75,8 @@ export default function ReportStep({ onBack, onComplete }: Props) {
       <div className="mt-4">
         <div className="text-sm text-gray-900 mb-2">Veterinarian&apos;s Notes:</div>
         <textarea
-          value={vetNotes}
-          onChange={(e) => setVetNotes(e.target.value)}
+          value={report.veterinarianNotes}
+          onChange={(e) => onChangeReport({ veterinarianNotes: e.target.value })}
           placeholder="Enter your veterinarian's notes"
           rows={2}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
@@ -75,8 +89,12 @@ export default function ReportStep({ onBack, onComplete }: Props) {
         <p className="text-[14px] font-normal text-black/60">Report generated on 05/12/2025, 11:12:47</p>
       </div>
       <div className="mt-6 space-y-3">
-        <button onClick={onComplete} className="w-full py-4 rounded-full bg-primary text-white font-medium">
-          Sign & Complete
+        <button
+          onClick={onComplete}
+          disabled={!!submitting}
+          className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-70"
+        >
+          {submitting ? 'Signing...' : 'Sign & Complete'}
         </button>
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
           Go Back

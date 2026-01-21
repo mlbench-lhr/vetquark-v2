@@ -3,8 +3,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
 
 type Props = {
+  selectedSeconds: number
+  onChangeSelectedSeconds: (nextSeconds: number) => void
   onBack: () => void
-  onNext: () => void
+  onAnalyzeAndProceed: () => void
 }
 
 const marks = [30, 40, 45, 60, 120]
@@ -13,15 +15,14 @@ function pad(n: number) {
   return String(n).padStart(2, '0')
 }
 
-export default function TimerStep({ onBack, onNext }: Props) {
-  const [selected, setSelected] = useState(45)
-  const [secondsLeft, setSecondsLeft] = useState(45)
+export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, onBack, onAnalyzeAndProceed }: Props) {
+  const [secondsLeft, setSecondsLeft] = useState(selectedSeconds)
   const [running, setRunning] = useState(true)
 
   useEffect(() => {
-    setSecondsLeft(selected)
+    setSecondsLeft(selectedSeconds)
     setRunning(true)
-  }, [selected])
+  }, [selectedSeconds])
 
   useEffect(() => {
     if (!running) return
@@ -67,12 +68,12 @@ export default function TimerStep({ onBack, onNext }: Props) {
 
       <div className="mt-4 flex gap-2 flex-wrap w-full justify-between">
         {marks.map((m) => {
-          const isSelected = m === selected
-          const isCompleted = m <= selected
+          const isSelected = m === selectedSeconds
+          const isCompleted = m <= selectedSeconds
           return (
             <button
               key={m}
-              onClick={() => setSelected(m)}
+              onClick={() => onChangeSelectedSeconds(m)}
               className={`px-4 py-2 rounded-xl border text-sm flex justify-start items-center gap-1 font-medium ${isCompleted
                 ? 'bg-green-50 text-green-700 border-green-200'
                 : 'bg-gray-50 text-gray-500 border-gray-200'
@@ -96,7 +97,7 @@ export default function TimerStep({ onBack, onNext }: Props) {
       </div>
 
       <div className="mt-6 space-y-3">
-        <button onClick={onNext} className="w-full py-4 rounded-full bg-primary text-white font-medium">
+        <button onClick={onAnalyzeAndProceed} className="w-full py-4 rounded-full bg-primary text-white font-medium">
           Analyse & Proceed
         </button>
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">

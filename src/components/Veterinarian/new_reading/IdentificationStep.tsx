@@ -4,20 +4,17 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, ChevronDown, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import LinkGenerated from './LinkGenerated'
-import { PatientListItem } from './types'
+import { IdentificationDraft, PatientListItem } from './types'
 
 type Props = {
+  value: IdentificationDraft
+  onChange: (patch: Partial<IdentificationDraft>) => void
   onNext: () => void
 }
 
-export default function IdentificationStep({ onNext }: Props) {
+export default function IdentificationStep({ value, onChange, onNext }: Props) {
   const router = useRouter()
   const [patients, setPatients] = useState<PatientListItem[]>([])
-  const [patientId, setPatientId] = useState('')
-  const [collectionMethod, setCollectionMethod] = useState('')
-  const [stripLot, setStripLot] = useState('')
-  const [stripExpiry, setStripExpiry] = useState('')
-  const [collectionAt, setCollectionAt] = useState('')
   const [showLink, setShowLink] = useState(false)
 
   const collectionRef = useRef<HTMLInputElement | null>(null)
@@ -44,27 +41,27 @@ export default function IdentificationStep({ onNext }: Props) {
   }, [])
 
   useEffect(() => {
-    if (patientId) return
+    if (value.patientId) return
     if (typeof window === 'undefined') return
     const selected = (new URLSearchParams(window.location.search).get('patientId') || '').trim()
-    if (selected) setPatientId(selected)
-  }, [patientId])
+    if (selected) onChange({ patientId: selected })
+  }, [onChange, value.patientId])
 
   useEffect(() => {
-    if (!patientId) return
-    if (patients.some((p) => p.id === patientId)) return
+    if (!value.patientId) return
+    if (patients.some((p) => p.id === value.patientId)) return
 
       ; (async () => {
         try {
           const res = await fetch(
-            `/api/patient/get_patient_details?patientId=${encodeURIComponent(patientId)}`,
+            `/api/patient/get_patient_details?patientId=${encodeURIComponent(value.patientId)}`,
           )
           const data = await res.json()
           const item = data?.item
           if (!res.ok || !item) return
 
           const row: PatientListItem = {
-            id: String(item.id || item._id || patientId),
+            id: String(item.id || item._id || value.patientId),
             name: String(item.animalName || ''),
             owner: String(item.guardian?.fullName || ''),
             image: item.photo,
@@ -74,11 +71,11 @@ export default function IdentificationStep({ onNext }: Props) {
         } catch {
         }
       })()
-  }, [patientId, patients])
+  }, [patients, value.patientId])
 
   const canProceed = useMemo(() => {
-    return !!patientId && !!collectionMethod && !!collectionAt && !!stripLot && !!stripExpiry
-  }, [patientId, collectionMethod, collectionAt, stripLot, stripExpiry])
+    return !!value.patientId && !!value.collectionMethod && !!value.collectionAt && !!value.stripLot && !!value.stripExpiry
+  }, [value.collectionAt, value.collectionMethod, value.patientId, value.stripExpiry, value.stripLot])
 
   if (showLink) {
     return (
@@ -100,12 +97,12 @@ export default function IdentificationStep({ onNext }: Props) {
           <div className="w-full flex justify-start items-center gap-2 relative">
             <button
               type="button"
-              onClick={() => router.push(`/Veterinarian/new-reading/select-patient${patientId ? `?selected=${encodeURIComponent(patientId)}` : ''}`)}
+              onClick={() => router.push(`/Veterinarian/new-reading/select-patient${value.patientId ? `?selected=${encodeURIComponent(value.patientId)}` : ''}`)}
               className="relative w-[calc(100%-64px)] px-4 py-4 bg-gray-100 rounded-2xl text-left text-gray-700"
             >
-              {patientId
+              {value.patientId
                 ? (() => {
-                  const p = patients.find((x) => x.id === patientId)
+                  const p = patients.find((x) => x.id === value.patientId)
                   return p ? `${p.name}${p.owner ? ` — ${p.owner}` : ''}` : 'Select a patient'
                 })()
                 : 'Select a patient'}
@@ -135,8 +132,8 @@ export default function IdentificationStep({ onNext }: Props) {
           <div className="text-sm text-gray-900 mb-2">Collection Method</div>
           <div className="relative">
             <select
-              value={collectionMethod}
-              onChange={(e) => setCollectionMethod(e.target.value)}
+              value={value.collectionMethod}
+              onChange={(e) => onChange({ collectionMethod: e.target.value as IdentificationDraft["collectionMethod"] })}
               className="w-full px-4 py-4 bg-gray-100 rounded-2xl appearance-none text-gray-700"
             >
               <option value="">Select a method</option>
@@ -154,9 +151,9 @@ export default function IdentificationStep({ onNext }: Props) {
             <input
               ref={collectionRef}
               type="datetime-local"
-              value={collectionAt}
+              value={value.collectionAt}
               max={new Date().toISOString().slice(0, 16)}
-              onChange={(e) => setCollectionAt(e.target.value)}
+              onChange={(e) => onChange({ collectionAt: e.target.value })}
               className="w-full px-4 py-4 bg-gray-100 rounded-2xl  text-gray-700"
               style={{ colorScheme: 'light' }}
             />
@@ -172,8 +169,8 @@ export default function IdentificationStep({ onNext }: Props) {
         <div>
           <div className="text-sm text-gray-900 mb-2">Strip Lot</div>
           <input
-            value={stripLot}
-            onChange={(e) => setStripLot(e.target.value)}
+            value={value.stripLot}
+            onChange={(e) => onChange({ stripLot: e.target.value })}
             placeholder="Enter Strip Lot Number"
             className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700"
           />
@@ -186,9 +183,9 @@ export default function IdentificationStep({ onNext }: Props) {
               <input
                 ref={stripExpiryRef}
                 type="date"
-                value={stripExpiry}
+                value={value.stripExpiry}
                 min={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => setStripExpiry(e.target.value)}
+                onChange={(e) => onChange({ stripExpiry: e.target.value })}
                 placeholder="Enter Strip Expiry Date"
                 className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 pr-12"
                 style={{ colorScheme: 'light' }}

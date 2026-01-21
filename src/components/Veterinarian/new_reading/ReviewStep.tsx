@@ -1,11 +1,14 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { AlertTriangle, Check } from 'lucide-react'
+import { ReviewResultDraft, ReviewSelectionMap } from './types'
 
 type Props = {
+  selectedByKey: ReviewSelectionMap
+  onChangeSelectedByKey: (next: ReviewSelectionMap) => void
   onBack: () => void
-  onNext: () => void
+  onIssueReport: (results: ReviewResultDraft[]) => void
 }
 
 type ResultStatus = 'Normal' | 'Abnormal'
@@ -289,6 +292,7 @@ function ResultRow({
               <div className="text-[10px] leading-[12px] text-[#9CA3AF]">{opt.topLabel}</div>
               <button
                 type="button"
+                onClick={() => onSelect(idx)}
                 className={`mt-2 h-6 w-6 rounded-full ${active ? 'shadow-sm shadow-black' : ''}`}
                 style={{ backgroundColor: opt.color }}
               />
@@ -304,10 +308,19 @@ function ResultRow({
   )
 }
 
-export default function ReviewStep({ onBack, onNext }: Props) {
-  const [selectedByKey, setSelectedByKey] = useState<Record<string, number>>(() => {
-    return Object.fromEntries(RESULT_ROWS.map((r) => [r.key, r.defaultIndex]))
-  })
+function parseNumericValueLabel(valueLabel: string): number | undefined {
+  const trimmed = valueLabel.trim()
+  if (!/^-?\d+(\.\d+)?$/.test(trimmed)) return undefined
+  const n = Number(trimmed)
+  return Number.isFinite(n) ? n : undefined
+}
+
+export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBack, onIssueReport }: Props) {
+  useEffect(() => {
+    if (Object.keys(selectedByKey).length > 0) return
+    const defaults: ReviewSelectionMap = Object.fromEntries(RESULT_ROWS.map((r) => [r.key, r.defaultIndex]))
+    onChangeSelectedByKey(defaults)
+  }, [onChangeSelectedByKey, selectedByKey])
 
   const canProceed = useMemo(() => RESULT_ROWS.length > 0, [])
 
@@ -324,14 +337,31 @@ export default function ReviewStep({ onBack, onNext }: Props) {
             key={row.key}
             row={row}
             selectedIndex={selectedByKey[row.key] ?? row.defaultIndex}
-            onSelect={(idx) => setSelectedByKey((prev) => ({ ...prev, [row.key]: idx }))}
+            onSelect={(idx) => onChangeSelectedByKey({ ...selectedByKey, [row.key]: idx })}
           />
         ))}
       </div>
 
       <div className="mt-6 space-y-3">
         <button
-          onClick={onNext}
+          onClick={() => {
+            const results: ReviewResultDraft[] = RESULT_ROWS.map((row) => {
+              const selectedIndex = selectedByKey[row.key] ?? row.defaultIndex
+              const opt = row.options[selectedIndex]
+              const valueLabel = opt ? opt.topLabel : row.options[row.defaultIndex]?.topLabel ?? ""
+              const numericValue = parseNumericValueLabel(valueLabel)
+              return {
+                key: row.key,
+                label: row.label,
+                unit: row.unit,
+                status: row.status,
+                selectedIndex,
+                valueLabel,
+                ...(numericValue === undefined ? {} : { numericValue }),
+              }
+            })
+            onIssueReport(results)
+          }}
           disabled={!canProceed}
           className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-60"
         >
