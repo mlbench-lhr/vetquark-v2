@@ -45,7 +45,7 @@ export default function EditProfileCard({
     const derivedPhoneNumber = parsedPhone ? parsedPhone.nationalNumber : phoneNumber;
 
     return (
-        <div className="bg-background min-h-screen flex flex-col px-4">
+        <div className="min-h-screen bg-white flex flex-col px-4">
             <Header title="Edit Profile" />
             {/* Avatar Section */}
             <div className="flex justify-center pt-8 pb-8">
@@ -68,42 +68,42 @@ export default function EditProfileCard({
 
             {/* Form Fields */}
             <div className="flex-1 space-y-5">
-                <div className="space-y-2">
-                    <Label className="text-sm font-normal text-foreground">
+                <div>
+                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
                         Full Name
                     </Label>
                     <Input
                         value={localFullName}
                         onChange={(e) => setLocalFullName(e.target.value)}
-                        className="h-12 border-0 border-b border-border rounded-none bg-transparent px-0 text-base text-foreground focus-visible:ring-0 focus-visible:border-primary"
+                        className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <Label className="text-sm font-normal text-foreground">Email</Label>
+                <div>
+                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
+                        Email
+                    </Label>
                     <Input
                         type="email"
                         value={localEmail}
                         onChange={(e) => setLocalEmail(e.target.value)}
-                        className="h-12 border-0 border-b border-border rounded-none bg-transparent px-0 text-base text-foreground focus-visible:ring-0 focus-visible:border-primary"
+                        className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <Label className="text-sm font-normal text-foreground">
+                <div>
+                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
                         Phone Number
                     </Label>
-                    <div className="border-b border-border">
-                        <PhoneInput
-                            name="phone"
-                            value={localPhone}
-                            onChange={setLocalPhone}
-                            defaultCountry="br"
-                            inputClassName="!w-full !h-12 !border-0 !bg-transparent !text-base !text-foreground focus:!outline-none focus:!ring-0"
-                            buttonClassName="!h-12 !border-0 !bg-transparent"
-                            containerClassName="w-full"
-                        />
-                    </div>
+                    <PhoneInput
+                        name="phone"
+                        value={localPhone}
+                        onChange={setLocalPhone}
+                        defaultCountry="br"
+                        containerClassName="w-full"
+                        inputClassName="!w-full !h-[56px] !rounded-[16px] !border-0 !bg-[#F5F6F6] !px-11 !text-[16px] !leading-[20px] !text-[#111827] placeholder:!text-[#9AA4AF] focus:!outline-none md:!text-[16px]"
+                        buttonClassName="!h-[56px] !border-0 !bg-[#F5F6F6] !rounded-[16px]"
+                    />
                 </div>
             </div>
 
