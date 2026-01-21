@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       id: String(p._id),
       name: p.animalName,
       owner: p.guardian?.fullName ?? "N/A",
-      image: p.photo || "/logo.png",
+      image: p.photo,
     }));
 
     return NextResponse.json({ items }, { status: 200 });

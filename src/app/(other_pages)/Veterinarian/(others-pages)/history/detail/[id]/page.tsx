@@ -52,7 +52,7 @@ function ReportCard({ item }: { item: ReportHistoryItem }) {
   );
 }
 
-export default function Page() {
+export default function ReportDetailsPage() {
   const router = useRouter()
   const physicalItems: ReportHistoryItem[] = [
     {

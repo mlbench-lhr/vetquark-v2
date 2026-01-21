@@ -1,7 +1,7 @@
 'use client';
 
 // app/page.tsx
-import { Bell, ChevronRight, FileText, Search } from 'lucide-react';
+import { Bell, ChevronRight, FileText, Search, User2 } from 'lucide-react';
 import { CurrentHealthProps, HeaderProps, PetSelectorProps, RecentHistoryProps, TrendsProps } from './types';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
@@ -14,17 +14,21 @@ function Header({ name }: HeaderProps) {
     return (
         <header className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-                <div className="w-12 h-12 border rounded-full flex items-center justify-center">
+                <Link href={"/Guardian/Menu"} className="w-12 h-12 border rounded-full flex items-center justify-center ">
                     {profile?.profileImageUrl ? (
-                        <img
+                        <Image
+                            width={58}
+                            height={58}
                             src={profile.profileImageUrl}
                             alt="Profile"
                             className="w-12 h-12 rounded-full object-cover"
                         />
                     ) : (
-                        <span className="text-2xl">👨</span>
+                        <div className='flex justify-center items-center w-12 h-12 rounded-full bg-gray-100'>
+                            <User2 />
+                        </div>
                     )}
-                </div>
+                </Link>
                 <div>
                     <p className="text-sm text-gray-500">Welcome,</p>
                     <h1 className="text-sm font-semibold text-gray-800">{name}</h1>
@@ -89,35 +93,119 @@ function CurrentHealth({ lastTestDate, parameters }: CurrentHealthProps) {
         </div>
     );
 }
+type ReportStatus = "signed" | "pending";
 
+type ReportHistoryItem = {
+    id: string;
+    color: string;
+    patientName: string;
+    guardianName: string;
+    dateLabel: string;
+    status: ReportStatus;
+    avatarSrc: string;
+    line: any,
+    percentage: number
+};
 function Trends({ data }: TrendsProps) {
+    const physicalItems: ReportHistoryItem[] = [
+        {
+            id: "1",
+            color: "#F59E0B",
+            patientName: "Color",
+            guardianName: "Normal: Pale Yellow",
+            dateLabel: "22/05/2024",
+            percentage: 0,
+            status: "signed",
+            line: <svg xmlns="http://www.w3.org/2000/svg" width="62" height="26" viewBox="0 0 62 26" fill="none">
+                <path d="M1 24.9949L15.9968 16.9966L30.9936 8.99829L45.9904 4.19932L60.9872 1" stroke="#F59E0B" stroke-width="1.99957" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>,
+            avatarSrc: "/images/product/product-01.jpg",
+        },
+        {
+            id: "2",
+            color: "#10B981",
+            patientName: "Clarity",
+            guardianName: "Normal: Clear",
+            dateLabel: "22/05/2024",
+            percentage: 0,
+            status: "signed",
+            line: <svg xmlns="http://www.w3.org/2000/svg" width="62" height="25" viewBox="0 0 62 25" fill="none">
+                <path d="M1 23.9951H15.9968H30.9936H45.9904H60.9872" stroke="#10B981" stroke-width="1.99957" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>,
+            avatarSrc: "/images/product/product-01.jpg",
+        },
+        {
+            id: "1",
+            color: "#F59E0B",
+            patientName: "Color",
+            guardianName: "Normal: Pale Yellow",
+            dateLabel: "22/05/2024",
+            percentage: 0,
+            status: "signed",
+            line: <svg xmlns="http://www.w3.org/2000/svg" width="62" height="26" viewBox="0 0 62 26" fill="none">
+                <path d="M1 24.9949L15.9968 16.9966L30.9936 8.99829L45.9904 4.19932L60.9872 1" stroke="#F59E0B" stroke-width="1.99957" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>,
+            avatarSrc: "/images/product/product-01.jpg",
+        },
+        {
+            id: "2",
+            color: "#10B981",
+            patientName: "Clarity",
+            guardianName: "Normal: Clear",
+            dateLabel: "22/05/2024",
+            percentage: 0,
+            status: "signed",
+            line: <svg xmlns="http://www.w3.org/2000/svg" width="62" height="25" viewBox="0 0 62 25" fill="none">
+                <path d="M1 23.9951H15.9968H30.9936H45.9904H60.9872" stroke="#10B981" stroke-width="1.99957" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>,
+            avatarSrc: "/images/product/product-01.jpg",
+        },
+    ];
     return (
         <div className="p- mb-6">
             <h2 className="text-gray-900 font-semibold text-xl mb-1">Trends</h2>
-            <p className="text-gray-500 text-sm mb-6">The evolution of some parameters.</p>
+            <p className="text-gray-500 text-sm mb-2">The evolution of some parameters.</p>
 
-            <div className="space-y-4">
-                {data.map((trend, index) => (
-                    <div key={index} className="relative p-2.5 rounded-[12px] bg-[#F5F6F6]">
-                        <div className="flex items-center justify-between mb-1">
-                            <span className="text-gray-700 font-medium">{trend.name}</span>
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
-                        </div>
-                        <div className="relative flex items-end px-2">
-                            <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 50">
-                                <path
-                                    d={`M 10 ${50 - (trend.data[0] / 2)} L 390 ${50 - (trend.data[1] / 2)}`}
-                                    stroke="#3B82F6"
-                                    strokeWidth="2"
-                                    fill="none"
-                                />
-                                <circle cx="10" cy={50 - (trend.data[0] / 2)} r="4" fill="#3B82F6" />
-                                <circle cx="390" cy={50 - (trend.data[1] / 2)} r="5" fill="#3B82F6" />
-                            </svg>
-                        </div>
-                    </div>
+            <div className="space-y-">
+                {physicalItems.map((item, index) => (
+                    <ReportCardDetail key={index} item={item} />
                 ))}
             </div>
+        </div>
+    );
+}
+
+function ReportCardDetail({ item }: { item: ReportHistoryItem }) {
+    return (
+        <div className="bg-white px- py-4 border-b">
+            <Link href={"/Guardian/home/TrendDetail"} className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3 justify-between w-full">
+                    <div className="flex min-w-0 items-center gap-2 justify-start">
+                        <div className="h-2 w-2  rounded-full" style={{ backgroundColor: item.color }}> </div>
+                        <div className="min-w-0">
+                            <p className="truncate text-[14px] font-medium text-gray-900">
+                                {item.patientName}
+                            </p>
+                            <p className="truncate text-[12px] text-gray-400">
+                                {item.guardianName}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex min-w-0 items-center gap-4">
+                        {item.line}
+                        <div className="min-w-0 text-end">
+                            <div className="flex justify-start items-center gap-1">
+                                <p className="truncate text-[14px] font-medium " style={{ color: item.color }}>
+                                    Abnormal              </p>
+                            </div>
+                            <p className="truncate text-[12px] text-gray-500">
+                                3.5 %
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </Link>
         </div>
     );
 }
@@ -137,7 +225,7 @@ export default function Home() {
     ];
 
     return (
-        <main className="min-h-screen bg-gray-50 p-6">
+        <main className="min-h-screen bg-gray-5 p-6">
             <div className="max-w-md mx-auto">
                 <Header name={profile?.fullName || 'User'} />
                 <PetSelector pets={pets} />

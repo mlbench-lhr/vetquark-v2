@@ -88,7 +88,7 @@ const PatientProfilePage: React.FC = () => {
       name: patient?.animalName ?? "",
       type: patient?.species ?? "",
       breed: patient?.breed ?? "",
-      image: patient?.photo || "/logo.png",
+      image: patient?.photo,
       sex: patient?.sex ?? "",
       age: ageYears === null ? "" : `${ageYears} years`,
       gender: patient?.sex ?? "",

@@ -24,7 +24,7 @@ export default function Page() {
               id: String(p.id || p._id),
               name: p.name,
               owner: p.owner,
-              image: p.image || '/logo.png',
+              image: p.image,
             }))
           );
         } else {

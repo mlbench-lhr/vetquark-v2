@@ -30,7 +30,7 @@ export default function Home() {
                             id: String(p.id || p._id),
                             name: typeof p.name === 'string' ? p.name : '',
                             owner: typeof p.owner === 'string' ? p.owner : '',
-                            image: typeof p.image === 'string' ? p.image : '/logo.png',
+                            image: typeof p.image === 'string' ? p.image : '',
                         }))
                     );
                 }
@@ -48,7 +48,7 @@ export default function Home() {
                 <StatCard number={6} label="Active Patients" sublabel="+2 new this month" variant="secondary" />
             </div>
 
-        
+
 
             <div className="">
                 <AttendanceChart
@@ -58,19 +58,19 @@ export default function Home() {
                     interactive={true}
                 />
             </div>
-                <div className="mt-2">
+            <div className="mt-2">
                 <div className="flex items-center justify-between mb-3">
-          <div>
-                    <h2 className="text-base font-bold text-gray-800">Recent Patients</h2>
-            <p className="text-xs text-gray-500">View recent pets at a glance</p>
-          </div>
+                    <div>
+                        <h2 className="text-base font-bold text-gray-800">Recent Patients</h2>
+                        <p className="text-xs text-gray-500">View recent pets at a glance</p>
+                    </div>
                     <button
                         type="button"
-className="px-3 py-1 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100"
+                        className="px-3 py-1 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100"
                         onClick={() => router.push('/Veterinarian/home/patients')}
                     >
                         View All
-                        <ChevronRight size={14} color='#3F78D8'/>
+                        <ChevronRight size={14} color='#3F78D8' />
                     </button>
                 </div>
                 <div className="space-y-3">
@@ -79,7 +79,7 @@ className="px-3 py-1 borde border-gray-300 rounded-full text-sm flex items-cente
                     ))}
                 </div>
 
-                
+
             </div>
         </div>
     );
