@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import BottomTabs from "@/layout/BottomTabs"; // adjust path as needed
+import { usePathname } from "next/navigation";
 
 // Mobile detection wrapper
 function MobileOnly({ children }: { children: React.ReactNode }) {
@@ -41,16 +42,42 @@ export default function Layout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const [hasBackButton, setHasBackButton] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      const nextHasBackButton = !!document.querySelector(
+        'button[aria-label="Back"]'
+      );
+      setHasBackButton((prev) =>
+        prev === nextHasBackButton ? prev : nextHasBackButton
+      );
+    };
+
+    check();
+
+    const observer = new MutationObserver(() => check());
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["aria-label"],
+    });
+
+    return () => observer.disconnect();
+  }, [pathname]);
+
   return (
     <MobileOnly>
       <div className="min-h-screen flex flex-col bg-white">
         {/* Main Content Area - with padding for bottom nav */}
-        <main className="flex-1 overflow-auto pb-20">
+        <main className={`flex-1 overflow-auto ${hasBackButton ? "" : "pb-20"}`}>
           {children}
         </main>
 
         {/* Bottom Navigation */}
-        <BottomTabs />
+        {!hasBackButton ? <BottomTabs /> : null}
       </div>
     </MobileOnly>
   );

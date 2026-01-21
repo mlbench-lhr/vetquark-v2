@@ -167,7 +167,11 @@ export default function ReportDetailsPage() {
     <div className="min-h-[100dvh] w-full bg-white">
       <div className="mx-auto w-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
         <div className="flex items-center justify-between">
-          <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={() => router.back()}>
+          <button
+            aria-label="Back"
+            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            onClick={() => router.back()}
+          >
             <ChevronLeft className="w-6 h-6 text-gray-700" />
           </button>
           <h1 className="text-base font-medium text-gray-900">Report Details</h1>

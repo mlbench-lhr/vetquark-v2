@@ -198,7 +198,8 @@ export default function TaxInfoAndProfessionalProfilePage() {
                   style={{ colorScheme: "light" }}
                 />
                 <Calendar
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                  color='#3F78D8'
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
                   size={20}
                   onClick={() => {
                     const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
@@ -306,7 +307,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
         </form>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-gray-100 p-4">
+      <div className="fixe bottom- left- right- bg-background border-t border-gray-100 p-4">
         <button
           type="submit"
           onClick={() => {

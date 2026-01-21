@@ -59,7 +59,11 @@ export default function Page() {
     return (
         <div className="min-h-screen px-3 py-5 relative">
             <div className=" flex items-center justify-between">
-                <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={() => router.back()}>
+                <button
+                    aria-label="Back"
+                    className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                    onClick={() => router.back()}
+                >
                     <ChevronLeft className="w-6 h-6 text-gray-700" />
                 </button>
                 <h1 className="text-base font-medium text-gray-900">All Patients</h1>
@@ -124,7 +128,7 @@ export default function Page() {
                 </div>
             ) : null}
 
-            <button className="w-fit px-5 mt-4 py-3 bg-primary text-white font-semibold rounded-full flex items-center justify-center gap-2 absolute bottom-24 right-4 z-100" onClick={() => router.push("/Veterinarian/patient")}>
+            <button className="w-fit px-5 mt-4 py-3 bg-primary text-white font-semibold rounded-full flex items-center justify-center gap-2 absolute bottom-5 right-4 z-100" onClick={() => router.push("/Veterinarian/patient")}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" strokeWidth="2" />
                     <path d="M12 8v8m-4-4h8" strokeWidth="2" strokeLinecap="round" />

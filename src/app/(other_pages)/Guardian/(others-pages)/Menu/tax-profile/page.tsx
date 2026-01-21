@@ -47,7 +47,9 @@ export default function Page() {
               onChange={(e) => setDateOfBirth(e.target.value)}
               className="h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 pr-12 text-[16px] leading-[20px] text-[#111827] outline-none"
             />
-            <Calendar className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9AA4AF]" />
+            <Calendar
+              color='#3F78D8'
+              className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9AA4AF]" />
           </div>
 
           <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">Address</div>
