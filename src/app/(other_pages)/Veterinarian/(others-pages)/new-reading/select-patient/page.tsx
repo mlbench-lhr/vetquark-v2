@@ -72,6 +72,7 @@ export default function Page() {
           <button
             type="button"
             onClick={() => router.back()}
+            aria-label="Back"
             className="absolute left-0 top-1/2 -translate-y-1/2 p-1"
           >
             <ChevronLeft className="h-6 w-6 text-[#111827]" />

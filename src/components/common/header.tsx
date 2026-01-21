@@ -18,6 +18,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             <div className="flex items-center gap-3 w-full justify-center">
                 <button
                     onClick={onBack}
+                    aria-label="Back"
                     className="w-fit h-fit rounded-full bg-gray-10 flex absolute left-4 items-center justify-center hover:bg-gray-200"
                 >
                     <ChevronLeft size={20} className="text-gray-700" />
