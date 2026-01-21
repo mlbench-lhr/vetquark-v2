@@ -68,42 +68,34 @@ export default function EditProfileCard({
 
             {/* Form Fields */}
             <div className="flex-1 space-y-5">
-                <div className="space-y-2">
-                    <Label className="text-sm font-normal text-foreground">
-                        Full Name
-                    </Label>
+                <div>
+                    <Label className="block text-gray-900 font-medium mb-2">Full Name</Label>
                     <Input
                         value={localFullName}
                         onChange={(e) => setLocalFullName(e.target.value)}
-                        className="h-12 border-0 border-b border-border rounded-none bg-transparent px-0 text-base text-foreground focus-visible:ring-0 focus-visible:border-primary"
+                        className="w-full h-12 px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-800 placeholder:text-gray-400 md:text-base"
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <Label className="text-sm font-normal text-foreground">Email</Label>
+                <div>
+                    <Label className="block text-gray-900 font-medium mb-2">Email</Label>
                     <Input
                         type="email"
                         value={localEmail}
                         onChange={(e) => setLocalEmail(e.target.value)}
-                        className="h-12 border-0 border-b border-border rounded-none bg-transparent px-0 text-base text-foreground focus-visible:ring-0 focus-visible:border-primary"
+                        className="w-full h-12 px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-800 placeholder:text-gray-400 md:text-base"
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <Label className="text-sm font-normal text-foreground">
-                        Phone Number
-                    </Label>
-                    <div className="border-b border-border">
-                        <PhoneInput
-                            name="phone"
-                            value={localPhone}
-                            onChange={setLocalPhone}
-                            defaultCountry="br"
-                            inputClassName="!w-full !h-12 !border-0 !bg-transparent !text-base !text-foreground focus:!outline-none focus:!ring-0"
-                            buttonClassName="!h-12 !border-0 !bg-transparent"
-                            containerClassName="w-full"
-                        />
-                    </div>
+                <div>
+                    <Label className="block text-gray-900 font-medium mb-2">Phone Number</Label>
+                    <PhoneInput
+                        name="phone"
+                        value={localPhone}
+                        onChange={setLocalPhone}
+                        defaultCountry="br"
+                        containerClassName="w-full"
+                    />
                 </div>
             </div>
 
