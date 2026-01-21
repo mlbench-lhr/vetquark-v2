@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectMongo from "@/lib/mongodb";
-import Patient from "@/lib/models/Patient";
-import User from "@/lib/models/User";
-import { parsePagination, toPaginationMeta } from "@/lib/utils";
 import jwt from "jsonwebtoken";
-
-function escapeRegex(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+import mongoose from "mongoose";
+import connectMongo from "@/lib/mongodb";
+import User from "@/lib/models/User";
+import Patient from "@/lib/models/Patient";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -40,16 +36,10 @@ export async function GET(req: NextRequest) {
   try {
     const { userId: veterinarianId, error } = getUserIdFromRequest(req);
     if (error) return error;
-    if (!veterinarianId) {
+    if (!veterinarianId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!mongoose.Types.ObjectId.isValid(veterinarianId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const url = new URL(req.url);
-    const q = (url.searchParams.get("q") || "").trim();
-    const { page, pageSize, skip, limit } = parsePagination(url.searchParams, {
-      defaultPageSize: 50,
-      maxPageSize: 100,
-    });
 
     await connectMongo();
 
@@ -58,32 +48,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const filter: any = { veterinarian: veterinarianId };
-    if (q) {
-      filter.animalName = { $regex: escapeRegex(q), $options: "i" };
-    }
-    const [total, docs] = await Promise.all([
-      Patient.countDocuments(filter),
-      Patient.find(filter)
-        .populate("guardian", "fullName")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+    const now = new Date();
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const startOfNextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+
+    const baseMatch = { veterinarian: new mongoose.Types.ObjectId(veterinarianId) };
+
+    const [activePatients, newThisMonth] = await Promise.all([
+      Patient.countDocuments({ ...baseMatch, isAlive: { $ne: false } }),
+      Patient.countDocuments({
+        ...baseMatch,
+        createdAt: { $gte: startOfMonth, $lt: startOfNextMonth },
+      }),
     ]);
 
-    const items = docs.map((p: any) => ({
-      id: String(p._id),
-      name: p.animalName,
-      owner: p.guardian?.fullName ?? "N/A",
-      image: p.photo,
-    }));
-
-    return NextResponse.json(
-      { items, pagination: toPaginationMeta({ page, pageSize, total }) },
-      { status: 200 }
-    );
-  } catch (e) {
+    return NextResponse.json({ activePatients, newThisMonth }, { status: 200 });
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

@@ -14,18 +14,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-interface ProfileSettingsCardProps {
-  name: string;
-  email: string;
-  avatarUrl?: string;
-  balance?: string;
-  currency?: string;
-  onEdit?: () => void;
-  onBalanceClick?: () => void;
-  onMenuItemClick?: (item: string) => void;
-  onLogout?: () => void;
-}
+import { useContext } from "react";
+import { useAppSelector } from "@/store/hooks";
+import { UserContext } from "@/context/authContext";
 
 const menuItems = [
   {
@@ -66,18 +57,19 @@ const menuItems = [
   },
 ];
 
-export default function ProfileSettingsCard({
-  name,
-  email,
-  avatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-  balance = "925.00",
-  currency = "R$",
-  onEdit,
-  onBalanceClick,
-  onMenuItemClick,
-  onLogout,
-}: ProfileSettingsCardProps) {
+export default function MenuPage() {
   const router = useRouter()
+  const profile = useAppSelector((s) => s.userProfile.profile);
+  const { logout } = useContext(UserContext);
+
+  const name = profile?.fullName ?? "User";
+  const email = profile?.email ?? "";
+  const avatarUrl =
+    profile?.profileImageUrl ??
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
+  const balance = "925.00";
+  const currency = "R$";
+
   return (
     <div className="bg-background min-h-screen flex flex-col">
       {/* Header Section */}
@@ -141,7 +133,6 @@ export default function ProfileSettingsCard({
             <Link
               href={"/Veterinarian/Menu/" + item.id}
               key={item.id}
-              onClick={() => onMenuItemClick?.(item.id)}
               className="w-full flex items-center gap-3 py-3.5 hover:bg-muted/50 rounded-lg transition-colors px-1"
             >
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -165,7 +156,8 @@ export default function ProfileSettingsCard({
 
         {/* Logout */}
         <button
-          onClick={onLogout}
+          type="button"
+          onClick={logout}
           className="w-full flex items-center gap-3 py-3.5 hover:bg-muted/50 rounded-lg transition-colors px-1"
         >
           <div className="w-10 h-10 rounded-full bg-[#F5F6F6] flex items-center justify-center flex-shrink-0">

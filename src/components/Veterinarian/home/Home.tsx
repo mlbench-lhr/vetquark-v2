@@ -18,6 +18,15 @@ export default function Home() {
     const router = useRouter();
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     const [patients, setPatients] = useState<Patient[]>([]);
+    const [patientStats, setPatientStats] = useState<{ activePatients: number; newThisMonth: number }>({
+        activePatients: 0,
+        newThisMonth: 0,
+    });
+    const [attendance, setAttendance] = useState<{ months: string[]; dogs: number[]; cats: number[] }>({
+        months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        dogs: Array(12).fill(0),
+        cats: Array(12).fill(0),
+    });
 
     useEffect(() => {
         (async () => {
@@ -38,23 +47,61 @@ export default function Home() {
             }
         })();
     }, []);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/patient/get_patient_stats', { credentials: 'include' });
+                const data = await res.json().catch(() => null);
+                if (!res.ok || !data) return;
+                const activePatients = Number((data as any).activePatients);
+                const newThisMonth = Number((data as any).newThisMonth);
+                if (!Number.isFinite(activePatients) || !Number.isFinite(newThisMonth)) return;
+                setPatientStats({ activePatients, newThisMonth });
+            } catch {
+            }
+        })();
+    }, []);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const year = new Date().getFullYear();
+                const res = await fetch(`/api/patient/get_attendance_species?year=${year}`, { credentials: 'include' });
+                const data = await res.json().catch(() => null);
+                if (!res.ok || !data) return;
+                if (!Array.isArray(data.months) || !Array.isArray(data.dogs) || !Array.isArray(data.cats)) return;
+                setAttendance({
+                    months: data.months as string[],
+                    dogs: data.dogs as number[],
+                    cats: data.cats as number[],
+                });
+            } catch {
+            }
+        })();
+    }, []);
     return (
         <div className="px-3 py-5">
             <Header userName={profile?.fullName} balance="$ 925,00" />
             <SearchBar />
 
             <div className="mt-3 grid grid-cols-2 gap-3">
-                <StatCard number={3} label="Exams Today" sublabel="1 completed" variant="primary" />
-                <StatCard number={6} label="Active Patients" sublabel="+2 new this month" variant="secondary" />
+                <StatCard number={0} label="Exams Today" sublabel="0 completed" variant="primary" />
+                <StatCard
+                    number={patientStats.activePatients}
+                    label="Active Patients"
+                    sublabel={`+${patientStats.newThisMonth} new this month`}
+                    variant="secondary"
+                />
             </div>
 
 
 
             <div className="">
                 <AttendanceChart
-                    months={['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']}
-                    dogs={[80, 120, 90, 150, 110, 135, 125, 140, 95, 160, 145, 130]}
-                    cats={[60, 70, 80, 65, 95, 85, 90, 75, 100, 80, 110, 95]}
+                    months={attendance.months}
+                    dogs={attendance.dogs}
+                    cats={attendance.cats}
                     interactive={true}
                 />
             </div>
