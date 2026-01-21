@@ -54,26 +54,26 @@ export default function IdentificationStep({ onNext }: Props) {
     if (!patientId) return
     if (patients.some((p) => p.id === patientId)) return
 
-    ; (async () => {
-      try {
-        const res = await fetch(
-          `/api/patient/get_patient_details?patientId=${encodeURIComponent(patientId)}`,
-        )
-        const data = await res.json()
-        const item = data?.item
-        if (!res.ok || !item) return
+      ; (async () => {
+        try {
+          const res = await fetch(
+            `/api/patient/get_patient_details?patientId=${encodeURIComponent(patientId)}`,
+          )
+          const data = await res.json()
+          const item = data?.item
+          if (!res.ok || !item) return
 
-        const row: PatientListItem = {
-          id: String(item.id || item._id || patientId),
-          name: String(item.animalName || ''),
-          owner: String(item.guardian?.fullName || ''),
-          image: item.photo,
+          const row: PatientListItem = {
+            id: String(item.id || item._id || patientId),
+            name: String(item.animalName || ''),
+            owner: String(item.guardian?.fullName || ''),
+            image: item.photo,
+          }
+
+          setPatients((prev) => (prev.some((p) => p.id === row.id) ? prev : [row, ...prev]))
+        } catch {
         }
-
-        setPatients((prev) => (prev.some((p) => p.id === row.id) ? prev : [row, ...prev]))
-      } catch {
-      }
-    })()
+      })()
   }, [patientId, patients])
 
   const canProceed = useMemo(() => {
@@ -160,15 +160,9 @@ export default function IdentificationStep({ onNext }: Props) {
               className="w-full px-4 py-4 bg-gray-100 rounded-2xl  text-gray-700"
               style={{ colorScheme: 'light' }}
             />
-            {/* <Calendar
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 cursor-pointer"
-              onClick={() => {
-                const el = collectionRef.current as any
-                if (!el) return
-                if (typeof el.showPicker === 'function') el.showPicker()
-                else el.click()
-              }}
-            /> */}
+            <Calendar
+              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 cursor-pointer"
+            />
           </div>
         </div>
 
