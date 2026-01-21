@@ -4,6 +4,39 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState } from 'react';
 import { Edit, Minus, Plus } from 'lucide-react';
+import PhoneInput from "@/components/form/group-input/PhoneInput";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { toast } from "react-toastify";
+
+const brazilianStateOptions = [
+    { value: "AC", text: "Acre" },
+    { value: "AL", text: "Alagoas" },
+    { value: "AP", text: "Amapá" },
+    { value: "AM", text: "Amazonas" },
+    { value: "BA", text: "Bahia" },
+    { value: "CE", text: "Ceará" },
+    { value: "DF", text: "Distrito Federal" },
+    { value: "ES", text: "Espírito Santo" },
+    { value: "GO", text: "Goiás" },
+    { value: "MA", text: "Maranhão" },
+    { value: "MT", text: "Mato Grosso" },
+    { value: "MS", text: "Mato Grosso do Sul" },
+    { value: "MG", text: "Minas Gerais" },
+    { value: "PA", text: "Pará" },
+    { value: "PB", text: "Paraíba" },
+    { value: "PR", text: "Paraná" },
+    { value: "PE", text: "Pernambuco" },
+    { value: "PI", text: "Piauí" },
+    { value: "RJ", text: "Rio de Janeiro" },
+    { value: "RN", text: "Rio Grande do Norte" },
+    { value: "RS", text: "Rio Grande do Sul" },
+    { value: "RO", text: "Rondônia" },
+    { value: "RR", text: "Roraima" },
+    { value: "SC", text: "Santa Catarina" },
+    { value: "SP", text: "São Paulo" },
+    { value: "SE", text: "Sergipe" },
+    { value: "TO", text: "Tocantins" },
+];
 
 type Props = {
     isOpen: boolean;
@@ -178,15 +211,16 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
                                     Phone Number
                                 </div>
-                                <div className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 flex items-center gap-3">
-                                    <div className="text-[15px] text-[#111827]">+205</div>
-                                    <input
-                                        value={newAddressForm.phone}
-                                        onChange={(e) => setNewAddressForm((p) => ({ ...p, phone: e.target.value }))}
-                                        placeholder="Enter your phone number"
-                                        className="flex-1 h-full bg-transparent text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
-                                    />
-                                </div>
+                                <PhoneInput
+                                    name="phone"
+                                    value={newAddressForm.phone}
+                                    onChange={(next) => setNewAddressForm((p) => ({ ...p, phone: next }))}
+                                    defaultCountry="br"
+                                    required
+                                    inputClassName="!w-full !h-[52px] !rounded-2xl !bg-[#F3F4F6] !border-0 !text-[15px] !text-[#111827] placeholder:!text-[#9CA3AF] focus:!outline-none"
+                                    buttonClassName="!h-[52px] !bg-[#F3F4F6] !border-0 !rounded-2xl"
+                                    containerClassName="w-full"
+                                />
                             </div>
 
                             <div>
@@ -217,12 +251,20 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
                                     State
                                 </div>
-                                <input
+                                <select
                                     value={newAddressForm.state}
                                     onChange={(e) => setNewAddressForm((p) => ({ ...p, state: e.target.value }))}
-                                    placeholder="Enter your state"
                                     className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
-                                />
+                                >
+                                    <option value="" disabled>
+                                        Select a state
+                                    </option>
+                                    {brazilianStateOptions.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>
+                                            {opt.text}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div>
@@ -238,43 +280,12 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                             </div>
                         </div>
 
-                        <div className="fixed left-0 right-0 bottom-0 bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    const id = `addr_${Date.now()}`;
-                                    const phone = newAddressForm.phone.trim();
-                                    const city = newAddressForm.city.trim();
-                                    const state = newAddressForm.state.trim();
-                                    const location = [city, state].filter(Boolean).join(", ");
-                                    const created: Address = {
-                                        id,
-                                        name: newAddressForm.label.trim() || "New Address",
-                                        phone: phone ? `(+205) ${phone}` : "",
-                                        location: location || "—",
-                                        addressLine: newAddressForm.address.trim() || undefined,
-                                        city: city || undefined,
-                                        state: state || undefined,
-                                        postalCode: newAddressForm.postalCode.trim() || undefined,
-                                    };
-
-                                    setAddresses((prev) => [...prev, created]);
-                                    setSelectedAddressId(id);
-                                    setNewAddressForm({
-                                        label: "",
-                                        phone: "",
-                                        address: "",
-                                        city: "",
-                                        state: "",
-                                        postalCode: "",
-                                    });
-                                    setStep("checkout");
-                                }}
-                                className="w-full h-[56px] rounded-full bg-[#4A7BF7] text-white text-[16px] font-medium"
-                            >
-                                Save
-                            </button>
-                        </div>
+                        <button
+                            onClick={handleProceedToPurchase}
+                            className="w-full bg-primary text-white mt-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+                        >
+                            Save
+                        </button>
                     </div>
                 ) : step === "change-address" ? (
                     <div className="mt-4 px-4 pb-24">
@@ -329,48 +340,13 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                     </div>
                 ) : (
                     <div className={`mt-6 space-y-4 p-4 rounded-[16px] ${step === "store" && "bg-[#F5F6F6]"} `}>
-                    <div className="bg-gray-0 rounded-2xl max-h-[85vh] relative">
-                        {/* Content */}
-                        <div className="p- bg-transparent">
-                            {/* Header */}
+                        <div className="bg-gray-0 rounded-2xl max-h-[85vh] relative">
+                            {/* Content */}
+                            <div className="p- bg-transparent">
+                                {/* Header */}
 
-                            {
-                                step === 'store' ? (
-                                    <div className='flex flex-col justify-between h-[70vh]'>
-                                        {/* Cart Items */}
-                                        <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
-                                            {quantities.map((qty, index) => (
-                                                <div key={index} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
-                                                    <div className="w-[80px] h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                        VETRIX
-                                                    </div>
-
-                                                    <div className="flex-1 text-xs">
-                                                        <h3 className="font-semibold text-gray-800">Vetrix Box</h3>
-                                                        <p className="max-w-[110px] text-gray-400">Box with 100 units of reagent strips</p>
-                                                        <div className='flex justify-between items-center gap-2'>
-                                                            <p className="text-base font-bold text-gray-800">£135.00</p>
-                                                            <div className="flex items-center">
-
-                                                                <button
-                                                                    onClick={() => handleIncrease(index)}
-                                                                    className="w-6 h-6 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
-                                                                >
-                                                                    <Plus className="w-4 h-4 text-white" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                            ))}
-                                        </div>
-
-                                        {/* Total and Button */}
-
-                                    </div>
-                                ) :
-                                    step === 'cart' ? (
+                                {
+                                    step === 'store' ? (
                                         <div className='flex flex-col justify-between h-[70vh]'>
                                             {/* Cart Items */}
                                             <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
@@ -386,13 +362,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                             <div className='flex justify-between items-center gap-2'>
                                                                 <p className="text-base font-bold text-gray-800">£135.00</p>
                                                                 <div className="flex items-center">
-                                                                    <button
-                                                                        onClick={() => handleDecrease(index)}
-                                                                        className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center hover:bg-blue-200 transition"
-                                                                    >
-                                                                        <Minus className="w-4 h-4 text-primary" />
-                                                                    </button>
-                                                                    <span className="w-8 text-center font-semibold">{qty}</span>
+
                                                                     <button
                                                                         onClick={() => handleIncrease(index)}
                                                                         className="w-6 h-6 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
@@ -411,50 +381,98 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
                                         </div>
                                     ) :
-                                        (
-                                            <div className='h-[70vh]'>
-                                                <DeliveryAddress
-                                                    address={selectedAddress}
-                                                    onChangeAddress={() => setStep("change-address")}
-                                                    onAddNewAddress={() => setStep("add-address")}
-                                                />
-                                                <div className="h-2 bg-secondary" />                                                <OrderSummary items={[
-                                                    { name: "SVOFMI", quantity: 1 },
-                                                    { name: "Amoxylife-LA", quantity: 2 },
-                                                ]} />
+                                        step === 'cart' ? (
+                                            <div className='flex flex-col justify-between h-[70vh]'>
+                                                {/* Cart Items */}
+                                                <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
+                                                    {quantities.map((qty, index) => (
+                                                        <div key={index} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
+                                                            <div className="w-[80px] h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                                VETRIX
+                                                            </div>
+
+                                                            <div className="flex-1 text-xs">
+                                                                <h3 className="font-semibold text-gray-800">Vetrix Box</h3>
+                                                                <p className="max-w-[110px] text-gray-400">Box with 100 units of reagent strips</p>
+                                                                <div className='flex justify-between items-center gap-2'>
+                                                                    <p className="text-base font-bold text-gray-800">£135.00</p>
+                                                                    <div className="flex items-center">
+                                                                        <button
+                                                                            onClick={() => handleDecrease(index)}
+                                                                            className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center hover:bg-blue-200 transition"
+                                                                        >
+                                                                            <Minus className="w-4 h-4 text-primary" />
+                                                                        </button>
+                                                                        <span className="w-8 text-center font-semibold">{qty}</span>
+                                                                        <button
+                                                                            onClick={() => handleIncrease(index)}
+                                                                            className="w-6 h-6 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
+                                                                        >
+                                                                            <Plus className="w-4 h-4 text-white" />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                    ))}
+                                                </div>
+
+                                                {/* Total and Button */}
+
                                             </div>
-                                        )}
-                        </div>
-                        <div className="space-y-4 bordert p-4 rounded-t-4xl bg-white absolute w-full bottom-0 z-300">
-                            {
-                                step === "store" ?
+                                        ) :
+                                            (
+                                                <div className='h-[70vh]'>
+                                                    <DeliveryAddress
+                                                        address={selectedAddress}
+                                                        onChangeAddress={() => setStep("change-address")}
+                                                        onAddNewAddress={() => setStep("add-address")}
+                                                    />
+                                                    <div className="h-2 bg-secondary" />                                                <OrderSummary items={[
+                                                        { name: "SVOFMI", quantity: 1 },
+                                                        { name: "Amoxylife-LA", quantity: 2 },
+                                                    ]} />
+                                                </div>
+                                            )}
+                            </div>
+                            <div className="space-y-4 bordert p-4 rounded-t-4xl bg-white absolute w-full bottom-0 z-300">
+                                {
+                                    step === "store" ?
 
-                                    <button
-                                        onClick={handleViewCart}
-                                        className="w-full bg-primary text-white py-2 rounded-full font-semibold px-3 flex justify-between items-center hover:bg-blue-700 transition"
-                                    >
-                                        <span className='text-base text-primary h-4.5 w-4.5 rounded-full bg-white flex justify-center items-center'>3</span>
-                                        View Your Cart
-                                        <span className='text-sm font-bold text-white '>Rs 140</span>
-                                    </button>
-
-                                    :
-                                    <>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-500">Total Amount</span>
-                                            <span className=" font-bold text-gray-800">R$ {getTotalAmount().toFixed(2)}</span>
-                                        </div><button
-                                            onClick={handleProceedToPurchase}
-                                            className="w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+                                        <button
+                                            onClick={handleViewCart}
+                                            className="w-full bg-primary text-white py-2 rounded-full font-semibold px-3 flex justify-between items-center hover:bg-blue-700 transition"
                                         >
-                                            Proceed to purchase
+                                            <span className='text-base text-primary h-4.5 w-4.5 rounded-full bg-white flex justify-center items-center'>3</span>
+                                            View Your Cart
+                                            <span className='text-sm font-bold text-white '>Rs 140</span>
                                         </button>
 
-                                    </>
-                            }
+                                        :
+                                        <>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-gray-500">Total Amount</span>
+                                                <span className=" font-bold text-gray-800">R$ {getTotalAmount().toFixed(2)}</span>
+                                            </div>
+                                            <button
+                                                onClick={handleProceedToPurchase}
+                                                className="w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+                                            >
+                                                Proceed to purchase
+                                            </button>
+                                            <button
+                                                onClick={handleProceedToPurchase}
+                                                className="w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+                                            >
+                                                Proceed to purchase
+                                            </button>
+
+                                        </>
+                                }
+                            </div>
                         </div>
                     </div>
-                </div>
                 )}
             </div>
         </div>

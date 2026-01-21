@@ -1,9 +1,12 @@
 "use client"
+import React from "react";
 import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Header from "@/components/common/header";
+import PhoneInput from "@/components/form/group-input/PhoneInput";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 interface EditProfileCardProps {
     fullName?: string;
@@ -29,6 +32,18 @@ export default function EditProfileCard({
     onAvatarChange,
     onSave,
 }: EditProfileCardProps) {
+    const [localFullName, setLocalFullName] = React.useState(fullName);
+    const [localEmail, setLocalEmail] = React.useState(email);
+    const [localPhone, setLocalPhone] = React.useState(() => {
+        const initial = `${phoneCode ?? ""}${phoneNumber ?? ""}`.replace(/\s+/gu, "");
+        if (!initial) return "";
+        return initial.startsWith("+") ? initial : `+${initial}`;
+    });
+
+    const parsedPhone = localPhone ? parsePhoneNumberFromString(localPhone) : undefined;
+    const derivedPhoneCode = parsedPhone ? `+${parsedPhone.countryCallingCode}` : phoneCode;
+    const derivedPhoneNumber = parsedPhone ? parsedPhone.nationalNumber : phoneNumber;
+
     return (
         <div className="bg-background min-h-screen flex flex-col px-4">
             <Header title="Edit Profile" />
@@ -58,7 +73,8 @@ export default function EditProfileCard({
                         Full Name
                     </Label>
                     <Input
-                        defaultValue={fullName}
+                        value={localFullName}
+                        onChange={(e) => setLocalFullName(e.target.value)}
                         className="h-12 border-0 border-b border-border rounded-none bg-transparent px-0 text-base text-foreground focus-visible:ring-0 focus-visible:border-primary"
                     />
                 </div>
@@ -67,7 +83,8 @@ export default function EditProfileCard({
                     <Label className="text-sm font-normal text-foreground">Email</Label>
                     <Input
                         type="email"
-                        defaultValue={email}
+                        value={localEmail}
+                        onChange={(e) => setLocalEmail(e.target.value)}
                         className="h-12 border-0 border-b border-border rounded-none bg-transparent px-0 text-base text-foreground focus-visible:ring-0 focus-visible:border-primary"
                     />
                 </div>
@@ -76,12 +93,15 @@ export default function EditProfileCard({
                     <Label className="text-sm font-normal text-foreground">
                         Phone Number
                     </Label>
-                    <div className="flex items-center gap-2 border-b border-border">
-                        <span className="text-base text-foreground">{phoneCode}</span>
-                        <Input
-                            type="tel"
-                            defaultValue={phoneNumber}
-                            className="h-12 border-0 rounded-none bg-transparent px-0 text-base text-foreground focus-visible:ring-0"
+                    <div className="border-b border-border">
+                        <PhoneInput
+                            name="phone"
+                            value={localPhone}
+                            onChange={setLocalPhone}
+                            defaultCountry="br"
+                            inputClassName="!w-full !h-12 !border-0 !bg-transparent !text-base !text-foreground focus:!outline-none focus:!ring-0"
+                            buttonClassName="!h-12 !border-0 !bg-transparent"
+                            containerClassName="w-full"
                         />
                     </div>
                 </div>
@@ -92,10 +112,10 @@ export default function EditProfileCard({
                 <Button
                     onClick={() =>
                         onSave?.({
-                            fullName,
-                            email,
-                            phoneCode,
-                            phoneNumber,
+                            fullName: localFullName,
+                            email: localEmail,
+                            phoneCode: derivedPhoneCode,
+                            phoneNumber: derivedPhoneNumber,
                         })
                     }
                     className="w-full h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-base"

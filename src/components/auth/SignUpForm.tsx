@@ -6,6 +6,8 @@ import MultiSelect from "@/components/form/MultiSelect";
 import DropdownSelect from "@/components/form/DropdownSelect";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import PhoneInput from "@/components/form/group-input/PhoneInput";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 type ProfileType = "veterinarian" | "tutor";
 
@@ -435,6 +437,13 @@ export default function SignUpForm() {
       return;
     }
 
+    const parsedPhone = parsePhoneNumberFromString(String(formData.phone || "").trim());
+    if (!parsedPhone?.isValid()) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+    const normalizedPhone = parsedPhone.number;
+
     try {
       setSubmitting(true);
       const res = await fetch("/api/auth/signup", {
@@ -444,7 +453,7 @@ export default function SignUpForm() {
           mode: "init",
           fullName: formData.fullName,
           email: formData.email,
-          phone: formData.phone,
+          phone: normalizedPhone,
           password: formData.password,
           profileType,
         }),
@@ -564,20 +573,16 @@ export default function SignUpForm() {
                 <label className="block text-gray-900 text-sm mb-2">
                   Phone Number
                 </label>
-                <div className="flex gap-2">
-                  <div className="w-20 px-3 py-3 bg-gray-50 rounded-xl flex items-center justify-center text-gray-600">
-                    +55
-                  </div>
-                  <input
-                    type="tel"
-                    name="phone"
-                    placeholder="Enter your phone number"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    className="flex-1 px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
-                  />
-                </div>
+                <PhoneInput
+                  name="phone"
+                  value={formData.phone}
+                  onChange={(next) => setFormData((prev) => ({ ...prev, phone: next }))}
+                  defaultCountry="br"
+                  required
+                  inputClassName="!w-full !h-12 !px-11 !py-3 !bg-gray-50 !rounded-xl !border-0 !text-gray-800 placeholder:!text-gray-400 focus:!outline-none"
+                  buttonClassName="!h-12 !bg-gray-50 !border-0 !rounded-xl"
+                  containerClassName="w-full"
+                />
               </div>
 
               <div>
@@ -811,33 +816,16 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                {profileType === "tutor" ? (
-                  <>
-                    <label className="block text-gray-900 text-sm mb-2">
-                      State
-                    </label>
-                    <input
-                      type="text"
-                      name="state"
-                      placeholder="Enter your state"
-                      value={formData.state}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
-                    />
-                  </>
-                ) : (
-                  <DropdownSelect
-                    label="State"
-                    options={brazilianStateOptions}
-                    value={formData.state}
-                    onChange={(value) => setFormData((prev) => ({ ...prev, state: value }))}
-                    placeholder="Select a state"
-                    placement="up"
-                    name="state"
-                    required
-                  />
-                )}
+                <DropdownSelect
+                  label="State"
+                  options={brazilianStateOptions}
+                  value={formData.state}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, state: value }))}
+                  placeholder="Select a state"
+                  placement="up"
+                  name="state"
+                  required
+                />
               </div>
 
               <div>

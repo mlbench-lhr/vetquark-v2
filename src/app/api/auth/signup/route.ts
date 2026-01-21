@@ -3,6 +3,30 @@ import bcrypt from "bcryptjs";
 import connectMongo from "@/lib/mongodb";
 import User, { IUser } from "@/lib/models/User";
 import { sendVerificationEmail, sendWelcomeEmail } from "@/lib/email";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function isValidCpf(value: string) {
+  const cpf = digitsOnly(value);
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+  const calcDigit = (base: string, factorStart: number) => {
+    let sum = 0;
+    for (let i = 0; i < base.length; i++) sum += Number(base[i]) * (factorStart - i);
+    const mod = sum % 11;
+    return String(mod < 2 ? 0 : 11 - mod);
+  };
+  const d1 = calcDigit(cpf.slice(0, 9), 10);
+  const d2 = calcDigit(cpf.slice(0, 9) + d1, 11);
+  return cpf[9] === d1 && cpf[10] === d2;
+}
+
+function isValidPostalCode(value: string) {
+  return digitsOnly(value).length === 8;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,12 +63,40 @@ export async function POST(req: NextRequest) {
       ? (profileType === "veterinarian" ? "Veterinarian" : profileType === "tutor" ? "Guardian" : profileType)
       : undefined;
 
+    const phoneInput = typeof phone === "string" ? phone.trim() : phone == null ? "" : String(phone).trim();
+    const normalizedPhone = phoneInput
+      ? (() => {
+          const parsed = parsePhoneNumberFromString(phoneInput);
+          if (!parsed?.isValid()) return null;
+          return parsed.number;
+        })()
+      : undefined;
+
+    if (normalizedPhone === null) {
+      return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
+    }
+
     await connectMongo();
 
     if (mode === 'vet_create_guardian') {
       if (!fullName || !email) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
       }
+      if (!normalizedPhone) {
+        return NextResponse.json({ error: "Phone is required" }, { status: 400 });
+      }
+      if (!taxId) {
+        return NextResponse.json({ error: "ID Card is required" }, { status: 400 });
+      }
+      // if (!isValidCpf(String(taxId))) {
+      //   return NextResponse.json({ error: "Invalid ID Card" }, { status: 400 });
+      // }
+      if (!postalCode) {
+        return NextResponse.json({ error: "Postal Code is required" }, { status: 400 });
+      }
+      // if (!isValidPostalCode(String(postalCode))) {
+      //   return NextResponse.json({ error: "Invalid Postal Code" }, { status: 400 });
+      // }
 
       const existing = await User.findOne({ email: emailLower }).lean();
       if (existing) {
@@ -59,7 +111,7 @@ export async function POST(req: NextRequest) {
       const doc: Partial<IUser> = {
         fullName,
         email: emailLower,
-        phone,
+        phone: normalizedPhone,
         passwordHash,
         taxId,
         dateOfBirth,
@@ -89,6 +141,9 @@ export async function POST(req: NextRequest) {
       if (!fullName || !email || !password) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
       }
+      if (!normalizedPhone) {
+        return NextResponse.json({ error: "Phone is required" }, { status: 400 });
+      }
 
       const existing = await User.findOne({ email: emailLower }).lean();
       if (existing && existing.emailVerified) {
@@ -107,7 +162,7 @@ export async function POST(req: NextRequest) {
           { email: emailLower },
           {
             fullName,
-            phone,
+            phone: normalizedPhone,
             passwordHash,
             verificationOtp: otp,
             verificationOtpExpiresAt: expiresAt,
@@ -123,7 +178,7 @@ export async function POST(req: NextRequest) {
         const doc: Partial<IUser> = {
           fullName,
           email: emailLower,
-          phone,
+          phone: normalizedPhone,
           passwordHash,
           acceptTerms: !!acceptTerms,
           emailVerified: false,
@@ -163,7 +218,6 @@ export async function POST(req: NextRequest) {
       }
       const update: Partial<IUser> = {
         fullName,
-        phone,
         taxId,
         dateOfBirth,
         address,
@@ -184,6 +238,7 @@ export async function POST(req: NextRequest) {
         reportHeaderAddress,
         reportFooter,
       };
+      if (normalizedPhone !== undefined) update.phone = normalizedPhone;
       const updated = await User.findOneAndUpdate({ email: emailLower }, update, { new: true }).lean();
       if (!updated?._id) {
         return NextResponse.json({ error: "Failed to complete profile" }, { status: 500 });
@@ -197,6 +252,9 @@ export async function POST(req: NextRequest) {
     if (acceptTerms !== true) {
       return NextResponse.json({ error: "Terms must be accepted" }, { status: 400 });
     }
+    if (!normalizedPhone) {
+      return NextResponse.json({ error: "Phone is required" }, { status: 400 });
+    }
 
     const existing = await User.findOne({ email: emailLower }).lean();
     if (existing) {
@@ -208,7 +266,7 @@ export async function POST(req: NextRequest) {
     const doc: Partial<IUser> = {
       fullName,
       email: emailLower,
-      phone,
+      phone: normalizedPhone,
       passwordHash,
       taxId,
       dateOfBirth,

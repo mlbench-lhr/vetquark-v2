@@ -3,6 +3,63 @@ import { useRef, useState } from 'react';
 import { ArrowLeft, Bell, Calendar, ChevronLeft, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import PhoneInput from '@/components/form/group-input/PhoneInput';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { toast } from 'react-toastify';
+
+function digitsOnly(value: string) {
+    return value.replace(/\D/g, "");
+}
+
+function isValidCpf(value: string) {
+    const cpf = digitsOnly(value);
+    if (cpf.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(cpf)) return false;
+    const calcDigit = (base: string, factorStart: number) => {
+        let sum = 0;
+        for (let i = 0; i < base.length; i++) sum += Number(base[i]) * (factorStart - i);
+        const mod = sum % 11;
+        return String(mod < 2 ? 0 : 11 - mod);
+    };
+    const d1 = calcDigit(cpf.slice(0, 9), 10);
+    const d2 = calcDigit(cpf.slice(0, 9) + d1, 11);
+    return cpf[9] === d1 && cpf[10] === d2;
+}
+
+function isValidPostalCode(value: string) {
+    const cep = digitsOnly(value);
+    return cep.length === 8;
+}
+
+const brazilianStateOptions = [
+    { value: "AC", text: "Acre" },
+    { value: "AL", text: "Alagoas" },
+    { value: "AP", text: "Amapá" },
+    { value: "AM", text: "Amazonas" },
+    { value: "BA", text: "Bahia" },
+    { value: "CE", text: "Ceará" },
+    { value: "DF", text: "Distrito Federal" },
+    { value: "ES", text: "Espírito Santo" },
+    { value: "GO", text: "Goiás" },
+    { value: "MA", text: "Maranhão" },
+    { value: "MT", text: "Mato Grosso" },
+    { value: "MS", text: "Mato Grosso do Sul" },
+    { value: "MG", text: "Minas Gerais" },
+    { value: "PA", text: "Pará" },
+    { value: "PB", text: "Paraíba" },
+    { value: "PR", text: "Paraná" },
+    { value: "PE", text: "Pernambuco" },
+    { value: "PI", text: "Piauí" },
+    { value: "RJ", text: "Rio de Janeiro" },
+    { value: "RN", text: "Rio Grande do Norte" },
+    { value: "RS", text: "Rio Grande do Sul" },
+    { value: "RO", text: "Rondônia" },
+    { value: "RR", text: "Roraima" },
+    { value: "SC", text: "Santa Catarina" },
+    { value: "SP", text: "São Paulo" },
+    { value: "SE", text: "Sergipe" },
+    { value: "TO", text: "Tocantins" },
+];
 
 interface FormData {
     fullName: string;
@@ -43,30 +100,69 @@ export default function GuardianRegistration() {
 
     const handleSubmit = async () => {
         try {
+            const fullName = formData.fullName.trim();
+            if (!fullName) {
+                toast.error("Full name is required");
+                return;
+            }
+
+            const idCard = formData.idCard.trim();
+            if (!idCard) {
+                toast.error("ID Card is required");
+                return;
+            }
+            // if (!isValidCpf(idCard)) {
+            //     toast.error("Please enter a valid ID Card");
+            //     return;
+            // }
+
+            const postalCode = formData.postalCode.trim();
+            if (!postalCode) {
+                toast.error("Postal Code is required");
+                return;
+            }
+            // if (!isValidPostalCode(postalCode)) {
+            //     toast.error("Please enter a valid Postal Code");
+            //     return;
+            // }
+
+            const mobileRaw = String(formData.mobile || "").trim();
+            if (!mobileRaw) {
+                toast.error("Phone number is required");
+                return;
+            }
+            const parsedPhone = parsePhoneNumberFromString(mobileRaw);
+            if (!parsedPhone?.isValid()) {
+                toast.error("Please enter a valid phone number");
+                return;
+            }
+            const normalizedPhone = parsedPhone.number;
+
             const res = await fetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     mode: 'vet_create_guardian',
-                    fullName: formData.fullName,
+                    fullName,
                     email: formData.email,
-                    phone: formData.mobile,
-                    taxId: formData.idCard,
+                    phone: normalizedPhone,
+                    taxId: idCard,
                     dateOfBirth: formData.dateOfBirth,
                     address: formData.address,
                     city: formData.city,
                     state: formData.state,
-                    postalCode: formData.postalCode,
+                    postalCode,
                     profileType: 'Guardian',
                 }),
             });
             const result = await res.json();
             if (!res.ok) {
-                console.error('Failed to create guardian:', result.error || result);
+                toast.error(typeof result?.error === "string" ? result.error : "Failed to create guardian");
                 return;
             }
             router.push(`/Veterinarian/patient/new_patient?guardianId=${result.id}&guardianName=${encodeURIComponent(formData.fullName)}`);
         } catch (e) {
+            toast.error("Network error while creating guardian");
             console.error('Error creating guardian:', e);
         }
     };
@@ -200,14 +296,17 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Mobile
+                                Phone Number
                             </label>
-                            <input
-                                type="tel"
-                                placeholder="Guardian's Mobile"
+                            <PhoneInput
+                                name="mobile"
                                 value={formData.mobile}
-                                onChange={(e) => handleChange('mobile', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                                onChange={(next) => handleChange('mobile', next)}
+                                defaultCountry="br"
+                                required
+                                inputClassName="!w-full !h-12 !px-11 !py-3 !bg-gray-100 !border-0 !rounded-lg !text-gray-900 placeholder:!text-gray-400 focus:!outline-none focus:!ring-2 focus:!ring-primary"
+                                buttonClassName="!h-12 !bg-gray-100 !border-0 !rounded-lg"
+                                containerClassName="w-full"
                             />
                         </div>
 
@@ -261,13 +360,20 @@ export default function GuardianRegistration() {
                             <label className="block text-sm text-gray-900 mb-2">
                                 State
                             </label>
-                            <input
-                                type="text"
-                                placeholder="Enter your state"
+                            <select
                                 value={formData.state}
                                 onChange={(e) => handleChange('state', e.target.value)}
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
+                            >
+                                <option value="" disabled>
+                                    Select a state
+                                </option>
+                                {brazilianStateOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.text}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>
