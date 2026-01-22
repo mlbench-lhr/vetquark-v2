@@ -1,9 +1,7 @@
 'use client'
-import { Check, ChevronLeft, Divide } from "lucide-react";
-import Image from "next/image";
+import { Check, ChevronLeft, MapPin, Minus, Plus, Ticket } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from 'react';
-import { Edit, Minus, Plus } from 'lucide-react';
 import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { toast } from "react-toastify";
@@ -38,6 +36,22 @@ const brazilianStateOptions = [
     { value: "TO", text: "Tocantins" },
 ];
 
+type StoreStep = "store" | "cart" | "checkout" | "change-address" | "add-address" | "success";
+
+type Product = {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+};
+
+const PRODUCTS: Product[] = [
+    { id: "vetquark-box", name: "VetQuark Box", description: "Box with 100 units of reagent strips", price: 135 },
+    { id: "svovmi", name: "SVOFMI", description: "Reagent strips pack", price: 75 },
+    { id: "amoxylife-la", name: "Amoxylife-LA", description: "Long-acting antibiotic", price: 110 },
+    { id: "vetquark-kits", name: "VetQuark Kits", description: "Starter kits for clinic use", price: 250 },
+];
+
 type Props = {
     isOpen: boolean;
     onClose?: () => void;
@@ -46,9 +60,9 @@ type Props = {
 
 const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
     const router = useRouter()
-    const [step, setStep] = useState<"store" | 'cart' | 'checkout' | "change-address" | "add-address">('store');
-    const [quantities, setQuantities] = useState<number[]>([1, 1, 1, 1, 1, 1, 1, 1]);
-    const [selectedPayment, setSelectedPayment] = useState<'card' | 'pix'>('card');
+    const [step, setStep] = useState<StoreStep>('store');
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [cart, setCart] = useState<Record<string, number>>({});
     const [selectedAddressId, setSelectedAddressId] = useState<string>("taltal");
     const [addresses, setAddresses] = useState<Address[]>([
         { id: "taltal", name: "Taltal Clinic", phone: "(205) 555-024", location: "Arcoverde, Pernambuco" },
@@ -64,48 +78,95 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         state: "",
         postalCode: "",
     });
+    const [lastOrder, setLastOrder] = useState<{
+        id: string;
+        items: Array<{ name: string; quantity: number }>;
+        total: number;
+        address: Address;
+    } | null>(null);
 
     const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0];
 
-    const handleIncrease = (index: number) => {
-        const newQuantities = [...quantities];
-        newQuantities[index] += 1;
-        setQuantities(newQuantities);
+    const filteredProducts = PRODUCTS.filter((p) => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return true;
+        return `${p.name} ${p.description}`.toLowerCase().includes(q);
+    });
+
+    const cartItems = Object.entries(cart)
+        .map(([productId, quantity]) => {
+            const product = PRODUCTS.find((p) => p.id === productId);
+            if (!product) return null;
+            const qty = Number(quantity);
+            if (!Number.isFinite(qty) || qty <= 0) return null;
+            return { product, quantity: qty };
+        })
+        .filter(Boolean) as Array<{ product: Product; quantity: number }>;
+
+    const cartQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const cartTotal = cartItems.reduce((sum, item) => sum + item.quantity * item.product.price, 0);
+
+    const setCartQuantity = (productId: string, quantity: number) => {
+        setCart((prev) => {
+            const next = { ...prev };
+            if (quantity <= 0) {
+                delete next[productId];
+                return next;
+            }
+            next[productId] = quantity;
+            return next;
+        });
     };
 
-    const handleDecrease = (index: number) => {
-        const newQuantities = [...quantities];
-        if (newQuantities[index] > 1) {
-            newQuantities[index] -= 1;
-            setQuantities(newQuantities);
-        }
-    };
-
-    const getTotalAmount = () => {
-        const total = quantities.reduce((sum, qty) => sum + (qty * 135), 0);
-        return total;
+    const addToCart = (productId: string) => {
+        setCart((prev) => ({ ...prev, [productId]: (prev[productId] ?? 0) + 1 }));
     };
 
     const handleProceedToPurchase = () => {
         if (step === "cart") {
+            if (cartQuantity <= 0) {
+                toast.error("Your cart is empty");
+                return;
+            }
             setStep("checkout");
             return;
         }
 
         if (step === "checkout") {
-            handleClose();
-            router.push("/Guardian/payment/1/pix");
+            if (cartQuantity <= 0) {
+                toast.error("Your cart is empty");
+                setStep("store");
+                return;
+            }
+            const orderId = `order_${Date.now()}`;
+            setLastOrder({
+                id: orderId,
+                items: cartItems.map((i) => ({ name: i.product.name, quantity: i.quantity })),
+                total: cartTotal,
+                address: selectedAddress,
+            });
+            setCart({});
+            setStep("success");
+            toast.success("Order created");
+            if (onUpdated) onUpdated();
             return;
         }
-
-        setStep("checkout");
     };
 
     const handleViewCart = () => {
+        if (cartQuantity <= 0) {
+            toast.error("Your cart is empty");
+            return;
+        }
         setStep('cart');
     };
 
     const handleBack = () => {
+        if (step === "success") {
+            setLastOrder(null);
+            setStep("store");
+            return;
+        }
         if (step === "add-address") {
             setStep("change-address");
             return;
@@ -126,16 +187,10 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
     };
 
     const handleClose = () => {
-        setStep('cart');
-        setQuantities([1, 1]);
+        setStep('store');
+        setCart({});
+        setLastOrder(null);
         onClose && onClose();
-    };
-
-    const handleCompletePurchase = () => {
-        // Handle purchase completion
-        console.log('Purchase completed');
-        handleClose();
-        if (onUpdated) onUpdated();
     };
 
     return (
@@ -175,7 +230,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                         <div className="flex-1 relative mx-2">
                             <input
                                 type="text"
-                                placeholder="Search for patient or exam..."
+                                placeholder="Search for an item"
                                 className="w-full px-4 py-3 pl-12  rounded-xl focus:outline-none focus:border-primary bg-gray-100"
                             />
                             <svg
@@ -483,8 +538,6 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 export default StoreModal;
 
 
-import { MapPin } from "lucide-react";
-
 interface Address {
     id: string;
     name: string;
@@ -539,8 +592,6 @@ const DeliveryAddress = ({ address, onChangeAddress, onAddNewAddress }: Delivery
     );
 };
 
-
-import { Ticket } from "lucide-react";
 
 interface OrderItem {
     name: string;

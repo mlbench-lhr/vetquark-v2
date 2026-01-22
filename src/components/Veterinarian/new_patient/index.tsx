@@ -1,11 +1,14 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { Search, Bell, ChevronRight, Plus, Link2 } from 'lucide-react';
+import { Link2, Mail, Plus, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import PatientCard from '../home/PatientCard';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/tables/Pagination';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
+import { Modal } from '@/components/ui/modal';
+import { useModal } from '@/hooks/useModal';
 
 interface Guardian {
     id: string;
@@ -16,13 +19,19 @@ interface Guardian {
 
 export default function AddPatientGuardian() {
     const router = useRouter();
+    const inviteModal = useModal();
     const [searchQuery, setSearchQuery] = useState('');
+    const [inviteUrl, setInviteUrl] = useState<string>('');
 
     const [guardians, setGuardians] = useState<Guardian[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const pageSize = 10;
+
+    useEffect(() => {
+        setInviteUrl(`${window.location.origin}/signup?profile=tutor`);
+    }, []);
 
     async function handleSearch(q: string, pageToFetch: number) {
         try {
@@ -59,6 +68,55 @@ export default function AddPatientGuardian() {
         guardian.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         guardian.owner.includes(searchQuery)
     );
+
+    const getInviteLink = () => {
+        if (inviteUrl) return inviteUrl;
+        if (typeof window !== 'undefined') return `${window.location.origin}/signup?profile=tutor`;
+        return '/signup?profile=tutor';
+    };
+
+    const handleInviteGuardian = async () => {
+        const url = getInviteLink();
+        const shareText = `Sign up as a Guardian on VetQuark: ${url}`;
+
+        // try {
+        //     if (typeof navigator !== 'undefined' && 'share' in navigator) {
+        //         await (navigator as any).share({
+        //             title: 'VetQuark Guardian Signup',
+        //             text: shareText,
+        //             url,
+        //         });
+        //         inviteModal.closeModal();
+        //         return;
+        //     }
+        // } catch {
+        // }
+
+        inviteModal.openModal();
+    };
+
+    const handleCopyInviteLink = async () => {
+        const url = getInviteLink();
+        try {
+            await navigator.clipboard.writeText(url);
+            toast.success('Link copied');
+        } catch {
+            toast.error('Unable to copy link');
+        }
+    };
+
+    const handleShareWhatsApp = () => {
+        const url = getInviteLink();
+        const text = `Sign up as a Guardian on VetQuark: ${url}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    };
+
+    const handleShareEmail = () => {
+        const url = getInviteLink();
+        const subject = 'VetQuark Guardian Signup';
+        const body = `Please sign up using this link: ${url}`;
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    };
 
     const GuardiansSkeleton = () => (
         <div className="space-y-3">
@@ -202,12 +260,80 @@ export default function AddPatientGuardian() {
                         New Guardian
                     </button>
 
-                    <button className="w-full bg-[#EBF2FF] hover:bg-gray-200 text-primary font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    <button
+                        onClick={handleInviteGuardian}
+                        className="w-full bg-[#EBF2FF] hover:bg-gray-200 text-primary font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors"
+                    >
                         <Link2 className="w-5 h-5" />
                         Invite Guardian
                     </button>
                 </div>
             </div>
-        </div>
+
+            <Modal isOpen={inviteModal.isOpen} onClose={inviteModal.closeModal} className="max-w-[520px] mx-4 p-6">
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Invite Guardian</h3>
+                        <p className="text-sm text-gray-600 mt-1">Share this link so they can sign up as a Guardian.</p>
+                    </div>
+                    <button type="button" onClick={inviteModal.closeModal} className="p-2 rounded-lg hover:bg-gray-100">
+                        <X className="w-5 h-5 text-gray-700" />
+                    </button>
+                </div>
+
+                <div className="mt-5 space-y-4">
+                    <input
+                        readOnly
+                        value={getInviteLink()}
+                        className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={handleCopyInviteLink}
+                            className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg"
+                        >
+                            Copy Link
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleShareWhatsApp}
+                            className="w-full bg-[#EBF2FF] hover:bg-gray-200 text-primary font-medium py-3 rounded-lg flex items-center justify-center gap-2"
+                        >
+                            <Link2 className="w-5 h-5" />
+                            WhatsApp
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleShareEmail}
+                            className="w-full bg-[#EBF2FF] hover:bg-gray-200 text-primary font-medium py-3 rounded-lg flex items-center justify-center gap-2 sm:col-span-2"
+                        >
+                            <Mail className="w-5 h-5" />
+                            Email
+                        </button>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            const url = getInviteLink();
+                            if (typeof navigator !== 'undefined' && 'share' in navigator) {
+                                await (navigator as any).share({
+                                    title: 'VetQuark Guardian Signup',
+                                    text: `Sign up as a Guardian on VetQuark: ${url}`,
+                                    url,
+                                });
+                                inviteModal.closeModal();
+                                return;
+                            }
+                        }}
+                        className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 rounded-lg"
+                    >
+                        Share…
+                    </button>
+                </div>
+            </Modal >
+        </div >
     );
 }

@@ -19,10 +19,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClickNavigate }) =
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={patient.image} alt={patient.name} />
-            <AvatarFallback className="bg-muted text-black text-sm">
-              <Dog />
-            </AvatarFallback>
+            <AvatarImage src={patient.image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"} alt={patient.name} />
           </Avatar>
 
         </div>

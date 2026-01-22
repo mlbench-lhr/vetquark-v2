@@ -5,7 +5,7 @@ import { Eye, EyeOff, Calendar, Check, ChevronLeft } from "lucide-react";
 import MultiSelect from "@/components/form/MultiSelect";
 import DropdownSelect from "@/components/form/DropdownSelect";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useAppDispatch } from "@/store/hooks";
@@ -40,9 +40,16 @@ type SignUpFormData = {
 
 export default function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
-  const [step, setStep] = useState(1);
-  const [profileType, setProfileType] = useState<ProfileType>("veterinarian");
+  const initialProfileType = (() => {
+    const raw = String(searchParams.get("profile") || searchParams.get("type") || "").toLowerCase().trim();
+    if (raw === "guardian" || raw === "tutor") return "tutor" as const;
+    if (raw === "vet" || raw === "veterinarian") return "veterinarian" as const;
+    return "veterinarian" as const;
+  })();
+  const [step, setStep] = useState(() => (initialProfileType === "tutor" ? 2 : 1));
+  const [profileType, setProfileType] = useState<ProfileType>(() => initialProfileType);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", ""]);
