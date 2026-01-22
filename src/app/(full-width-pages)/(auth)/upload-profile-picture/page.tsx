@@ -9,6 +9,11 @@ export default function UploadProfilePicturePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = useMemo(() => (searchParams.get("userId") || "").trim(), [searchParams]);
+  const profileType = useMemo(() => (searchParams.get("profileType") || "").trim(), [searchParams]);
+  const homeHref = useMemo(
+    () => (profileType === "veterinarian" ? "/Veterinarian/home" : "/Guardian/home"),
+    [profileType]
+  );
 
   const [profileImageUrl, setProfileImageUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
@@ -69,16 +74,17 @@ export default function UploadProfilePicturePage() {
   };
 
   const handleSkip = () => {
-    router.push("/signin");
+    router.push(homeHref);
   };
 
   const handleContinue = async () => {
     if (!userId) {
       toast.error("Missing user id");
+      router.push(homeHref);
       return;
     }
     if (!profileImageUrl) {
-      router.push("/signin");
+      router.push(homeHref);
       return;
     }
     try {
@@ -94,7 +100,7 @@ export default function UploadProfilePicturePage() {
         return;
       }
       toast.success("Profile picture updated");
-      router.push("/signin");
+      router.push(homeHref);
     } finally {
       setSaving(false);
     }
@@ -104,7 +110,7 @@ export default function UploadProfilePicturePage() {
     <div className="min-h-[calc(100vh-48px)] bg-white flex flex-col">
       <div className="flex items-center justify-between">
         <button
-          onClick={() => router.push("/signin")}
+          onClick={() => router.push(homeHref)}
           className="hover:bg-gray-100 rounded-lg transition-colors bg-transparent border-0 cursor-pointer"
           aria-label="Back"
         >
@@ -161,4 +167,3 @@ export default function UploadProfilePicturePage() {
     </div>
   );
 }
-

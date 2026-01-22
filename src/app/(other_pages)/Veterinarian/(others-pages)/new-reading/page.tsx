@@ -1,9 +1,11 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import NewReadingWizard from '@/components/Veterinarian/new_reading/NewReadingWizard'
 
 function page() {
   return (
-    <NewReadingWizard />
+    <Suspense fallback={null}>
+      <NewReadingWizard />
+    </Suspense>
   )
 }
 

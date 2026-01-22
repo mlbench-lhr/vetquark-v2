@@ -35,10 +35,10 @@ function getUserIdFromRequest(req: NextRequest): { userId: string | null; error:
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId: veterinarianId, error } = getUserIdFromRequest(req);
+    const { userId, error } = getUserIdFromRequest(req);
     if (error) return error;
-    if (!veterinarianId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (!mongoose.Types.ObjectId.isValid(veterinarianId)) {
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -54,18 +54,19 @@ export async function GET(req: NextRequest) {
 
     await connectMongo();
 
-    const veterinarian = await User.findById(veterinarianId).select("_id role").lean();
-    if (!veterinarian || veterinarian.role !== "Veterinarian") {
+    const user = await User.findById(userId).select("_id role fullName").lean();
+    if (!user || (user.role !== "Veterinarian" && user.role !== "Guardian")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const filter: any = { veterinarian: veterinarianId };
+    const filter: any = user.role === "Veterinarian" ? { veterinarian: userId } : { guardian: userId };
     if (patientId) filter.patient = patientId;
     const [total, docs] = await Promise.all([
       Reading.countDocuments(filter),
       Reading.find(filter)
         .populate("patient", "animalName photo")
         .populate("guardian", "fullName")
+        .populate("veterinarian", "fullName tradeName")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -76,6 +77,7 @@ export async function GET(req: NextRequest) {
       id: String(r._id),
       patientName: r.patient?.animalName ?? "N/A",
       guardianName: r.guardian?.fullName ?? "N/A",
+      veterinarianName: r.veterinarian?.tradeName ?? r.veterinarian?.fullName ?? "N/A",
       date: (r.signedAt ?? r.createdAt ?? new Date()).toISOString?.() ?? String(r.signedAt ?? r.createdAt ?? ""),
       status: r.signedAt ? "signed" : "pending",
       avatarSrc: r.patient?.photo || "/images/product/product-01.jpg",
@@ -89,4 +91,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

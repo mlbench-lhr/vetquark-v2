@@ -15,7 +15,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Vertix",
+  title: "VetQuark",
   description: "Mobile website for Vetinarians and Pet Owners",
   icons: {
     icon: "/logo.pg"

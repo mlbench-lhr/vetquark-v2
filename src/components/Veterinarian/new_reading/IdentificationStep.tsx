@@ -169,6 +169,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         <div>
           <div className="text-sm text-gray-900 mb-2">Strip Lot</div>
           <input
+            type='number'
             value={value.stripLot}
             onChange={(e) => onChange({ stripLot: e.target.value })}
             placeholder="Enter Strip Lot Number"

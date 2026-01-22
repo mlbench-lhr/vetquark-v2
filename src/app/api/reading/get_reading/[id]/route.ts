@@ -34,10 +34,10 @@ function getUserIdFromRequest(req: NextRequest): { userId: string | null; error:
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> | { id: string } }) {
   try {
-    const { userId: veterinarianId, error } = getUserIdFromRequest(req);
+    const { userId, error } = getUserIdFromRequest(req);
     if (error) return error;
-    if (!veterinarianId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (!mongoose.Types.ObjectId.isValid(veterinarianId)) {
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -49,12 +49,17 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
 
     await connectMongo();
 
-    const veterinarian = await User.findById(veterinarianId).select("_id role").lean();
-    if (!veterinarian || veterinarian.role !== "Veterinarian") {
+    const user = await User.findById(userId).select("_id role").lean();
+    if (!user || (user.role !== "Veterinarian" && user.role !== "Guardian")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const doc = await Reading.findOne({ _id: readingId, veterinarian: veterinarianId })
+    const filter =
+      user.role === "Veterinarian"
+        ? { _id: readingId, veterinarian: userId }
+        : { _id: readingId, guardian: userId };
+
+    const doc = await Reading.findOne(filter)
       .populate("patient", "animalName photo")
       .populate("guardian", "fullName")
       .populate("veterinarian", "fullName crmv crmvState tradeName clinicLogoUrl reportHeaderAddress reportFooter")
@@ -99,4 +104,3 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

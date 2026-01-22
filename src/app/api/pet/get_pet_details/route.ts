@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import Patient from "@/lib/models/Patient";
 import User from "@/lib/models/User";
@@ -9,22 +10,27 @@ export async function GET(req: NextRequest) {
     if (!guardianId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (!mongoose.Types.ObjectId.isValid(guardianId)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const url = new URL(req.url);
     const petId = (url.searchParams.get("petId") || "").trim();
     if (!petId) {
       return NextResponse.json({ error: "petId is required" }, { status: 400 });
     }
+    if (!mongoose.Types.ObjectId.isValid(petId)) {
+      return NextResponse.json({ error: "Invalid petId" }, { status: 400 });
+    }
 
     await connectMongo();
 
     const guardian = await User.findById(guardianId).select("_id role").lean();
-    // if (!guardian || guardian.role !== "Guardian") {
-    //   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    // }
+    if (!guardian || guardian.role !== "Guardian") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-    // const doc = await Patient.findOne({ _id: petId, guardian: guardianId })
-    const doc = await Patient.findOne({ _id: petId })
+    const doc = await Patient.findOne({ _id: petId, guardian: guardianId })
       .populate("veterinarian", "fullName tradeName email")
       .lean();
 
@@ -71,4 +77,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

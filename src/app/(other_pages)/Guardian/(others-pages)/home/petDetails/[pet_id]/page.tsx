@@ -1,10 +1,12 @@
 'use client';
 
 import Header from '@/components/common/header';
-import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { PatientInfoCard } from '@/components/Veterinarian/home/details/Information';
-import Progress from '@/components/Veterinarian/home/details/Progress';
+import Link from 'next/link';
+import { toast } from 'react-toastify';
+import { Check } from 'lucide-react';
 
 interface TabsProps {
   activeTab: string;
@@ -48,9 +50,14 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState('information');
   const params = useParams<{ pet_id: string }>();
   const petId = params?.pet_id;
+  const router = useRouter();
 
   const [pet, setPet] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [reports, setReports] = useState<
+    Array<{ id: string; date: string; status: 'signed' | 'pending'; avatarSrc: string }>
+  >([]);
 
   useEffect(() => {
     (async () => {
@@ -60,13 +67,51 @@ export default function Page() {
         const res = await fetch(`/api/pet/get_pet_details?petId=${encodeURIComponent(petId)}`);
         const data = await res.json();
         if (res.ok) {
+          console.log("data.item---", data.item);
+
           setPet(data.item);
+        } else {
+          toast.error(typeof data?.error === "string" ? data.error : "Failed to load pet");
+          setPet(null);
         }
       } finally {
         setLoading(false);
       }
     })();
   }, [petId]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!petId) return;
+      try {
+        setLoadingReports(true);
+        const res = await fetch(`/api/reading/get_readings?patientId=${encodeURIComponent(petId)}&page=1&pageSize=50`);
+        const data = await res.json().catch(() => null);
+        if (!mounted) return;
+        if (!res.ok) {
+          throw new Error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load reports");
+        }
+        const items = Array.isArray((data as any)?.items) ? (data as any).items : [];
+        setReports(
+          items.map((r: any) => ({
+            id: String(r.id || r._id || ""),
+            date: String(r.date || ""),
+            status: r.status === "signed" ? "signed" : "pending",
+            avatarSrc: String(r.avatarSrc || pet?.photo || "/images/product/product-01.jpg"),
+          }))
+        );
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Failed to load reports");
+        setReports([]);
+      } finally {
+        if (mounted) setLoadingReports(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [petId, pet?.photo]);
 
   const petData = useMemo(() => {
     const dob = pet?.dateOfBirth ? new Date(pet.dateOfBirth) : null;
@@ -85,12 +130,140 @@ export default function Page() {
       name: pet?.animalName ?? '',
       type: pet?.species ?? '',
       breed: pet?.breed ?? '',
-      image: pet?.photo,
+      image: pet?.photo ?? '',
       sex: pet?.sex ?? '',
       age: ageYears === null ? '' : `${ageYears} years`,
       gender: pet?.sex ?? '',
+      microchip: pet?.microchip ?? '',
+      temperament: pet?.temperament ?? '',
+      size: pet?.size ?? '',
+      coat: pet?.coat ?? '',
+      neutered: pet?.neutered ?? '',
+      rga: pet?.rga ?? '',
+      planName: pet?.planName ?? '',
+      cardNumber: pet?.cardNumber ?? '',
+      cardValidity: pet?.cardValidity ?? '',
+      allergies: pet?.allergies ?? '',
+      chronicDiseases: pet?.chronicDiseases ?? '',
+      otherInformation: pet?.otherInformation ?? '',
+      internalNotes: pet?.internalNotes ?? '',
     };
   }, [pet]);
+  console.log("patientData----", pet);
+
+  const details = useMemo(
+    () => [
+      { label: "Microchip", value: pet?.microchip ?? "" },
+      { label: "RGA", value: pet?.rga ?? "" },
+      { label: "Plan", value: pet?.planName ?? "" },
+      { label: "Neutered", value: pet?.neutered ?? "" },
+      { label: "Size", value: pet?.size ?? "" },
+      { label: "Coat", value: pet?.coat ?? "" },
+      { label: "Temperament", value: pet?.temperament ?? "" },
+      { label: "Allergies", value: pet?.allergies ?? "" },
+      { label: "Chronic Diseases", value: pet?.chronicDiseases ?? "" },
+    ],
+    [pet]
+  );
+
+  const handleDownload = useCallback(async (readingId: string) => {
+    try {
+      const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to download report");
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `urinalysis-report-${readingId}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Download failed");
+    }
+  }, []);
+
+  const formatDateLabel = (value: string) => {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    const date = d.toLocaleDateString("en-GB");
+    const time = d.toLocaleTimeString("en-GB", { hour12: false });
+    return `${date}, ${time}`;
+  };
+
+  const StatusPill = ({ status }: { status: "signed" | "pending" }) => {
+    const label = status === "signed" ? "Signed" : "Pending";
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-3 py-1.5 text-[13px] font-medium text-[#3F78D8]">
+        <Check className="h-4 w-4" />
+        {label}
+      </span>
+    );
+  };
+
+  const ExamsTab = () => {
+    return (
+      <div className="px-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">Exams</div>
+          <Link
+            href={`/Guardian/history?petId=${encodeURIComponent(String(petId || ""))}`}
+            className="text-[13px] font-medium leading-[18px] text-[#3F78D8]"
+          >
+            View History
+          </Link>
+        </div>
+
+        {loadingReports ? (
+          <div className="text-[14px] leading-[18px] text-[#9CA3AF]">Loading exams...</div>
+        ) : reports.length === 0 ? (
+          <div className="text-[14px] leading-[18px] text-[#9CA3AF]">No exams found.</div>
+        ) : (
+          <div className="space-y-3">
+            {reports.map((r) => (
+              <div key={r.id} className="rounded-[16px] bg-[#F5F6F6] px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white">
+                      <img src={r.avatarSrc} alt="" className="h-full w-full object-cover" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-[14px] font-medium leading-[18px] text-[#111827]">
+                        Urinalysis Report
+                      </div>
+                      <div className="mt-1 text-[12px] leading-[16px] text-[#9CA3AF]">{formatDateLabel(r.date)}</div>
+                    </div>
+                  </div>
+                  <StatusPill status={r.status} />
+                </div>
+
+                <div className="mt-3 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    className="inline-flex h-[34px] items-center gap-2 rounded-full bg-[#3F78D8] px-4 text-[13px] font-medium text-white"
+                    onClick={() => handleDownload(r.id)}
+                  >
+                    Download
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-[#3F78D8]"
+                    onClick={() => router.push(`/Guardian/history/detail/${encodeURIComponent(r.id)}`)}
+                  >
+                    Details
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const PetDetailsSkeleton = () => (
     <div className="px-4 animate-pulse space-y-4">
@@ -127,9 +300,11 @@ export default function Page() {
       {loading ? (
         <PetDetailsSkeleton />
       ) : activeTab === 'information' ? (
-        <PatientInfoCard {...petData} />
+        <div className="px-4 space-y-4">
+          <PatientInfoCard {...petData} />
+        </div>
       ) : (
-        <Progress />
+        <ExamsTab />
       )}
     </div>
   );
