@@ -1,63 +1,143 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Zap } from "lucide-react";
 import Header from "@/components/common/header";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setProfile } from "@/store/userProfileSlice";
+import { toast } from "react-toastify";
 
-interface PaymentMethodCardProps {
-    onSave?: (data: PixData | BankData) => void;
-}
-
-interface PixData {
+type PixData = {
     type: "pix";
     keyType: "cpf" | "cnpj";
     pixKey: string;
     holderName: string;
     holderCpfCnpj: string;
-}
+};
 
-interface BankData {
+type BankData = {
     type: "bank";
     personType: "individual" | "legal";
     bankName: string;
     agency: string;
     account: string;
     holderCpfCnpj: string;
-}
+};
 
-export default function PaymentMethodCard({ onSave }: PaymentMethodCardProps) {
-    const [activeTab, setActiveTab] = useState<"pix" | "bank">("pix");
-    const [keyType, setKeyType] = useState<"cpf" | "cnpj">("cpf");
-    const [personType, setPersonType] = useState<"individual" | "legal">("individual");
+type PayoutMethod = PixData | BankData;
 
-    // PIX form state
-    const [pixKey, setPixKey] = useState("");
-    const [pixHolderName, setPixHolderName] = useState("");
-    const [pixHolderCpfCnpj, setPixHolderCpfCnpj] = useState("");
+export default function Page() {
+    const dispatch = useAppDispatch();
+    const profile = useAppSelector((s) => s.userProfile.profile);
 
-    // Bank form state
-    const [bankName, setBankName] = useState("");
-    const [agency, setAgency] = useState("");
-    const [account, setAccount] = useState("");
-    const [bankHolderCpfCnpj, setBankHolderCpfCnpj] = useState("");
-
-    const handleSave = () => {
-        if (activeTab === "pix") {
-            onSave?.({
+    const payoutMethod = useMemo(() => {
+        const pm = profile?.payoutMethod as any;
+        if (!pm || typeof pm !== "object") return null;
+        if (pm.type === "pix") {
+            const keyType = pm.keyType === "cnpj" ? "cnpj" : "cpf";
+            return {
                 type: "pix",
                 keyType,
-                pixKey,
-                holderName: pixHolderName,
-                holderCpfCnpj: pixHolderCpfCnpj,
-            });
-        } else {
-            onSave?.({
+                pixKey: typeof pm.pixKey === "string" ? pm.pixKey : "",
+                holderName: typeof pm.holderName === "string" ? pm.holderName : "",
+                holderCpfCnpj: typeof pm.holderCpfCnpj === "string" ? pm.holderCpfCnpj : "",
+            } satisfies PixData;
+        }
+        if (pm.type === "bank") {
+            const personType = pm.personType === "legal" ? "legal" : "individual";
+            return {
                 type: "bank",
                 personType,
-                bankName,
-                agency,
-                account,
-                holderCpfCnpj: bankHolderCpfCnpj,
+                bankName: typeof pm.bankName === "string" ? pm.bankName : "",
+                agency: typeof pm.agency === "string" ? pm.agency : "",
+                account: typeof pm.account === "string" ? pm.account : "",
+                holderCpfCnpj: typeof pm.holderCpfCnpj === "string" ? pm.holderCpfCnpj : "",
+            } satisfies BankData;
+        }
+        return null;
+    }, [profile?.payoutMethod]);
+
+    const [activeTab, setActiveTab] = useState<"pix" | "bank">(payoutMethod?.type === "bank" ? "bank" : "pix");
+    const [keyType, setKeyType] = useState<"cpf" | "cnpj">(payoutMethod?.type === "pix" ? payoutMethod.keyType : "cpf");
+    const [personType, setPersonType] = useState<"individual" | "legal">(
+        payoutMethod?.type === "bank" ? payoutMethod.personType : "individual"
+    );
+    const [pixKey, setPixKey] = useState(payoutMethod?.type === "pix" ? payoutMethod.pixKey : "");
+    const [pixHolderName, setPixHolderName] = useState(payoutMethod?.type === "pix" ? payoutMethod.holderName : "");
+    const [pixHolderCpfCnpj, setPixHolderCpfCnpj] = useState(
+        payoutMethod?.type === "pix" ? payoutMethod.holderCpfCnpj : ""
+    );
+    const [bankName, setBankName] = useState(payoutMethod?.type === "bank" ? payoutMethod.bankName : "");
+    const [agency, setAgency] = useState(payoutMethod?.type === "bank" ? payoutMethod.agency : "");
+    const [account, setAccount] = useState(payoutMethod?.type === "bank" ? payoutMethod.account : "");
+    const [bankHolderCpfCnpj, setBankHolderCpfCnpj] = useState(
+        payoutMethod?.type === "bank" ? payoutMethod.holderCpfCnpj : ""
+    );
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        setActiveTab(payoutMethod?.type === "bank" ? "bank" : "pix");
+        if (payoutMethod?.type === "pix") {
+            setKeyType(payoutMethod.keyType);
+            setPixKey(payoutMethod.pixKey);
+            setPixHolderName(payoutMethod.holderName);
+            setPixHolderCpfCnpj(payoutMethod.holderCpfCnpj);
+        } else if (payoutMethod?.type === "bank") {
+            setPersonType(payoutMethod.personType);
+            setBankName(payoutMethod.bankName);
+            setAgency(payoutMethod.agency);
+            setAccount(payoutMethod.account);
+            setBankHolderCpfCnpj(payoutMethod.holderCpfCnpj);
+        }
+    }, [payoutMethod]);
+
+    const handleSave = async () => {
+        const data: PayoutMethod =
+            activeTab === "pix"
+                ? {
+                    type: "pix",
+                    keyType,
+                    pixKey,
+                    holderName: pixHolderName,
+                    holderCpfCnpj: pixHolderCpfCnpj,
+                }
+                : {
+                    type: "bank",
+                    personType,
+                    bankName,
+                    agency,
+                    account,
+                    holderCpfCnpj: bankHolderCpfCnpj,
+                };
+
+        if (data.type === "pix") {
+            if (!data.pixKey.trim() || !data.holderCpfCnpj.trim()) {
+                toast.error("Please fill PIX key and CPF/CNPJ");
+                return;
+            }
+        } else {
+            if (!data.bankName.trim() || !data.agency.trim() || !data.account.trim() || !data.holderCpfCnpj.trim()) {
+                toast.error("Please fill all bank fields");
+                return;
+            }
+        }
+
+        try {
+            setSaving(true);
+            const res = await fetch("/api/user/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ payoutMethod: data }),
             });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+                return;
+            }
+            if (json?.profile) dispatch(setProfile(json.profile));
+            toast.success("Saved changes");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -257,13 +337,13 @@ export default function PaymentMethodCard({ onSave }: PaymentMethodCardProps) {
                 </div>
             )}
 
-            {/* Save Button - Fixed at bottom */}
             <div className="mt-auto pt-6">
                 <button
                     onClick={handleSave}
-                    className="w-full bg-[#4A7BF7] text-white py-4 rounded-full text-base font-semibold hover:bg-[#3A6BE7] transition-colors"
+                    disabled={saving}
+                    className="w-full bg-[#4A7BF7] text-white py-4 rounded-full text-base font-semibold hover:bg-[#3A6BE7] transition-colors disabled:opacity-60"
                 >
-                    Save Changes
+                    {saving ? "Saving..." : "Save Changes"}
                 </button>
             </div>
         </div>

@@ -1,9 +1,10 @@
 'use client'
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/common/header";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAppSelector } from "@/store/hooks";
 
 interface Transaction {
     id: string;
@@ -62,6 +63,16 @@ export default function WalletCard({
     const [period, setPeriod] = useState<"7d" | "30d" | "90d">("7d");
     const [filter, setFilter] = useState<"all" | "credits" | "withdrawals">("all");
     const router = useRouter()
+    const profile = useAppSelector((s) => s.userProfile.profile);
+
+    const resolvedPixNumber = useMemo(() => {
+        const pm = profile?.payoutMethod as any;
+        if (!pm || typeof pm !== "object" || pm.type !== "pix") return pixNumber;
+        const raw = typeof pm.pixKey === "string" ? pm.pixKey : typeof pm.holderCpfCnpj === "string" ? pm.holderCpfCnpj : "";
+        const digits = raw.replace(/\D/g, "");
+        if (digits.length >= 6) return `***${digits.slice(3, 6)}.***-${digits.slice(-2)}`;
+        return raw ? "***" : pixNumber;
+    }, [pixNumber, profile?.payoutMethod]);
 
     const filteredTransactions = transactions.filter((t) => {
         if (filter === "all") return true;
@@ -106,7 +117,7 @@ export default function WalletCard({
                 </div>
                 <div>
                     <p className="font-medium text-foreground text-sm">PIX (CPF/CNPJ)</p>
-                    <p className="text-xs text-muted-foreground">{pixNumber}</p>
+                    <p className="text-xs text-muted-foreground">{resolvedPixNumber}</p>
                 </div>
             </div>
 

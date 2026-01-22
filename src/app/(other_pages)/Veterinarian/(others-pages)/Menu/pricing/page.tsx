@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Pencil } from "lucide-react";
 import Header from "@/components/common/header";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -26,7 +26,7 @@ export default function BasePriceCard() {
 
     const netPayout = amount - platformFee;
 
-    const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = parseFloat(e.target.value) || 0;
         setAmount(value);
     };

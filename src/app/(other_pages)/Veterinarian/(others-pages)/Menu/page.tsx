@@ -9,6 +9,7 @@ import {
   Building2,
   Lock,
   Bell,
+  Languages,
   LogOut,
   Wallet,
 } from "lucide-react";
@@ -54,6 +55,12 @@ const menuItems = [
     icon: Bell,
     title: "Notifications",
     description: "Manage notification alerts",
+  },
+  {
+    id: "language",
+    icon: Languages,
+    title: "Language",
+    description: "Update your language preferences",
   },
 ];
 
