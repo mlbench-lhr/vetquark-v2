@@ -5,6 +5,7 @@ import Header from "@/components/common/header";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
+import { Pencil } from "lucide-react";
 
 type ClinicReportsFormData = {
   clinicLogoUrl: string;
@@ -134,7 +135,7 @@ export default function ClinicReportsPage() {
   };
 
   return (
-    <div className="w-full bg-background min-h-screen flex flex-col">
+    <div className="w-full bg-background min-h-scree flex flex-col">
       <Header title="Clinic & Reports" />
 
       <div className="flex-1 overflow-y-auto px-5 pb-28">
@@ -142,19 +143,25 @@ export default function ClinicReportsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-gray-900 font-medium mb-2">Clinic Logo</label>
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p- text-center">
                 {formData.clinicLogoUrl ? (
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex w-full h-[200px] flex-col relative items-center gap-3">
                     <img
                       src={formData.clinicLogoUrl}
                       alt="Clinic logo"
-                      className="w-32 h-32 object-contain rounded-lg bg-white"
+                      className="w-full h-full object-contain rounded-lg bg-white"
                     />
-                    <label className="inline-block">
+                    <label className="inline-block absolute -top-2 -right-2">
                       <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
-                      <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
-                        {uploadingClinicLogo ? "Uploading..." : "Change Logo"}
-                      </span>
+                      {
+                        uploadingClinicLogo ?
+                          <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
+                            {uploadingClinicLogo ? "Uploading..." : "Change Logo"}
+                          </span>
+                          : <div className="p-2 bg-primary rounded-full">
+                            <Pencil color="white" size={16} />
+                          </div>
+                      }
                     </label>
                   </div>
                 ) : (

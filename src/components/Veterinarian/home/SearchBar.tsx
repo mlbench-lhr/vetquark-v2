@@ -6,11 +6,20 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Patient } from './types';
 
+type ExamSuggestion = {
+  id: string;
+  patientName: string;
+  guardianName: string;
+  status: 'signed' | 'pending';
+  date: string;
+};
+
 const SearchBar: React.FC = () => {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<Patient[]>([]);
+  const [patientSuggestions, setPatientSuggestions] = useState<Patient[]>([]);
+  const [examSuggestions, setExamSuggestions] = useState<ExamSuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +40,8 @@ const SearchBar: React.FC = () => {
 
   useEffect(() => {
     if (!trimmedQuery) {
-      setSuggestions([]);
+      setPatientSuggestions([]);
+      setExamSuggestions([]);
       setLoading(false);
       return;
     }
@@ -40,26 +50,55 @@ const SearchBar: React.FC = () => {
     const timeout = window.setTimeout(async () => {
       try {
         setLoading(true);
-        const res = await fetch(
-          `/api/patient/get_patients?page=1&pageSize=6&q=${encodeURIComponent(trimmedQuery)}`,
-          { signal: controller.signal, credentials: 'include' }
-        );
-        const data = await res.json().catch(() => null);
-        if (!res.ok || !data || !Array.isArray(data.items)) {
-          setSuggestions([]);
-          return;
+        const [patientsRes, examsRes] = await Promise.all([
+          fetch(`/api/patient/get_patients?page=1&pageSize=6&q=${encodeURIComponent(trimmedQuery)}`, {
+            signal: controller.signal,
+            credentials: 'include',
+          }),
+          fetch(`/api/reading/get_readings?page=1&pageSize=6&q=${encodeURIComponent(trimmedQuery)}`, {
+            signal: controller.signal,
+            credentials: 'include',
+          }),
+        ]);
+
+        const [patientsData, examsData] = await Promise.all([
+          patientsRes.json().catch(() => null),
+          examsRes.json().catch(() => null),
+        ]);
+
+        if (patientsRes.ok && patientsData && Array.isArray((patientsData as any).items)) {
+          setPatientSuggestions(
+            (patientsData as any).items.map((p: any) => ({
+              id: String(p.id || p._id),
+              name: String(p.name || ''),
+              owner: String(p.owner || ''),
+              image: String(p.image || ''),
+            })),
+          );
+        } else {
+          setPatientSuggestions([]);
         }
-        setSuggestions(
-          data.items.map((p: any) => ({
-            id: String(p.id || p._id),
-            name: String(p.name || ''),
-            owner: String(p.owner || ''),
-            image: String(p.image || ''),
-          }))
-        );
+
+        if (examsRes.ok && examsData && Array.isArray((examsData as any).items)) {
+          setExamSuggestions(
+            (examsData as any).items.map((r: any) => ({
+              id: String(r.id || r._id || ''),
+              patientName: String(r.patientName || 'N/A'),
+              guardianName: String(r.guardianName || 'N/A'),
+              status: r.status === 'signed' ? 'signed' : 'pending',
+              date: String(r.date || ''),
+            })),
+          );
+        } else {
+          setExamSuggestions([]);
+        }
+
         setOpen(true);
       } catch (e) {
-        if ((e as any)?.name !== 'AbortError') setSuggestions([]);
+        if ((e as any)?.name !== 'AbortError') {
+          setPatientSuggestions([]);
+          setExamSuggestions([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -75,6 +114,18 @@ const SearchBar: React.FC = () => {
     setQuery(patient.name);
     setOpen(false);
     router.push(`/Veterinarian/home/patientDetails/${patient.id}`);
+  };
+
+  const selectExam = (exam: ExamSuggestion) => {
+    setQuery(exam.patientName);
+    setOpen(false);
+    router.push(`/Veterinarian/history/detail/${exam.id}`);
+  };
+
+  const formatExamDate = (raw: string) => {
+    const d = new Date(raw);
+    if (!Number.isFinite(d.getTime())) return raw || '';
+    return d.toLocaleDateString();
   };
 
   return (
@@ -97,8 +148,13 @@ const SearchBar: React.FC = () => {
               return;
             }
             if (e.key === 'Enter') {
-              const first = suggestions[0];
-              if (first) selectPatient(first);
+              const firstPatient = patientSuggestions[0];
+              if (firstPatient) {
+                selectPatient(firstPatient);
+                return;
+              }
+              const firstExam = examSuggestions[0];
+              if (firstExam) selectExam(firstExam);
             }
           }}
           className="w-full px-4 py-3 pl-12  rounded-xl focus:outline-none focus:border-primary bg-gray-100"
@@ -117,25 +173,49 @@ const SearchBar: React.FC = () => {
           <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
             {loading ? (
               <div className="px-4 py-3 text-sm text-gray-500">Searching...</div>
-            ) : suggestions.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-gray-500">No patients found</div>
+            ) : patientSuggestions.length === 0 && examSuggestions.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-gray-500">No results found</div>
             ) : (
               <div className="max-h-80 overflow-auto">
-                {suggestions.map((p) => (
+                {patientSuggestions.length ? (
+                  <div className="px-4 pt-3 pb-2 text-xs font-semibold text-gray-400">Patients</div>
+                ) : null}
+                {patientSuggestions.map((p) => (
                   <button
-                    key={p.id}
+                    key={`patient-${p.id}`}
                     type="button"
                     onClick={() => selectPatient(p)}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
                   >
                     <div className="h-9 w-9 overflow-hidden rounded-full bg-gray-200">
-                      {p.image ? (
-                        <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
-                      ) : null}
+                      {p.image ? <img src={p.image} alt={p.name} className="h-full w-full object-cover" /> : null}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-gray-900">{p.name}</div>
                       <div className="truncate text-xs text-gray-500">{p.owner}</div>
+                    </div>
+                  </button>
+                ))}
+
+                {examSuggestions.length ? (
+                  <div className="px-4 pt-3 pb-2 text-xs font-semibold text-gray-400">Exams</div>
+                ) : null}
+                {examSuggestions.map((r) => (
+                  <button
+                    key={`exam-${r.id}`}
+                    type="button"
+                    onClick={() => selectExam(r)}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-gray-900">{r.patientName}</div>
+                      <div className="truncate text-xs text-gray-500">{r.guardianName}</div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className={`text-xs font-medium ${r.status === 'signed' ? 'text-green-600' : 'text-amber-600'}`}>
+                        {r.status === 'signed' ? 'Signed' : 'Pending'}
+                      </div>
+                      <div className="text-xs text-gray-400">{formatExamDate(r.date)}</div>
                     </div>
                   </button>
                 ))}

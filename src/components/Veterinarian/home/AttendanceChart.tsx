@@ -100,6 +100,31 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
+  const handleExport = () => {
+    const sanitize = (value: unknown) => {
+      const str = String(value ?? '');
+      return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+    };
+
+    const header = ['Month', dogsLabel, catsLabel, 'Total'];
+    const rows = months.map((m, i) => {
+      const d = Number(dogs[i] ?? 0);
+      const c = Number(cats[i] ?? 0);
+      return [m, Number.isFinite(d) ? d : 0, Number.isFinite(c) ? c : 0, (Number.isFinite(d) ? d : 0) + (Number.isFinite(c) ? c : 0)];
+    });
+
+    const csv = [header, ...rows].map((r) => r.map(sanitize).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendances-${new Date().getFullYear()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="mt-6 bg-white rounded-2xl borde border-gray-200">
       {!hideHeader && (
@@ -108,7 +133,11 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({
             <h2 className="text-base font-bold text-gray-800">Attendances</h2>
             <p className="text-xs text-gray-500">Total number of attendances</p>
           </div>
-          <button className="px-3 py-1 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100">
+          <button
+            type="button"
+            onClick={handleExport}
+            className="px-3 py-1 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100"
+          >
             <Download size={14} color='#3F78D8' />
             Export
           </button>
@@ -220,7 +249,7 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({
             </svg>
             {interactive && selectedIndex != null && typeof dogs[selectedIndex] === 'number' && (
               <div
-                style={{ position: 'absolute', left: toX(selectedIndex) - 5, top: toY(dogs[selectedIndex]) - 28 }}
+                style={{ position: 'absolute', left: toX(selectedIndex) - 5, top: toY(dogs[selectedIndex]) - 15 }}
                 className="px-2 py-1 bg-indigo-700 text-white text-xs rounded-lg shadow pointer-events-none"
               >
                 {`${Math.round(dogs[selectedIndex])}${ySuffix ?? ''}`}

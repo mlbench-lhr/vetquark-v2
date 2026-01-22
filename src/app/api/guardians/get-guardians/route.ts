@@ -5,6 +5,7 @@ import Patient from "@/lib/models/Patient";
 import { parsePagination, toPaginationMeta } from "@/lib/utils";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
     }
 
     const url = new URL(req.url);
+    const guardianId = (url.searchParams.get("guardianId") || "").trim();
     const q = (url.searchParams.get("q") || "").trim();
     const sort = (url.searchParams.get("sort") || "name_az").trim();
     const { page, pageSize, skip, limit } = parsePagination(url.searchParams, {
@@ -59,6 +61,46 @@ export async function GET(req: NextRequest) {
     const veterinarian = await User.findById(veterinarianId).select("_id role").lean();
     if (!veterinarian || veterinarian.role !== "Veterinarian") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (guardianId) {
+      if (!mongoose.Types.ObjectId.isValid(guardianId)) {
+        return NextResponse.json({ error: "Invalid guardianId" }, { status: 400 });
+      }
+
+      const [guardianUser, patientCount] = await Promise.all([
+        User.findById(guardianId)
+          .select("_id role fullName email phone taxId dateOfBirth address city state postalCode profileImageUrl")
+          .lean(),
+        Patient.countDocuments({ veterinarian: veterinarianId, guardian: guardianId }),
+      ]);
+
+      if (!guardianUser || guardianUser.role !== "Guardian") {
+        return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
+      }
+      if (!patientCount) {
+        return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
+      }
+
+      return NextResponse.json(
+        {
+          item: {
+            id: String(guardianUser._id),
+            fullName: (guardianUser as any).fullName ?? "",
+            email: (guardianUser as any).email ?? "",
+            phone: (guardianUser as any).phone ?? "",
+            dateOfBirth: (guardianUser as any).dateOfBirth ?? "",
+            address: (guardianUser as any).address ?? "",
+            city: (guardianUser as any).city ?? "",
+            state: (guardianUser as any).state ?? "",
+            postalCode: (guardianUser as any).postalCode ?? "",
+            taxId: (guardianUser as any).taxId ?? "",
+            profileImageUrl: (guardianUser as any).profileImageUrl ?? "",
+            patientCount,
+          },
+        },
+        { status: 200 }
+      );
     }
 
     const veterinarianObjectId = new mongoose.Types.ObjectId(veterinarianId);
@@ -137,6 +179,83 @@ export async function GET(req: NextRequest) {
       },
       { status: 200 }
     );
+  } catch (e) {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const { userId: veterinarianId, error } = getUserIdFromRequest(req);
+    if (error) return error;
+    if (!veterinarianId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!mongoose.Types.ObjectId.isValid(veterinarianId)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const {
+      guardianId,
+      fullName,
+      phone,
+      taxId,
+      dateOfBirth,
+      address,
+      city,
+      state,
+      postalCode,
+      profileImageUrl,
+    } = body || {};
+
+    if (!guardianId || typeof guardianId !== "string" || !guardianId.trim()) {
+      return NextResponse.json({ error: "guardianId is required" }, { status: 400 });
+    }
+    const resolvedGuardianId = guardianId.trim();
+    if (!mongoose.Types.ObjectId.isValid(resolvedGuardianId)) {
+      return NextResponse.json({ error: "Invalid guardianId" }, { status: 400 });
+    }
+
+    await connectMongo();
+
+    const veterinarian = await User.findById(veterinarianId).select("_id role").lean();
+    if (!veterinarian || veterinarian.role !== "Veterinarian") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const linked = await Patient.exists({ veterinarian: veterinarianId, guardian: resolvedGuardianId });
+    if (!linked) {
+      return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
+    }
+
+    const update: Record<string, any> = {};
+    if (typeof fullName === "string") update.fullName = fullName.trim();
+    if (typeof taxId === "string") update.taxId = taxId.trim();
+    if (typeof dateOfBirth === "string") update.dateOfBirth = dateOfBirth.trim();
+    if (typeof address === "string") update.address = address.trim();
+    if (typeof city === "string") update.city = city.trim();
+    if (typeof state === "string") update.state = state.trim();
+    if (typeof postalCode === "string") update.postalCode = postalCode.trim();
+    if (typeof profileImageUrl === "string") update.profileImageUrl = profileImageUrl.trim();
+
+    if (typeof phone === "string") {
+      const parsed = parsePhoneNumberFromString(phone.trim());
+      if (!parsed?.isValid()) {
+        return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
+      }
+      update.phone = parsed.number;
+    }
+
+    const updated = await User.findOneAndUpdate(
+      { _id: resolvedGuardianId, role: "Guardian" },
+      { $set: update },
+      { new: true }
+    ).lean();
+
+    if (!updated?._id) {
+      return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ id: String(updated._id) }, { status: 200 });
   } catch (e) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

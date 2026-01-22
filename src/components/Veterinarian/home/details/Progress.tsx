@@ -332,7 +332,7 @@ export function ParameterProgress() {
             {/* Controls Row */}
             <div className="flex gap-3 mb-6 grid grid-cols-5">
                 <Select value={selectedParameter} onValueChange={setSelectedParameter}>
-                    <SelectTrigger className="text-[12px]! col-span-2 bg-secondary border-0 rounded-lg">
+                    <SelectTrigger className="text-[12px]! col-span-2 bg-secondary border-0 rounded-lg shadow-none">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border border-border shadow-lg z-50">
@@ -343,7 +343,7 @@ export function ParameterProgress() {
                 </Select>
 
                 <Popover>
-                    <PopoverTrigger className="col-span-3 text-[12px]!" asChild>
+                    <PopoverTrigger className="col-span-3 text-[12px]! shadow-none" asChild>
                         <Button
                             variant="secondary"
                             className="bg-secondary border-0 rounded-lg font-normal"
@@ -361,7 +361,7 @@ export function ParameterProgress() {
                                 className="ml-2 h-4 w-4 text-muted-foregroun" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className=" w-auto p-0 bg-popover border border-border shadow-lg z-50 me-2" align="start">
+                    <PopoverContent className=" w-auto p-0 bg-popover border border-border shadow-l z-50 me-2" align="start">
                         <CalendarComponent
                             mode="range"
                             selected={{ from: dateRange.from, to: dateRange.to }}
@@ -384,7 +384,7 @@ export function ParameterProgress() {
                         Normal: {currentParam.normalValue}
                     </p>
                 </div>
-                <Button variant="outline" className="rounded-lg gap-2 ">
+                <Button variant="outline" className="bg-[#F5F6F6] border-0 shadow-none rounded-full gap-2 ">
                     <Download className="h-4 w-4 text-primary" />
                     Export
                 </Button>

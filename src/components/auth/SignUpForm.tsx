@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, EyeOff, Calendar, Check, ChevronLeft } from "lucide-react";
+import { Eye, EyeOff, Calendar, Check, ChevronLeft, Pencil } from "lucide-react";
 import MultiSelect from "@/components/form/MultiSelect";
 import DropdownSelect from "@/components/form/DropdownSelect";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useAppDispatch } from "@/store/hooks";
@@ -40,9 +40,16 @@ type SignUpFormData = {
 
 export default function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
-  const [step, setStep] = useState(1);
-  const [profileType, setProfileType] = useState<ProfileType>("veterinarian");
+  const initialProfileType = (() => {
+    const raw = String(searchParams.get("profile") || searchParams.get("type") || "").toLowerCase().trim();
+    if (raw === "guardian" || raw === "tutor") return "tutor" as const;
+    if (raw === "vet" || raw === "veterinarian") return "veterinarian" as const;
+    return "veterinarian" as const;
+  })();
+  const [step, setStep] = useState(() => (initialProfileType === "tutor" ? 2 : 1));
+  const [profileType, setProfileType] = useState<ProfileType>(() => initialProfileType);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", ""]);
@@ -984,13 +991,21 @@ export default function SignUpForm() {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-900 font-medium mb-2">Clinic Logo</label>
-                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p- text-center">
                   {formData.clinicLogoUrl ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <img src={formData.clinicLogoUrl} alt="Clinic logo" className="w-32 h-32 object-contain rounded-lg bg-white" />
-                      <label className="inline-block">
+                    <div className="flex flex-col items-center w-full h-[200px] gap-3 relative">
+                      <img src={formData.clinicLogoUrl} alt="Clinic logo" className="w-full h-full object-contain rounded-lg bg-white" />
+                      <label className="inline-block absolute -top-2 -right-0">
                         <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
-                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? "Uploading..." : "Change Logo"}</span>
+                        {
+                          uploadingClinicLogo ?
+                            <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
+                              {uploadingClinicLogo ? "Uploading..." : "Change Logo"}
+                            </span>
+                            : <div className="p-2 bg-primary rounded-full">
+                              <Pencil color="white" size={16} />
+                            </div>
+                        }
                       </label>
                     </div>
                   ) : (

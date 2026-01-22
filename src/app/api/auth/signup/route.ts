@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import connectMongo from "@/lib/mongodb";
 import User, { IUser } from "@/lib/models/User";
+import VetGuardianEmailVerification from "@/lib/models/VetGuardianEmailVerification";
 import { sendVerificationEmail, sendWelcomeEmail } from "@/lib/email";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 
@@ -26,6 +28,36 @@ function isValidCpf(value: string) {
 
 function isValidPostalCode(value: string) {
   return digitsOnly(value).length === 8;
+}
+
+function sha256Hex(value: string) {
+  return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function randomStrongPassword(length: number) {
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const lower = "abcdefghijkmnopqrstuvwxyz";
+  const digits = "23456789";
+  const symbols = "!@#$%^&*";
+  const all = upper + lower + digits + symbols;
+
+  const picks = [
+    upper[crypto.randomInt(upper.length)],
+    lower[crypto.randomInt(lower.length)],
+    digits[crypto.randomInt(digits.length)],
+    symbols[crypto.randomInt(symbols.length)],
+  ];
+
+  for (let i = picks.length; i < length; i++) {
+    picks.push(all[crypto.randomInt(all.length)]);
+  }
+
+  for (let i = picks.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(i + 1);
+    [picks[i], picks[j]] = [picks[j], picks[i]];
+  }
+
+  return picks.join("");
 }
 
 export async function POST(req: NextRequest) {
@@ -56,6 +88,8 @@ export async function POST(req: NextRequest) {
       reportHeaderAddress,
       reportFooter,
       mode,
+      otp,
+      verificationId,
     } = body || {};
 
     const emailLower = email ? String(email).toLowerCase() : "";
@@ -78,6 +112,106 @@ export async function POST(req: NextRequest) {
 
     await connectMongo();
 
+    if (mode === "vet_guardian_send_otp") {
+      if (!emailLower) {
+        return NextResponse.json({ error: "Email is required" }, { status: 400 });
+      }
+
+      const existing = await User.findOne({ email: emailLower }).lean();
+      if (existing) {
+        return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+      }
+
+      const now = Date.now();
+      const cooldownMs = 35 * 1000;
+
+      const current = await VetGuardianEmailVerification.findOne({ email: emailLower }).lean();
+      const last = current?.otpLastSentAt ? new Date(current.otpLastSentAt).getTime() : 0;
+      if (last && now - last < cooldownMs) {
+        const remaining = Math.ceil((cooldownMs - (now - last)) / 1000);
+        return NextResponse.json({ error: `Please wait ${remaining}s before resending` }, { status: 429 });
+      }
+
+      const code = String(crypto.randomInt(10000, 100000));
+      const otpExpiresAt = new Date(now + 10 * 60 * 1000);
+      const cleanupAt = new Date(now + 2 * 60 * 60 * 1000);
+
+      await VetGuardianEmailVerification.findOneAndUpdate(
+        { email: emailLower },
+        {
+          $set: {
+            email: emailLower,
+            otpHash: sha256Hex(code),
+            otpExpiresAt,
+            otpAttempts: 0,
+            otpLastSentAt: new Date(now),
+            cleanupAt,
+          },
+          $unset: {
+            verifiedAt: "",
+            verifiedExpiresAt: "",
+            verificationId: "",
+            consumedAt: "",
+          },
+        },
+        { upsert: true, new: true }
+      );
+
+      try {
+        await sendVerificationEmail(emailLower, code);
+      } catch {
+        return NextResponse.json({ message: "OTP generated, email send failed" }, { status: 202 });
+      }
+
+      return NextResponse.json({ message: "OTP sent" }, { status: 200 });
+    }
+
+    if (mode === "vet_guardian_verify_otp") {
+      if (!emailLower) {
+        return NextResponse.json({ error: "Email is required" }, { status: 400 });
+      }
+      if (!otp || typeof otp !== "string" || otp.length !== 5) {
+        return NextResponse.json({ error: "Invalid OTP format" }, { status: 400 });
+      }
+
+      const record = await VetGuardianEmailVerification.findOne({ email: emailLower });
+      if (!record) {
+        return NextResponse.json({ error: "No OTP to verify" }, { status: 400 });
+      }
+      if (record.consumedAt) {
+        return NextResponse.json({ error: "Verification already used" }, { status: 409 });
+      }
+
+      const now = Date.now();
+      if (record.otpExpiresAt && now > new Date(record.otpExpiresAt).getTime()) {
+        return NextResponse.json({ error: "OTP expired" }, { status: 410 });
+      }
+
+      const attempts = Number(record.otpAttempts || 0);
+      if (attempts >= 5) {
+        return NextResponse.json({ error: "Too many attempts" }, { status: 429 });
+      }
+
+      if (record.otpHash !== sha256Hex(otp)) {
+        await VetGuardianEmailVerification.updateOne({ _id: record._id }, { $set: { otpAttempts: attempts + 1 } });
+        return NextResponse.json({ error: "Incorrect OTP" }, { status: 400 });
+      }
+
+      const nextVerificationId = crypto.randomUUID();
+      await VetGuardianEmailVerification.updateOne(
+        { _id: record._id },
+        {
+          $set: {
+            verifiedAt: new Date(now),
+            verifiedExpiresAt: new Date(now + 30 * 60 * 1000),
+            verificationId: nextVerificationId,
+          },
+        }
+      );
+
+      return NextResponse.json({ message: "Email verified", verificationId: nextVerificationId }, { status: 200 });
+    }
+
     if (mode === 'vet_create_guardian') {
       if (!fullName || !email) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -88,11 +222,29 @@ export async function POST(req: NextRequest) {
       if (!taxId) {
         return NextResponse.json({ error: "ID Card is required" }, { status: 400 });
       }
+      if (!dateOfBirth) {
+        return NextResponse.json({ error: "Date of birth is required" }, { status: 400 });
+      }
+      if (!address) {
+        return NextResponse.json({ error: "Address is required" }, { status: 400 });
+      }
+      if (!city) {
+        return NextResponse.json({ error: "City is required" }, { status: 400 });
+      }
+      if (!state) {
+        return NextResponse.json({ error: "State is required" }, { status: 400 });
+      }
       // if (!isValidCpf(String(taxId))) {
       //   return NextResponse.json({ error: "Invalid ID Card" }, { status: 400 });
       // }
       if (!postalCode) {
         return NextResponse.json({ error: "Postal Code is required" }, { status: 400 });
+      }
+      if (!verificationId || typeof verificationId !== "string") {
+        return NextResponse.json({ error: "Email verification is required" }, { status: 400 });
+      }
+      if (acceptTerms !== true) {
+        return NextResponse.json({ error: "Terms must be accepted" }, { status: 400 });
       }
       // if (!isValidPostalCode(String(postalCode))) {
       //   return NextResponse.json({ error: "Invalid Postal Code" }, { status: 400 });
@@ -103,9 +255,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
       }
 
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
-      let tempPassword = '';
-      for (let i = 0; i < 12; i++) tempPassword += chars[Math.floor(Math.random() * chars.length)];
+      const verification = await VetGuardianEmailVerification.findOne({ email: emailLower, verificationId }).lean();
+      if (!verification?.verifiedAt || verification.consumedAt) {
+        return NextResponse.json({ error: "Email verification is required" }, { status: 400 });
+      }
+      const verifiedExpiresAt = verification.verifiedExpiresAt ? new Date(verification.verifiedExpiresAt).getTime() : 0;
+      if (verifiedExpiresAt && Date.now() > verifiedExpiresAt) {
+        return NextResponse.json({ error: "Email verification expired" }, { status: 410 });
+      }
+
+      await VetGuardianEmailVerification.updateOne({ email: emailLower, verificationId }, { $set: { consumedAt: new Date() } });
+
+      const tempPassword = randomStrongPassword(16);
       const passwordHash = await bcrypt.hash(tempPassword, 10);
 
       const doc: Partial<IUser> = {

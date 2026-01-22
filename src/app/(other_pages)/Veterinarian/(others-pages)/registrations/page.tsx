@@ -367,7 +367,7 @@ function RegistrationsListContent({
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-11 w-11">
-                        <AvatarImage src={patient.avatarUrl} alt={patient.name} />
+                        <AvatarImage src={patient.avatarUrl || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"} alt={patient.name} />
                         <AvatarFallback className="bg-muted text-black text-sm">
                           {patient.name.charAt(0)}
                         </AvatarFallback>
@@ -440,7 +440,7 @@ function RegistrationsListContent({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-11 w-11">
-                        <AvatarImage src={guardian.avatarUrl} alt={guardian.name} />
+                        <AvatarImage src={guardian.avatarUrl || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"} alt={guardian.name} />
                         <AvatarFallback className="bg-muted text-black text-sm">
                           {guardian.name.charAt(0)}
                         </AvatarFallback>
@@ -451,7 +451,7 @@ function RegistrationsListContent({
                       </div>
                     </div>
                     <Link
-                      href={`/Veterinarian/home/guardianPatients/${encodeURIComponent(guardian.id)}`}
+                      href={`/Veterinarian/home/guardianDetails/${encodeURIComponent(guardian.id)}`}
                       className="text-black hover:text-foreground transition-colors p-1"
                     >
                       <ChevronRight className="h-5 w-5 text-primary" />

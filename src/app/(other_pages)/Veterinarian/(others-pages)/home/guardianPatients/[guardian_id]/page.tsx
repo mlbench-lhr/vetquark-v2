@@ -43,7 +43,7 @@ function page() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-11 w-11">
-                    <AvatarImage src={guardian.avatarUrl} alt={guardian.name} />
+                    <AvatarImage src={guardian.avatarUrl || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"} alt={guardian.name} />
                     <AvatarFallback className="bg-muted text-black text-sm">
                       {guardian.name.charAt(0)}
                     </AvatarFallback>

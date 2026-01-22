@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: "VetQuark",
   description: "Mobile website for Vetinarians and Pet Owners",
   icons: {
-    icon: "/logo.pg"
+    icon: "/Group 1261153125.png"
   },
 };
 

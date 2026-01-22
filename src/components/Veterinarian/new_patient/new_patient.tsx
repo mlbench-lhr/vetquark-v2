@@ -1,6 +1,6 @@
 'use client'
-import { useRef, useState, ChangeEvent } from 'react';
-import { ArrowLeft, Bell, RefreshCw, Calendar, Upload, ChevronDown, ChevronLeft } from 'lucide-react';
+import { useEffect, useRef, useState, ChangeEvent } from 'react';
+import { RefreshCw, Calendar, Upload, ChevronDown, ChevronLeft } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -38,11 +38,14 @@ interface PatientFormData {
 export default function AddPatientMultiStep() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const patientId = (searchParams.get('patientId') || '').trim() || null;
   const dobRef = useRef<HTMLInputElement | null>(null);
   const cardValidityRef = useRef<HTMLInputElement | null>(null);
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [isAlive, setIsAlive] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [loadingPatient, setLoadingPatient] = useState(false);
+  const [linkedGuardian, setLinkedGuardian] = useState<{ id: string; fullName: string; taxId: string } | null>(null);
   const [formData, setFormData] = useState<PatientFormData>({
     photo: null,
     animalName: '',
@@ -64,6 +67,73 @@ export default function AddPatientMultiStep() {
     otherInformation: '',
     internalNotes: ''
   });
+
+  useEffect(() => {
+    if (patientId) {
+      let mounted = true;
+      (async () => {
+        try {
+          setLoadingPatient(true);
+          const res = await fetch(`/api/patient/get_patient_details?patientId=${encodeURIComponent(patientId)}`);
+          const json = await res.json();
+          if (!res.ok) {
+            return;
+          }
+          const item = (json as any)?.item;
+          if (!mounted || !item) return;
+
+          setFormData({
+            photo: item.photo ?? null,
+            animalName: item.animalName ?? '',
+            microchip: item.microchip ?? '',
+            species: item.species ?? '',
+            breed: item.breed ?? '',
+            sex: item.sex ?? '',
+            dateOfBirth: item.dateOfBirth ?? '',
+            temperament: item.temperament ?? '',
+            size: item.size ?? '',
+            coat: item.coat ?? '',
+            neutered: item.neutered ?? '',
+            rga: item.rga ?? '',
+            planName: item.planName ?? '',
+            cardNumber: item.cardNumber ?? '',
+            cardValidity: item.cardValidity ?? '',
+            allergies: item.allergies ?? '',
+            chronicDiseases: item.chronicDiseases ?? '',
+            otherInformation: item.otherInformation ?? '',
+            internalNotes: item.internalNotes ?? '',
+          });
+          setIsAlive(typeof item.isAlive === 'boolean' ? item.isAlive : true);
+
+          const g = item.guardian;
+          if (g && typeof g === 'object') {
+            const gid = String(g.id || '').trim();
+            if (gid) {
+              setLinkedGuardian({
+                id: gid,
+                fullName: String(g.fullName || '').trim() || 'N/A',
+                taxId: String(g.taxId || '').trim(),
+              });
+            }
+          }
+        } finally {
+          if (mounted) setLoadingPatient(false);
+        }
+      })();
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const guardianId = (searchParams.get('guardianId') || '').trim();
+    const guardianName = (searchParams.get('guardianName') || '').trim();
+    const guardianTaxId = (searchParams.get('guardianTaxId') || '').trim();
+    if (guardianId) {
+      setLinkedGuardian({ id: guardianId, fullName: guardianName || 'N/A', taxId: guardianTaxId });
+    } else {
+      setLinkedGuardian(null);
+    }
+  }, [patientId, searchParams]);
 
   const handleChange = (field: keyof PatientFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -128,23 +198,26 @@ export default function AddPatientMultiStep() {
     }
   };
 
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep((currentStep - 1) as Step);
-    }
-  };
-
   const handleSubmit = async () => {
-    const guardianId = searchParams.get('guardianId');
     try {
+      const isEditing = !!patientId;
+      const guardianId = (searchParams.get('guardianId') || '').trim();
       const res = await fetch('/api/patient/new_patient', {
-        method: 'POST',
+        method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          guardianId,
-          isAlive,
-          ...formData,
-        }),
+        body: JSON.stringify(
+          isEditing
+            ? {
+                patientId,
+                isAlive,
+                ...formData,
+              }
+            : {
+                guardianId,
+                isAlive,
+                ...formData,
+              }
+        ),
       });
       if (!res.ok) {
         console.error('Failed to save patient');
@@ -164,7 +237,7 @@ export default function AddPatientMultiStep() {
         <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={() => router.back()}>
           <ChevronLeft className="w-6 h-6 text-gray-700" />
         </button>
-        <h1 className="text-base font-medium text-gray-900">Add new Patient</h1>
+        <h1 className="text-base font-medium text-gray-900">{patientId ? 'Edit Patient' : 'Add new Patient'}</h1>
         <button className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
           <span className="text-white text-sm">
             <Image
@@ -213,14 +286,16 @@ export default function AddPatientMultiStep() {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-orange-300 to-orange-400 rounded-full"></div>
             <div>
-              <p className="font-medium text-gray-900">{searchParams.get('guardianName') ?? 'N/A'}</p>
-              <p className="text-xs text-tertiary">CPF: N/A</p>
+              <p className="font-medium text-gray-900">{linkedGuardian?.fullName ?? 'N/A'}</p>
+              <p className="text-xs text-tertiary">CPF: {linkedGuardian?.taxId || 'N/A'}</p>
             </div>
           </div>
-          <button className="flex items-center gap-1 text-primary text-sm font-medium" onClick={() => router.push('/Veterinarian/patient')}>
-            <RefreshCw className="w-4 h-4" />
-            Change
-          </button>
+          {!patientId && (
+            <button className="flex items-center gap-1 text-primary text-sm font-medium" onClick={() => router.push('/Veterinarian/patient')}>
+              <RefreshCw className="w-4 h-4" />
+              Change
+            </button>
+          )}
         </div>
 
         <div className="flex items-center justify-between bg-gray-100 p-2 mt-2 rounded-[12px]">
@@ -243,332 +318,337 @@ export default function AddPatientMultiStep() {
 
       {/* Form Content */}
       <div className="p">
-        {currentStep === 1 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Identifications</h2>
-              <span className="text-sm text-primary">Step 1/4</span>
-            </div>
+        {loadingPatient ? (
+          <div className="text-sm text-gray-500 py-6">Loading patient...</div>
+        ) : (
+          <>
+            {currentStep === 1 && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-medium text-gray-900">Identifications</h2>
+                  <span className="text-sm text-primary">Step 1/4</span>
+                </div>
 
-            <div className="space-y-4">
-              {/* Photo Upload */}
-              <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                {formData.photo ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <img src={formData.photo} alt="Patient" className="w-50 object-cover" />
-                    <label className="inline-block mt-2">
-                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                      <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingPhoto ? 'Uploading...' : 'Change Photo'}</span>
-                    </label>
+                <div className="space-y-4">
+                  <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    {formData.photo ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <img src={formData.photo} alt="Patient" className="w-50 object-cover" />
+                        <label className="inline-block mt-2">
+                          <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                          <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
+                            {uploadingPhoto ? 'Uploading...' : 'Change Photo'}
+                          </span>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="w-8 h-8 text-primary mx-auto" />
+                        <p className="text-sm text-gray-700">Drag and drop the photo here, or click to select</p>
+                        <label className="inline-block">
+                          <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                          <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
+                            {uploadingPhoto ? 'Uploading...' : 'Select Photo'}
+                          </span>
+                        </label>
+                        <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 10MB</p>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload className="w-8 h-8 text-primary mx-auto" />
-                    <p className="text-sm text-gray-700">Drag and drop the photo here, or click to select</p>
-                    <label className="inline-block">
-                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                      <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingPhoto ? 'Uploading...' : 'Select Photo'}</span>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">
+                      Animal Name<span className="text-red-500">*</span>
                     </label>
-                    <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 10MB</p>
+                    <input
+                      type="text"
+                      placeholder="Pet's Name"
+                      value={formData.animalName}
+                      onChange={(e) => handleChange('animalName', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
                   </div>
-                )}
-              </div>
 
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">
-                  Animal Name<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Pet's Name"
-                  value={formData.animalName}
-                  onChange={(e) => handleChange('animalName', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Microchip</label>
+                    <input
+                      type="text"
+                      placeholder="Enter microchip number"
+                      value={formData.microchip}
+                      onChange={(e) => handleChange('microchip', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Microchip</label>
-                <input
-                  type="text"
-                  placeholder="Enter microchip number"
-                  value={formData.microchip}
-                  onChange={(e) => handleChange('microchip', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Species</label>
+                    <div className="relative">
+                      <select
+                        value={formData.species}
+                        onChange={(e) => handleChange('species', e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="">Select an option</option>
+                        <option value="dog">Dog</option>
+                        <option value="cat">Cat</option>
+                        <option value="bird">Bird</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
+                    </div>
+                  </div>
 
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Species</label>
-                <div className="relative">
-                  <select
-                    value={formData.species}
-                    onChange={(e) => handleChange('species', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="">Select an option</option>
-                    <option value="dog">Dog</option>
-                    <option value="cat">Cat</option>
-                    <option value="bird">Bird</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Breed</label>
+                    <input
+                      type="text"
+                      placeholder="E.g. Labrador, Siamese..."
+                      value={formData.breed}
+                      onChange={(e) => handleChange('breed', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Sex</label>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleChange('sex', 'Male')}
+                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
+                          formData.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        Male
+                      </button>
+                      <button
+                        onClick={() => handleChange('sex', 'Female')}
+                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
+                          formData.sex === 'Female' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        Female
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Date Of Birth</label>
+                    <div className="relative">
+                      <input
+                        ref={dobRef}
+                        type="date"
+                        max={new Date().toISOString().slice(0, 10)}
+                        placeholder="Select date of birth"
+                        value={formData.dateOfBirth}
+                        onChange={(e) => handleChange('dateOfBirth', e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
+                        style={{ colorScheme: 'light' }}
+                      />
+                      <Calendar
+                        color="#3F78D8"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
+                        onClick={() => {
+                          const el = dobRef.current as any;
+                          if (!el) return;
+                          if (typeof el.showPicker === 'function') el.showPicker();
+                          else el.click();
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
+            )}
 
+            {currentStep === 2 && (
               <div>
-                <label className="block text-sm text-gray-900 mb-2">Breed</label>
-                <input
-                  type="text"
-                  placeholder="E.g. Labrador, Siamese..."
-                  value={formData.breed}
-                  onChange={(e) => handleChange('breed', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-medium text-gray-900">Additional Information</h2>
+                  <span className="text-sm text-primary">Step 2/4</span>
+                </div>
 
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Sex</label>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleChange('sex', 'Male')}
-                    className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.sex === 'Male'
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-gray-100 text-gray-700'
-                      }`}
-                  >
-                    Male
-                  </button>
-                  <button
-                    onClick={() => handleChange('sex', 'Female')}
-                    className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.sex === 'Female'
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-gray-100 text-gray-700'
-                      }`}
-                  >
-                    Female
-                  </button>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Temperament</label>
+                    <input
+                      type="text"
+                      placeholder="E.g. Gentle, Agitated"
+                      value={formData.temperament}
+                      onChange={(e) => handleChange('temperament', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Size</label>
+                    <input
+                      type="text"
+                      placeholder="E.g. Small, Medium, Large"
+                      value={formData.size}
+                      onChange={(e) => handleChange('size', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Coat</label>
+                    <input
+                      type="text"
+                      placeholder="E.g. Short, Long, Smooth"
+                      value={formData.coat}
+                      onChange={(e) => handleChange('coat', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Neutered</label>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleChange('neutered', 'Yes')}
+                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
+                          formData.neutered === 'Yes' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => handleChange('neutered', 'No')}
+                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
+                          formData.neutered === 'No' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">RGA</label>
+                    <input
+                      type="text"
+                      placeholder="Enter animal health registration"
+                      value={formData.rga}
+                      onChange={(e) => handleChange('rga', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
                 </div>
               </div>
+            )}
 
+            {currentStep === 3 && (
               <div>
-                <label className="block text-sm text-gray-900 mb-2">Date Of Birth</label>
-                <div className="relative">
-                  <input
-                    ref={dobRef}
-                    type="date"
-                    max={new Date().toISOString().slice(0, 10)}
-                    placeholder="Select date of birth"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
-                    style={{ colorScheme: 'light' }}
-                  />
-                  <Calendar
-                    color='#3F78D8'
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
-                    onClick={() => {
-                      const el = dobRef.current as any;
-                      if (!el) return;
-                      if (typeof el.showPicker === "function") el.showPicker();
-                      else el.click();
-                    }}
-                  />
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-medium text-gray-900">Health Plan</h2>
+                  <span className="text-sm text-primary">Step 3/4</span>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Plan Name</label>
+                    <input
+                      type="text"
+                      placeholder="Enter health plan name"
+                      value={formData.planName}
+                      onChange={(e) => handleChange('planName', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Card number</label>
+                    <input
+                      type="text"
+                      placeholder="Enter health plan number"
+                      value={formData.cardNumber}
+                      onChange={(e) => handleChange('cardNumber', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Card Validity</label>
+                    <div className="relative">
+                      <input
+                        ref={cardValidityRef}
+                        type="date"
+                        placeholder="Select date of birth"
+                        value={formData.cardValidity}
+                        onChange={(e) => handleChange('cardValidity', e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
+                        style={{ colorScheme: 'light' }}
+                      />
+                      <Calendar
+                        color="#3F78D8"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
+                        onClick={() => {
+                          const el = cardValidityRef.current as any;
+                          if (!el) return;
+                          if (typeof el.showPicker === 'function') el.showPicker();
+                          else el.click();
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {currentStep === 2 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Additional Information</h2>
-              <span className="text-sm text-primary">Step 2/4</span>
-            </div>
-
-            <div className="space-y-4">
+            {currentStep === 4 && (
               <div>
-                <label className="block text-sm text-gray-900 mb-2">Temperament</label>
-                <input
-                  type="text"
-                  placeholder="E.g. Gentle, Agitated"
-                  value={formData.temperament}
-                  onChange={(e) => handleChange('temperament', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-medium text-gray-900">Clinical Information</h2>
+                  <span className="text-sm text-primary">Step 4/4</span>
+                </div>
 
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Size</label>
-                <input
-                  type="text"
-                  placeholder="E.g. Small, Medium, Large"
-                  value={formData.size}
-                  onChange={(e) => handleChange('size', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Allergies</label>
+                    <textarea
+                      placeholder="Write any known allergies"
+                      value={formData.allergies}
+                      onChange={(e) => handleChange('allergies', e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Coat</label>
-                <input
-                  type="text"
-                  placeholder="E.g. Short, Long, Smooth"
-                  value={formData.coat}
-                  onChange={(e) => handleChange('coat', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Chronic Diseases</label>
+                    <textarea
+                      placeholder="Write existing chronic diseases"
+                      value={formData.chronicDiseases}
+                      onChange={(e) => handleChange('chronicDiseases', e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Neutered</label>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleChange('neutered', 'Yes')}
-                    className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.neutered === 'Yes'
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-gray-100 text-gray-700'
-                      }`}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    onClick={() => handleChange('neutered', 'No')}
-                    className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.neutered === 'No'
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-gray-100 text-gray-700'
-                      }`}
-                  >
-                    No
-                  </button>
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Other Information</label>
+                    <textarea
+                      placeholder="Write existing chronic diseases"
+                      value={formData.otherInformation}
+                      onChange={(e) => handleChange('otherInformation', e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">Internal Notes</label>
+                    <textarea
+                      placeholder="Write your notes about animal"
+                      value={formData.internalNotes}
+                      onChange={(e) => handleChange('internalNotes', e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    />
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">RGA</label>
-                <input
-                  type="text"
-                  placeholder="Enter animal health registration"
-                  value={formData.rga}
-                  onChange={(e) => handleChange('rga', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentStep === 3 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Health Plan</h2>
-              <span className="text-sm text-primary">Step 3/4</span>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Plan Name</label>
-                <input
-                  type="text"
-                  placeholder="Enter health plan name"
-                  value={formData.planName}
-                  onChange={(e) => handleChange('planName', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Card number</label>
-                <input
-                  type="text"
-                  placeholder="Enter health plan number"
-                  value={formData.cardNumber}
-                  onChange={(e) => handleChange('cardNumber', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Card Validity</label>
-                <div className="relative">
-                  <input
-                    ref={cardValidityRef}
-                    type="date"
-                    placeholder="Select date of birth"
-                    value={formData.cardValidity}
-                    onChange={(e) => handleChange('cardValidity', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
-                    style={{ colorScheme: 'light' }}
-                  />
-                  <Calendar
-                    color='#3F78D8'
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
-                    onClick={() => {
-                      const el = cardValidityRef.current as any;
-                      if (!el) return;
-                      if (typeof el.showPicker === "function") el.showPicker();
-                      else el.click();
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentStep === 4 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Clinical Information</h2>
-              <span className="text-sm text-primary">Step 4/4</span>
-            </div>
-
-            <div className="space-y-2">
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Allergies</label>
-                <textarea
-                  placeholder="Write any known allergies"
-                  value={formData.allergies}
-                  onChange={(e) => handleChange('allergies', e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Chronic Diseases</label>
-                <textarea
-                  placeholder="Write existing chronic diseases"
-                  value={formData.chronicDiseases}
-                  onChange={(e) => handleChange('chronicDiseases', e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Other Information</label>
-                <textarea
-                  placeholder="Write existing chronic diseases"
-                  value={formData.otherInformation}
-                  onChange={(e) => handleChange('otherInformation', e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-900 mb-2">Internal Notes</label>
-                <textarea
-                  placeholder="Write your notes about animal"
-                  value={formData.internalNotes}
-                  onChange={(e) => handleChange('internalNotes', e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                />
-              </div>
-            </div>
-          </div>
+            )}
+          </>
         )}
       </div>
 
@@ -579,7 +659,7 @@ export default function AddPatientMultiStep() {
             onClick={currentStep === 4 ? handleSubmit : handleNext}
             className="w-full bg-primary hover:bg-blue-600 text-white font-medium py-4 rounded-2xl transition-colors"
           >
-            {currentStep === 4 ? 'Add Animal' : 'Next'}
+            {currentStep === 4 ? (patientId ? 'Save Changes' : 'Add Animal') : 'Next'}
           </button>
 
         </div>

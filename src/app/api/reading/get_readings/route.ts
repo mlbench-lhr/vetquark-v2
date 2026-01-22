@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
+import Patient from "@/lib/models/Patient";
 import Reading from "@/lib/models/Reading";
 import { parsePagination, toPaginationMeta } from "@/lib/utils";
 
@@ -33,6 +34,18 @@ function getUserIdFromRequest(req: NextRequest): { userId: string | null; error:
   }
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function parseDateParam(raw: string | null) {
+  const v = (raw || "").trim();
+  if (!v) return null;
+  const d = new Date(v);
+  if (!Number.isFinite(d.getTime())) return null;
+  return d;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { userId, error } = getUserIdFromRequest(req);
@@ -47,6 +60,22 @@ export async function GET(req: NextRequest) {
     if (patientId && !mongoose.Types.ObjectId.isValid(patientId)) {
       return NextResponse.json({ error: "Invalid patientId" }, { status: 400 });
     }
+    const q = (url.searchParams.get("q") || "").trim();
+    const from = parseDateParam(url.searchParams.get("from"));
+    const to = parseDateParam(url.searchParams.get("to"));
+    const status = (url.searchParams.get("status") || "").trim();
+    if ((url.searchParams.get("from") || "").trim() && !from) {
+      return NextResponse.json({ error: "Invalid from" }, { status: 400 });
+    }
+    if ((url.searchParams.get("to") || "").trim() && !to) {
+      return NextResponse.json({ error: "Invalid to" }, { status: 400 });
+    }
+    if (from && to && from.getTime() >= to.getTime()) {
+      return NextResponse.json({ error: "Invalid date range" }, { status: 400 });
+    }
+    if (status && status !== "signed" && status !== "pending") {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
     const { page, pageSize, skip, limit } = parsePagination(url.searchParams, {
       defaultPageSize: 100,
       maxPageSize: 500,
@@ -59,8 +88,50 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const filter: any = user.role === "Veterinarian" ? { veterinarian: userId } : { guardian: userId };
-    if (patientId) filter.patient = patientId;
+    const baseFilter: any = user.role === "Veterinarian" ? { veterinarian: userId } : { guardian: userId };
+    if (patientId) baseFilter.patient = patientId;
+
+    const andClauses: any[] = [baseFilter];
+
+    if (from || to) {
+      const createdAt: any = {};
+      if (from) createdAt.$gte = from;
+      if (to) createdAt.$lt = to;
+      andClauses.push({ createdAt });
+    }
+
+    if (status === "signed") {
+      andClauses.push({ signedAt: { $ne: null } });
+    } else if (status === "pending") {
+      andClauses.push({ $or: [{ signedAt: null }, { signedAt: { $exists: false } }] });
+    }
+
+    if (q) {
+      const regex = new RegExp(escapeRegExp(q), "i");
+      const patientScopeFilter: any =
+        user.role === "Veterinarian" ? { veterinarian: userId } : { guardian: userId };
+      const [patientDocs, guardianDocs] = await Promise.all([
+        Patient.find({ ...patientScopeFilter, animalName: regex }).select("_id").lean(),
+        user.role === "Veterinarian"
+          ? User.find({ role: "Guardian", fullName: regex }).select("_id").lean()
+          : Promise.resolve([] as any[]),
+      ]);
+
+      const patientIds = patientDocs.map((p: any) => p._id);
+      const guardianIds = guardianDocs.map((g: any) => g._id);
+      const orClauses: any[] = [];
+      if (patientIds.length) orClauses.push({ patient: { $in: patientIds } });
+      if (guardianIds.length) orClauses.push({ guardian: { $in: guardianIds } });
+      if (!orClauses.length) {
+        return NextResponse.json(
+          { items: [], pagination: toPaginationMeta({ page, pageSize, total: 0 }) },
+          { status: 200 },
+        );
+      }
+      andClauses.push({ $or: orClauses });
+    }
+
+    const filter = andClauses.length === 1 ? andClauses[0] : { $and: andClauses };
     const [total, docs] = await Promise.all([
       Reading.countDocuments(filter),
       Reading.find(filter)
