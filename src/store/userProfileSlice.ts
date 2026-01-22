@@ -30,6 +30,7 @@ export type UserProfile = {
   preferredLanguage?: "en" | "pt";
   baseExamPrice?: number;
   notificationSettings?: Record<string, any>;
+  payoutMethod?: Record<string, any>;
   createdAt?: string;
   updatedAt?: string;
 };

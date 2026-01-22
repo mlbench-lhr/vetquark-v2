@@ -1,8 +1,11 @@
 'use client'
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Camera, ChevronDown, ChevronLeft, ChevronRight, CreditCard, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setProfile } from "@/store/userProfileSlice";
+import { toast } from "react-toastify";
 
 type View = "list" | "add_pix";
 
@@ -30,15 +33,79 @@ function PaymentHeader({ title, onBack }: { title: string; onBack: () => void })
 
 export default function Page() {
     const router = useRouter();
+    const dispatch = useAppDispatch();
+    const profile = useAppSelector((s) => s.userProfile.profile);
     const [view, setView] = useState<View>("list");
     const [isAddCardOpen, setIsAddCardOpen] = useState(false);
 
-    const [pixKeyType, setPixKeyType] = useState<"cpf" | "cnpj">("cpf");
-    const [pixKey, setPixKey] = useState("");
-    const [pixHolderName, setPixHolderName] = useState("");
-    const [pixHolderCpfCnpj, setPixHolderCpfCnpj] = useState("");
+    const payoutMethod = useMemo(() => {
+        const pm = profile?.payoutMethod as any;
+        if (!pm || typeof pm !== "object" || pm.type !== "pix") return null;
+        return {
+            type: "pix" as const,
+            keyType: pm.keyType === "cnpj" ? ("cnpj" as const) : ("cpf" as const),
+            pixKey: typeof pm.pixKey === "string" ? pm.pixKey : "",
+            holderName: typeof pm.holderName === "string" ? pm.holderName : "",
+            holderCpfCnpj: typeof pm.holderCpfCnpj === "string" ? pm.holderCpfCnpj : "",
+        };
+    }, [profile?.payoutMethod]);
 
-    const maskedPix = useMemo(() => "***222.***-00", []);
+    const [pixKeyType, setPixKeyType] = useState<"cpf" | "cnpj">(payoutMethod?.keyType ?? "cpf");
+    const [pixKey, setPixKey] = useState(payoutMethod?.pixKey ?? "");
+    const [pixHolderName, setPixHolderName] = useState(payoutMethod?.holderName ?? "");
+    const [pixHolderCpfCnpj, setPixHolderCpfCnpj] = useState(payoutMethod?.holderCpfCnpj ?? "");
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        if (!payoutMethod) return;
+        setPixKeyType(payoutMethod.keyType);
+        setPixKey(payoutMethod.pixKey);
+        setPixHolderName(payoutMethod.holderName);
+        setPixHolderCpfCnpj(payoutMethod.holderCpfCnpj);
+    }, [payoutMethod]);
+
+    const maskedPix = useMemo(() => {
+        const raw = payoutMethod?.pixKey || payoutMethod?.holderCpfCnpj || "";
+        const digits = raw.replace(/\D/g, "");
+        if (digits.length >= 6) {
+            return `***${digits.slice(3, 6)}.***-${digits.slice(-2)}`;
+        }
+        return raw ? "***" : "***222.***-00";
+    }, [payoutMethod?.holderCpfCnpj, payoutMethod?.pixKey, payoutMethod]);
+
+    const handleSavePix = async () => {
+        if (!pixKey.trim() || !pixHolderCpfCnpj.trim()) {
+            toast.error("Please fill PIX key and CPF/CNPJ");
+            return;
+        }
+        try {
+            setSaving(true);
+            const res = await fetch("/api/user/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    payoutMethod: {
+                        type: "pix",
+                        keyType: pixKeyType,
+                        pixKey,
+                        holderName: pixHolderName,
+                        holderCpfCnpj: pixHolderCpfCnpj,
+                    },
+                }),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+                return;
+            }
+            if (json?.profile) dispatch(setProfile(json.profile));
+            toast.success("Saved changes");
+            setView("list");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const onBack = () => {
         if (isAddCardOpen) {
@@ -173,10 +240,11 @@ export default function Page() {
                     <div className="mt-auto pt-10">
                         <button
                             type="button"
-                            onClick={() => setView("list")}
+                            onClick={handleSavePix}
+                            disabled={saving}
                             className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
                         >
-                            Add account
+                            {saving ? "Saving..." : "Add account"}
                         </button>
                     </div>
                 </div>
