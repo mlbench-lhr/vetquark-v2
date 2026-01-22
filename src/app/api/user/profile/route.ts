@@ -31,6 +31,7 @@ type LeanUser = {
   preferredLanguage?: unknown;
   baseExamPrice?: unknown;
   notificationSettings?: unknown;
+  payoutMethod?: unknown;
   createdAt?: unknown;
   updatedAt?: unknown;
 };
@@ -64,6 +65,7 @@ function toSafeProfile(user: LeanUser) {
     preferredLanguage: user.preferredLanguage === "en" || user.preferredLanguage === "pt" ? user.preferredLanguage : undefined,
     baseExamPrice: typeof user.baseExamPrice === "number" && Number.isFinite(user.baseExamPrice) ? user.baseExamPrice : undefined,
     notificationSettings: user.notificationSettings && typeof user.notificationSettings === "object" ? user.notificationSettings : undefined,
+    payoutMethod: user.payoutMethod && typeof user.payoutMethod === "object" ? user.payoutMethod : undefined,
     createdAt:
       typeof user.createdAt === "string" || typeof user.createdAt === "number" || user.createdAt instanceof Date
         ? new Date(user.createdAt).toISOString()
@@ -189,6 +191,46 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "Invalid notificationSettings" }, { status: 400 });
       }
       $set.notificationSettings = body.notificationSettings;
+    }
+
+    if (body?.payoutMethod !== undefined) {
+      if (body.payoutMethod === null) {
+        $unset.payoutMethod = 1;
+      } else if (!body.payoutMethod || typeof body.payoutMethod !== "object" || Array.isArray(body.payoutMethod)) {
+        return NextResponse.json({ error: "Invalid payoutMethod" }, { status: 400 });
+      } else {
+        const raw = body.payoutMethod as any;
+        const type = asTrimmedString(raw?.type);
+        if (type !== "pix" && type !== "bank") {
+          return NextResponse.json({ error: "Invalid payoutMethod.type" }, { status: 400 });
+        }
+        if (type === "pix") {
+          const keyType = asTrimmedString(raw?.keyType);
+          if (keyType !== "cpf" && keyType !== "cnpj") {
+            return NextResponse.json({ error: "Invalid payoutMethod.keyType" }, { status: 400 });
+          }
+          $set.payoutMethod = {
+            type: "pix",
+            keyType,
+            pixKey: asTrimmedString(raw?.pixKey) ?? "",
+            holderName: asTrimmedString(raw?.holderName) ?? "",
+            holderCpfCnpj: asTrimmedString(raw?.holderCpfCnpj) ?? "",
+          };
+        } else {
+          const personType = asTrimmedString(raw?.personType);
+          if (personType !== "individual" && personType !== "legal") {
+            return NextResponse.json({ error: "Invalid payoutMethod.personType" }, { status: 400 });
+          }
+          $set.payoutMethod = {
+            type: "bank",
+            personType,
+            bankName: asTrimmedString(raw?.bankName) ?? "",
+            agency: asTrimmedString(raw?.agency) ?? "",
+            account: asTrimmedString(raw?.account) ?? "",
+            holderCpfCnpj: asTrimmedString(raw?.holderCpfCnpj) ?? "",
+          };
+        }
+      }
     }
 
     if (!$set.fullName && body?.fullName !== undefined) {

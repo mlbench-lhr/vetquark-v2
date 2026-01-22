@@ -31,6 +31,7 @@ type LeanUser = {
   preferredLanguage?: unknown;
   baseExamPrice?: unknown;
   notificationSettings?: unknown;
+  payoutMethod?: unknown;
   createdAt?: unknown;
   updatedAt?: unknown;
 };
@@ -64,6 +65,7 @@ function toSafeProfile(user: LeanUser) {
     preferredLanguage: user.preferredLanguage === "en" || user.preferredLanguage === "pt" ? user.preferredLanguage : undefined,
     baseExamPrice: typeof user.baseExamPrice === "number" && Number.isFinite(user.baseExamPrice) ? user.baseExamPrice : undefined,
     notificationSettings: user.notificationSettings && typeof user.notificationSettings === "object" ? user.notificationSettings : undefined,
+    payoutMethod: user.payoutMethod && typeof user.payoutMethod === "object" ? user.payoutMethod : undefined,
     createdAt:
       typeof user.createdAt === "string" || typeof user.createdAt === "number" || user.createdAt instanceof Date
         ? new Date(user.createdAt).toISOString()

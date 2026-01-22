@@ -2,29 +2,23 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Header from "@/components/common/header";
+import { useRouter } from "next/navigation";
 
 interface FAQItem {
-    question: string;
-    answer: string;
+  question: string;
+  answer: string;
 }
 
-interface PricingInfoCardProps {
-    platformFee?: string;
-    minWithdrawal?: string;
-    onGoToWallet?: () => void;
-}
-
-export default function PricingInfoCard({
-    platformFee = "£33.00",
-    minWithdrawal = "£20.00",
-    onGoToWallet,
-}: PricingInfoCardProps) {
+export default function FeesAndPayoutsPage() {
+    const router = useRouter();
     const [openFAQ, setOpenFAQ] = useState<number | null>(0);
+    const platformFee = 33.0;
+    const minWithdrawal = 20.0;
 
     const faqItems: FAQItem[] = [
         {
             question: "Can i charge below R$33.00?",
-            answer: "It is not recommended; below this, your payout would be £0.00 or negative.",
+            answer: "It is not recommended; below this, your payout would be R$0.00 or negative.",
         },
         {
             question: "When will I see the money?",
@@ -53,9 +47,9 @@ export default function PricingInfoCard({
                     How the charging works?
                 </h2>
                 <div className="text-[14px] text-muted-foreground leading-[1.6] space-y-1">
-                    <p>Fixed fee per exam: {platformFee} (charged by the platform at the time of tutor payment).</p>
+                    <p>Fixed fee per exam: R$ {platformFee.toFixed(2)} (charged by the platform at the time of tutor payment).</p>
                     <p>Price to the tutor: set by you in Pricing.</p>
-                    <p>Payout to the veterinarian: Price to the tutor – {platformFee}.</p>
+                    <p>Payout to the veterinarian: Price to the tutor – R$ {platformFee.toFixed(2)}.</p>
                 </div>
             </section>
 
@@ -66,7 +60,7 @@ export default function PricingInfoCard({
                 </h2>
                 <div className="text-[14px] text-muted-foreground leading-[1.7] space-y-1">
                     <p>1. Tutor pays for the exam (link/QR).</p>
-                    <p>2. The platform retains {platformFee}.</p>
+                    <p>2. The platform retains R$ {platformFee.toFixed(2)}.</p>
                     <p>3. The net amount enters your Wallet as scheduled credit.</p>
                     <p>4. Credit is released in D+2 business days after payment confirmation.</p>
                     <p>5. Released amount contributes to your available balance (ready for withdrawal).</p>
@@ -79,7 +73,7 @@ export default function PricingInfoCard({
                     Transparency of fees
                 </h2>
                 <div className="text-[14px] text-muted-foreground leading-[1.7] space-y-1">
-                    <p>Platform: {platformFee} per exam.</p>
+                    <p>Platform: R$ {platformFee.toFixed(2)} per exam.</p>
                     <p>Payment methods: Costs already included in the platform fee.</p>
                     <p>Withdrawal: No additional fee from the platform (except for any external bank fees, if applicable).</p>
                 </div>
@@ -128,12 +122,12 @@ export default function PricingInfoCard({
                 </h2>
                 <div className="text-[14px] text-muted-foreground leading-[1.7] space-y-1 mb-4">
                     <p>Withdrawals are requested on the Wallet screen for your registered payment method.</p>
-                    <p>The minimum withdrawal amount is {minWithdrawal}.</p>
+                    <p>The minimum withdrawal amount is R$ {minWithdrawal.toFixed(2)}.</p>
                     <p>The processing time is up to 1 business day.</p>
                     <p>If a tutor&apos;s payment is reversed, the amount is deducted from your balance.</p>
                 </div>
                 <button
-                    onClick={onGoToWallet}
+                    onClick={() => router.push("/Veterinarian/Menu/wallet")}
                     className="w-full h-[48px] bg-[hsl(224,65%,56%)] text-[hsl(220,20%,96%)] text-[15px] font-medium rounded-full transition-colors"
                 >
                     Go To Wallet
@@ -146,7 +140,7 @@ export default function PricingInfoCard({
                     Taxes and Invoices
                 </h2>
                 <p className="text-[14px] text-muted-foreground leading-[1.6]">
-                    The fee of {platformFee} does not include taxes for your CNPJ/CPF. Consult your accountant regarding the issuance of an invoice to the tutor, if applicable.
+                    The fee of R$ {platformFee.toFixed(2)} does not include taxes for your CNPJ/CPF. Consult your accountant regarding the issuance of an invoice to the tutor, if applicable.
                 </p>
             </section>
         </div>
