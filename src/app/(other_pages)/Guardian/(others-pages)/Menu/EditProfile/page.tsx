@@ -7,42 +7,64 @@ import { Label } from "@/components/ui/label";
 import Header from "@/components/common/header";
 import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { toast } from "react-toastify";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setProfile } from "@/store/userProfileSlice";
 
-interface EditProfileCardProps {
-    fullName?: string;
-    email?: string;
-    phoneCode?: string;
-    phoneNumber?: string;
-    avatarUrl?: string;
-    onAvatarChange?: () => void;
-    onSave?: (data: {
-        fullName: string;
-        email: string;
-        phoneCode: string;
-        phoneNumber: string;
-    }) => void;
-}
+export default function EditProfileCard() {
+    const dispatch = useAppDispatch();
+    const profile = useAppSelector((s) => s.userProfile.profile);
 
-export default function EditProfileCard({
-    fullName = "Jackson Miro",
-    email = "jackm@gmail.com",
-    phoneCode = "+222",
-    phoneNumber = "273782901",
-    avatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-    onAvatarChange,
-    onSave,
-}: EditProfileCardProps) {
+    const fullName = profile?.fullName ?? "";
+    const email = profile?.email ?? "";
+    const phone = profile?.phone ?? "";
+    const avatarUrl =
+        profile?.profileImageUrl ??
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
+
     const [localFullName, setLocalFullName] = React.useState(fullName);
     const [localEmail, setLocalEmail] = React.useState(email);
     const [localPhone, setLocalPhone] = React.useState(() => {
-        const initial = `${phoneCode ?? ""}${phoneNumber ?? ""}`.replace(/\s+/gu, "");
+        const initial = String(phone || "").replace(/\s+/gu, "");
         if (!initial) return "";
         return initial.startsWith("+") ? initial : `+${initial}`;
     });
+    const [saving, setSaving] = React.useState(false);
+
+    React.useEffect(() => {
+        setLocalFullName(fullName);
+        setLocalEmail(email);
+        const initial = String(phone || "").replace(/\s+/gu, "");
+        setLocalPhone(!initial ? "" : initial.startsWith("+") ? initial : `+${initial}`);
+    }, [email, fullName, phone]);
 
     const parsedPhone = localPhone ? parsePhoneNumberFromString(localPhone) : undefined;
-    const derivedPhoneCode = parsedPhone ? `+${parsedPhone.countryCallingCode}` : phoneCode;
-    const derivedPhoneNumber = parsedPhone ? parsedPhone.nationalNumber : phoneNumber;
+    const derivedPhone = parsedPhone ? parsedPhone.number : localPhone;
+
+    const handleSave = async () => {
+        try {
+            setSaving(true);
+            const res = await fetch("/api/user/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    fullName: localFullName,
+                    email: localEmail,
+                    phone: derivedPhone,
+                }),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+                return;
+            }
+            if (json?.profile) dispatch(setProfile(json.profile));
+            toast.success("Saved changes");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-white flex flex-col px-4">
@@ -58,7 +80,7 @@ export default function EditProfileCard({
                         />
                     </div>
                     <button
-                        onClick={onAvatarChange}
+                        onClick={() => toast.info("Coming soon")}
                         className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
                     >
                         <Camera className="h-4 w-4 text-primary-foreground" />
@@ -110,17 +132,11 @@ export default function EditProfileCard({
             {/* Save Button */}
             <div className="py-6">
                 <Button
-                    onClick={() =>
-                        onSave?.({
-                            fullName: localFullName,
-                            email: localEmail,
-                            phoneCode: derivedPhoneCode,
-                            phoneNumber: derivedPhoneNumber,
-                        })
-                    }
+                    onClick={handleSave}
+                    disabled={saving}
                     className="w-full h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-base"
                 >
-                    Save Changes
+                    {saving ? "Saving..." : "Save Changes"}
                 </Button>
             </div>
         </div>

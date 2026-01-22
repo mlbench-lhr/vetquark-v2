@@ -19,6 +19,7 @@ export default function ClinicReportsPage() {
   const profile = useAppSelector((s) => s.userProfile.profile);
   const formRef = useRef<HTMLFormElement | null>(null);
   const [uploadingClinicLogo, setUploadingClinicLogo] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const initialFormData = useMemo<ClinicReportsFormData>(() => {
     return {
@@ -98,7 +99,7 @@ export default function ClinicReportsPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.clinicLogoUrl) {
@@ -106,20 +107,30 @@ export default function ClinicReportsPage() {
       return;
     }
 
-    if (profile) {
-      dispatch(
-        setProfile({
-          ...profile,
+    try {
+      setSaving(true);
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
           clinicLogoUrl: formData.clinicLogoUrl,
           tradeName: formData.tradeName,
-          cnpjIe: formData.cnpjIe || undefined,
+          cnpjIe: formData.cnpjIe,
           reportHeaderAddress: formData.reportHeaderAddress,
           reportFooter: formData.reportFooter,
-        })
-      );
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+        return;
+      }
+      if (json?.profile) dispatch(setProfile(json.profile));
+      toast.success("Saved changes");
+    } finally {
+      setSaving(false);
     }
-
-    toast.success("Saved changes (local only)");
   };
 
   return (
@@ -222,13 +233,12 @@ export default function ClinicReportsPage() {
         <button
           type="submit"
           onClick={() => formRef.current?.requestSubmit()}
-          disabled={uploadingClinicLogo}
+          disabled={uploadingClinicLogo || saving}
           className="w-full h-[52px] bg-[hsl(224,65%,56%)] hover:bg-[hsl(224,65%,50%)] text-white text-[16px] font-medium rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Save Changes
+          {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </div>
   );
 }
-

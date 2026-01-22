@@ -23,7 +23,7 @@ export default function NewReadingWizard() {
       stripExpiry: '',
     },
     timer: {
-      selectedSeconds: 45,
+      selectedSeconds: 120,
       analyzedAt: '',
       analysis: null,
     },

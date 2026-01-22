@@ -1,27 +1,28 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pencil } from "lucide-react";
 import Header from "@/components/common/header";
+import { toast } from "react-toastify";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setProfile } from "@/store/userProfileSlice";
 
-interface BasePriceCardProps {
-    initialAmount?: number;
-    platformFee?: number;
-    minSuggested?: number;
-    maxSuggested?: number;
-    onSave?: (amount: number) => void;
-    onReset?: () => void;
-}
+export default function BasePriceCard() {
+    const dispatch = useAppDispatch();
+    const profile = useAppSelector((s) => s.userProfile.profile);
 
-export default function BasePriceCard({
-    initialAmount = 89.90,
-    platformFee = 33.00,
-    minSuggested = 59.00,
-    maxSuggested = 119.00,
-    onSave,
-    onReset,
-}: BasePriceCardProps) {
+    const platformFee = 33.0;
+    const minSuggested = 59.0;
+    const maxSuggested = 119.0;
+
+    const initialAmount = useMemo(() => profile?.baseExamPrice ?? 89.9, [profile?.baseExamPrice]);
+
     const [amount, setAmount] = useState(initialAmount);
     const [isEditing, setIsEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        setAmount(initialAmount);
+    }, [initialAmount]);
 
     const netPayout = amount - platformFee;
 
@@ -30,15 +31,31 @@ export default function BasePriceCard({
         setAmount(value);
     };
 
-    const handleSave = () => {
-        setIsEditing(false);
-        onSave?.(amount);
+    const handleSave = async () => {
+        try {
+            setIsEditing(false);
+            setSaving(true);
+            const res = await fetch("/api/user/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ baseExamPrice: amount }),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+                return;
+            }
+            if (json?.profile) dispatch(setProfile(json.profile));
+            toast.success("Saved changes");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleReset = () => {
         const midPoint = (minSuggested + maxSuggested) / 2;
         setAmount(midPoint);
-        onReset?.();
     };
 
     return (
@@ -117,9 +134,10 @@ export default function BasePriceCard({
             <div className="space-y-3 pt-6">
                 <button
                     onClick={handleSave}
+                    disabled={saving}
                     className="w-full h-[52px] bg-[hsl(224,65%,56%)] hover:bg-[hsl(224,65%,50%)] text-white text-[16px] font-medium rounded-full transition-colors"
                 >
-                    Save Changes
+                    {saving ? "Saving..." : "Save Changes"}
                 </button>
                 <button
                     onClick={handleReset}

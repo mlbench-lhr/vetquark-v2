@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Check, Clock } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 
 type ReportStatus = "signed" | "pending";
@@ -163,7 +164,9 @@ function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; on
   );
 }
 
-export default function Page() {
+function PageContent() {
+  const searchParams = useSearchParams();
+  const patientId = useMemo(() => String(searchParams.get("patientId") || "").trim(), [searchParams]);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<ReportHistoryItem[]>([]);
 
@@ -172,7 +175,11 @@ export default function Page() {
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/reading/get_readings?page=1&pageSize=500");
+        const params = new URLSearchParams();
+        params.set("page", "1");
+        params.set("pageSize", "500");
+        if (patientId) params.set("patientId", patientId);
+        const res = await fetch(`/api/reading/get_readings?${params.toString()}`);
         const data = await res.json().catch(() => null);
         if (!mounted) return;
         if (!res.ok) {
@@ -202,7 +209,7 @@ export default function Page() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [patientId]);
 
   const sortedItems = useMemo(() => items, [items]);
 
@@ -260,5 +267,13 @@ export default function Page() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="h-[100dvh] w-full bg-white" />}>
+      <PageContent />
+    </Suspense>
   );
 }
