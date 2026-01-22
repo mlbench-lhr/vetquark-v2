@@ -1,10 +1,11 @@
 import GuardianRegistration from '@/components/Veterinarian/new_patient/add_guardian'
-import AddPatientGuardian from '@/components/Veterinarian/new_patient'
-import React from 'react'
+import { Suspense } from 'react'
 
 function page() {
   return (
-    <GuardianRegistration />
+    <Suspense fallback={null}>
+      <GuardianRegistration />
+    </Suspense>
   )
 }
 

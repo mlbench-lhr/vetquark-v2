@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Calendar, ChevronLeft, Plus, X } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import PhoneInput from '@/components/form/group-input/PhoneInput';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { toast } from 'react-toastify';
@@ -81,6 +81,9 @@ interface FormData {
 
 export default function GuardianRegistration() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const guardianId = (searchParams.get('guardianId') || '').trim() || null;
+    const isEditing = !!guardianId;
     const dobRef = useRef<HTMLInputElement | null>(null);
     const { isOpen: otpModalOpen, openModal: openOtpModal, closeModal: closeOtpModal } = useModal();
     const prevEmailRef = useRef<string>('');
@@ -104,6 +107,7 @@ export default function GuardianRegistration() {
     const [otp, setOtp] = useState('');
     const [emailVerified, setEmailVerified] = useState(false);
     const [emailVerificationId, setEmailVerificationId] = useState<string | null>(null);
+    const [loadingGuardian, setLoadingGuardian] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const handleChange = (field: keyof FormData, value: string) => {
@@ -111,6 +115,7 @@ export default function GuardianRegistration() {
     };
 
     useEffect(() => {
+        if (isEditing) return;
         const currentEmail = String(formData.email || '');
         if (prevEmailRef.current === currentEmail) return;
         prevEmailRef.current = currentEmail;
@@ -118,9 +123,53 @@ export default function GuardianRegistration() {
         setEmailVerificationId(null);
         setOtp('');
         closeOtpModal();
-    }, [formData.email, closeOtpModal]);
+    }, [closeOtpModal, formData.email, isEditing]);
+
+    useEffect(() => {
+        if (!guardianId) return;
+
+        let mounted = true;
+        ; (async () => {
+            try {
+                setLoadingGuardian(true);
+                const res = await fetch(`/api/guardians/get-guardians?guardianId=${encodeURIComponent(guardianId)}`);
+                const json = await res.json().catch(() => null);
+                if (!mounted) return;
+                if (!res.ok || !json?.item) {
+                    toast.error(typeof json?.error === "string" ? json.error : "Failed to load guardian");
+                    return;
+                }
+                const item = json.item as any;
+                setFormData((prev) => ({
+                    ...prev,
+                    fullName: String(item.fullName || ''),
+                    idCard: String(item.taxId || ''),
+                    dateOfBirth: String(item.dateOfBirth || ''),
+                    mobile: String(item.phone || ''),
+                    email: String(item.email || ''),
+                    address: String(item.address || ''),
+                    city: String(item.city || ''),
+                    state: String(item.state || ''),
+                    postalCode: String(item.postalCode || ''),
+                    acceptTerms: true,
+                }));
+                prevEmailRef.current = String(item.email || '');
+                setEmailVerified(true);
+                setEmailVerificationId(null);
+                setOtp('');
+                closeOtpModal();
+            } finally {
+                if (mounted) setLoadingGuardian(false);
+            }
+        })();
+
+        return () => {
+            mounted = false;
+        };
+    }, [guardianId, closeOtpModal]);
 
     const handleSendOtp = async () => {
+        if (isEditing) return;
         const email = String(formData.email || '').trim().toLowerCase();
         if (!email) {
             toast.error("Email is required");
@@ -154,6 +203,7 @@ export default function GuardianRegistration() {
     };
 
     const handleVerifyOtp = async () => {
+        if (isEditing) return;
         const email = String(formData.email || '').trim().toLowerCase();
         const code = otp.replace(/\D/g, '').slice(0, 5);
         if (code.length !== 5) {
@@ -189,10 +239,6 @@ export default function GuardianRegistration() {
     };
 
     const handleSubmit = async () => {
-        if (!emailVerified || !emailVerificationId) {
-            toast.error("Please verify the email first");
-            return;
-        }
         try {
             setSubmitting(true);
             const fullName = formData.fullName.trim();
@@ -234,14 +280,16 @@ export default function GuardianRegistration() {
             const normalizedPhone = parsedPhone.number;
 
             const email = String(formData.email || '').trim().toLowerCase();
-            if (!email) {
-                toast.error("Email is required");
-                return;
-            }
-            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-            if (!emailOk) {
-                toast.error("Please enter a valid email");
-                return;
+            if (!isEditing) {
+                if (!email) {
+                    toast.error("Email is required");
+                    return;
+                }
+                const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                if (!emailOk) {
+                    toast.error("Please enter a valid email");
+                    return;
+                }
             }
 
             const dateOfBirth = String(formData.dateOfBirth || '').trim();
@@ -268,8 +316,40 @@ export default function GuardianRegistration() {
                 return;
             }
 
-            if (formData.acceptTerms !== true) {
+            if (!isEditing && formData.acceptTerms !== true) {
                 toast.error("Terms must be accepted");
+                return;
+            }
+
+            if (isEditing) {
+                if (!guardianId) return;
+                const res = await fetch('/api/guardians/get-guardians', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        guardianId,
+                        fullName,
+                        phone: normalizedPhone,
+                        taxId: idCard,
+                        dateOfBirth,
+                        address,
+                        city,
+                        state,
+                        postalCode,
+                    }),
+                });
+                const result = await res.json().catch(() => null);
+                if (!res.ok) {
+                    toast.error(typeof result?.error === "string" ? result.error : "Failed to update guardian");
+                    return;
+                }
+                const updatedId = String(result?.id || guardianId);
+                router.push(`/Veterinarian/home/guardianDetails/${encodeURIComponent(updatedId)}`);
+                return;
+            }
+
+            if (!emailVerified || !emailVerificationId) {
+                toast.error("Please verify the email first");
                 return;
             }
 
@@ -299,8 +379,8 @@ export default function GuardianRegistration() {
             }
             router.push(`/Veterinarian/patient/new_patient?guardianId=${result.id}&guardianName=${encodeURIComponent(formData.fullName)}`);
         } catch (e) {
-            toast.error("Network error while creating guardian");
-            console.error('Error creating guardian:', e);
+            toast.error(isEditing ? "Network error while updating guardian" : "Network error while creating guardian");
+            console.error(isEditing ? 'Error updating guardian:' : 'Error creating guardian:', e);
         } finally {
             setSubmitting(false);
         }
@@ -313,7 +393,7 @@ export default function GuardianRegistration() {
                 <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={() => router.back()}>
                     <ChevronLeft className="w-6 h-6 text-gray-700" />
                 </button>
-                <h1 className="text-base font-medium text-gray-900">Guardian Registration</h1>
+                    <h1 className="text-base font-medium text-gray-900">{isEditing ? "Edit Guardian" : "Guardian Registration"}</h1>
                 <button className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm">
                         <Image
@@ -460,16 +540,19 @@ export default function GuardianRegistration() {
                                     placeholder="Enter email here"
                                     value={formData.email}
                                     onChange={(e) => handleChange('email', e.target.value)}
+                                    disabled={isEditing}
                                     className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                                 />
-                                <button
-                                    type="button"
-                                    onClick={handleSendOtp}
-                                    disabled={sendingOtp || emailVerified}
-                                    className="shrink-0 px-4 py-3 rounded-lg bg-primary text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                >
-                                    {emailVerified ? "Verified" : sendingOtp ? "Sending..." : "Verify"}
-                                </button>
+                                {!isEditing ? (
+                                    <button
+                                        type="button"
+                                        onClick={handleSendOtp}
+                                        disabled={sendingOtp || emailVerified}
+                                        className="shrink-0 px-4 py-3 rounded-lg bg-primary text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                    >
+                                        {emailVerified ? "Verified" : sendingOtp ? "Sending..." : "Verify"}
+                                    </button>
+                                ) : null}
                             </div>
                         </div>
                     </div>
@@ -544,6 +627,7 @@ export default function GuardianRegistration() {
                                 type="checkbox"
                                 checked={formData.acceptTerms}
                                 onChange={(e) => setFormData((prev) => ({ ...prev, acceptTerms: e.target.checked }))}
+                                disabled={isEditing}
                                 className="mt-1 w-5 h-5 text-primary rounded border-gray-300 focus:ring-primary"
                             />
                             <label className="text-sm text-gray-700">
@@ -561,16 +645,16 @@ export default function GuardianRegistration() {
                 <div className="">
                     <button
                         onClick={handleSubmit}
-                        disabled={!emailVerified || submitting}
+                        disabled={(isEditing ? false : !emailVerified) || submitting || loadingGuardian}
                         className="w-full bg-primary hover:bg-primary/70 text-white font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         <Plus className="w-5 h-5" />
-                        {submitting ? "Adding..." : "Add Guardian"}
+                        {submitting || loadingGuardian ? (isEditing ? "Saving..." : "Adding...") : (isEditing ? "Save Changes" : "Add Guardian")}
                     </button>
                 </div>
             </div>
 
-            <Modal isOpen={otpModalOpen} onClose={closeOtpModal} className="max-w-[420px] mx-4 p-6">
+            <Modal isOpen={otpModalOpen && !isEditing} onClose={closeOtpModal} className="max-w-[420px] mx-4 p-6">
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900">Email Verification</h3>

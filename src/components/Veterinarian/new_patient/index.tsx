@@ -79,18 +79,18 @@ export default function AddPatientGuardian() {
         const url = getInviteLink();
         const shareText = `Sign up as a Guardian on VetQuark: ${url}`;
 
-        // try {
-        //     if (typeof navigator !== 'undefined' && 'share' in navigator) {
-        //         await (navigator as any).share({
-        //             title: 'VetQuark Guardian Signup',
-        //             text: shareText,
-        //             url,
-        //         });
-        //         inviteModal.closeModal();
-        //         return;
-        //     }
-        // } catch {
-        // }
+        try {
+            if (typeof navigator !== 'undefined' && 'share' in navigator) {
+                await (navigator as any).share({
+                    title: 'VetQuark Guardian Signup',
+                    text: shareText,
+                    url,
+                });
+                inviteModal.closeModal();
+                return;
+            }
+        } catch {
+        }
 
         inviteModal.openModal();
     };
@@ -316,24 +316,13 @@ export default function AddPatientGuardian() {
 
                     <button
                         type="button"
-                        onClick={async () => {
-                            const url = getInviteLink();
-                            if (typeof navigator !== 'undefined' && 'share' in navigator) {
-                                await (navigator as any).share({
-                                    title: 'VetQuark Guardian Signup',
-                                    text: `Sign up as a Guardian on VetQuark: ${url}`,
-                                    url,
-                                });
-                                inviteModal.closeModal();
-                                return;
-                            }
-                        }}
+                        onClick={handleInviteGuardian}
                         className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 rounded-lg"
                     >
                         Share…
                     </button>
                 </div>
-            </Modal >
-        </div >
+            </Modal>
+        </div>
     );
 }
