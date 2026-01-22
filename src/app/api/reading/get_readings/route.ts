@@ -43,6 +43,10 @@ export async function GET(req: NextRequest) {
     }
 
     const url = new URL(req.url);
+    const patientId = (url.searchParams.get("patientId") || "").trim();
+    if (patientId && !mongoose.Types.ObjectId.isValid(patientId)) {
+      return NextResponse.json({ error: "Invalid patientId" }, { status: 400 });
+    }
     const { page, pageSize, skip, limit } = parsePagination(url.searchParams, {
       defaultPageSize: 100,
       maxPageSize: 500,
@@ -56,6 +60,7 @@ export async function GET(req: NextRequest) {
     }
 
     const filter: any = { veterinarian: veterinarianId };
+    if (patientId) filter.patient = patientId;
     const [total, docs] = await Promise.all([
       Reading.countDocuments(filter),
       Reading.find(filter)
