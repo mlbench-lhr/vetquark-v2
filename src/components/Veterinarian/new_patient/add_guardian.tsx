@@ -1,11 +1,13 @@
 'use client'
-import { useRef, useState } from 'react';
-import { ArrowLeft, Bell, Calendar, ChevronLeft, Plus } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Calendar, ChevronLeft, Plus, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import PhoneInput from '@/components/form/group-input/PhoneInput';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { toast } from 'react-toastify';
+import { Modal } from '@/components/ui/modal';
+import { useModal } from '@/hooks/useModal';
 
 function digitsOnly(value: string) {
     return value.replace(/\D/g, "");
@@ -74,11 +76,14 @@ interface FormData {
     city: string;
     state: string;
     postalCode: string;
+    acceptTerms: boolean;
 }
 
 export default function GuardianRegistration() {
     const router = useRouter();
     const dobRef = useRef<HTMLInputElement | null>(null);
+    const { isOpen: otpModalOpen, openModal: openOtpModal, closeModal: closeOtpModal } = useModal();
+    const prevEmailRef = useRef<string>('');
     const [formData, setFormData] = useState<FormData>({
         fullName: '',
         taxId: '',
@@ -91,15 +96,105 @@ export default function GuardianRegistration() {
         address: '',
         city: '',
         state: '',
-        postalCode: ''
+        postalCode: '',
+        acceptTerms: false,
     });
+    const [sendingOtp, setSendingOtp] = useState(false);
+    const [verifyingOtp, setVerifyingOtp] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [emailVerified, setEmailVerified] = useState(false);
+    const [emailVerificationId, setEmailVerificationId] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
 
     const handleChange = (field: keyof FormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleSubmit = async () => {
+    useEffect(() => {
+        const currentEmail = String(formData.email || '');
+        if (prevEmailRef.current === currentEmail) return;
+        prevEmailRef.current = currentEmail;
+        setEmailVerified(false);
+        setEmailVerificationId(null);
+        setOtp('');
+        closeOtpModal();
+    }, [formData.email, closeOtpModal]);
+
+    const handleSendOtp = async () => {
+        const email = String(formData.email || '').trim().toLowerCase();
+        if (!email) {
+            toast.error("Email is required");
+            return;
+        }
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!emailOk) {
+            toast.error("Please enter a valid email");
+            return;
+        }
+
         try {
+            setSendingOtp(true);
+            const res = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: 'vet_guardian_send_otp', email }),
+            });
+            const result = await res.json();
+            if (!res.ok) {
+                toast.error(typeof result?.error === "string" ? result.error : "Failed to send verification code");
+                return;
+            }
+            toast.success(typeof result?.message === "string" ? result.message : "OTP sent");
+            openOtpModal();
+        } catch {
+            toast.error("Network error while sending verification code");
+        } finally {
+            setSendingOtp(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        const email = String(formData.email || '').trim().toLowerCase();
+        const code = otp.replace(/\D/g, '').slice(0, 5);
+        if (code.length !== 5) {
+            toast.error("Please enter the 5-digit code");
+            return;
+        }
+        try {
+            setVerifyingOtp(true);
+            const res = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: 'vet_guardian_verify_otp', email, otp: code }),
+            });
+            const result = await res.json();
+            if (!res.ok) {
+                toast.error(typeof result?.error === "string" ? result.error : "Verification failed");
+                return;
+            }
+            const verificationId = typeof result?.verificationId === "string" ? result.verificationId : null;
+            if (!verificationId) {
+                toast.error("Verification failed");
+                return;
+            }
+            setEmailVerified(true);
+            setEmailVerificationId(verificationId);
+            closeOtpModal();
+            toast.success("Email verified");
+        } catch {
+            toast.error("Network error while verifying code");
+        } finally {
+            setVerifyingOtp(false);
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!emailVerified || !emailVerificationId) {
+            toast.error("Please verify the email first");
+            return;
+        }
+        try {
+            setSubmitting(true);
             const fullName = formData.fullName.trim();
             if (!fullName) {
                 toast.error("Full name is required");
@@ -138,21 +233,63 @@ export default function GuardianRegistration() {
             }
             const normalizedPhone = parsedPhone.number;
 
+            const email = String(formData.email || '').trim().toLowerCase();
+            if (!email) {
+                toast.error("Email is required");
+                return;
+            }
+            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            if (!emailOk) {
+                toast.error("Please enter a valid email");
+                return;
+            }
+
+            const dateOfBirth = String(formData.dateOfBirth || '').trim();
+            if (!dateOfBirth) {
+                toast.error("Date of birth is required");
+                return;
+            }
+
+            const address = String(formData.address || '').trim();
+            if (!address) {
+                toast.error("Address is required");
+                return;
+            }
+
+            const city = String(formData.city || '').trim();
+            if (!city) {
+                toast.error("City is required");
+                return;
+            }
+
+            const state = String(formData.state || '').trim();
+            if (!state) {
+                toast.error("State is required");
+                return;
+            }
+
+            if (formData.acceptTerms !== true) {
+                toast.error("Terms must be accepted");
+                return;
+            }
+
             const res = await fetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     mode: 'vet_create_guardian',
                     fullName,
-                    email: formData.email,
+                    email,
                     phone: normalizedPhone,
                     taxId: idCard,
-                    dateOfBirth: formData.dateOfBirth,
-                    address: formData.address,
-                    city: formData.city,
-                    state: formData.state,
+                    dateOfBirth,
+                    address,
+                    city,
+                    state,
                     postalCode,
                     profileType: 'Guardian',
+                    acceptTerms: true,
+                    verificationId: emailVerificationId,
                 }),
             });
             const result = await res.json();
@@ -164,6 +301,8 @@ export default function GuardianRegistration() {
         } catch (e) {
             toast.error("Network error while creating guardian");
             console.error('Error creating guardian:', e);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -223,7 +362,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                ID Card
+                                ID Card<span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -249,7 +388,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Date Of Birth
+                                Date Of Birth<span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                                 <input
@@ -297,7 +436,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Phone Number
+                                Phone Number<span className="text-red-500">*</span>
                             </label>
                             <PhoneInput
                                 name="mobile"
@@ -313,15 +452,25 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Email
+                                Email<span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="email"
-                                placeholder="Enter email here"
-                                value={formData.email}
-                                onChange={(e) => handleChange('email', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="email"
+                                    placeholder="Enter email here"
+                                    value={formData.email}
+                                    onChange={(e) => handleChange('email', e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleSendOtp}
+                                    disabled={sendingOtp || emailVerified}
+                                    className="shrink-0 px-4 py-3 rounded-lg bg-primary text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                >
+                                    {emailVerified ? "Verified" : sendingOtp ? "Sending..." : "Verify"}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -333,7 +482,7 @@ export default function GuardianRegistration() {
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Address
+                                Address<span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -346,7 +495,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                City
+                                City<span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -359,7 +508,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                State
+                                State<span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={formData.state}
@@ -379,7 +528,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Postal Code
+                                Postal Code<span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -388,6 +537,20 @@ export default function GuardianRegistration() {
                                 onChange={(e) => handleChange('postalCode', e.target.value)}
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                             />
+                        </div>
+
+                        <div className="flex items-start gap-3 pt-2">
+                            <input
+                                type="checkbox"
+                                checked={formData.acceptTerms}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, acceptTerms: e.target.checked }))}
+                                className="mt-1 w-5 h-5 text-primary rounded border-gray-300 focus:ring-primary"
+                            />
+                            <label className="text-sm text-gray-700">
+                                By continuing you agree to our{" "}
+                                <span className="text-primary font-medium">Terms of use</span> &{" "}
+                                <span className="text-primary font-medium">LGPD/Privacy</span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -398,13 +561,44 @@ export default function GuardianRegistration() {
                 <div className="">
                     <button
                         onClick={handleSubmit}
-                        className="w-full bg-primary hover:bg-primary/70 text-white font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors"
+                        disabled={!emailVerified || submitting}
+                        className="w-full bg-primary hover:bg-primary/70 text-white font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         <Plus className="w-5 h-5" />
-                        Add Guardian
+                        {submitting ? "Adding..." : "Add Guardian"}
                     </button>
                 </div>
             </div>
+
+            <Modal isOpen={otpModalOpen} onClose={closeOtpModal} className="max-w-[420px] mx-4 p-6">
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Email Verification</h3>
+                        <p className="text-sm text-gray-600 mt-1">Enter the 5-digit code sent to {String(formData.email || '').trim()}</p>
+                    </div>
+                    <button type="button" onClick={closeOtpModal} className="p-2 rounded-lg hover:bg-gray-100">
+                        <X className="w-5 h-5 text-gray-700" />
+                    </button>
+                </div>
+
+                <div className="mt-5 space-y-4">
+                    <input
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                        inputMode="numeric"
+                        placeholder="12345"
+                        className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary text-center tracking-widest text-lg"
+                    />
+                    <button
+                        type="button"
+                        onClick={handleVerifyOtp}
+                        disabled={verifyingOtp}
+                        className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        {verifyingOtp ? "Verifying..." : "Verify Code"}
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }
