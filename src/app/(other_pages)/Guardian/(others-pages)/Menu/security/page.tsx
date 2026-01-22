@@ -3,6 +3,7 @@
 import React from "react";
 import Header from "@/components/common/header";
 import { Laptop, Monitor, Smartphone } from "lucide-react";
+import { toast } from "react-toastify";
 
 type SessionRow = {
   id: string;
@@ -16,6 +17,12 @@ type SessionRow = {
 };
 
 export default function SecurityPage() {
+  const [changeOpen, setChangeOpen] = React.useState(false);
+  const [currentPassword, setCurrentPassword] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+
   const sessions: SessionRow[] = [
     { id: "iphone", label: "iPhone 17 Pro Max", rightLabel: "This device", icon: { type: "smartphone" } },
     { id: "macbook", label: "Macbook Computer", icon: { type: "laptop" } },
@@ -43,6 +50,7 @@ export default function SecurityPage() {
             <div className="text-[15px] text-[#111827] font-medium">Change Password</div>
             <button
               type="button"
+              onClick={() => setChangeOpen(true)}
               className="h-10 px-6 rounded-full bg-[#4A7BF7] text-white text-[14px] font-medium"
             >
               Change
@@ -83,7 +91,97 @@ export default function SecurityPage() {
           </div>
         </div>
       </div>
+
+      {changeOpen ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
+          <div className="w-full max-w-md rounded-3xl bg-white p-5">
+            <div className="text-[16px] font-semibold text-[#111827]">Change Password</div>
+
+            <div className="mt-4 space-y-3">
+              <div>
+                <div className="text-[14px] font-medium text-[#111827]">Current password</div>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="mt-2 h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 text-[15px] text-[#111827] outline-none"
+                />
+              </div>
+              <div>
+                <div className="text-[14px] font-medium text-[#111827]">New password</div>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="mt-2 h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 text-[15px] text-[#111827] outline-none"
+                />
+              </div>
+              <div>
+                <div className="text-[14px] font-medium text-[#111827]">Confirm new password</div>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="mt-2 h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 text-[15px] text-[#111827] outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={async () => {
+                  if (!currentPassword || !newPassword) {
+                    toast.error("Please fill all fields");
+                    return;
+                  }
+                  if (newPassword !== confirmPassword) {
+                    toast.error("Passwords do not match");
+                    return;
+                  }
+                  try {
+                    setSaving(true);
+                    const res = await fetch("/api/user/change-password", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({ currentPassword, newPassword }),
+                    });
+                    const json = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                      toast.error(typeof json?.error === "string" ? json.error : "Failed to change password");
+                      return;
+                    }
+                    toast.success("Password changed");
+                    setChangeOpen(false);
+                    setCurrentPassword("");
+                    setNewPassword("");
+                    setConfirmPassword("");
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                className="h-[52px] w-full rounded-full bg-[#4A7BF7] text-[15px] font-medium text-white disabled:opacity-60"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setChangeOpen(false);
+                  setCurrentPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                }}
+                className="h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-[#111827]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
-

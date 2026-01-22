@@ -1,8 +1,11 @@
 'use client'
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Calendar, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setProfile } from "@/store/userProfileSlice";
+import { toast } from "react-toastify";
 
 function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
@@ -23,9 +26,53 @@ function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
 
 export default function Page() {
   const router = useRouter();
-  const [nationalId, setNationalId] = useState("AB374892928");
-  const [dateOfBirth, setDateOfBirth] = useState("28/10/1990");
-  const [address, setAddress] = useState("742 Evergreen Terrace, Sao Paulo, 67289");
+  const dispatch = useAppDispatch();
+  const profile = useAppSelector((s) => s.userProfile.profile);
+
+  const initial = useMemo(
+    () => ({
+      taxId: profile?.taxId ?? "",
+      dateOfBirth: profile?.dateOfBirth ?? "",
+      address: profile?.address ?? "",
+    }),
+    [profile?.address, profile?.dateOfBirth, profile?.taxId]
+  );
+
+  const [nationalId, setNationalId] = useState(initial.taxId);
+  const [dateOfBirth, setDateOfBirth] = useState(initial.dateOfBirth);
+  const [address, setAddress] = useState(initial.address);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setNationalId(initial.taxId);
+    setDateOfBirth(initial.dateOfBirth);
+    setAddress(initial.address);
+  }, [initial.address, initial.dateOfBirth, initial.taxId]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          taxId: nationalId,
+          dateOfBirth,
+          address,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+        return;
+      }
+      if (json?.profile) dispatch(setProfile(json.profile));
+      toast.success("Saved changes");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -43,6 +90,7 @@ export default function Page() {
           <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">Date of Birth</div>
           <div className="relative mt-3">
             <input
+              type="date"
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
               className="h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 pr-12 text-[16px] leading-[20px] text-[#111827] outline-none"
@@ -63,9 +111,11 @@ export default function Page() {
         <div className="mt-auto pt-10">
           <button
             type="button"
+            onClick={handleSave}
+            disabled={saving}
             className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
           >
-            Save Changes
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>

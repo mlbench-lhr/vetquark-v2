@@ -27,6 +27,9 @@ export type UserProfile = {
   reportHeaderAddress?: string;
   reportFooter?: string;
   profileImageUrl?: string;
+  preferredLanguage?: "en" | "pt";
+  baseExamPrice?: number;
+  notificationSettings?: Record<string, any>;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -95,4 +98,3 @@ const userProfileSlice = createSlice({
 
 export const { setProfile, clearProfile } = userProfileSlice.actions;
 export default userProfileSlice.reducer;
-

@@ -28,6 +28,9 @@ export interface IUser {
   reportHeaderAddress?: string;
   reportFooter?: string;
   profileImageUrl?: string;
+  preferredLanguage?: "en" | "pt";
+  baseExamPrice?: number;
+  notificationSettings?: Record<string, any>;
   // Account verification
   emailVerified?: boolean;
   emailVerifiedAt?: Date;
@@ -75,6 +78,9 @@ const UserSchema = new Schema<IUser>(
     reportHeaderAddress: { type: String },
     reportFooter: { type: String },
     profileImageUrl: { type: String },
+    preferredLanguage: { type: String, enum: ["en", "pt"], default: "en" },
+    baseExamPrice: { type: Number, min: 0 },
+    notificationSettings: { type: Schema.Types.Mixed, default: {} },
     // Account verification
     emailVerified: { type: Boolean, default: false },
     emailVerifiedAt: { type: Date },

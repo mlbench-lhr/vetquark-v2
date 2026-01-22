@@ -1,8 +1,11 @@
 'use client'
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setProfile } from "@/store/userProfileSlice";
+import { toast } from "react-toastify";
 
 function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
@@ -25,7 +28,37 @@ type Lang = "en" | "pt";
 
 export default function Page() {
   const router = useRouter();
-  const [lang, setLang] = useState<Lang>("en");
+  const dispatch = useAppDispatch();
+  const profile = useAppSelector((s) => s.userProfile.profile);
+
+  const initialLang = useMemo<Lang>(() => (profile?.preferredLanguage === "pt" ? "pt" : "en"), [profile?.preferredLanguage]);
+  const [lang, setLang] = useState<Lang>(initialLang);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setLang(initialLang);
+  }, [initialLang]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ preferredLanguage: lang }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+        return;
+      }
+      if (json?.profile) dispatch(setProfile(json.profile));
+      toast.success("Saved changes");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const items: Array<{ id: Lang; label: string; flag: string }> = [
     { id: "en", label: "English", flag: "🇬🇧" },
@@ -73,13 +106,14 @@ export default function Page() {
         <div className="mt-auto pt-10">
           <button
             type="button"
+            onClick={handleSave}
+            disabled={saving}
             className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
           >
-            Save Changes
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
     </div>
   );
 }
-

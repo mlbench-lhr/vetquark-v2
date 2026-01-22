@@ -100,6 +100,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
   const profile = useAppSelector((s) => s.userProfile.profile);
   const dobRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const initialFormData = useMemo<TaxProfileFormData>(() => {
     return {
@@ -129,14 +130,17 @@ export default function TaxInfoAndProfessionalProfilePage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (profile) {
-      dispatch(
-        setProfile({
-          ...profile,
+    try {
+      setSaving(true);
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
           taxId: formData.taxId,
-          cnpjIe: formData.cnpjIe || undefined,
+          cnpjIe: formData.cnpjIe,
           dateOfBirth: formData.dateOfBirth,
           address: formData.address,
           crmv: formData.crmv,
@@ -144,10 +148,18 @@ export default function TaxInfoAndProfessionalProfilePage() {
           mapaRegistration: formData.mapaRegistration,
           operateHow: formData.operateHow,
           expertise: formData.expertise,
-        })
-      );
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+        return;
+      }
+      if (json?.profile) dispatch(setProfile(json.profile));
+      toast.success("Saved changes");
+    } finally {
+      setSaving(false);
     }
-    toast.success("Saved changes (local only)");
   };
 
   return (
@@ -307,15 +319,16 @@ export default function TaxInfoAndProfessionalProfilePage() {
         </form>
       </div>
 
-      <div className="fixe bottom- left- right- bg-background border-t border-gray-100 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-gray-100 p-4">
         <button
           type="submit"
           onClick={() => {
             formRef.current?.requestSubmit();
           }}
+          disabled={saving}
           className="w-full h-[52px] bg-[hsl(224,65%,56%)] hover:bg-[hsl(224,65%,50%)] text-white text-[16px] font-medium rounded-full transition-colors"
         >
-          Save Changes
+          {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </div>

@@ -28,6 +28,9 @@ type LeanUser = {
   reportHeaderAddress?: unknown;
   reportFooter?: unknown;
   profileImageUrl?: unknown;
+  preferredLanguage?: unknown;
+  baseExamPrice?: unknown;
+  notificationSettings?: unknown;
   createdAt?: unknown;
   updatedAt?: unknown;
 };
@@ -58,6 +61,9 @@ function toSafeProfile(user: LeanUser) {
     reportHeaderAddress: typeof user.reportHeaderAddress === "string" ? user.reportHeaderAddress : undefined,
     reportFooter: typeof user.reportFooter === "string" ? user.reportFooter : undefined,
     profileImageUrl: typeof user.profileImageUrl === "string" ? user.profileImageUrl : undefined,
+    preferredLanguage: user.preferredLanguage === "en" || user.preferredLanguage === "pt" ? user.preferredLanguage : undefined,
+    baseExamPrice: typeof user.baseExamPrice === "number" && Number.isFinite(user.baseExamPrice) ? user.baseExamPrice : undefined,
+    notificationSettings: user.notificationSettings && typeof user.notificationSettings === "object" ? user.notificationSettings : undefined,
     createdAt:
       typeof user.createdAt === "string" || typeof user.createdAt === "number" || user.createdAt instanceof Date
         ? new Date(user.createdAt).toISOString()
@@ -103,4 +109,3 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ profile: toSafeProfile(user as unknown as LeanUser) }, { status: 200 });
 }
-

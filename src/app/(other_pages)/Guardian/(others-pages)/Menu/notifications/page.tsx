@@ -1,7 +1,10 @@
 'use client'
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Header from "@/components/common/header";
+import { toast } from "react-toastify";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setProfile } from "@/store/userProfileSlice";
 
 type ToggleItem = {
   id: string;
@@ -76,6 +79,9 @@ function SettingCard({
 }
 
 export default function NotificationsSettingsPage() {
+  const dispatch = useAppDispatch();
+  const profile = useAppSelector((s) => s.userProfile.profile);
+
   const pushItems: ToggleItem[] = useMemo(
     () => [
       {
@@ -118,12 +124,59 @@ export default function NotificationsSettingsPage() {
     []
   );
 
-  const [pushState, setPushState] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(pushItems.map((i) => [i.id, i.defaultOn]))
-  );
-  const [emailState, setEmailState] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(emailItems.map((i) => [i.id, i.defaultOn]))
-  );
+  const initialPush = useMemo(() => {
+    const fromProfile = (profile?.notificationSettings as any)?.push;
+    const record = fromProfile && typeof fromProfile === "object" ? (fromProfile as Record<string, unknown>) : {};
+    return Object.fromEntries(
+      pushItems.map((i) => [i.id, typeof record[i.id] === "boolean" ? Boolean(record[i.id]) : i.defaultOn])
+    ) as Record<string, boolean>;
+  }, [profile?.notificationSettings, pushItems]);
+
+  const initialEmail = useMemo(() => {
+    const fromProfile = (profile?.notificationSettings as any)?.email;
+    const record = fromProfile && typeof fromProfile === "object" ? (fromProfile as Record<string, unknown>) : {};
+    return Object.fromEntries(
+      emailItems.map((i) => [i.id, typeof record[i.id] === "boolean" ? Boolean(record[i.id]) : i.defaultOn])
+    ) as Record<string, boolean>;
+  }, [emailItems, profile?.notificationSettings]);
+
+  const [pushState, setPushState] = useState<Record<string, boolean>>(initialPush);
+  const [emailState, setEmailState] = useState<Record<string, boolean>>(initialEmail);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setPushState(initialPush);
+  }, [initialPush]);
+
+  useEffect(() => {
+    setEmailState(initialEmail);
+  }, [initialEmail]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          notificationSettings: {
+            push: pushState,
+            email: emailState,
+          },
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+        return;
+      }
+      if (json?.profile) dispatch(setProfile(json.profile));
+      toast.success("Saved changes");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -163,8 +216,18 @@ export default function NotificationsSettingsPage() {
             />
           ))}
         </div>
+
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="h-[56px] w-full rounded-full bg-[#4A7BF7] text-[15px] font-medium text-white"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-
