@@ -19,7 +19,7 @@ export default function EditProfileCard() {
     const email = profile?.email ?? "";
     const phone = profile?.phone ?? "";
     const profileImageUrl = profile?.profileImageUrl ?? "";
-    const fallbackAvatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
+    const fallbackAvatarUrl = "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png";
 
     const [localFullName, setLocalFullName] = React.useState(fullName);
     const [localEmail, setLocalEmail] = React.useState(email);

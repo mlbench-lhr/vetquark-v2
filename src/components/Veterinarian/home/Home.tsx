@@ -22,6 +22,10 @@ export default function Home() {
         activePatients: 0,
         newThisMonth: 0,
     });
+    const [examStats, setExamStats] = useState<{ todayTotal: number; todayCompleted: number }>({
+        todayTotal: 0,
+        todayCompleted: 0,
+    });
     const [attendance, setAttendance] = useState<{ months: string[]; dogs: number[]; cats: number[] }>({
         months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         dogs: Array(12).fill(0),
@@ -80,13 +84,49 @@ export default function Home() {
             }
         })();
     }, []);
+
+    useEffect(() => {
+        (async () => {
+            const start = new Date();
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(start);
+            end.setDate(end.getDate() + 1);
+
+            const baseParams = new URLSearchParams({
+                page: '1',
+                pageSize: '1',
+                from: start.toISOString(),
+                to: end.toISOString(),
+            });
+
+            try {
+                const [totalRes, completedRes] = await Promise.all([
+                    fetch(`/api/reading/get_readings?${baseParams.toString()}`, { credentials: 'include' }),
+                    fetch(`/api/reading/get_readings?${new URLSearchParams({ ...Object.fromEntries(baseParams), status: 'signed' }).toString()}`, { credentials: 'include' }),
+                ]);
+
+                const [totalData, completedData] = await Promise.all([
+                    totalRes.json().catch(() => null),
+                    completedRes.json().catch(() => null),
+                ]);
+
+                const todayTotal = Number((totalData as any)?.pagination?.total ?? 0);
+                const todayCompleted = Number((completedData as any)?.pagination?.total ?? 0);
+
+                if (Number.isFinite(todayTotal) && Number.isFinite(todayCompleted)) {
+                    setExamStats({ todayTotal, todayCompleted });
+                }
+            } catch {
+            }
+        })();
+    }, []);
     return (
         <div className="px-3 py-5">
             <Header userName={profile?.fullName} balance="$ 925,00" />
             <SearchBar />
 
             <div className="mt-3 grid grid-cols-2 gap-3">
-                <StatCard number={0} label="Exams Today" sublabel="0 completed" variant="primary" />
+                <StatCard number={examStats.todayTotal} label="Exams Today" sublabel={`${examStats.todayCompleted} completed`} variant="primary" />
                 <StatCard
                     number={patientStats.activePatients}
                     label="Active Patients"

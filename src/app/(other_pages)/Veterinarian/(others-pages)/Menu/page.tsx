@@ -73,7 +73,7 @@ export default function MenuPage() {
   const email = profile?.email ?? "";
   const avatarUrl =
     profile?.profileImageUrl ??
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
+    "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png";
   const balance = "925.00";
   const currency = "R$";
 

@@ -220,7 +220,7 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({
             </svg>
             {interactive && selectedIndex != null && typeof dogs[selectedIndex] === 'number' && (
               <div
-                style={{ position: 'absolute', left: toX(selectedIndex) - 5, top: toY(dogs[selectedIndex]) - 28 }}
+                style={{ position: 'absolute', left: toX(selectedIndex) - 5, top: toY(dogs[selectedIndex]) - 15 }}
                 className="px-2 py-1 bg-indigo-700 text-white text-xs rounded-lg shadow pointer-events-none"
               >
                 {`${Math.round(dogs[selectedIndex])}${ySuffix ?? ''}`}
