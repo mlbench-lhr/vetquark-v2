@@ -1,10 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { Search, Bell, ChevronRight, Plus, Link, Link2 } from 'lucide-react';
+import { Search, Bell, ChevronRight, Plus, Link2 } from 'lucide-react';
 import Image from 'next/image';
 import PatientCard from '../home/PatientCard';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/tables/Pagination';
+import Link from 'next/link';
 
 interface Guardian {
     id: string;
@@ -31,11 +32,13 @@ export default function AddPatientGuardian() {
             );
             const data = await res.json();
             if (res.ok) {
+                console.log("data.items----", data.items);
+
                 setGuardians((data.items || []).map((u: any) => ({
-                    id: String(u._id),
-                    name: u.fullName,
+                    id: String(u.id),
+                    name: u.name,
                     owner: u.taxId ? `National ID: ${u.taxId}` : 'National ID: N/A',
-                    image: '',
+                    image: u.avatarUrl,
                 })));
                 setTotalPages(Number(data.pagination?.totalPages || 0));
             } else {
@@ -50,6 +53,7 @@ export default function AddPatientGuardian() {
     useEffect(() => {
         handleSearch(searchQuery, page);
     }, [page, searchQuery]);
+    console.log("guardians----", guardians);
 
     const filteredGuardians = guardians.filter(guardian =>
         guardian.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -83,7 +87,7 @@ export default function AddPatientGuardian() {
             {/* Header */}
             <div className="bg-white flex items-center justify-between">
                 <h1 className="text-base font-medium text-gray-900">Add New Patient</h1>
-                <button className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                <Link href={"/Veterinarian/notifications"} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm">
                         <Image
                             src={"/images/home/bell.svg"}
@@ -92,7 +96,7 @@ export default function AddPatientGuardian() {
                             height={24}
                         />
                     </span>
-                </button>
+                </Link>
             </div>
 
             {/* Progress Tabs */}

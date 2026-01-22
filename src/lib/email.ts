@@ -21,7 +21,7 @@ export async function sendVerificationEmail(to: string, otp: string) {
   });
 
   const subject = "Your verification code";
-  const html = `<p>Your Vertix verification code is <strong>${otp}</strong>.</p><p>This code expires in 10 minutes.</p>`;
+  const html = `<p>Your VetQuark verification code is <strong>${otp}</strong>.</p><p>This code expires in 10 minutes.</p>`;
 
   const info = await transporter.sendMail({
     from,
@@ -55,7 +55,7 @@ export async function sendResetEmail(to: string, otp: string) {
   });
 
   const subject = "Reset your password";
-  const html = `<p>Your Vertix password reset code is <strong>${otp}</strong>.</p><p>This code expires in 10 minutes.</p>`;
+  const html = `<p>Your VetQuark password reset code is <strong>${otp}</strong>.</p><p>This code expires in 10 minutes.</p>`;
 
   const info = await transporter.sendMail({
     from,
@@ -88,7 +88,7 @@ export async function sendWelcomeEmail(to: string, email: string, tempPassword: 
     auth: { user, pass },
   });
 
-  const subject = "Welcome to Vertix";
+  const subject = "Welcome to VetQuark";
   const html = `
     <p>Hello,</p>
     <p>Your Guardian account has been created by your veterinarian.</p>

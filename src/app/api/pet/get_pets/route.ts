@@ -3,11 +3,15 @@ import connectMongo from "@/lib/mongodb";
 import Patient from "@/lib/models/Patient";
 import User from "@/lib/models/User";
 import { parsePagination, toPaginationMeta } from "@/lib/utils";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
   try {
     const guardianId = req.headers.get("x-user-id");
     if (!guardianId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!mongoose.Types.ObjectId.isValid(guardianId)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,12 +24,11 @@ export async function GET(req: NextRequest) {
     await connectMongo();
 
     const guardian = await User.findById(guardianId).select("_id role").lean();
-    // if (!guardian || guardian.role !== "Guardian") {
-  //   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    // }
+    if (!guardian || guardian.role !== "Guardian") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-    // const docs = await Patient.find({ guardian: guardianId })
-    const filter = {};
+    const filter = { guardian: guardianId };
     const [total, docs] = await Promise.all([
       Patient.countDocuments(filter),
       Patient.find(filter)

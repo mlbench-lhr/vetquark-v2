@@ -9,8 +9,11 @@ import TimerStep from './TimerStep'
 import ReviewStep from './ReviewStep'
 import ReportStep from './ReportStep'
 import { toast } from 'react-toastify'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
 export default function NewReadingWizard() {
+  const searchParams = useSearchParams()
   const [step, setStep] = useState<NewReadingStep>('identification')
   const [submitting, setSubmitting] = useState(false)
 
@@ -42,6 +45,16 @@ export default function NewReadingWizard() {
     species: string
     guardianName: string
   } | null>(null)
+
+  const patientIdFromQuery = useMemo(() => (searchParams.get('patientId') || '').trim(), [searchParams])
+
+  useEffect(() => {
+    if (!patientIdFromQuery) return
+    setDraft((prev) => ({
+      ...prev,
+      identification: { ...prev.identification, patientId: patientIdFromQuery },
+    }))
+  }, [patientIdFromQuery])
 
   useEffect(() => {
     const patientId = draft.identification.patientId
@@ -138,9 +151,9 @@ export default function NewReadingWizard() {
     <div className="min-h-screen p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div className="text-base font-medium">New Urine Test</div>
-        <button className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+        <Link href={"/Veterinarian/notifications"} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
           <Image src={"/images/home/bell.svg"} alt="Bell icon" width={24} height={24} />
-        </button>
+        </Link>
       </div>
 
       <Stepper active={step} />

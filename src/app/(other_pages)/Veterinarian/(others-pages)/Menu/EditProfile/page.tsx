@@ -18,9 +18,8 @@ export default function EditProfileCard() {
     const fullName = profile?.fullName ?? "";
     const email = profile?.email ?? "";
     const phone = profile?.phone ?? "";
-    const avatarUrl =
-        profile?.profileImageUrl ??
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
+    const profileImageUrl = profile?.profileImageUrl ?? "";
+    const fallbackAvatarUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
 
     const [localFullName, setLocalFullName] = React.useState(fullName);
     const [localEmail, setLocalEmail] = React.useState(email);
@@ -29,17 +28,98 @@ export default function EditProfileCard() {
         if (!initial) return "";
         return initial.startsWith("+") ? initial : `+${initial}`;
     });
+    const [localProfileImageUrl, setLocalProfileImageUrl] = React.useState(profileImageUrl);
     const [saving, setSaving] = React.useState(false);
+    const [uploadingAvatar, setUploadingAvatar] = React.useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
     React.useEffect(() => {
         setLocalFullName(fullName);
         setLocalEmail(email);
         const initial = String(phone || "").replace(/\s+/gu, "");
         setLocalPhone(!initial ? "" : initial.startsWith("+") ? initial : `+${initial}`);
-    }, [email, fullName, phone]);
+        setLocalProfileImageUrl(profileImageUrl);
+    }, [email, fullName, phone, profileImageUrl]);
 
     const parsedPhone = localPhone ? parsePhoneNumberFromString(localPhone) : undefined;
     const derivedPhone = parsedPhone ? parsedPhone.number : localPhone;
+
+    const avatarUrl = localProfileImageUrl || fallbackAvatarUrl;
+
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+        if (!CLOUD_NAME || !API_KEY) {
+            toast.error("Cloudinary is not configured");
+            return;
+        }
+
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("File too large (max 10MB)");
+            e.target.value = "";
+            return;
+        }
+
+        setUploadingAvatar(true);
+        try {
+            const signRes = await fetch(`/api/cloudinary/upload?folder=profile_pictures`);
+            const signJson = await signRes.json();
+            if (!signRes.ok) {
+                toast.error("Failed to prepare upload");
+                return;
+            }
+            const { timestamp, signature } = signJson;
+
+            const data = new FormData();
+            data.append("file", file);
+            data.append("api_key", API_KEY);
+            data.append("timestamp", String(timestamp));
+            data.append("signature", signature);
+            data.append("folder", "profile_pictures");
+
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                method: "POST",
+                body: data,
+            });
+            const json = await res.json();
+            if (!res.ok) {
+                toast.error("Upload failed");
+                return;
+            }
+            const url = json.secure_url || json.url;
+            if (url) {
+                const nextUrl = String(url);
+                const previousUrl = localProfileImageUrl;
+                setLocalProfileImageUrl(nextUrl);
+
+                const saveRes = await fetch("/api/user/profile", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ profileImageUrl: nextUrl }),
+                });
+                const saveJson = await saveRes.json().catch(() => ({}));
+                if (!saveRes.ok) {
+                    setLocalProfileImageUrl(previousUrl);
+                    toast.error(typeof saveJson?.error === "string" ? saveJson.error : "Failed to save profile picture");
+                    return;
+                }
+                if (saveJson?.profile) dispatch(setProfile(saveJson.profile));
+                toast.success("Profile picture updated");
+            }
+        } catch {
+            toast.error("Upload failed");
+        } finally {
+            setUploadingAvatar(false);
+            e.target.value = "";
+        }
+    };
 
     const handleSave = async () => {
         try {
@@ -50,8 +130,10 @@ export default function EditProfileCard() {
                 credentials: "include",
                 body: JSON.stringify({
                     fullName: localFullName,
-                    email: localEmail,
                     phone: derivedPhone,
+                    ...(localProfileImageUrl && localProfileImageUrl !== profileImageUrl
+                        ? { profileImageUrl: localProfileImageUrl }
+                        : {}),
                 }),
             });
             const json = await res.json().catch(() => ({}));
@@ -79,8 +161,17 @@ export default function EditProfileCard() {
                             className="w-full h-full object-cover"
                         />
                     </div>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                    />
                     <button
-                        onClick={() => toast.info("Coming soon")}
+                        type="button"
+                        onClick={handleAvatarClick}
+                        disabled={uploadingAvatar}
                         className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
                     >
                         <Camera className="h-4 w-4 text-primary-foreground" />
@@ -104,7 +195,7 @@ export default function EditProfileCard() {
                     <Input
                         type="email"
                         value={localEmail}
-                        onChange={(e) => setLocalEmail(e.target.value)}
+                        disabled
                         className="w-full h-12 px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-800 placeholder:text-gray-400 md:text-base"
                     />
                 </div>

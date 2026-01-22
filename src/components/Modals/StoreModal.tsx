@@ -353,11 +353,11 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                 {quantities.map((qty, index) => (
                                                     <div key={index} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
                                                         <div className="w-[80px] h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                            VETRIX
+                                                            VetQuark
                                                         </div>
 
                                                         <div className="flex-1 text-xs">
-                                                            <h3 className="font-semibold text-gray-800">Vetrix Box</h3>
+                                                            <h3 className="font-semibold text-gray-800">VetQuark Box</h3>
                                                             <p className="max-w-[110px] text-gray-400">Box with 100 units of reagent strips</p>
                                                             <div className='flex justify-between items-center gap-2'>
                                                                 <p className="text-base font-bold text-gray-800">£135.00</p>
@@ -388,11 +388,11 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                     {quantities.map((qty, index) => (
                                                         <div key={index} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
                                                             <div className="w-[80px] h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                                VETRIX
+                                                                VetQuark
                                                             </div>
 
                                                             <div className="flex-1 text-xs">
-                                                                <h3 className="font-semibold text-gray-800">Vetrix Box</h3>
+                                                                <h3 className="font-semibold text-gray-800">VetQuark Box</h3>
                                                                 <p className="max-w-[110px] text-gray-400">Box with 100 units of reagent strips</p>
                                                                 <div className='flex justify-between items-center gap-2'>
                                                                     <p className="text-base font-bold text-gray-800">£135.00</p>

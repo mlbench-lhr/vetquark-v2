@@ -95,7 +95,7 @@ async function downloadReadingReport(readingId: string) {
 }
 
 async function shareReadingReport(readingId: string) {
-  const url = `${window.location.origin}/Veterinarian/history/detail/${readingId}`;
+  const url = window.location.href;
   const navAny = navigator as any;
   if (typeof navAny?.share === "function") {
     await navAny.share({ title: "Urinalysis Report", url });

@@ -8,6 +8,8 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { useAppDispatch } from "@/store/hooks";
+import { setProfile as setUserProfile } from "@/store/userProfileSlice";
 
 type ProfileType = "veterinarian" | "tutor";
 
@@ -38,6 +40,7 @@ type SignUpFormData = {
 
 export default function SignUpForm() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [step, setStep] = useState(1);
   const [profileType, setProfileType] = useState<ProfileType>("veterinarian");
   const [showPassword, setShowPassword] = useState(false);
@@ -368,11 +371,28 @@ export default function SignUpForm() {
       }
       toast.success("Account created");
       const id = (data?.id ? String(data.id) : "").trim();
-      if (id) {
-        router.push(`/upload-profile-picture?userId=${encodeURIComponent(id)}`);
-      } else {
-        router.push("/signin");
+      const homeHref = profileType === "veterinarian" ? "/Veterinarian/home" : "/Guardian/home";
+      try {
+        const loginRes = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, password: formData.password }),
+          credentials: "include",
+        });
+        const loginData = await loginRes.json().catch(() => null);
+        if (loginRes.ok && loginData?.profile) {
+          dispatch(setUserProfile(loginData.profile));
+        }
+      } catch {
       }
+
+      if (!id) {
+        router.push(homeHref);
+        return;
+      }
+      router.push(
+        `/upload-profile-picture?userId=${encodeURIComponent(id)}&profileType=${encodeURIComponent(profileType)}`
+      );
     } finally {
       setSubmitting(false);
     }

@@ -176,7 +176,7 @@ export default function MenuPage() {
 
       {/* Footer */}
       <div className="py-6 text-center">
-        <p className="text-xs text-muted-foreground">© 2026 Vetrix</p>
+        <p className="text-xs text-muted-foreground">© 2026 VetQuark</p>
       </div>
     </div>
   );

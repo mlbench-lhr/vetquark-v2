@@ -88,10 +88,27 @@ const PatientProfilePage: React.FC = () => {
       name: patient?.animalName ?? "",
       type: patient?.species ?? "",
       breed: patient?.breed ?? "",
-      image: patient?.photo,
+      image: patient?.photo ?? "",
       sex: patient?.sex ?? "",
       age: ageYears === null ? "" : `${ageYears} years`,
       gender: patient?.sex ?? "",
+      microchip: patient?.microchip ?? "",
+      temperament: patient?.temperament ?? "",
+      size: patient?.size ?? "",
+      coat: patient?.coat ?? "",
+      neutered: patient?.neutered ?? "",
+      rga: patient?.rga ?? "",
+      planName: patient?.planName ?? "",
+      cardNumber: patient?.cardNumber ?? "",
+      cardValidity: patient?.cardValidity ?? "",
+      allergies: patient?.allergies ?? "",
+      chronicDiseases: patient?.chronicDiseases ?? "",
+      otherInformation: patient?.otherInformation ?? "",
+      internalNotes: patient?.internalNotes ?? "",
+      guardianId: patient?.guardian?.id ?? "",
+      guardianName: patient?.guardian?.fullName ?? "",
+      guardianTaxId: patient?.guardian?.taxId ?? "",
+      guardianEmail: patient?.guardian?.email ?? "",
     };
   }, [patient]);
 
@@ -132,7 +149,7 @@ const PatientProfilePage: React.FC = () => {
       {loading ? (
         <PatientDetailsSkeleton />
       ) : activeTab === 'information' ? (
-        <PatientInfoCard {...patientData} />
+        <PatientInfoCard {...patientData} patientId={patientId} />
       ) : (
         <Progress />
       )}
