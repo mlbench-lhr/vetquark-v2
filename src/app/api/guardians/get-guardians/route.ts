@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
     }
 
     const url = new URL(req.url);
+    const guardianId = (url.searchParams.get("guardianId") || "").trim();
     const q = (url.searchParams.get("q") || "").trim();
     const sort = (url.searchParams.get("sort") || "name_az").trim();
     const { page, pageSize, skip, limit } = parsePagination(url.searchParams, {
@@ -59,6 +60,42 @@ export async function GET(req: NextRequest) {
     const veterinarian = await User.findById(veterinarianId).select("_id role").lean();
     if (!veterinarian || veterinarian.role !== "Veterinarian") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (guardianId) {
+      if (!mongoose.Types.ObjectId.isValid(guardianId)) {
+        return NextResponse.json({ error: "Invalid guardianId" }, { status: 400 });
+      }
+
+      const [guardianUser, patientCount] = await Promise.all([
+        User.findById(guardianId)
+          .select("_id role fullName email phone address taxId profileImageUrl")
+          .lean(),
+        Patient.countDocuments({ veterinarian: veterinarianId, guardian: guardianId }),
+      ]);
+
+      if (!guardianUser || guardianUser.role !== "Guardian") {
+        return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
+      }
+      if (!patientCount) {
+        return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
+      }
+
+      return NextResponse.json(
+        {
+          item: {
+            id: String(guardianUser._id),
+            fullName: (guardianUser as any).fullName ?? "",
+            email: (guardianUser as any).email ?? "",
+            phone: (guardianUser as any).phone ?? "",
+            address: (guardianUser as any).address ?? "",
+            taxId: (guardianUser as any).taxId ?? "",
+            profileImageUrl: (guardianUser as any).profileImageUrl ?? "",
+            patientCount,
+          },
+        },
+        { status: 200 }
+      );
     }
 
     const veterinarianObjectId = new mongoose.Types.ObjectId(veterinarianId);

@@ -40,7 +40,7 @@ export default function Page() {
               id: String(p.id || p._id),
               name: String(p.name || p.animalName || ''),
               owner: String(p.owner || ''),
-              image: String(p.image || p.photo),
+              image: String(p.image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
             }))
           )
           setTotalPages(Number(data.pagination?.totalPages || 0))
@@ -125,7 +125,7 @@ export default function Page() {
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="h-10 w-10 overflow-hidden rounded-full bg-white/60">
-                        <img src={p.image} alt={p.name} className="h-10 w-10 object-cover" />
+                        <img src={p.image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"} alt={p.name} className="h-10 w-10 object-cover" />
                       </div>
                       <div className="min-w-0">
                         <div className="truncate text-[14px] leading-[18px] font-medium text-[#111827]">{p.name}</div>

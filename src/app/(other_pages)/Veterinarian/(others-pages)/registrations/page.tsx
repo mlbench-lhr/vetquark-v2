@@ -451,7 +451,7 @@ function RegistrationsListContent({
                       </div>
                     </div>
                     <Link
-                      href={`/Veterinarian/home/guardianPatients/${encodeURIComponent(guardian.id)}`}
+                      href={`/Veterinarian/home/guardianDetails/${encodeURIComponent(guardian.id)}`}
                       className="text-black hover:text-foreground transition-colors p-1"
                     >
                       <ChevronRight className="h-5 w-5 text-primary" />

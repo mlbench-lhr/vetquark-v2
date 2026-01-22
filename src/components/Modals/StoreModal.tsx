@@ -63,6 +63,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
     const [step, setStep] = useState<StoreStep>('store');
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [cart, setCart] = useState<Record<string, number>>({});
+    const [placingOrder, setPlacingOrder] = useState(false);
     const [selectedAddressId, setSelectedAddressId] = useState<string>("taltal");
     const [addresses, setAddresses] = useState<Address[]>([
         { id: "taltal", name: "Taltal Clinic", phone: "(205) 555-024", location: "Arcoverde, Pernambuco" },
@@ -122,7 +123,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         setCart((prev) => ({ ...prev, [productId]: (prev[productId] ?? 0) + 1 }));
     };
 
-    const handleProceedToPurchase = () => {
+    const handleProceedToPurchase = async () => {
         if (step === "cart") {
             if (cartQuantity <= 0) {
                 toast.error("Your cart is empty");
@@ -133,23 +134,51 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         }
 
         if (step === "checkout") {
+            if (placingOrder) return;
             if (cartQuantity <= 0) {
                 toast.error("Your cart is empty");
                 setStep("store");
                 return;
             }
-            const orderId = `order_${Date.now()}`;
-            setLastOrder({
-                id: orderId,
-                items: cartItems.map((i) => ({ name: i.product.name, quantity: i.quantity })),
-                total: cartTotal,
-                address: selectedAddress,
-            });
-            setCart({});
-            setStep("success");
-            toast.success("Order created");
-            if (onUpdated) onUpdated();
-            return;
+            setPlacingOrder(true);
+            try {
+                const payload = {
+                    items: cartItems.map((i) => ({
+                        productId: i.product.id,
+                        name: i.product.name,
+                        price: i.product.price,
+                        quantity: i.quantity,
+                    })),
+                    total: cartTotal,
+                    address: selectedAddress,
+                };
+
+                const res = await fetch("/api/store/orders", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                const data = await res.json().catch(() => null);
+                if (!res.ok) {
+                    const msg = data?.error || "Failed to create order";
+                    toast.error(msg);
+                    return;
+                }
+
+                const orderId = typeof data?.order?.id === "string" ? data.order.id : `order_${Date.now()}`;
+                setLastOrder({
+                    id: orderId,
+                    items: cartItems.map((i) => ({ name: i.product.name, quantity: i.quantity })),
+                    total: cartTotal,
+                    address: selectedAddress,
+                });
+                setCart({});
+                setStep("success");
+                toast.success("Order created");
+                if (onUpdated) onUpdated();
+            } finally {
+                setPlacingOrder(false);
+            }
         }
     };
 
@@ -193,6 +222,56 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         onClose && onClose();
     };
 
+    const handleSaveNewAddress = () => {
+        const label = newAddressForm.label.trim();
+        const phoneRaw = newAddressForm.phone.trim();
+        const addressLine = newAddressForm.address.trim();
+        const city = newAddressForm.city.trim();
+        const state = newAddressForm.state.trim();
+        const postalCode = newAddressForm.postalCode.trim();
+
+        if (!label || !phoneRaw || !addressLine || !city || !state || !postalCode) {
+            toast.error("Please fill all address fields");
+            return;
+        }
+
+        const phone = parsePhoneNumberFromString(phoneRaw, "BR");
+        if (!phone || !phone.isValid()) {
+            toast.error("Please enter a valid phone number");
+            return;
+        }
+
+        const id =
+            typeof globalThis.crypto !== "undefined" && "randomUUID" in globalThis.crypto
+                ? (globalThis.crypto as Crypto).randomUUID()
+                : `addr_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+        const location = `${city}, ${state}`;
+        const next: Address = {
+            id,
+            name: label,
+            phone: phone.formatInternational(),
+            location,
+            addressLine,
+            city,
+            state,
+            postalCode,
+        };
+
+        setAddresses((prev) => [...prev, next]);
+        setSelectedAddressId(next.id);
+        setNewAddressForm({
+            label: "",
+            phone: "",
+            address: "",
+            city: "",
+            state: "",
+            postalCode: "",
+        });
+        setStep("checkout");
+        toast.success("Address added");
+    };
+
     return (
         <div className="min-h-[100dvh] w-full bg-white">
             <div className="mx-auto w-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
@@ -208,19 +287,25 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 ? "Cart"
                                 : step === "checkout"
                                     ? "Checkout"
+                                    : step === "success"
+                                        ? "Order Confirmed"
                                     : step === "change-address"
                                         ? "Change Address"
                                         : "Add New Address"}
                     </h1>
                     {
                         step === "store" ?
-                            <button className="w-12 h-12 bg-gray-10 rounded-full flex items-center justify-center" onClick={() => {
-                                setStep("cart")
-                            }}>
-                                <span className="h-10 w-10 flex justify-center items-center bg-[#F5F6F6] text-white text-sm rounded-full">
+                            <button className="w-12 h-12 bg-gray-10 rounded-full flex items-center justify-center relative" onClick={handleViewCart}>
+                                <span className="h-10 w-10 flex justify-center items-center bg-[#F5F6F6] text-white text-sm rounded-full relative">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                                         <path d="M17 18C15.89 18 15 18.89 15 20C15 20.5304 15.2107 21.0391 15.5858 21.4142C15.9609 21.7893 16.4696 22 17 22C17.5304 22 18.0391 21.7893 18.4142 21.4142C18.7893 21.0391 19 20.5304 19 20C19 19.4696 18.7893 18.9609 18.4142 18.5858C18.0391 18.2107 17.5304 18 17 18ZM1 2V4H3L6.6 11.59L5.24 14.04C5.09 14.32 5 14.65 5 15C5 15.5304 5.21071 16.0391 5.58579 16.4142C5.96086 16.7893 6.46957 17 7 17H19V15H7.42C7.3537 15 7.29011 14.9737 7.24322 14.9268C7.19634 14.8799 7.17 14.8163 7.17 14.75C7.17 14.7 7.18 14.66 7.2 14.63L8.1 13H15.55C16.3 13 16.96 12.58 17.3 11.97L20.88 5.5C20.95 5.34 21 5.17 21 5C21 4.73478 20.8946 4.48043 20.7071 4.29289C20.5196 4.10536 20.2652 4 20 4H5.21L4.27 2M7 18C5.89 18 5 18.89 5 20C5 20.5304 5.21071 21.0391 5.58579 21.4142C5.96086 21.7893 6.46957 22 7 22C7.53043 22 8.03914 21.7893 8.41421 21.4142C8.78929 21.0391 9 20.5304 9 20C9 19.4696 8.78929 18.9609 8.41421 18.5858C8.03914 18.2107 7.53043 18 7 18Z" fill="#2B2B2B" />
-                                    </svg>                        </span>
+                                    </svg>
+                                    {cartQuantity > 0 ? (
+                                        <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-white text-xs flex items-center justify-center">
+                                            {cartQuantity}
+                                        </span>
+                                    ) : null}
+                                </span>
                             </button>
                             : <div className="w-12 h-12" />}
 
@@ -231,6 +316,8 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                             <input
                                 type="text"
                                 placeholder="Search for an item"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full px-4 py-3 pl-12  rounded-xl focus:outline-none focus:border-primary bg-gray-100"
                             />
                             <svg
@@ -336,7 +423,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                         </div>
 
                         <button
-                            onClick={handleProceedToPurchase}
+                            onClick={handleSaveNewAddress}
                             className="w-full bg-primary text-white mt-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
                         >
                             Save
@@ -400,26 +487,76 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                             <div className="p- bg-transparent">
                                 {/* Header */}
 
-                                {
-                                    step === 'store' ? (
-                                        <div className='flex flex-col justify-between h-[70vh]'>
-                                            {/* Cart Items */}
-                                            <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
-                                                {quantities.map((qty, index) => (
-                                                    <div key={index} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
+                                {step === 'store' ? (
+                                    <div className='flex flex-col justify-between h-[70vh]'>
+                                        <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
+                                            {filteredProducts.length === 0 ? (
+                                                <div className="py-10 text-center text-sm text-gray-500">
+                                                    No items found
+                                                </div>
+                                            ) : (
+                                                filteredProducts.map((product) => {
+                                                    const qtyInCart = cart[product.id] ?? 0;
+                                                    return (
+                                                        <div key={product.id} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
+                                                            <div className="w-[80px] h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                                VetQuark
+                                                            </div>
+
+                                                            <div className="flex-1 text-xs">
+                                                                <h3 className="font-semibold text-gray-800">{product.name}</h3>
+                                                                <p className="max-w-[180px] text-gray-400">{product.description}</p>
+                                                                <div className='flex justify-between items-center gap-2'>
+                                                                    <p className="text-base font-bold text-gray-800">R$ {product.price.toFixed(2)}</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        {qtyInCart > 0 ? (
+                                                                            <span className="text-xs text-gray-500">{qtyInCart} in cart</span>
+                                                                        ) : null}
+                                                                        <button
+                                                                            onClick={() => addToCart(product.id)}
+                                                                            className="h-8 px-3 rounded-full bg-primary text-white text-xs font-semibold hover:bg-blue-700 transition flex items-center gap-1"
+                                                                        >
+                                                                            <Plus className="w-4 h-4" />
+                                                                            Add
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : step === 'cart' ? (
+                                    <div className='flex flex-col justify-between h-[70vh]'>
+                                        <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
+                                            {cartItems.length === 0 ? (
+                                                <div className="py-10 text-center text-sm text-gray-500">
+                                                    Your cart is empty
+                                                </div>
+                                            ) : (
+                                                cartItems.map((item) => (
+                                                    <div key={item.product.id} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
                                                         <div className="w-[80px] h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                                                             VetQuark
                                                         </div>
 
                                                         <div className="flex-1 text-xs">
-                                                            <h3 className="font-semibold text-gray-800">VetQuark Box</h3>
-                                                            <p className="max-w-[110px] text-gray-400">Box with 100 units of reagent strips</p>
+                                                            <h3 className="font-semibold text-gray-800">{item.product.name}</h3>
+                                                            <p className="max-w-[180px] text-gray-400">{item.product.description}</p>
                                                             <div className='flex justify-between items-center gap-2'>
-                                                                <p className="text-base font-bold text-gray-800">£135.00</p>
+                                                                <p className="text-base font-bold text-gray-800">R$ {item.product.price.toFixed(2)}</p>
                                                                 <div className="flex items-center">
-
                                                                     <button
-                                                                        onClick={() => handleIncrease(index)}
+                                                                        onClick={() => setCartQuantity(item.product.id, item.quantity - 1)}
+                                                                        className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center hover:bg-blue-200 transition"
+                                                                    >
+                                                                        <Minus className="w-4 h-4 text-primary" />
+                                                                    </button>
+                                                                    <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                                                                    <button
+                                                                        onClick={() => setCartQuantity(item.product.id, item.quantity + 1)}
                                                                         className="w-6 h-6 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
                                                                     >
                                                                         <Plus className="w-4 h-4 text-white" />
@@ -428,102 +565,98 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                ))}
-                                            </div>
-
-                                            {/* Total and Button */}
-
-                                        </div>
-                                    ) :
-                                        step === 'cart' ? (
-                                            <div className='flex flex-col justify-between h-[70vh]'>
-                                                {/* Cart Items */}
-                                                <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
-                                                    {quantities.map((qty, index) => (
-                                                        <div key={index} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
-                                                            <div className="w-[80px] h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                                VetQuark
-                                                            </div>
-
-                                                            <div className="flex-1 text-xs">
-                                                                <h3 className="font-semibold text-gray-800">VetQuark Box</h3>
-                                                                <p className="max-w-[110px] text-gray-400">Box with 100 units of reagent strips</p>
-                                                                <div className='flex justify-between items-center gap-2'>
-                                                                    <p className="text-base font-bold text-gray-800">£135.00</p>
-                                                                    <div className="flex items-center">
-                                                                        <button
-                                                                            onClick={() => handleDecrease(index)}
-                                                                            className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center hover:bg-blue-200 transition"
-                                                                        >
-                                                                            <Minus className="w-4 h-4 text-primary" />
-                                                                        </button>
-                                                                        <span className="w-8 text-center font-semibold">{qty}</span>
-                                                                        <button
-                                                                            onClick={() => handleIncrease(index)}
-                                                                            className="w-6 h-6 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
-                                                                        >
-                                                                            <Plus className="w-4 h-4 text-white" />
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                    ))}
-                                                </div>
-
-                                                {/* Total and Button */}
-
-                                            </div>
-                                        ) :
-                                            (
-                                                <div className='h-[70vh]'>
-                                                    <DeliveryAddress
-                                                        address={selectedAddress}
-                                                        onChangeAddress={() => setStep("change-address")}
-                                                        onAddNewAddress={() => setStep("add-address")}
-                                                    />
-                                                    <div className="h-2 bg-secondary" />                                                <OrderSummary items={[
-                                                        { name: "SVOFMI", quantity: 1 },
-                                                        { name: "Amoxylife-LA", quantity: 2 },
-                                                    ]} />
-                                                </div>
+                                                ))
                                             )}
+                                        </div>
+                                    </div>
+                                ) : step === "checkout" ? (
+                                    <div className='h-[70vh]'>
+                                        <DeliveryAddress
+                                            address={selectedAddress}
+                                            onChangeAddress={() => setStep("change-address")}
+                                            onAddNewAddress={() => setStep("add-address")}
+                                        />
+                                        <div className="h-2 bg-secondary" />
+                                        <OrderSummary items={cartItems.map((i) => ({ name: i.product.name, quantity: i.quantity }))} />
+                                    </div>
+                                ) : (
+                                    <div className='h-[70vh] px-4 py-6 overflow-y-auto'>
+                                        <div className="text-lg font-semibold text-gray-900">Order placed</div>
+                                        {lastOrder ? (
+                                            <div className="mt-1 text-sm text-gray-500">Order ID: {lastOrder.id}</div>
+                                        ) : null}
+                                        {lastOrder ? (
+                                            <div className="mt-4 rounded-2xl bg-white border border-gray-100">
+                                                <div className="px-4 py-4 border-b border-gray-100">
+                                                    <div className="text-sm font-semibold text-gray-900">{lastOrder.address.name}</div>
+                                                    <div className="text-sm text-gray-500">{lastOrder.address.phone}</div>
+                                                    <div className="text-sm text-gray-500">{lastOrder.address.location}</div>
+                                                </div>
+                                                <OrderSummary items={lastOrder.items} />
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-4 bordert p-4 rounded-t-4xl bg-white absolute w-full bottom-0 z-300">
                                 {
-                                    step === "store" ?
-
+                                    step === "store" ? (
                                         <button
                                             onClick={handleViewCart}
-                                            className="w-full bg-primary text-white py-2 rounded-full font-semibold px-3 flex justify-between items-center hover:bg-blue-700 transition"
+                                            disabled={cartQuantity <= 0}
+                                            className={[
+                                                "w-full bg-primary text-white py-2 rounded-full font-semibold px-3 flex justify-between items-center hover:bg-blue-700 transition",
+                                                cartQuantity <= 0 ? "opacity-50 pointer-events-none" : "",
+                                            ].join(" ")}
                                         >
-                                            <span className='text-base text-primary h-4.5 w-4.5 rounded-full bg-white flex justify-center items-center'>3</span>
+                                            <span className='text-base text-primary h-6 w-6 rounded-full bg-white flex justify-center items-center'>
+                                                {cartQuantity}
+                                            </span>
                                             View Your Cart
-                                            <span className='text-sm font-bold text-white '>Rs 140</span>
+                                            <span className='text-sm font-bold text-white'>R$ {cartTotal.toFixed(2)}</span>
                                         </button>
-
-                                        :
+                                    ) : step === "cart" ? (
                                         <>
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-gray-500">Total Amount</span>
-                                                <span className=" font-bold text-gray-800">R$ {getTotalAmount().toFixed(2)}</span>
+                                                <span className="font-bold text-gray-800">R$ {cartTotal.toFixed(2)}</span>
                                             </div>
                                             <button
                                                 onClick={handleProceedToPurchase}
-                                                className="w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+                                                disabled={cartQuantity <= 0}
+                                                className={[
+                                                    "w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition",
+                                                    cartQuantity <= 0 ? "opacity-50 pointer-events-none" : "",
+                                                ].join(" ")}
                                             >
-                                                Proceed to purchase
+                                                Proceed to checkout
                                             </button>
+                                        </>
+                                    ) : step === "checkout" ? (
+                                        <>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-gray-500">Total Amount</span>
+                                                <span className="font-bold text-gray-800">R$ {cartTotal.toFixed(2)}</span>
+                                            </div>
                                             <button
                                                 onClick={handleProceedToPurchase}
-                                                className="w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+                                                disabled={placingOrder || cartQuantity <= 0}
+                                                className={[
+                                                    "w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition",
+                                                    placingOrder || cartQuantity <= 0 ? "opacity-50 pointer-events-none" : "",
+                                                ].join(" ")}
                                             >
-                                                Proceed to purchase
+                                                {placingOrder ? "Placing order..." : "Place order"}
                                             </button>
-
                                         </>
+                                    ) : (
+                                        <button
+                                            onClick={handleClose}
+                                            className="w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+                                        >
+                                            Done
+                                        </button>
+                                    )
                                 }
                             </div>
                         </div>
