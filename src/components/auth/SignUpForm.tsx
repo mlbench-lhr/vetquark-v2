@@ -38,6 +38,31 @@ type SignUpFormData = {
   reportFooter: string;
 };
 
+const getEmptyFormData = (): SignUpFormData => ({
+  fullName: "",
+  email: "",
+  phone: "",
+  password: "",
+  confirmPassword: "",
+  taxId: "",
+  dateOfBirth: "",
+  address: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  crmv: "",
+  crmvState: "",
+  mapaRegistration: "",
+  operateHow: "",
+  expertise: [],
+  acceptTerms: false,
+  clinicLogoUrl: "",
+  tradeName: "",
+  cnpjIe: "",
+  reportHeaderAddress: "",
+  reportFooter: "",
+});
+
 export default function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -140,33 +165,17 @@ export default function SignUpForm() {
     { value: "TO", text: "Tocantins" },
   ];
 
-
-  const [formData, setFormData] = useState<SignUpFormData>({
-    fullName: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    taxId: "",
-    dateOfBirth: "",
-    address: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    crmv: "",
-    crmvState: "",
-    mapaRegistration: "",
-    operateHow: "",
-    expertise: [],
-    acceptTerms: false,
-    clinicLogoUrl: "",
-    tradeName: "",
-    cnpjIe: "",
-    reportHeaderAddress: "",
-    reportFooter: "",
-  });
+  const [formData, setFormData] = useState<SignUpFormData>(() => getEmptyFormData());
 
   const finalStep = profileType === "veterinarian" ? 6 : 4;
+
+  const resetInnerFormFields = () => {
+    setFormData(getEmptyFormData());
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setOtp(["", "", "", "", ""]);
+    setCountdown(35);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const target = e.target;
@@ -509,7 +518,11 @@ export default function SignUpForm() {
             <div className="space-y-3 mt-4">
               <button
                 type="button"
-                onClick={() => setProfileType("veterinarian")}
+                onClick={() => {
+                  if (profileType === "veterinarian") return;
+                  resetInnerFormFields();
+                  setProfileType("veterinarian");
+                }}
                 className={`w-full p-4 transition-all flex items-center justify-between ${profileType === "veterinarian"
                   ? "bg-[#EBF2FF] text-primary rounded-full"
                   : "bg-gray-50 text-gray-700 rounded-2xl"
@@ -536,7 +549,11 @@ export default function SignUpForm() {
 
               <button
                 type="button"
-                onClick={() => setProfileType("tutor")}
+                onClick={() => {
+                  if (profileType === "tutor") return;
+                  resetInnerFormFields();
+                  setProfileType("tutor");
+                }}
                 className={`w-full p-4 transition-all flex items-center justify-between ${profileType === "tutor"
                   ? "bg-[#EBF2FF] text-primary rounded-full"
                   : "bg-gray-50 text-gray-700 rounded-2xl"
@@ -1074,7 +1091,7 @@ export default function SignUpForm() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-48px)] bg-white flex flex-col">
+    <div className="min-h-[calc(100vh-48px) h-fit bg-white pb-[100px]! flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between ">
         <button
@@ -1125,7 +1142,6 @@ export default function SignUpForm() {
           )}
         </div>
       )}
-
     </div>
   );
 }
