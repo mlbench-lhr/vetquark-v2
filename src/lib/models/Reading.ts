@@ -2,6 +2,7 @@ import { Schema, model, models } from "mongoose";
 
 export type CollectionMethod = "free_catch" | "cystocentesis" | "catheter";
 export type ReadingResultStatus = "Normal" | "Abnormal";
+export type ReadingPaymentStatus = "pending" | "paid" | "expired";
 
 export type ReadingResult = {
   key: string;
@@ -24,6 +25,8 @@ export interface IReading {
   veterinarian: Schema.Types.ObjectId;
   guardian: Schema.Types.ObjectId;
   patient: Schema.Types.ObjectId;
+  paymentLink?: Schema.Types.ObjectId | null;
+  paymentStatus?: ReadingPaymentStatus | null;
   testType: "urine";
   identification: {
     collectionMethod: CollectionMethod;
@@ -31,11 +34,11 @@ export interface IReading {
     stripLot: string;
     stripExpiry: Date;
   };
-  timer: {
+  timer?: {
     selectedSeconds: number;
     analyzedAt: Date;
     analysis: ReadingTimerAnalysis;
-  };
+  } | null;
   results: ReadingResult[];
   report: {
     summaryAndInterpretation: string;
@@ -65,6 +68,8 @@ const ReadingSchema = new Schema<IReading>(
     veterinarian: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     guardian: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     patient: { type: Schema.Types.ObjectId, ref: "Patient", required: true, index: true },
+    paymentLink: { type: Schema.Types.ObjectId, ref: "PaymentLink", default: null, index: true },
+    paymentStatus: { type: String, enum: ["pending", "paid", "expired"], default: null, index: true },
     testType: { type: String, enum: ["urine"], default: "urine", required: true },
     identification: {
       collectionMethod: { type: String, enum: ["free_catch", "cystocentesis", "catheter"], required: true },
@@ -73,11 +78,11 @@ const ReadingSchema = new Schema<IReading>(
       stripExpiry: { type: Date, required: true },
     },
     timer: {
-      selectedSeconds: { type: Number, required: true, min: 1 },
-      analyzedAt: { type: Date, required: true },
+      selectedSeconds: { type: Number, min: 1 },
+      analyzedAt: { type: Date },
       analysis: {
-        summary: { type: String, required: true, trim: true },
-        confidence: { type: Number, required: true, min: 0, max: 1 },
+        summary: { type: String, trim: true },
+        confidence: { type: Number, min: 0, max: 1 },
         flags: { type: [String], default: [] },
       },
     },

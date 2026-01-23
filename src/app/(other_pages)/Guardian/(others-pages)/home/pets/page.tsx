@@ -54,7 +54,7 @@ export default function Page() {
   }, [pets, searchQuery]);
 
   return (
-    <div className="min-h-screen px-3 py-5 relative">
+    <div className="min-h-scree px-3 py-5 relative">
       <div className=" flex items-center justify-between">
         <button
           aria-label="Back"

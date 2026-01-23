@@ -22,6 +22,7 @@ export type CollectionMethod = "free_catch" | "cystocentesis" | "catheter";
 
 export type IdentificationDraft = {
   patientId: string;
+  paymentLinkId?: string;
   collectionMethod: CollectionMethod | "";
   stripLot: string;
   stripExpiry: string;
