@@ -2,11 +2,12 @@
 
 import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 
 type PaymentDetails = {
   id: string;
   petName: string;
-  reportName: string;
   amountLabel: string;
   vetName: string;
   vetCrmv: string;
@@ -15,27 +16,65 @@ type PaymentDetails = {
   vetAvatarUrl: string;
 };
 
-const PAYMENTS: PaymentDetails[] = [
-  {
-    id: "1",
-    petName: "Wolfy",
-    reportName: "Urinalysis Report",
-    amountLabel: "R$ 5,00",
-    vetName: "Dr. Vet",
-    vetCrmv: "CRMV-SP 12345",
-    invoiceDate: "15/02/2026",
-    petAvatarUrl:
-      "https://images.unsplash.com/photo-1552053831-71594a27632d?w=200&h=200&fit=crop&crop=faces",
-    vetAvatarUrl:
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=faces",
-  },
-];
-
 export default function Page() {
   const router = useRouter();
   const params = useParams<{ payment_id: string }>();
   const paymentId = params?.payment_id;
-  const payment = PAYMENTS.find((p) => p.id === paymentId) ?? PAYMENTS[0];
+  const [payment, setPayment] = useState<PaymentDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const id = String(paymentId || "").trim();
+    if (!id) return;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/payment_links/get/${encodeURIComponent(id)}`);
+        const data = await res.json().catch(() => null);
+        if (!mounted) return;
+        if (!res.ok) {
+          toast.error(typeof data?.error === "string" ? data.error : "Failed to load payment details");
+          return;
+        }
+        const item = data?.item;
+        if (!item) return;
+        setPayment({
+          id: String(item.id),
+          petName: String(item.patient?.name || ""),
+          amountLabel: String(item.amountLabel || ""),
+          vetName: String(item.veterinarian?.name || ""),
+          vetCrmv:
+            item.veterinarian?.crmv && item.veterinarian?.crmvState
+              ? `CRMV-${String(item.veterinarian.crmvState).toUpperCase()} ${String(item.veterinarian.crmv)}`
+              : "",
+          invoiceDate: typeof item.createdAt === "string" ? new Date(item.createdAt).toLocaleDateString() : "",
+          petAvatarUrl: String(item.patient?.photo || "/images/product/product-01.jpg"),
+          vetAvatarUrl: "/images/product/product-01.jpg",
+        });
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [paymentId]);
+
+  const safePayment = useMemo(
+    () =>
+      payment || {
+        id: String(paymentId || ""),
+        petName: "",
+        amountLabel: "",
+        vetName: "",
+        vetCrmv: "",
+        invoiceDate: "",
+        petAvatarUrl: "/images/product/product-01.jpg",
+        vetAvatarUrl: "/images/product/product-01.jpg",
+      },
+    [payment, paymentId]
+  );
 
   return (
     <div className="min-h-screen bg-white">
@@ -55,21 +94,21 @@ export default function Page() {
       </div>
 
       <div className="px-4 pt-5">
+        {loading ? (
+          <div className="text-[14px] leading-[18px] text-[#9AA4AF]">Loading...</div>
+        ) : null}
         <div className="rounded-[16px] bg-[#F5F6F6] px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="h-[44px] w-[44px] rounded-full bg-[#3F78D8] p-[2px]">
               <img
-                src={payment.petAvatarUrl}
-                alt={payment.petName}
+                src={safePayment.petAvatarUrl}
+                alt={safePayment.petName}
                 className="h-full w-full rounded-full object-cover"
               />
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[16px] font-medium leading-[20px] text-[#111827]">
-                {payment.petName}
-              </div>
-              <div className="mt-1 truncate text-[13px] leading-[16px] text-[#9AA4AF]">
-                {payment.reportName}
+                {safePayment.petName}
               </div>
             </div>
           </div>
@@ -89,7 +128,7 @@ export default function Page() {
             Amount to be paid
           </div>
           <div className="mt-1 text-[36px] font-semibold leading-[40px] tracking-[-0.02em] text-[#3F78D8]">
-            {payment.amountLabel}
+            {safePayment.amountLabel}
           </div>
         </div>
 
@@ -99,17 +138,17 @@ export default function Page() {
         <div className="mt-3 flex items-center gap-3">
           <div className="h-[44px] w-[44px] rounded-full bg-[#F5F6F6] p-[2px]">
             <img
-              src={payment.vetAvatarUrl}
-              alt={payment.vetName}
+              src={safePayment.vetAvatarUrl}
+              alt={safePayment.vetName}
               className="h-full w-full rounded-full object-cover"
             />
           </div>
           <div className="min-w-0">
             <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">
-              {payment.vetName}
+              {safePayment.vetName}
             </div>
             <div className="mt-1 text-[13px] leading-[16px] text-[#9AA4AF]">
-              {payment.vetCrmv}
+              {safePayment.vetCrmv}
             </div>
           </div>
         </div>
@@ -120,14 +159,14 @@ export default function Page() {
           Invoice Date
         </div>
         <div className="mt-2 text-[16px] font-semibold leading-[20px] text-[#111827]">
-          {payment.invoiceDate}
+          {safePayment.invoiceDate}
         </div>
       </div>
 
       <div className="mt-10 px-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <button
           type="button"
-          onClick={() => router.push(`/Guardian/payment/${encodeURIComponent(payment.id)}/pix`)}
+          onClick={() => router.push(`/Guardian/payment/${encodeURIComponent(String(paymentId || safePayment.id))}/pix`)}
           className="h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
         >
           Proceed Payment

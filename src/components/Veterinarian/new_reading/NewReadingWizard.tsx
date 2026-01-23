@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Stepper from './Stepper'
 import { NewReadingDraft, NewReadingStep, ReviewResultDraft } from './types'
@@ -11,9 +11,15 @@ import ReportStep from './ReportStep'
 import { toast } from 'react-toastify'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useAppSelector } from '@/store/hooks'
+import type { RootState } from '@/store/store'
+import Pusher from 'pusher-js'
 
 export default function NewReadingWizard() {
   const searchParams = useSearchParams()
+  const profile = useAppSelector((s: RootState) => s.userProfile.profile)
+  const userId = profile?.id || ''
+  const [unreadCount, setUnreadCount] = useState(0)
   const [step, setStep] = useState<NewReadingStep>('identification')
   const [submitting, setSubmitting] = useState(false)
 
@@ -47,6 +53,55 @@ export default function NewReadingWizard() {
   } | null>(null)
 
   const patientIdFromQuery = useMemo(() => (searchParams.get('patientId') || '').trim(), [searchParams])
+
+  const refreshUnread = useCallback(async () => {
+    try {
+      const res = await fetch('/api/notifications/unread_count', { method: 'GET' })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setUnreadCount(0)
+        return
+      }
+      const next = Number(data?.count || 0)
+      setUnreadCount(Number.isFinite(next) && next > 0 ? next : 0)
+    } catch {
+      setUnreadCount(0)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshUnread()
+  }, [refreshUnread, userId])
+
+  useEffect(() => {
+    if (!userId) return
+    const key = process.env.NEXT_PUBLIC_PUSHER_KEY
+    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER
+    if (!key || !cluster) return
+
+    const pusher = new Pusher(key, { cluster, authEndpoint: '/api/pusher/auth' })
+    const channelName = `private-notifications-${userId}`
+    const channel = pusher.subscribe(channelName)
+
+    const handler = () => {
+      setUnreadCount((prev) => (prev > 0 ? prev + 1 : 1))
+    }
+    channel.bind('notification:new', handler)
+
+    return () => {
+      channel.unbind('notification:new', handler)
+      pusher.unsubscribe(channelName)
+      pusher.disconnect()
+    }
+  }, [userId])
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refreshUnread()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [refreshUnread])
 
   useEffect(() => {
     if (!patientIdFromQuery) return
@@ -151,7 +206,8 @@ export default function NewReadingWizard() {
     <div className="min-h-screen p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div className="text-base font-medium">New Urine Test</div>
-        <Link href={"/Veterinarian/notifications"} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+        <Link href={"/Veterinarian/notifications"} className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+          {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
           <Image src={"/images/home/bell.svg"} alt="Bell icon" width={24} height={24} />
         </Link>
       </div>

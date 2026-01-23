@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Calendar, ChevronLeft, Plus, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,6 +8,9 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { toast } from 'react-toastify';
 import { Modal } from '@/components/ui/modal';
 import { useModal } from '@/hooks/useModal';
+import { useAppSelector } from '@/store/hooks';
+import type { RootState } from '@/store/store';
+import Pusher from 'pusher-js';
 
 function digitsOnly(value: string) {
     return value.replace(/\D/g, "");
@@ -63,6 +66,91 @@ const brazilianStateOptions = [
     { value: "TO", text: "Tocantins" },
 ];
 
+const countryOptions = [
+    { value: "Brazil", text: "Brazil" },
+    { value: "Argentina", text: "Argentina" },
+    { value: "Canada", text: "Canada" },
+    { value: "Chile", text: "Chile" },
+    { value: "Colombia", text: "Colombia" },
+    { value: "Mexico", text: "Mexico" },
+    { value: "Portugal", text: "Portugal" },
+    { value: "Spain", text: "Spain" },
+    { value: "United Kingdom", text: "United Kingdom" },
+    { value: "United States", text: "United States" },
+];
+
+type StateOption = { value: string; text: string; stateName: string };
+
+async function fetchCountryStates(country: string, signal?: AbortSignal): Promise<StateOption[]> {
+    const normalized = country.trim();
+    if (!normalized) return [];
+
+    try {
+        const res = await fetch("https://countriesnow.space/api/v0.1/countries/states", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ country: normalized }),
+            signal,
+        });
+        const json = await res.json().catch(() => null);
+        const statesRaw = (json as any)?.data?.states;
+        if (!res.ok || !Array.isArray(statesRaw)) throw new Error("Failed to load states");
+
+        const parsed = statesRaw
+            .map((s: any) => {
+                const name = typeof s?.name === "string" ? s.name.trim() : "";
+                const code = typeof s?.state_code === "string" ? s.state_code.trim() : "";
+                const value = code || name;
+                if (!name || !value) return null;
+                return { value, text: name, stateName: name } satisfies StateOption;
+            })
+            .filter(Boolean) as StateOption[];
+
+        if (parsed.length) return parsed;
+        throw new Error("No states returned");
+    } catch {
+        if (normalized.toLowerCase() === "brazil") {
+            return brazilianStateOptions.map((opt) => ({ value: opt.value, text: opt.text, stateName: opt.text }));
+        }
+        return [];
+    }
+}
+
+async function fetchCountryStateCities(country: string, stateName: string, stateCode?: string, signal?: AbortSignal): Promise<string[]> {
+    const c = country.trim();
+    const s = stateName.trim();
+    if (!c || !s) return [];
+
+    try {
+        const res = await fetch("https://countriesnow.space/api/v0.1/countries/state/cities", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ country: c, state: s }),
+            signal,
+        });
+        const json = await res.json().catch(() => null);
+        const citiesRaw = (json as any)?.data;
+        if (!res.ok || !Array.isArray(citiesRaw)) throw new Error("Failed to load cities");
+        return citiesRaw
+            .map((x: any) => (typeof x === "string" ? x.trim() : ""))
+            .filter((x: string) => !!x);
+    } catch {
+        if (c.toLowerCase() === "brazil" && stateCode) {
+            try {
+                const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${encodeURIComponent(stateCode)}/municipios`, { signal });
+                const json = await res.json().catch(() => null);
+                if (!res.ok || !Array.isArray(json)) return [];
+                return (json as any[])
+                    .map((m) => (typeof m?.nome === "string" ? m.nome.trim() : ""))
+                    .filter((x) => !!x);
+            } catch {
+                return [];
+            }
+        }
+        return [];
+    }
+}
+
 interface FormData {
     fullName: string;
     taxId: string;
@@ -73,6 +161,7 @@ interface FormData {
     mobile: string;
     email: string;
     address: string;
+    country: string;
     city: string;
     state: string;
     postalCode: string;
@@ -82,6 +171,9 @@ interface FormData {
 export default function GuardianRegistration() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const profile = useAppSelector((s: RootState) => s.userProfile.profile);
+    const userId = profile?.id || '';
+    const [unreadCount, setUnreadCount] = useState(0);
     const guardianId = (searchParams.get('guardianId') || '').trim() || null;
     const isEditing = !!guardianId;
     const dobRef = useRef<HTMLInputElement | null>(null);
@@ -97,6 +189,7 @@ export default function GuardianRegistration() {
         mobile: '',
         email: '',
         address: '',
+        country: 'Brazil',
         city: '',
         state: '',
         postalCode: '',
@@ -109,6 +202,60 @@ export default function GuardianRegistration() {
     const [emailVerificationId, setEmailVerificationId] = useState<string | null>(null);
     const [loadingGuardian, setLoadingGuardian] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+
+    const refreshUnread = useCallback(async () => {
+        try {
+            const res = await fetch('/api/notifications/unread_count', { method: 'GET' });
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                setUnreadCount(0);
+                return;
+            }
+            const next = Number(data?.count || 0);
+            setUnreadCount(Number.isFinite(next) && next > 0 ? next : 0);
+        } catch {
+            setUnreadCount(0);
+        }
+    }, []);
+
+    useEffect(() => {
+        refreshUnread();
+    }, [refreshUnread, userId]);
+
+    useEffect(() => {
+        if (!userId) return;
+        const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
+        const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+        if (!key || !cluster) return;
+
+        const pusher = new Pusher(key, { cluster, authEndpoint: '/api/pusher/auth' });
+        const channelName = `private-notifications-${userId}`;
+        const channel = pusher.subscribe(channelName);
+
+        const handler = () => {
+            setUnreadCount((prev) => (prev > 0 ? prev + 1 : 1));
+        };
+        channel.bind('notification:new', handler);
+
+        return () => {
+            channel.unbind('notification:new', handler);
+            pusher.unsubscribe(channelName);
+            pusher.disconnect();
+        };
+    }, [userId]);
+
+    useEffect(() => {
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') refreshUnread();
+        };
+        document.addEventListener('visibilitychange', onVisibility);
+        return () => document.removeEventListener('visibilitychange', onVisibility);
+    }, [refreshUnread]);
+
+    const [stateOptions, setStateOptions] = useState<StateOption[]>([]);
+    const [cityOptions, setCityOptions] = useState<string[]>([]);
+    const [loadingStates, setLoadingStates] = useState(false);
+    const [loadingCities, setLoadingCities] = useState(false);
 
     const handleChange = (field: keyof FormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -148,6 +295,7 @@ export default function GuardianRegistration() {
                     mobile: String(item.phone || ''),
                     email: String(item.email || ''),
                     address: String(item.address || ''),
+                    country: String(item.country || prev.country || 'Brazil'),
                     city: String(item.city || ''),
                     state: String(item.state || ''),
                     postalCode: String(item.postalCode || ''),
@@ -167,6 +315,85 @@ export default function GuardianRegistration() {
             mounted = false;
         };
     }, [guardianId, closeOtpModal]);
+
+    useEffect(() => {
+        const country = String(formData.country || '').trim();
+        const controller = new AbortController();
+        let mounted = true;
+
+        (async () => {
+            setLoadingStates(true);
+            setStateOptions([]);
+            setCityOptions([]);
+            setLoadingCities(false);
+
+            if (!country) {
+                setLoadingStates(false);
+                return;
+            }
+
+            const options = await fetchCountryStates(country, controller.signal);
+            if (!mounted || controller.signal.aborted) return;
+            setStateOptions(options);
+            setLoadingStates(false);
+
+            setFormData((prev) => {
+                const stateOk = !!prev.state && options.some((o) => o.value === prev.state);
+                if (stateOk) return prev;
+                if (!prev.state && !prev.city) return prev;
+                return { ...prev, state: "", city: "" };
+            });
+        })().catch(() => {
+            if (!mounted || controller.signal.aborted) return;
+            setStateOptions([]);
+            setLoadingStates(false);
+        });
+
+        return () => {
+            mounted = false;
+            controller.abort();
+        };
+    }, [formData.country]);
+
+    useEffect(() => {
+        const country = String(formData.country || '').trim();
+        const selectedState = String(formData.state || '').trim();
+        const stateMeta = stateOptions.find((o) => o.value === selectedState) || null;
+
+        const controller = new AbortController();
+        let mounted = true;
+
+        (async () => {
+            setCityOptions([]);
+            if (!country || !selectedState || !stateMeta) {
+                setLoadingCities(false);
+                setFormData((prev) => (prev.city ? { ...prev, city: "" } : prev));
+                return;
+            }
+
+            setLoadingCities(true);
+            const cities = await fetchCountryStateCities(country, stateMeta.stateName, stateMeta.value, controller.signal);
+            if (!mounted || controller.signal.aborted) return;
+            setCityOptions(cities);
+            setLoadingCities(false);
+
+            setFormData((prev) => {
+                const city = String(prev.city || '').trim();
+                if (!city) return prev;
+                if (cities.includes(city)) return prev;
+                return { ...prev, city: "" };
+            });
+        })().catch(() => {
+            if (!mounted || controller.signal.aborted) return;
+            setCityOptions([]);
+            setLoadingCities(false);
+        });
+
+        return () => {
+            mounted = false;
+            controller.abort();
+        };
+    }, [formData.country, formData.state, stateOptions]);
 
     const handleSendOtp = async () => {
         if (isEditing) return;
@@ -304,15 +531,30 @@ export default function GuardianRegistration() {
                 return;
             }
 
+            const country = String(formData.country || '').trim();
+            if (!country) {
+                toast.error("Country is required");
+                return;
+            }
+
+            const selectedState = String(formData.state || '').trim();
+            if (!selectedState) {
+                toast.error("State is required");
+                return;
+            }
+            const selectedStateMeta = stateOptions.find((o) => o.value === selectedState) || null;
+            if (!selectedStateMeta) {
+                toast.error("Please select a valid state");
+                return;
+            }
+
             const city = String(formData.city || '').trim();
             if (!city) {
                 toast.error("City is required");
                 return;
             }
-
-            const state = String(formData.state || '').trim();
-            if (!state) {
-                toast.error("State is required");
+            if (!cityOptions.includes(city)) {
+                toast.error("Please select a valid city");
                 return;
             }
 
@@ -333,8 +575,9 @@ export default function GuardianRegistration() {
                         taxId: idCard,
                         dateOfBirth,
                         address,
+                        country,
                         city,
-                        state,
+                        state: selectedState,
                         postalCode,
                     }),
                 });
@@ -364,8 +607,9 @@ export default function GuardianRegistration() {
                     taxId: idCard,
                     dateOfBirth,
                     address,
+                    country,
                     city,
-                    state,
+                    state: selectedState,
                     postalCode,
                     profileType: 'Guardian',
                     acceptTerms: true,
@@ -394,7 +638,8 @@ export default function GuardianRegistration() {
                     <ChevronLeft className="w-6 h-6 text-gray-700" />
                 </button>
                     <h1 className="text-base font-medium text-gray-900">{isEditing ? "Edit Guardian" : "Guardian Registration"}</h1>
-                <button className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                <button className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
                     <span className="text-white text-sm">
                         <Image
                             src={"/images/home/bell.svg"}
@@ -578,15 +823,22 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                City<span className="text-red-500">*</span>
+                                Country<span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="text"
-                                placeholder="Enter your city name"
-                                value={formData.city}
-                                onChange={(e) => handleChange('city', e.target.value)}
+                            <select
+                                value={formData.country}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, country: e.target.value, state: "", city: "" }))}
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
+                            >
+                                <option value="" disabled>
+                                    Select a country
+                                </option>
+                                {countryOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.text}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>
@@ -595,15 +847,37 @@ export default function GuardianRegistration() {
                             </label>
                             <select
                                 value={formData.state}
-                                onChange={(e) => handleChange('state', e.target.value)}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
+                                disabled={!formData.country || loadingStates || stateOptions.length === 0}
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                             >
                                 <option value="" disabled>
-                                    Select a state
+                                    {!formData.country ? "Select a country first" : loadingStates ? "Loading states..." : "Select a state"}
                                 </option>
-                                {brazilianStateOptions.map((opt) => (
+                                {stateOptions.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
                                         {opt.text}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-gray-900 mb-2">
+                                City<span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={formData.city}
+                                onChange={(e) => handleChange('city', e.target.value)}
+                                disabled={!formData.state || loadingCities || cityOptions.length === 0}
+                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                            >
+                                <option value="" disabled>
+                                    {!formData.state ? "Select a state first" : loadingCities ? "Loading cities..." : "Select a city"}
+                                </option>
+                                {cityOptions.map((city) => (
+                                    <option key={city} value={city}>
+                                        {city}
                                     </option>
                                 ))}
                             </select>

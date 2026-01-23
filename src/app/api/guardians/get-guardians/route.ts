@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
 
       const [guardianUser, patientCount] = await Promise.all([
         User.findById(guardianId)
-          .select("_id role fullName email phone taxId dateOfBirth address city state postalCode profileImageUrl")
+          .select("_id role fullName email phone taxId dateOfBirth address country city state postalCode profileImageUrl")
           .lean(),
         Patient.countDocuments({ veterinarian: veterinarianId, guardian: guardianId }),
       ]);
@@ -91,6 +91,7 @@ export async function GET(req: NextRequest) {
             phone: (guardianUser as any).phone ?? "",
             dateOfBirth: (guardianUser as any).dateOfBirth ?? "",
             address: (guardianUser as any).address ?? "",
+            country: (guardianUser as any).country ?? "",
             city: (guardianUser as any).city ?? "",
             state: (guardianUser as any).state ?? "",
             postalCode: (guardianUser as any).postalCode ?? "",
@@ -201,6 +202,7 @@ export async function PUT(req: NextRequest) {
       taxId,
       dateOfBirth,
       address,
+      country,
       city,
       state,
       postalCode,
@@ -232,6 +234,7 @@ export async function PUT(req: NextRequest) {
     if (typeof taxId === "string") update.taxId = taxId.trim();
     if (typeof dateOfBirth === "string") update.dateOfBirth = dateOfBirth.trim();
     if (typeof address === "string") update.address = address.trim();
+    if (typeof country === "string") update.country = country.trim();
     if (typeof city === "string") update.city = city.trim();
     if (typeof state === "string") update.state = state.trim();
     if (typeof postalCode === "string") update.postalCode = postalCode.trim();

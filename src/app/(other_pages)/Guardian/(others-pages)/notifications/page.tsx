@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { ChevronLeft, CreditCard } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -22,7 +22,7 @@ function timeLabel(iso: string | null) {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function NotificationsPage() {
+export default function GuardianNotificationsPage() {
   const router = useRouter();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);

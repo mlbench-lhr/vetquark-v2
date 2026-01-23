@@ -11,6 +11,7 @@ type LeanUser = {
   taxId?: unknown;
   dateOfBirth?: unknown;
   address?: unknown;
+  country?: unknown;
   city?: unknown;
   state?: unknown;
   postalCode?: unknown;
@@ -45,6 +46,7 @@ function toSafeProfile(user: LeanUser) {
     taxId: typeof user.taxId === "string" ? user.taxId : undefined,
     dateOfBirth: typeof user.dateOfBirth === "string" ? user.dateOfBirth : undefined,
     address: typeof user.address === "string" ? user.address : undefined,
+    country: typeof user.country === "string" ? user.country : undefined,
     city: typeof user.city === "string" ? user.city : undefined,
     state: typeof user.state === "string" ? user.state : undefined,
     postalCode: typeof user.postalCode === "string" ? user.postalCode : undefined,
@@ -122,6 +124,9 @@ export async function PATCH(req: NextRequest) {
     const address = asTrimmedString(body?.address);
     if (address !== null) $set.address = address;
 
+    const country = asTrimmedString(body?.country);
+    if (country !== null) $set.country = country;
+
     const city = asTrimmedString(body?.city);
     if (city !== null) $set.city = city;
 
@@ -150,8 +155,11 @@ export async function PATCH(req: NextRequest) {
       $set.expertise = body.expertise.filter((v: any) => typeof v === "string" && v.trim()).map((v: string) => v.trim());
     }
 
-    const clinicLogoUrl = asTrimmedString(body?.clinicLogoUrl);
-    if (clinicLogoUrl !== null) $set.clinicLogoUrl = clinicLogoUrl;
+    if (body?.clinicLogoUrl !== undefined) {
+      const clinicLogoUrl = asTrimmedString(body?.clinicLogoUrl);
+      if (clinicLogoUrl === null) $unset.clinicLogoUrl = 1;
+      else $set.clinicLogoUrl = clinicLogoUrl;
+    }
 
     const tradeName = asTrimmedString(body?.tradeName);
     if (tradeName !== null) $set.tradeName = tradeName;

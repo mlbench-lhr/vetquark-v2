@@ -1,16 +1,70 @@
 'use client';
 
-// app/page.tsx
-import { Bell, ChevronRight, FileText, Search, User2 } from 'lucide-react';
-import { CurrentHealthProps, HeaderProps, PetSelectorProps, RecentHistoryProps, TrendsProps } from './types';
+import { User2 } from 'lucide-react';
+import { CurrentHealthProps, HeaderProps, Pet, PetSelectorProps, TrendsProps } from './types';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ReportCard } from '@/app/(other_pages)/Veterinarian/(others-pages)/home/patientHistory/[patient_id]/page';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Pusher from 'pusher-js';
 
 function Header({ name }: HeaderProps) {
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
+    const userId = profile?.id || '';
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const refreshUnread = useCallback(async () => {
+        try {
+            const res = await fetch('/api/notifications/unread_count', { method: 'GET' });
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                setUnreadCount(0);
+                return;
+            }
+            const next = Number(data?.count || 0);
+            setUnreadCount(Number.isFinite(next) && next > 0 ? next : 0);
+        } catch {
+            setUnreadCount(0);
+        }
+    }, []);
+
+    useEffect(() => {
+        refreshUnread();
+    }, [refreshUnread, userId]);
+
+    useEffect(() => {
+        if (!userId) return;
+        const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
+        const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+        if (!key || !cluster) return;
+
+        const pusher = new Pusher(key, { cluster, authEndpoint: '/api/pusher/auth' });
+        const channelName = `private-notifications-${userId}`;
+        const channel = pusher.subscribe(channelName);
+
+        const handler = () => {
+            setUnreadCount((prev) => (prev > 0 ? prev + 1 : 1));
+        };
+        channel.bind('notification:new', handler);
+
+        return () => {
+            channel.unbind('notification:new', handler);
+            pusher.unsubscribe(channelName);
+            pusher.disconnect();
+        };
+    }, [userId]);
+
+    useEffect(() => {
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') refreshUnread();
+        };
+        document.addEventListener('visibilitychange', onVisibility);
+        return () => document.removeEventListener('visibilitychange', onVisibility);
+    }, [refreshUnread]);
+
     return (
         <header className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -34,7 +88,8 @@ function Header({ name }: HeaderProps) {
                     <h1 className="text-sm font-semibold text-gray-800">{name}</h1>
                 </div>
             </div>
-            <Link href={"/Veterinarian/notifications"} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+            <Link href={"/Guardian/notifications"} className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
                 <span className="text-white text-sm">
                     <Image
                         src={"/images/home/bell.svg"}
@@ -49,24 +104,39 @@ function Header({ name }: HeaderProps) {
     );
 }
 
-function PetSelector({ pets }: PetSelectorProps) {
-    const imageurl = "https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=800&h=600&fit=crop"
+function PetSelector({ pets, activePetId, onSelect, loading }: PetSelectorProps) {
     return (
         <div className="flex gap-3 mb-6">
-            {pets.map((pet) => (
-                <button
-                    key={pet.id}
-                    className={`flex items-center p-2 rounded-full transition-all ${pet.active
-                        ? 'bg-[#EBF2FF] text-primary'
-                        : 'bg-[#F5F6F6] text-black'
-                        }`}
-                >
-                    <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-                        <img src={imageurl} alt={pet.name} width={40} height={40} />
-                    </div>
-                    <span className="font-medium px-4">{pet.name}</span>
-                </button>
-            ))}
+            {loading ? (
+                <div className="text-sm text-gray-500">Loading pets...</div>
+            ) : pets.length === 0 ? (
+                <div className="text-sm text-gray-500">No pets found.</div>
+            ) : (
+                pets.map((pet) => {
+                    const active = pet.id === activePetId;
+                    return (
+                        <button
+                            key={pet.id}
+                            type="button"
+                            onClick={() => onSelect(pet.id)}
+                            className={`flex items-center p-2 rounded-full transition-all ${active
+                                ? 'bg-[#EBF2FF] text-primary'
+                                : 'bg-[#F5F6F6] text-black'
+                                }`}
+                        >
+                            <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                                <img
+                                    src={pet.image || "/images/product/product-01.jpg"}
+                                    alt={pet.name}
+                                    width={40}
+                                    height={40}
+                                />
+                            </div>
+                            <span className="font-medium px-4">{pet.name}</span>
+                        </button>
+                    );
+                })
+            )}
         </div>
     );
 }
@@ -93,114 +163,54 @@ function CurrentHealth({ lastTestDate, parameters }: CurrentHealthProps) {
         </div>
     );
 }
-type ReportStatus = "signed" | "pending";
-
-type ReportHistoryItem = {
-    id: string;
-    color: string;
-    patientName: string;
-    guardianName: string;
-    dateLabel: string;
-    status: ReportStatus;
-    avatarSrc: string;
-    line: any,
-    percentage: number
-};
-function Trends({ data }: TrendsProps) {
-    const physicalItems: ReportHistoryItem[] = [
-        {
-            id: "1",
-            color: "#F59E0B",
-            patientName: "Color",
-            guardianName: "Normal: Pale Yellow",
-            dateLabel: "22/05/2024",
-            percentage: 0,
-            status: "signed",
-            line: <svg xmlns="http://www.w3.org/2000/svg" width="62" height="26" viewBox="0 0 62 26" fill="none">
-                <path d="M1 24.9949L15.9968 16.9966L30.9936 8.99829L45.9904 4.19932L60.9872 1" stroke="#F59E0B" stroke-width="1.99957" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>,
-            avatarSrc: "/images/product/product-01.jpg",
-        },
-        {
-            id: "2",
-            color: "#10B981",
-            patientName: "Clarity",
-            guardianName: "Normal: Clear",
-            dateLabel: "22/05/2024",
-            percentage: 0,
-            status: "signed",
-            line: <svg xmlns="http://www.w3.org/2000/svg" width="62" height="25" viewBox="0 0 62 25" fill="none">
-                <path d="M1 23.9951H15.9968H30.9936H45.9904H60.9872" stroke="#10B981" stroke-width="1.99957" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>,
-            avatarSrc: "/images/product/product-01.jpg",
-        },
-        {
-            id: "1",
-            color: "#F59E0B",
-            patientName: "Color",
-            guardianName: "Normal: Pale Yellow",
-            dateLabel: "22/05/2024",
-            percentage: 0,
-            status: "signed",
-            line: <svg xmlns="http://www.w3.org/2000/svg" width="62" height="26" viewBox="0 0 62 26" fill="none">
-                <path d="M1 24.9949L15.9968 16.9966L30.9936 8.99829L45.9904 4.19932L60.9872 1" stroke="#F59E0B" stroke-width="1.99957" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>,
-            avatarSrc: "/images/product/product-01.jpg",
-        },
-        {
-            id: "2",
-            color: "#10B981",
-            patientName: "Clarity",
-            guardianName: "Normal: Clear",
-            dateLabel: "22/05/2024",
-            percentage: 0,
-            status: "signed",
-            line: <svg xmlns="http://www.w3.org/2000/svg" width="62" height="25" viewBox="0 0 62 25" fill="none">
-                <path d="M1 23.9951H15.9968H30.9936H45.9904H60.9872" stroke="#10B981" stroke-width="1.99957" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>,
-            avatarSrc: "/images/product/product-01.jpg",
-        },
-    ];
+function Trends({ items, loading }: TrendsProps) {
     return (
         <div className="p- mb-6">
             <h2 className="text-gray-900 font-semibold text-xl mb-1">Trends</h2>
             <p className="text-gray-500 text-sm mb-2">The evolution of some parameters.</p>
 
             <div className="space-y-">
-                {physicalItems.map((item, index) => (
-                    <ReportCardDetail key={index} item={item} />
-                ))}
+                {loading ? (
+                    <div className="text-sm text-gray-500">Loading trends...</div>
+                ) : items.length === 0 ? (
+                    <div className="text-sm text-gray-500">No trends found.</div>
+                ) : (
+                    items.map((item) => (
+                        <ReportCardDetail key={item.id} item={item} />
+                    ))
+                )}
             </div>
         </div>
     );
 }
 
-function ReportCardDetail({ item }: { item: ReportHistoryItem }) {
+function ReportCardDetail({ item }: { item: TrendsProps["items"][number] }) {
+    const color = item.status === "Abnormal" ? "#F59E0B" : "#10B981";
     return (
         <div className="bg-white px- py-4 border-b">
-            <Link href={"/Guardian/home/TrendDetail"} className="flex items-start justify-between gap-3">
+            <Link href={`/Guardian/history/detail/${encodeURIComponent(item.readingId)}`} className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3 justify-between w-full">
                     <div className="flex min-w-0 items-center gap-2 justify-start">
-                        <div className="h-2 w-2  rounded-full" style={{ backgroundColor: item.color }}> </div>
+                        <div className="h-2 w-2  rounded-full" style={{ backgroundColor: color }}> </div>
                         <div className="min-w-0">
                             <p className="truncate text-[14px] font-medium text-gray-900">
-                                {item.patientName}
+                                {item.label}
                             </p>
                             <p className="truncate text-[12px] text-gray-400">
-                                {item.guardianName}
+                                {item.valueLabel}
                             </p>
                         </div>
                     </div>
 
                     <div className="flex min-w-0 items-center gap-4">
-                        {item.line}
                         <div className="min-w-0 text-end">
                             <div className="flex justify-start items-center gap-1">
-                                <p className="truncate text-[14px] font-medium " style={{ color: item.color }}>
-                                    Abnormal              </p>
+                                <p className="truncate text-[14px] font-medium " style={{ color }}>
+                                    {item.status}
+                                </p>
                             </div>
                             <p className="truncate text-[12px] text-gray-500">
-                                3.5 %
+                                {item.dateLabel}
                             </p>
                         </div>
                     </div>
@@ -210,33 +220,199 @@ function ReportCardDetail({ item }: { item: ReportHistoryItem }) {
     );
 }
 
+function formatDateLabel(value: string) {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value || "N/A";
+    return d.toLocaleDateString("en-GB");
+}
+
+async function downloadReadingReport(readingId: string) {
+    const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+        const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to download report";
+        throw new Error(msg);
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `urinalysis-report-${readingId}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
 
 export default function Home() {
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
-    const pets = [
-        { id: 1, name: 'Lola', image: '/lola.jpg', active: true },
-        { id: 2, name: 'Buddy', image: '/buddy.jpg', active: false },
-    ];
+    const router = useRouter();
+    const [pets, setPets] = useState<Pet[]>([]);
+    const [activePetId, setActivePetId] = useState("");
+    const [loadingPets, setLoadingPets] = useState(false);
 
-    const trendsData = [
-        { name: 'Leukocytes', data: [40, 65] },
-        { name: 'Proteins', data: [35, 70] },
-        { name: 'Density', data: [30, 75] },
-    ];
+    const [loadingReadings, setLoadingReadings] = useState(false);
+    const [readings, setReadings] = useState<any[]>([]);
+
+    const latestReadingId = useMemo(() => String(readings?.[0]?.id || ""), [readings]);
+    const [loadingLatestReading, setLoadingLatestReading] = useState(false);
+    const [latestReading, setLatestReading] = useState<any | null>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                setLoadingPets(true);
+                const res = await fetch(`/api/pet/get_pets?page=1&pageSize=100`);
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                if (!res.ok) {
+                    throw new Error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load pets");
+                }
+                const items = Array.isArray((data as any)?.items) ? (data as any).items : [];
+                const mapped: Pet[] = items
+                    .map((p: any) => ({
+                        id: String(p.id || p._id || ""),
+                        name: String(p.name || p.animalName || "N/A"),
+                        image: (p.image || p.photo || null) as any,
+                    }))
+                    .filter((p: Pet) => Boolean(p.id));
+                setPets(mapped);
+                setActivePetId((prev) => prev || mapped[0]?.id || "");
+            } catch {
+                setPets([]);
+                setActivePetId("");
+            } finally {
+                if (mounted) setLoadingPets(false);
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            if (!activePetId) {
+                setReadings([]);
+                return;
+            }
+            try {
+                setLoadingReadings(true);
+                const res = await fetch(`/api/reading/get_readings?patientId=${encodeURIComponent(activePetId)}&page=1&pageSize=50`);
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                if (!res.ok) {
+                    throw new Error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load readings");
+                }
+                const items = Array.isArray((data as any)?.items) ? (data as any).items : [];
+                setReadings(items);
+            } catch {
+                setReadings([]);
+            } finally {
+                if (mounted) setLoadingReadings(false);
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, [activePetId]);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            if (!latestReadingId) {
+                setLatestReading(null);
+                return;
+            }
+            try {
+                setLoadingLatestReading(true);
+                const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(latestReadingId)}`);
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                if (!res.ok) {
+                    throw new Error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load report");
+                }
+                setLatestReading((data as any)?.reading ?? null);
+            } catch {
+                setLatestReading(null);
+            } finally {
+                if (mounted) setLoadingLatestReading(false);
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, [latestReadingId]);
+
+    const currentHealth = useMemo(() => {
+        const dateRaw = String(latestReading?.signedAt || latestReading?.createdAt || readings?.[0]?.date || "");
+        const results = Array.isArray(latestReading?.results) ? latestReading.results : [];
+        if (results.length === 0) {
+            return { lastTestDate: "N/A", parameters: ["No recent tests"] };
+        }
+        const abnormal = results.filter((r: any) => r?.status === "Abnormal").map((r: any) => String(r?.label || "")).filter(Boolean);
+        return {
+            lastTestDate: formatDateLabel(dateRaw),
+            parameters: abnormal.length ? abnormal.slice(0, 4) : ["All parameters normal"],
+        };
+    }, [latestReading, readings]);
+
+    const trendItems = useMemo<TrendsProps["items"]>(() => {
+        const readingId = String(latestReading?.id || "");
+        const dateLabel = formatDateLabel(String(latestReading?.signedAt || latestReading?.createdAt || ""));
+        const results = Array.isArray(latestReading?.results) ? latestReading.results : [];
+        if (!readingId || results.length === 0) return [];
+        return results.slice(0, 6).map((r: any, idx: number) => {
+            const unit = String(r?.unit || "").trim();
+            const valueLabel = String(r?.valueLabel || "").trim();
+            const combinedValue = unit ? `${valueLabel} ${unit}` : valueLabel;
+            return {
+                id: `${readingId}:${String(r?.key || r?.label || "result")}:${idx}`,
+                label: String(r?.label || "N/A"),
+                valueLabel: combinedValue || "N/A",
+                status: r?.status === "Abnormal" ? "Abnormal" : "Normal",
+                readingId,
+                dateLabel,
+            };
+        });
+    }, [latestReading]);
+
+    const handleDownloadLatest = useCallback(async () => {
+        if (!latestReadingId) return;
+        await downloadReadingReport(latestReadingId);
+    }, [latestReadingId]);
+
+    const handleDetailsLatest = useCallback(() => {
+        if (!latestReadingId) return;
+        router.push(`/Guardian/history/detail/${encodeURIComponent(latestReadingId)}`);
+    }, [latestReadingId, router]);
 
     return (
         <main className="min-h-screen bg-gray-5 p-6">
             <div className="max-w-md mx-auto">
                 <Header name={profile?.fullName || 'User'} />
-                <PetSelector pets={pets} />
+                <PetSelector pets={pets} activePetId={activePetId} onSelect={setActivePetId} loading={loadingPets} />
                 <CurrentHealth
-                    lastTestDate="24/05/2024"
-                    parameters={['Proteins', 'Blood', 'Ketones']}
+                    lastTestDate={currentHealth.lastTestDate}
+                    parameters={currentHealth.parameters}
                 />
                 <div className="bg-[#F5F6F6] w-[calc(100%+48px)] -ms-6 h-2 my-4"></div>
-                <Trends data={trendsData} />
+                <Trends items={trendItems} loading={loadingLatestReading || loadingReadings} />
                 <div className="bg-[#F5F6F6] w-[calc(100%+48px)] -ms-6 h-2 my-4"></div>
-                <ReportCard title='Urinalysis Report' date='24/05/2024' avatarUrl='https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=800&h=600&fit=crop' />
+                {readings?.[0]?.id ? (
+                    <ReportCard
+                        title="Urinalysis Report"
+                        date={formatDateLabel(String(readings?.[0]?.date || ""))}
+                        avatarUrl={String(readings?.[0]?.avatarSrc || "")}
+                        signed={readings?.[0]?.status === "signed"}
+                        onDownload={handleDownloadLatest}
+                        onDetails={handleDetailsLatest}
+                    />
+                ) : (
+                    <div className="text-sm text-gray-500">No reports found.</div>
+                )}
             </div>
         </main>
     );

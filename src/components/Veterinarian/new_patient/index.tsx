@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link2, Mail, Plus, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import PatientCard from '../home/PatientCard';
@@ -9,12 +9,16 @@ import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { Modal } from '@/components/ui/modal';
 import { useModal } from '@/hooks/useModal';
+import { useAppSelector } from '@/store/hooks';
+import type { RootState } from '@/store/store';
+import Pusher from 'pusher-js';
 
 interface Guardian {
     id: string;
     name: string;
     owner: string;
     image: string;
+    taxId: string;
 }
 
 export default function AddPatientGuardian() {
@@ -22,6 +26,9 @@ export default function AddPatientGuardian() {
     const inviteModal = useModal();
     const [searchQuery, setSearchQuery] = useState('');
     const [inviteUrl, setInviteUrl] = useState<string>('');
+    const profile = useAppSelector((s: RootState) => s.userProfile.profile);
+    const userId = profile?.id || '';
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const [guardians, setGuardians] = useState<Guardian[]>([]);
     const [loading, setLoading] = useState(false);
@@ -32,6 +39,55 @@ export default function AddPatientGuardian() {
     useEffect(() => {
         setInviteUrl(`${window.location.origin}/signup?profile=tutor`);
     }, []);
+
+    const refreshUnread = useCallback(async () => {
+        try {
+            const res = await fetch('/api/notifications/unread_count', { method: 'GET' });
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                setUnreadCount(0);
+                return;
+            }
+            const next = Number(data?.count || 0);
+            setUnreadCount(Number.isFinite(next) && next > 0 ? next : 0);
+        } catch {
+            setUnreadCount(0);
+        }
+    }, []);
+
+    useEffect(() => {
+        refreshUnread();
+    }, [refreshUnread, userId]);
+
+    useEffect(() => {
+        if (!userId) return;
+        const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
+        const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+        if (!key || !cluster) return;
+
+        const pusher = new Pusher(key, { cluster, authEndpoint: '/api/pusher/auth' });
+        const channelName = `private-notifications-${userId}`;
+        const channel = pusher.subscribe(channelName);
+
+        const handler = () => {
+            setUnreadCount((prev) => (prev > 0 ? prev + 1 : 1));
+        };
+        channel.bind('notification:new', handler);
+
+        return () => {
+            channel.unbind('notification:new', handler);
+            pusher.unsubscribe(channelName);
+            pusher.disconnect();
+        };
+    }, [userId]);
+
+    useEffect(() => {
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') refreshUnread();
+        };
+        document.addEventListener('visibilitychange', onVisibility);
+        return () => document.removeEventListener('visibilitychange', onVisibility);
+    }, [refreshUnread]);
 
     async function handleSearch(q: string, pageToFetch: number) {
         try {
@@ -46,8 +102,9 @@ export default function AddPatientGuardian() {
                 setGuardians((data.items || []).map((u: any) => ({
                     id: String(u.id),
                     name: u.name,
-                    owner: u.taxId ? `National ID: ${u.taxId}` : 'National ID: N/A',
+                    owner: u.idNumber ? `National ID: ${u.idNumber}` : 'National ID: N/A',
                     image: u.avatarUrl,
+                    taxId: String(u.idNumber || '').trim(),
                 })));
                 setTotalPages(Number(data.pagination?.totalPages || 0));
             } else {
@@ -66,7 +123,7 @@ export default function AddPatientGuardian() {
 
     const filteredGuardians = guardians.filter(guardian =>
         guardian.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        guardian.owner.includes(searchQuery)
+        guardian.owner.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const getInviteLink = () => {
@@ -145,7 +202,8 @@ export default function AddPatientGuardian() {
             {/* Header */}
             <div className="bg-white flex items-center justify-between">
                 <h1 className="text-base font-medium text-gray-900">Add New Patient</h1>
-                <Link href={"/Veterinarian/notifications"} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                <Link href={"/Veterinarian/notifications"} className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
                     <span className="text-white text-sm">
                         <Image
                             src={"/images/home/bell.svg"}
@@ -222,7 +280,7 @@ export default function AddPatientGuardian() {
                         <PatientCard
                             key={guardian.id}
                             patient={guardian}
-                            onClickNavigate={`/Veterinarian/patient/new_patient?guardianId=${guardian.id}&guardianName=${encodeURIComponent(guardian.name)}`}
+                            onClickNavigate={`/Veterinarian/patient/new_patient?guardianId=${guardian.id}&guardianName=${encodeURIComponent(guardian.name)}&guardianTaxId=${encodeURIComponent(guardian.taxId)}`}
                         />
                         // <button
                         //     key={guardian.id}

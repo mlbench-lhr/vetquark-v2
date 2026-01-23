@@ -3,14 +3,16 @@ export interface HeaderProps {
 }
 
 export interface Pet {
-    id: number;
+    id: string;
     name: string;
-    image: string;
-    active: boolean;
+    image?: string | null;
 }
 
 export interface PetSelectorProps {
     pets: Pet[];
+    activePetId: string;
+    onSelect: (petId: string) => void;
+    loading: boolean;
 }
 
 export interface CurrentHealthProps {
@@ -18,13 +20,18 @@ export interface CurrentHealthProps {
     parameters: string[];
 }
 
-export interface TrendData {
-  name: string;
-  data: number[];
-}
+export type ReadingResultStatus = "Normal" | "Abnormal";
 
 export interface TrendsProps {
-  data: TrendData[];
+  items: Array<{
+    id: string;
+    label: string;
+    valueLabel: string;
+    status: ReadingResultStatus;
+    readingId: string;
+    dateLabel: string;
+  }>;
+  loading: boolean;
 }
 
 export interface RecentHistoryProps {

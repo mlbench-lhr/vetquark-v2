@@ -11,6 +11,7 @@ type LeanUser = {
   taxId?: unknown;
   dateOfBirth?: unknown;
   address?: unknown;
+  country?: unknown;
   city?: unknown;
   state?: unknown;
   postalCode?: unknown;
@@ -45,6 +46,7 @@ function toSafeProfile(user: LeanUser) {
     taxId: typeof user.taxId === "string" ? user.taxId : undefined,
     dateOfBirth: typeof user.dateOfBirth === "string" ? user.dateOfBirth : undefined,
     address: typeof user.address === "string" ? user.address : undefined,
+    country: typeof user.country === "string" ? user.country : undefined,
     city: typeof user.city === "string" ? user.city : undefined,
     state: typeof user.state === "string" ? user.state : undefined,
     postalCode: typeof user.postalCode === "string" ? user.postalCode : undefined,
