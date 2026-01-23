@@ -5,6 +5,7 @@ import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import Patient from "@/lib/models/Patient";
 import Reading, { CollectionMethod, ReadingResultStatus } from "@/lib/models/Reading";
+import PaymentLink from "@/lib/models/PaymentLink";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -77,6 +78,12 @@ export async function POST(req: NextRequest) {
     const patientId = String((body as any).patientId || "").trim();
     if (!patientId || !mongoose.Types.ObjectId.isValid(patientId)) {
       return NextResponse.json({ error: "Invalid patientId" }, { status: 400 });
+    }
+
+    const paymentLinkIdRaw = String((body as any).paymentLinkId || "").trim();
+    const paymentLinkId = paymentLinkIdRaw ? paymentLinkIdRaw : null;
+    if (paymentLinkId && !mongoose.Types.ObjectId.isValid(paymentLinkId)) {
+      return NextResponse.json({ error: "Invalid paymentLinkId" }, { status: 400 });
     }
 
     const identification = (body as any).identification || {};
@@ -168,10 +175,89 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Patient not found" }, { status: 404 });
     }
 
+    let paymentStatus: "paid" | null = null;
+    let paymentLinkReadingId: string | null = null;
+    if (paymentLinkId) {
+      const link = await PaymentLink.findOne({ _id: paymentLinkId, veterinarian: veterinarianId, patient: patientId })
+        .select("_id status reading expiresAt createdAt")
+        .lean();
+      if (!link) {
+        return NextResponse.json({ error: "Payment link not found" }, { status: 404 });
+      }
+      const now = new Date();
+      const createdAt = (link as any).createdAt ? new Date((link as any).createdAt) : null;
+      const expiresAt = (link as any).expiresAt ? new Date((link as any).expiresAt) : null;
+      const fallbackExpired = !expiresAt && createdAt ? now.getTime() - createdAt.getTime() >= 24 * 60 * 60 * 1000 : false;
+      const isExpired = expiresAt ? expiresAt.getTime() <= now.getTime() : fallbackExpired;
+      if ((link as any).status === "pending" && isExpired) {
+        await PaymentLink.updateOne({ _id: paymentLinkId, status: "pending" }, { $set: { status: "expired", expiresAt: expiresAt ?? createdAt } });
+        return NextResponse.json({ error: "Payment link expired" }, { status: 410 });
+      }
+      if ((link as any).status !== "paid") {
+        return NextResponse.json({ error: "Payment pending" }, { status: 403 });
+      }
+      paymentStatus = "paid";
+      paymentLinkReadingId = (link as any).reading ? String((link as any).reading) : null;
+
+      if (paymentLinkReadingId && mongoose.Types.ObjectId.isValid(paymentLinkReadingId)) {
+        const existingReading = await Reading.findOne({ _id: paymentLinkReadingId, veterinarian: veterinarianId })
+          .select("_id signedAt")
+          .lean();
+        if (existingReading?.signedAt) {
+          return NextResponse.json({ error: "Payment link already used" }, { status: 409 });
+        }
+      }
+    }
+
+    if (paymentLinkId && paymentLinkReadingId && mongoose.Types.ObjectId.isValid(paymentLinkReadingId)) {
+      const updated = await Reading.findOneAndUpdate(
+        { _id: paymentLinkReadingId, veterinarian: veterinarianId, $or: [{ signedAt: { $exists: false } }, { signedAt: null }] },
+        {
+          $set: {
+            guardian: (patient as any).guardian,
+            patient: patientId,
+            paymentLink: paymentLinkId,
+            paymentStatus,
+            identification: {
+              collectionMethod,
+              collectionAt,
+              stripLot,
+              stripExpiry,
+            },
+            timer: {
+              selectedSeconds,
+              analyzedAt,
+              analysis: {
+                summary: analysisSummary,
+                confidence: analysisConfidence,
+                flags: analysisFlags,
+              },
+            },
+            results,
+            report: {
+              summaryAndInterpretation,
+              otherInformation,
+              veterinarianNotes,
+            },
+            signedAt: new Date(),
+          },
+        },
+        { new: true }
+      ).lean();
+
+      if (updated?._id) {
+        return NextResponse.json({ id: String(updated._id) }, { status: 201 });
+      }
+    }
+
+    const readingId = new mongoose.Types.ObjectId();
     const created = await Reading.create({
+      _id: readingId,
       veterinarian: veterinarianId,
       guardian: (patient as any).guardian,
       patient: patientId,
+      paymentLink: paymentLinkId,
+      paymentStatus,
       testType: "urine",
       identification: {
         collectionMethod,
@@ -197,6 +283,17 @@ export async function POST(req: NextRequest) {
       signedAt: new Date(),
     });
 
+    if (paymentLinkId) {
+      const updated = await PaymentLink.updateOne(
+        { _id: paymentLinkId, veterinarian: veterinarianId, patient: patientId, reading: null },
+        { $set: { reading: created._id } },
+      );
+      if (!updated.modifiedCount) {
+        await Reading.deleteOne({ _id: created._id });
+        return NextResponse.json({ error: "Payment link already used" }, { status: 409 });
+      }
+    }
+
     return NextResponse.json({ id: String(created._id) }, { status: 201 });
   } catch (err){
     console.log("err------", err);
@@ -204,4 +301,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

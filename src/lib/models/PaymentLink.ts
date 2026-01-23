@@ -7,9 +7,11 @@ export interface IPaymentLink {
   veterinarian: Schema.Types.ObjectId;
   guardian: Schema.Types.ObjectId;
   patient: Schema.Types.ObjectId;
+  reading?: Schema.Types.ObjectId | null;
   amount: number;
   currency: string;
   status: PaymentLinkStatus;
+  notifiedAt?: Date | null;
   expiresAt?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -20,9 +22,11 @@ const PaymentLinkSchema = new Schema<IPaymentLink>(
     veterinarian: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     guardian: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     patient: { type: Schema.Types.ObjectId, ref: "Patient", required: true, index: true },
+    reading: { type: Schema.Types.ObjectId, ref: "Reading", default: null, index: true },
     amount: { type: Number, required: true, min: 0 },
     currency: { type: String, default: "BRL", trim: true },
     status: { type: String, enum: ["pending", "paid", "expired"], default: "pending", index: true },
+    notifiedAt: { type: Date, default: null, index: true },
     expiresAt: { type: Date, default: null, index: true },
   },
   { timestamps: true }

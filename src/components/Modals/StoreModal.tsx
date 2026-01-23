@@ -190,6 +190,10 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         setStep('cart');
     };
 
+    const handleViewOrders = () => {
+        router.push("/Veterinarian/store/orders");
+    };
+
     const handleBack = () => {
         if (step === "success") {
             setLastOrder(null);
@@ -601,20 +605,30 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                             <div className="space-y-4 bordert p-4 rounded-t-4xl bg-white absolute w-full bottom-0 z-300">
                                 {
                                     step === "store" ? (
-                                        <button
-                                            onClick={handleViewCart}
-                                            disabled={cartQuantity <= 0}
-                                            className={[
-                                                "w-full bg-primary text-white py-2 rounded-full font-semibold px-3 flex justify-between items-center hover:bg-blue-700 transition",
-                                                cartQuantity <= 0 ? "opacity-50 pointer-events-none" : "",
-                                            ].join(" ")}
-                                        >
-                                            <span className='text-base text-primary h-6 w-6 rounded-full bg-white flex justify-center items-center'>
-                                                {cartQuantity}
-                                            </span>
-                                            View Your Cart
-                                            <span className='text-sm font-bold text-white'>R$ {cartTotal.toFixed(2)}</span>
-                                        </button>
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={handleViewOrders}
+                                                className="w-full bg-[#F5F6F6] text-black py-2 rounded-full font-semibold px-3 flex items-center justify-center hover:bg-gray-200 transition"
+                                            >
+                                                View My Orders
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleViewCart}
+                                                disabled={cartQuantity <= 0}
+                                                className={[
+                                                    "w-full bg-primary text-white py-2 rounded-full font-semibold px-3 flex justify-between items-center hover:bg-blue-700 transition",
+                                                    cartQuantity <= 0 ? "opacity-50 pointer-events-none" : "",
+                                                ].join(" ")}
+                                            >
+                                                <span className='text-base text-primary h-6 w-6 rounded-full bg-white flex justify-center items-center'>
+                                                    {cartQuantity}
+                                                </span>
+                                                View Your Cart
+                                                <span className='text-sm font-bold text-white'>R$ {cartTotal.toFixed(2)}</span>
+                                            </button>
+                                        </>
                                     ) : step === "cart" ? (
                                         <>
                                             <div className="flex justify-between items-center text-sm">

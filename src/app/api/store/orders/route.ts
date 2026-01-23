@@ -31,6 +31,66 @@ function getUserIdFromRequest(req: NextRequest): { userId: string | null; error:
   }
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const { userId, error } = getUserIdFromRequest(req);
+    if (error) return error;
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectMongo();
+
+    const user = await User.findById(userId).select("_id role").lean();
+    if (!user || user.role !== "Veterinarian") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const veterinarianObjectId = new mongoose.Types.ObjectId(userId);
+    const docs = await mongoose.connection
+      .collection("store_orders")
+      .find({ veterinarian: veterinarianObjectId })
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(200)
+      .toArray();
+
+    const orders = docs.map((doc: any) => ({
+      id: String(doc?._id),
+      status: typeof doc?.status === "string" ? doc.status : "created",
+      total: Number.isFinite(Number(doc?.total)) ? Number(doc.total) : 0,
+      createdAt: doc?.createdAt ? new Date(doc.createdAt).toISOString() : null,
+      updatedAt: doc?.updatedAt ? new Date(doc.updatedAt).toISOString() : null,
+      items: Array.isArray(doc?.items)
+        ? doc.items
+            .map((i: any) => ({
+              productId: typeof i?.productId === "string" ? i.productId : "",
+              name: typeof i?.name === "string" ? i.name : "",
+              price: Number.isFinite(Number(i?.price)) ? Number(i.price) : 0,
+              quantity: Number.isFinite(Number(i?.quantity)) ? Number(i.quantity) : 0,
+            }))
+            .filter((i: any) => i.name && i.quantity > 0)
+        : [],
+      address:
+        doc?.address && typeof doc.address === "object"
+          ? {
+              name: typeof doc.address.name === "string" ? doc.address.name : "",
+              phone: typeof doc.address.phone === "string" ? doc.address.phone : "",
+              location: typeof doc.address.location === "string" ? doc.address.location : "",
+              addressLine: typeof doc.address.addressLine === "string" ? doc.address.addressLine : "",
+              city: typeof doc.address.city === "string" ? doc.address.city : "",
+              state: typeof doc.address.state === "string" ? doc.address.state : "",
+              postalCode: typeof doc.address.postalCode === "string" ? doc.address.postalCode : "",
+            }
+          : null,
+    }));
+
+    return NextResponse.json({ orders }, { status: 200 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { userId, error } = getUserIdFromRequest(req);
@@ -109,4 +169,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

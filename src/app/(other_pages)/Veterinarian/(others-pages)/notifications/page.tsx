@@ -93,7 +93,7 @@ export default function NotificationsPage() {
   const displayItems = useMemo(() => items, [items]);
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-scree">
       <div className="px-5 pt-[calc(env(safe-area-inset-top)+14px)] pb-4">
         <div className="relative flex items-center justify-center">
           <button type="button" onClick={() => router.back()} className="absolute left-0 top-1/2 -translate-y-1/2 p-1">

@@ -6,6 +6,7 @@ import Patient from "@/lib/models/Patient";
 import PaymentLink from "@/lib/models/PaymentLink";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
+import Reading from "@/lib/models/Reading";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +22,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid paymentLinkId" }, { status: 400 });
     }
 
+    const identification = body?.identification || null;
+    const patientId = String(identification?.patientId || "").trim();
+    const collectionMethod = String(identification?.collectionMethod || "").trim();
+    const collectionAtRaw = String(identification?.collectionAt || "").trim();
+    const stripLot = String(identification?.stripLot || "").trim();
+    const stripExpiryRaw = String(identification?.stripExpiry || "").trim();
+
+    if (!patientId || !mongoose.Types.ObjectId.isValid(patientId)) {
+      return NextResponse.json({ error: "Invalid identification.patientId" }, { status: 400 });
+    }
+    if (collectionMethod !== "free_catch" && collectionMethod !== "cystocentesis" && collectionMethod !== "catheter") {
+      return NextResponse.json({ error: "Invalid identification.collectionMethod" }, { status: 400 });
+    }
+    if (!stripLot) {
+      return NextResponse.json({ error: "Invalid identification.stripLot" }, { status: 400 });
+    }
+    const collectionAt = new Date(collectionAtRaw);
+    if (!collectionAtRaw || Number.isNaN(collectionAt.getTime())) {
+      return NextResponse.json({ error: "Invalid identification.collectionAt" }, { status: 400 });
+    }
+    const stripExpiry = new Date(stripExpiryRaw);
+    if (!stripExpiryRaw || Number.isNaN(stripExpiry.getTime())) {
+      return NextResponse.json({ error: "Invalid identification.stripExpiry" }, { status: 400 });
+    }
+
     await connectMongo();
 
     const veterinarian = await User.findById(veterinarianId).select("_id role tradeName fullName").lean();
@@ -28,8 +54,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const link = await PaymentLink.findOne({ _id: paymentLinkId, veterinarian: veterinarianId }).lean();
+    const link = await PaymentLink.findOneAndUpdate(
+      { _id: paymentLinkId, veterinarian: veterinarianId, patient: patientId },
+      { $set: { notifiedAt: new Date() } },
+      { new: true }
+    ).lean();
     if (!link) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    if (!(link as any).reading) {
+      const readingId = new mongoose.Types.ObjectId();
+      const created = await Reading.create({
+        _id: readingId,
+        veterinarian: veterinarianId,
+        guardian: (link as any).guardian,
+        patient: (link as any).patient,
+        paymentLink: link._id,
+        paymentStatus: "pending",
+        testType: "urine",
+        identification: {
+          collectionMethod,
+          collectionAt,
+          stripLot,
+          stripExpiry,
+        },
+        results: [],
+        report: {
+          summaryAndInterpretation: "",
+          otherInformation: "",
+          veterinarianNotes: "",
+        },
+      });
+
+      const updated = await PaymentLink.updateOne(
+        { _id: link._id, reading: null },
+        { $set: { reading: created._id } },
+      );
+      if (!updated.modifiedCount) {
+        await Reading.deleteOne({ _id: created._id });
+      }
+    }
 
     const patient = await Patient.findById(link.patient).select("_id animalName").lean();
     const guardianId = String(link.guardian);
@@ -64,4 +127,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

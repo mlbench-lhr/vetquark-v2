@@ -69,17 +69,30 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    const paymentStatus = typeof (doc as any).paymentStatus === "string" ? String((doc as any).paymentStatus) : "";
+    const paymentLinkId = (doc as any).paymentLink ? String((doc as any).paymentLink) : "";
+    const patientId = String((doc as any).patient?._id ?? (doc as any).patient ?? "");
+
+    if (paymentStatus === "pending") {
+      return NextResponse.json(
+        { error: "Payment required", paymentStatus, paymentLinkId, patientId },
+        { status: 402 },
+      );
+    }
+
     const reading = {
       id: String((doc as any)._id),
       testType: (doc as any).testType ?? "urine",
       signedAt: (doc as any).signedAt ?? null,
       createdAt: (doc as any).createdAt ?? null,
+      paymentStatus: paymentStatus || null,
+      paymentLinkId,
       identification: (doc as any).identification ?? null,
       timer: (doc as any).timer ?? null,
       results: Array.isArray((doc as any).results) ? (doc as any).results : [],
       report: (doc as any).report ?? null,
       patient: {
-        id: String((doc as any).patient?._id ?? ""),
+        id: patientId,
         name: (doc as any).patient?.animalName ?? "N/A",
         photo: (doc as any).patient?.photo ?? null,
       },

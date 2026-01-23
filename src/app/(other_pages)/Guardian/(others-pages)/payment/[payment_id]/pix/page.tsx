@@ -1,8 +1,9 @@
 "use client";
 
 import { ChevronLeft, Copy } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 
 const QR_SVG = (
   <svg
@@ -21,10 +22,32 @@ const QR_SVG = (
 export default function Page() {
   const router = useRouter();
 
-  const amountLabel = "R$ 5,00";
+  const params = useParams<{ payment_id: string }>();
+  const paymentId = String(params?.payment_id || "").trim();
+  const [amountLabel, setAmountLabel] = useState("R$ 0,00");
+  const [paying, setPaying] = useState(false);
   const pixCode = "000201010212268900";
 
   const title = useMemo(() => "Pay with Pix", []);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!paymentId) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/payment_links/get/${encodeURIComponent(paymentId)}`);
+        const data = await res.json().catch(() => null);
+        if (!mounted) return;
+        if (!res.ok) return;
+        const nextAmountLabel = typeof data?.item?.amountLabel === "string" ? data.item.amountLabel : "";
+        if (nextAmountLabel) setAmountLabel(nextAmountLabel);
+      } catch {
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [paymentId]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -98,9 +121,28 @@ export default function Page() {
         <div className="mt-6 pb-[calc(env(safe-area-inset-bottom)+18px)]">
           <button
             type="button"
-            className="h-[52px] w-full rounded-full bg-[#EEF4FF] text-[15px] font-medium text-[#3F78D8]"
+            disabled={paying || !paymentId}
+            onClick={async () => {
+              if (!paymentId || paying) return;
+              try {
+                setPaying(true);
+                const res = await fetch(`/api/payment_links/get/${encodeURIComponent(paymentId)}`, { method: "PATCH" });
+                const data = await res.json().catch(() => null);
+                if (!res.ok) {
+                  toast.error(typeof data?.error === "string" ? data.error : "Failed to mark as paid");
+                  return;
+                }
+                toast.success("Payment marked as paid");
+                router.push(`/Guardian/payment/${encodeURIComponent(paymentId)}`);
+              } catch {
+                toast.error("Network error");
+              } finally {
+                setPaying(false);
+              }
+            }}
+            className="h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:opacity-60"
           >
-            Waiting for payment confirmation....
+            {paying ? "Paying..." : "Pay"}
           </button>
         </div>
       </div>

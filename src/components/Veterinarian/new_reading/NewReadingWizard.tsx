@@ -22,10 +22,12 @@ export default function NewReadingWizard() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [step, setStep] = useState<NewReadingStep>('identification')
   const [submitting, setSubmitting] = useState(false)
+  const [paymentLinkStatus, setPaymentLinkStatus] = useState<"unknown" | "pending" | "paid" | "expired">("unknown")
 
   const [draft, setDraft] = useState<NewReadingDraft>(() => ({
     identification: {
       patientId: '',
+      paymentLinkId: '',
       collectionMethod: '',
       collectionAt: '',
       stripLot: '',
@@ -53,6 +55,8 @@ export default function NewReadingWizard() {
   } | null>(null)
 
   const patientIdFromQuery = useMemo(() => (searchParams.get('patientId') || '').trim(), [searchParams])
+  const paymentLinkIdFromQuery = useMemo(() => (searchParams.get('paymentLinkId') || '').trim(), [searchParams])
+  const stepFromQuery = useMemo(() => (searchParams.get('step') || '').trim(), [searchParams])
 
   const refreshUnread = useCallback(async () => {
     try {
@@ -112,6 +116,19 @@ export default function NewReadingWizard() {
   }, [patientIdFromQuery])
 
   useEffect(() => {
+    if (!paymentLinkIdFromQuery) return
+    setDraft((prev) => ({
+      ...prev,
+      identification: { ...prev.identification, paymentLinkId: paymentLinkIdFromQuery },
+    }))
+  }, [paymentLinkIdFromQuery])
+
+  useEffect(() => {
+    if (stepFromQuery !== 'identification' && stepFromQuery !== 'timer' && stepFromQuery !== 'review' && stepFromQuery !== 'report') return
+    setStep(stepFromQuery)
+  }, [stepFromQuery])
+
+  useEffect(() => {
     const patientId = draft.identification.patientId
     if (!patientId) {
       setPatientPreview(null)
@@ -133,6 +150,45 @@ export default function NewReadingWizard() {
       }
     })()
   }, [draft.identification.patientId])
+
+  const paymentLinkId = useMemo(() => (draft.identification.paymentLinkId || '').trim(), [draft.identification.paymentLinkId])
+
+  useEffect(() => {
+    let mounted = true
+    let interval: any = null
+    const fetchStatus = async () => {
+      if (!paymentLinkId) {
+        if (mounted) setPaymentLinkStatus("unknown")
+        return
+      }
+      try {
+        const res = await fetch(`/api/payment_links/get/${encodeURIComponent(paymentLinkId)}`)
+        const data = await res.json().catch(() => null)
+        if (!mounted) return
+        if (!res.ok) {
+          setPaymentLinkStatus("unknown")
+          return
+        }
+        const statusRaw = String(data?.item?.status || "")
+        if (statusRaw === "paid" || statusRaw === "pending" || statusRaw === "expired") {
+          setPaymentLinkStatus(statusRaw)
+        } else {
+          setPaymentLinkStatus("unknown")
+        }
+      } catch {
+        if (mounted) setPaymentLinkStatus("unknown")
+      }
+    }
+
+    fetchStatus()
+    if (paymentLinkId) {
+      interval = setInterval(fetchStatus, 5000)
+    }
+    return () => {
+      mounted = false
+      if (interval) clearInterval(interval)
+    }
+  }, [paymentLinkId])
 
   const canSubmit = useMemo(() => {
     const i = draft.identification
@@ -165,6 +221,7 @@ export default function NewReadingWizard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           patientId: draft.identification.patientId,
+          paymentLinkId: paymentLinkId || undefined,
           identification: {
             collectionMethod: draft.identification.collectionMethod,
             collectionAt: draft.identification.collectionAt,
@@ -188,7 +245,7 @@ export default function NewReadingWizard() {
       toast.success("Reading saved successfully")
       setDraft((prev) => ({
         ...prev,
-        identification: { patientId: "", collectionMethod: "", collectionAt: "", stripLot: "", stripExpiry: "" },
+        identification: { patientId: "", paymentLinkId: "", collectionMethod: "", collectionAt: "", stripLot: "", stripExpiry: "" },
         timer: { selectedSeconds: 45, analyzedAt: "", analysis: null },
         reviewSelections: {},
         results: [],
@@ -203,7 +260,7 @@ export default function NewReadingWizard() {
   }
 
   return (
-    <div className="min-h-screen p-4 space-y-4">
+    <div className="min-h-scree p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div className="text-base font-medium">New Urine Test</div>
         <Link href={"/Veterinarian/notifications"} className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
@@ -225,18 +282,54 @@ export default function NewReadingWizard() {
       )}
 
       {step === 'timer' && (
-        <TimerStep
-          selectedSeconds={draft.timer.selectedSeconds}
-          onChangeSelectedSeconds={(next: number) =>
-            setDraft((prev) => ({ ...prev, timer: { ...prev.timer, selectedSeconds: next } }))
-          }
-          onBack={() => setStep('identification')}
-          onAnalyzeAndProceed={() => {
-            const dummy = makeDummyAnalysis()
-            setDraft((prev) => ({ ...prev, timer: { ...prev.timer, analyzedAt: dummy.analyzedAt, analysis: dummy.analysis } }))
-            setStep('review')
-          }}
-        />
+        paymentLinkId && paymentLinkStatus !== "paid" ? (
+          <div className="rounded-2xl bg-gray-100 px-5 py-6">
+            <div className="text-lg font-medium text-gray-900">Payment pending</div>
+            <div className="mt-2 text-sm text-gray-600">
+              Waiting for the guardian to pay before starting the timer.
+            </div>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setStep("identification")}
+                className="flex-1 py-3 rounded-full bg-white text-gray-700 font-medium"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/payment_links/get/${encodeURIComponent(paymentLinkId)}`)
+                    const data = await res.json().catch(() => null)
+                    if (!res.ok) return
+                    const statusRaw = String(data?.item?.status || "")
+                    if (statusRaw === "paid" || statusRaw === "pending" || statusRaw === "expired") {
+                      setPaymentLinkStatus(statusRaw as any)
+                    }
+                  } catch {
+                  }
+                }}
+                className="flex-1 py-3 rounded-full bg-primary text-white font-medium"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+        ) : (
+          <TimerStep
+            selectedSeconds={draft.timer.selectedSeconds}
+            onChangeSelectedSeconds={(next: number) =>
+              setDraft((prev) => ({ ...prev, timer: { ...prev.timer, selectedSeconds: next } }))
+            }
+            onBack={() => setStep('identification')}
+            onAnalyzeAndProceed={() => {
+              const dummy = makeDummyAnalysis()
+              setDraft((prev) => ({ ...prev, timer: { ...prev.timer, analyzedAt: dummy.analyzedAt, analysis: dummy.analysis } }))
+              setStep('review')
+            }}
+          />
+        )
       )}
 
       {step === 'review' && (

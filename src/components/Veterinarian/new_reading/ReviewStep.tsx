@@ -35,7 +35,7 @@ const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'cells/µL',
     defaultIndex: 2,
     options: [
-      { topLabel: 'Neg', color: '#E9D5FF' },
+      { topLabel: 'Neg', color: 'white' },
       { topLabel: '15', color: '#D8B4FE' },
       { topLabel: '70', color: '#C084FC' },
       { topLabel: '125', color: '#A855F7' },
@@ -49,7 +49,7 @@ const RESULT_ROWS: ResultRowConfig[] = [
     unit: '',
     defaultIndex: 1,
     options: [
-      { topLabel: 'Neg', color: '#FBCFE8' },
+      { topLabel: 'Neg', color: 'white' },
       { topLabel: 'Pos', color: '#EC4899' },
     ],
   },
@@ -275,8 +275,8 @@ function ResultRow({
 }) {
   const cols = row.options.length
   return (
-    <div className="py-4">
-      <div className="flex items-center justify-between">
+    <div className="py-4 px-3">
+      <div className="flex items-center opa justify-between">
         <div className="text-[14px] leading-[18px] font-medium text-[#111827]">{row.label}</div>
         <StatusPill status={row.status} />
       </div>
@@ -290,12 +290,16 @@ function ResultRow({
           return (
             <div key={`${row.key}-${idx}`} className="flex flex-col items-center">
               <div className="text-[10px] leading-[12px] text-[#9CA3AF]">{opt.topLabel}</div>
-              <button
-                type="button"
-                onClick={() => onSelect(idx)}
-                className={`mt-2 h-6 w-6 rounded-full ${active ? 'shadow-sm shadow-black' : ''}`}
+              <div
+                // onClick={() => onSelect(idx)}
+                className={`mt-2 h-6 w-6 relative rounded-full ${opt.topLabel === "Neg" && "border"} ${active ? 'shadow-md!' : ''}`}
                 style={{ backgroundColor: opt.color }}
-              />
+              >
+                {
+                  active &&
+                  <div className='absolute top-1/2 left-1/2 h-1 w-1 bg-white/50 rounded-full -translate-x-1/2 -translate-y-1/2'></div>
+                }
+              </div>
             </div>
           )
         })}
@@ -331,7 +335,7 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
         Adjust the results, add observations and proceed to issue the report.
       </p>
 
-      <div className="mt-5 divide-y divide-[#E5E7EB]">
+      <div className="mt-5 divide-y divide-[#F1F5F9] border border-[#F1F5F9] rounded-[16px] shadow-2xs">
         {RESULT_ROWS.map((row) => (
           <ResultRow
             key={row.key}

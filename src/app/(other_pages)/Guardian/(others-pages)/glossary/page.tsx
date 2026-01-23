@@ -162,7 +162,7 @@ export default function Page() {
   const activeItem = useMemo(() => items.find((i) => i.id === activeId) ?? null, [activeId, items]);
 
   return (
-    <div className="min-h-[100dvh] bg-[#F4F6FB]">
+    <div className="min-h-[calc(100dvh-80px)] bg-[#F4F6FB]">
       <div className="mx-auto w-full max-w-[520px] px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
         <div>
           <h1 className="text-[22px] font-semibold text-gray-900">Glossary of Parameters</h1>

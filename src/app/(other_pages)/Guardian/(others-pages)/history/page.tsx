@@ -191,7 +191,7 @@ function PageContent() {
   }, []);
 
   return (
-    <div className="h-[100dvh] w-full bg-white">
+    <div className="h-[100dvh w-full bg-white">
       <div className="mx-auto w-full h-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
         <div className="px-4">
           <h1 className="text-[22px] font-semibold leading-[28px] text-[#111827]">

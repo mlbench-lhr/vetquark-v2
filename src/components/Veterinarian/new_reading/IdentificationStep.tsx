@@ -17,7 +17,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   const router = useRouter()
   const [patients, setPatients] = useState<PatientListItem[]>([])
   const [showLink, setShowLink] = useState(false)
-  const [paymentLinkId, setPaymentLinkId] = useState<string | null>(null)
+  const [paymentLinkId, setPaymentLinkId] = useState<string | null>((value.paymentLinkId || '').trim() || null)
   const [amountLabel, setAmountLabel] = useState<string | undefined>(undefined)
   const [generating, setGenerating] = useState(false)
   const [sending, setSending] = useState(false)
@@ -78,6 +78,12 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
       })()
   }, [patients, value.patientId])
 
+  useEffect(() => {
+    const next = (value.paymentLinkId || '').trim()
+    if (!next) return
+    setPaymentLinkId(next)
+  }, [value.paymentLinkId])
+
   const canProceed = useMemo(() => {
     return !!value.patientId && !!value.collectionMethod && !!value.collectionAt && !!value.stripLot && !!value.stripExpiry
   }, [value.collectionAt, value.collectionMethod, value.patientId, value.stripExpiry, value.stripLot])
@@ -98,7 +104,16 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
             const res = await fetch('/api/payment_links/notify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentLinkId }),
+              body: JSON.stringify({
+                paymentLinkId,
+                identification: {
+                  patientId: value.patientId,
+                  collectionMethod: value.collectionMethod,
+                  collectionAt: value.collectionAt,
+                  stripLot: value.stripLot,
+                  stripExpiry: value.stripExpiry,
+                },
+              }),
             })
             const data = await res.json().catch(() => null)
             if (!res.ok) {
@@ -115,7 +130,6 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         }}
         onBack={() => {
           setShowLink(false)
-          setPaymentLinkId(null)
           setAmountLabel(undefined)
         }}
       />
@@ -215,7 +229,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
 
         <div className="text-sm text-gray-900 mb-2">Strip Expiry</div>
         <div className="w-full flex justify-start items-center gap-2 relative">
-          <div className="relative w-[calc(100%-64px)]">
+          <div className="relative w-[calc(100%-0px)]">
             <div className="relative">
               <input
                 ref={stripExpiryRef}
@@ -239,16 +253,37 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
               />
             </div>
           </div>
-          <div className='w-[56px] h-[56px] flex justify-center items-center bg-[#EBF2FF] rounded-[20px]'>
+          {/* <div className='w-[56px] h-[56px] flex justify-center items-center bg-[#EBF2FF] rounded-[20px]'>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M3 11H11V3H3V11ZM5 5H9V9H5V5ZM3 21H11V13H3V21ZM5 15H9V19H5V15ZM13 3V11H21V3H13ZM19 9H15V5H19V9ZM13.01 13H15.01V15H13.01V13ZM15.01 15H17.01V17H15.01V15ZM13.01 17H15.01V19H13.01V17ZM17.01 17H19.01V19H17.01V17ZM19.01 19H21.01V21H19.01V19ZM15.01 19H17.01V21H15.01V19ZM17.01 13H19.01V15H17.01V13ZM19.01 15H21.01V17H19.01V15Z" fill="#3F78D8" />
             </svg>
-          </div>
+          </div> */}
         </div>
 
         <button
           onClick={async () => {
             if (generating) return
+            const existingId = (value.paymentLinkId || paymentLinkId || "").trim()
+            if (existingId) {
+              try {
+                setGenerating(true)
+                const res = await fetch(`/api/payment_links/get/${encodeURIComponent(existingId)}`)
+                const data = await res.json().catch(() => null)
+                if (!res.ok) {
+                  toast.error(typeof data?.error === "string" ? data.error : "Failed to load payment link")
+                  return
+                }
+                const nextAmountLabel = typeof data?.item?.amountLabel === "string" ? data.item.amountLabel : undefined
+                setAmountLabel(nextAmountLabel)
+                setPaymentLinkId(existingId)
+                setShowLink(true)
+              } catch {
+                toast.error("Network error while loading payment link")
+              } finally {
+                setGenerating(false)
+              }
+              return
+            }
             try {
               setGenerating(true)
               const res = await fetch('/api/payment_links/generate', {
@@ -261,7 +296,9 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
                 toast.error(typeof data?.error === "string" ? data.error : "Failed to generate payment link")
                 return
               }
-              setPaymentLinkId(String(data?.id || ""))
+              const id = String(data?.id || "")
+              setPaymentLinkId(id)
+              onChange({ paymentLinkId: id })
               setAmountLabel(typeof data?.amountLabel === "string" ? data.amountLabel : undefined)
               setShowLink(true)
             } catch {
@@ -273,7 +310,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
           disabled={!canProceed}
           className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-60"
         >
-          {generating ? "Generating..." : "Generate Payment Link"}
+          {generating ? "Generating..." : (value.paymentLinkId || paymentLinkId ? "View Payment Link" : "Generate Payment Link")}
         </button>
       </div>
     </div>

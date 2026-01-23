@@ -146,12 +146,15 @@ export async function GET(req: NextRequest) {
 
     const items = docs.map((r: any) => ({
       id: String(r._id),
+      patientId: String(r.patient?._id ?? r.patient ?? ""),
       patientName: r.patient?.animalName ?? "N/A",
       guardianName: r.guardian?.fullName ?? "N/A",
       veterinarianName: r.veterinarian?.tradeName ?? r.veterinarian?.fullName ?? "N/A",
       date: (r.signedAt ?? r.createdAt ?? new Date()).toISOString?.() ?? String(r.signedAt ?? r.createdAt ?? ""),
       status: r.signedAt ? "signed" : "pending",
       avatarSrc: r.patient?.photo || "/images/product/product-01.jpg",
+      paymentStatus: typeof r.paymentStatus === "string" ? r.paymentStatus : null,
+      paymentLinkId: r.paymentLink ? String(r.paymentLink) : "",
     }));
 
     return NextResponse.json(
