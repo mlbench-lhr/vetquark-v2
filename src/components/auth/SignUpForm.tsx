@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, EyeOff, Calendar, Check, ChevronLeft, Pencil } from "lucide-react";
+import { Eye, EyeOff, Calendar, Check, ChevronLeft } from "lucide-react";
 import MultiSelect from "@/components/form/MultiSelect";
 import DropdownSelect from "@/components/form/DropdownSelect";
 import { toast } from "react-toastify";
@@ -329,10 +329,6 @@ export default function SignUpForm() {
       setStep(step + 1);
       return;
     }
-    if (profileType === "veterinarian" && !formData.clinicLogoUrl) {
-      toast.error("Please upload your clinic logo");
-      return;
-    }
     try {
       setSubmitting(true);
       const basePayload = {
@@ -358,7 +354,7 @@ export default function SignUpForm() {
           crmv: formData.crmv,
           crmvState: formData.crmvState,
           mapaRegistration: formData.mapaRegistration,
-          clinicLogoUrl: formData.clinicLogoUrl,
+          clinicLogoUrl: formData.clinicLogoUrl || undefined,
           tradeName: formData.tradeName,
           cnpjIe: formData.cnpjIe || undefined,
           reportHeaderAddress: formData.reportHeaderAddress,
@@ -990,27 +986,21 @@ export default function SignUpForm() {
           <form id="signup-step-6" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="pt-8">
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-900 font-medium mb-2">Clinic Logo</label>
-                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p- text-center">
+                <label className="block text-gray-900 font-medium mb-2">
+                  Clinic Logo <span className="text-gray-500 font-normal">(optional)</span>
+                </label>
+                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
                   {formData.clinicLogoUrl ? (
-                    <div className="flex flex-col items-center w-full h-[200px] gap-3 relative">
-                      <img src={formData.clinicLogoUrl} alt="Clinic logo" className="w-full h-full object-contain rounded-lg bg-white" />
-                      <label className="inline-block absolute -top-2 -right-0">
+                    <div className="flex flex-col items-center gap-3">
+                      <img src={formData.clinicLogoUrl} alt="Clinic logo" className="w-32 h-32 object-contain rounded-lg bg-white" />
+                      <label className="inline-block">
                         <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
-                        {
-                          uploadingClinicLogo ?
-                            <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
-                              {uploadingClinicLogo ? "Uploading..." : "Change Logo"}
-                            </span>
-                            : <div className="p-2 bg-primary rounded-full">
-                              <Pencil color="white" size={16} />
-                            </div>
-                        }
+                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? "Uploading..." : "Change Logo"}</span>
                       </label>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="text-gray-600 text-sm">Upload your clinic logo</div>
+                      <div className="text-gray-600 text-sm">Upload your clinic logo (optional)</div>
                       <label className="inline-block">
                         <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
                         <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? "Uploading..." : "Select File"}</span>

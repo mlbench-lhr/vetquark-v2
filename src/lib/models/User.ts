@@ -11,6 +11,7 @@ export interface IUser {
   taxId?: string;
   dateOfBirth?: string;
   address?: string;
+  country?: string;
   city?: string;
   state?: string;
   postalCode?: string;
@@ -62,6 +63,7 @@ const UserSchema = new Schema<IUser>(
     taxId: { type: String },
     dateOfBirth: { type: String },
     address: { type: String },
+    country: { type: String },
     city: { type: String },
     state: { type: String },
     postalCode: { type: String },

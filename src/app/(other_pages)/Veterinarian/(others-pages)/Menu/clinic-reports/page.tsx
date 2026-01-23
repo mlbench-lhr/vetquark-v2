@@ -103,11 +103,6 @@ export default function ClinicReportsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.clinicLogoUrl) {
-      toast.error("Please upload your clinic logo");
-      return;
-    }
-
     try {
       setSaving(true);
       const res = await fetch("/api/user/profile", {
@@ -115,7 +110,7 @@ export default function ClinicReportsPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          clinicLogoUrl: formData.clinicLogoUrl,
+          clinicLogoUrl: formData.clinicLogoUrl || undefined,
           tradeName: formData.tradeName,
           cnpjIe: formData.cnpjIe,
           reportHeaderAddress: formData.reportHeaderAddress,
@@ -142,7 +137,9 @@ export default function ClinicReportsPage() {
         <form ref={formRef} onSubmit={handleSubmit} className="pt-2">
           <div className="space-y-4">
             <div>
-              <label className="block text-gray-900 font-medium mb-2">Clinic Logo</label>
+              <label className="block text-gray-900 font-medium mb-2">
+                Clinic Logo <span className="text-gray-500 font-normal">(optional)</span>
+              </label>
               <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p- text-center">
                 {formData.clinicLogoUrl ? (
                   <div className="flex w-full h-[200px] flex-col relative items-center gap-3">
@@ -166,7 +163,7 @@ export default function ClinicReportsPage() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3">
-                    <div className="text-gray-600 text-sm">Upload your clinic logo</div>
+                    <div className="text-gray-600 text-sm">Upload your clinic logo (optional)</div>
                     <label className="inline-block">
                       <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
                       <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">

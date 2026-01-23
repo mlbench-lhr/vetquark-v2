@@ -5,6 +5,7 @@ import { Calendar, ChevronDown, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import LinkGenerated from './LinkGenerated'
 import { IdentificationDraft, PatientListItem } from './types'
+import { toast } from 'react-toastify'
 
 type Props = {
   value: IdentificationDraft
@@ -16,6 +17,10 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   const router = useRouter()
   const [patients, setPatients] = useState<PatientListItem[]>([])
   const [showLink, setShowLink] = useState(false)
+  const [paymentLinkId, setPaymentLinkId] = useState<string | null>(null)
+  const [amountLabel, setAmountLabel] = useState<string | undefined>(undefined)
+  const [generating, setGenerating] = useState(false)
+  const [sending, setSending] = useState(false)
 
   const collectionRef = useRef<HTMLInputElement | null>(null)
   const stripExpiryRef = useRef<HTMLInputElement | null>(null)
@@ -80,8 +85,39 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   if (showLink) {
     return (
       <LinkGenerated
-        onSend={() => onNext()}
-        onBack={() => setShowLink(false)}
+        amountLabel={amountLabel}
+        sending={generating || sending}
+        onSend={async () => {
+          if (sending || generating) return
+          if (!paymentLinkId) {
+            toast.error("Payment link is not ready yet")
+            return
+          }
+          try {
+            setSending(true)
+            const res = await fetch('/api/payment_links/notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentLinkId }),
+            })
+            const data = await res.json().catch(() => null)
+            if (!res.ok) {
+              toast.error(typeof data?.error === "string" ? data.error : "Failed to send payment link")
+              return
+            }
+            toast.success("Payment link sent to guardian")
+            onNext()
+          } catch {
+            toast.error("Network error while sending payment link")
+          } finally {
+            setSending(false)
+          }
+        }}
+        onBack={() => {
+          setShowLink(false)
+          setPaymentLinkId(null)
+          setAmountLabel(undefined)
+        }}
       />
     )
   }
@@ -211,11 +247,33 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         </div>
 
         <button
-          onClick={() => setShowLink(true)}
+          onClick={async () => {
+            if (generating) return
+            try {
+              setGenerating(true)
+              const res = await fetch('/api/payment_links/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patientId: value.patientId }),
+              })
+              const data = await res.json().catch(() => null)
+              if (!res.ok) {
+                toast.error(typeof data?.error === "string" ? data.error : "Failed to generate payment link")
+                return
+              }
+              setPaymentLinkId(String(data?.id || ""))
+              setAmountLabel(typeof data?.amountLabel === "string" ? data.amountLabel : undefined)
+              setShowLink(true)
+            } catch {
+              toast.error("Network error while generating payment link")
+            } finally {
+              setGenerating(false)
+            }
+          }}
           disabled={!canProceed}
           className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-60"
         >
-          Generate Payment Link
+          {generating ? "Generating..." : "Generate Payment Link"}
         </button>
       </div>
     </div>

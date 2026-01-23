@@ -38,7 +38,7 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', onSend, onBack,
           disabled={!!sending}
           className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-70"
         >
-          Send Payment Link
+          {sending ? "Sending..." : "Send Payment Link"}
         </button>
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
           Go Back

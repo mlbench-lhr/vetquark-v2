@@ -2,53 +2,95 @@ import { NextRequest, NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import Patient from "@/lib/models/Patient";
 import User from "@/lib/models/User";
-import mongoose from "mongoose";
+import { asNonEmptyTrimmedString, asOptionalTrimmedString, isMongoObjectId } from "@/lib/utils";
+import jwt from "jsonwebtoken";
+
+function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
+  const headerId = req.headers.get("x-user-id");
+  if (headerId?.trim()) return { userId: headerId.trim(), error: null };
+
+  const token = req.cookies.get("session_id")?.value || req.cookies.get("auth_token")?.value;
+  if (!token) return { userId: null, error: null };
+
+  const authSecret = process.env.AUTH_SECRET;
+  if (!authSecret) {
+    return {
+      userId: null,
+      error: NextResponse.json({ error: "Server auth misconfigured" }, { status: 500 }),
+    };
+  }
+
+  try {
+    const decoded = jwt.verify(token, authSecret);
+    if (decoded && typeof decoded === "object" && "sub" in decoded) {
+      const sub = (decoded as { sub?: unknown }).sub;
+      if (typeof sub === "string" && sub.trim()) return { userId: sub.trim(), error: null };
+    }
+    return { userId: null, error: null };
+  } catch {
+    return { userId: null, error: null };
+  }
+}
+
+function asPhotoUrl(value: unknown): string | null {
+  if (value === null) return null;
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function asSex(value: unknown): "Male" | "Female" | "" | null {
+  const v = asOptionalTrimmedString(value);
+  if (!v) return "";
+  if (v === "Male" || v === "Female") return v;
+  return null;
+}
+
+function asNeutered(value: unknown): "Yes" | "No" | "" | null {
+  const v = asOptionalTrimmedString(value);
+  if (!v) return "";
+  if (v === "Yes" || v === "No") return v;
+  return null;
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const veterinarianId = req.headers.get("x-user-id");
-    if (!veterinarianId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { userId: veterinarianId, error } = getUserIdFromRequest(req);
+    if (error) return error;
+    if (!veterinarianId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!isMongoObjectId(veterinarianId)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Invalid body" }, { status: 400 });
     }
 
-    const body = await req.json();
+    const guardianId = asNonEmptyTrimmedString((body as any).guardianId);
+    if (!guardianId) return NextResponse.json({ error: "guardianId is required" }, { status: 400 });
+    if (!isMongoObjectId(guardianId)) return NextResponse.json({ error: "Invalid guardianId" }, { status: 400 });
 
-    const {
-      guardianId,
-      photo,
-      animalName,
-      microchip,
-      species,
-      breed,
-      sex,
-      dateOfBirth,
-      temperament,
-      size,
-      coat,
-      neutered,
-      rga,
-      planName,
-      cardNumber,
-      cardValidity,
-      allergies,
-      chronicDiseases,
-      otherInformation,
-      internalNotes,
-      isAlive,
-    } = body || {};
+    const animalName = asNonEmptyTrimmedString((body as any).animalName);
+    if (!animalName) return NextResponse.json({ error: "animalName is required" }, { status: 400 });
 
-    if (!guardianId || !animalName) {
-      return NextResponse.json({ error: "guardianId and animalName are required" }, { status: 400 });
+    const sex = asSex((body as any).sex);
+    if (sex === null) return NextResponse.json({ error: "Invalid sex" }, { status: 400 });
+
+    const neutered = asNeutered((body as any).neutered);
+    if (neutered === null) return NextResponse.json({ error: "Invalid neutered" }, { status: 400 });
+
+    const isAlive = (body as any).isAlive;
+    if (isAlive !== undefined && typeof isAlive !== "boolean") {
+      return NextResponse.json({ error: "Invalid isAlive" }, { status: 400 });
     }
 
     await connectMongo();
 
-    const veterinarian = await User.findById(veterinarianId).lean();
+    const veterinarian = await User.findById(veterinarianId).select("_id role").lean();
     if (!veterinarian || veterinarian.role !== "Veterinarian") {
       return NextResponse.json({ error: "Veterinarian not found" }, { status: 404 });
     }
 
-    const guardian = await User.findById(guardianId).lean();
+    const guardian = await User.findById(guardianId).select("_id role").lean();
     if (!guardian || guardian.role !== "Guardian") {
       return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
     }
@@ -56,29 +98,29 @@ export async function POST(req: NextRequest) {
     const doc = await Patient.create({
       guardian: guardianId,
       veterinarian: veterinarianId,
-      photo: photo ?? null,
+      photo: asPhotoUrl((body as any).photo),
       animalName,
-      microchip,
-      species,
-      breed,
+      microchip: asOptionalTrimmedString((body as any).microchip),
+      species: asOptionalTrimmedString((body as any).species),
+      breed: asOptionalTrimmedString((body as any).breed),
       sex,
-      dateOfBirth,
-      temperament,
-      size,
-      coat,
+      dateOfBirth: asOptionalTrimmedString((body as any).dateOfBirth),
+      temperament: asOptionalTrimmedString((body as any).temperament),
+      size: asOptionalTrimmedString((body as any).size),
+      coat: asOptionalTrimmedString((body as any).coat),
       neutered,
-      rga,
-      planName,
-      cardNumber,
-      cardValidity,
-      allergies,
-      chronicDiseases,
-      otherInformation,
-      internalNotes,
+      rga: asOptionalTrimmedString((body as any).rga),
+      planName: asOptionalTrimmedString((body as any).planName),
+      cardNumber: asOptionalTrimmedString((body as any).cardNumber),
+      cardValidity: asOptionalTrimmedString((body as any).cardValidity),
+      allergies: asOptionalTrimmedString((body as any).allergies),
+      chronicDiseases: asOptionalTrimmedString((body as any).chronicDiseases),
+      otherInformation: asOptionalTrimmedString((body as any).otherInformation),
+      internalNotes: asOptionalTrimmedString((body as any).internalNotes),
       isAlive: typeof isAlive === "boolean" ? isAlive : true,
     });
 
-    return NextResponse.json({ id: doc._id }, { status: 201 });
+    return NextResponse.json({ id: String(doc._id) }, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -86,49 +128,33 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const veterinarianId = req.headers.get("x-user-id");
-    if (!veterinarianId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (!mongoose.Types.ObjectId.isValid(veterinarianId)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { userId: veterinarianId, error } = getUserIdFromRequest(req);
+    if (error) return error;
+    if (!veterinarianId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!isMongoObjectId(veterinarianId)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Invalid body" }, { status: 400 });
     }
 
-    const body = await req.json();
+    const patientId = asNonEmptyTrimmedString((body as any).patientId);
+    if (!patientId) return NextResponse.json({ error: "patientId is required" }, { status: 400 });
+    if (!isMongoObjectId(patientId)) return NextResponse.json({ error: "Invalid patientId" }, { status: 400 });
+    const resolvedPatientId = patientId;
 
-    const {
-      patientId,
-      photo,
-      animalName,
-      microchip,
-      species,
-      breed,
-      sex,
-      dateOfBirth,
-      temperament,
-      size,
-      coat,
-      neutered,
-      rga,
-      planName,
-      cardNumber,
-      cardValidity,
-      allergies,
-      chronicDiseases,
-      otherInformation,
-      internalNotes,
-      isAlive,
-    } = body || {};
+    const animalName = asNonEmptyTrimmedString((body as any).animalName);
+    if (!animalName) return NextResponse.json({ error: "animalName is required" }, { status: 400 });
 
-    if (!patientId || typeof patientId !== "string" || !patientId.trim()) {
-      return NextResponse.json({ error: "patientId is required" }, { status: 400 });
-    }
-    const resolvedPatientId = patientId.trim();
-    if (!mongoose.Types.ObjectId.isValid(resolvedPatientId)) {
-      return NextResponse.json({ error: "Invalid patientId" }, { status: 400 });
-    }
-    if (!animalName || typeof animalName !== "string" || !animalName.trim()) {
-      return NextResponse.json({ error: "animalName is required" }, { status: 400 });
+    const sex = asSex((body as any).sex);
+    if (sex === null) return NextResponse.json({ error: "Invalid sex" }, { status: 400 });
+
+    const neutered = asNeutered((body as any).neutered);
+    if (neutered === null) return NextResponse.json({ error: "Invalid neutered" }, { status: 400 });
+
+    const isAlive = (body as any).isAlive;
+    if (isAlive !== undefined && typeof isAlive !== "boolean") {
+      return NextResponse.json({ error: "Invalid isAlive" }, { status: 400 });
     }
 
     await connectMongo();
@@ -139,25 +165,25 @@ export async function PUT(req: NextRequest) {
     }
 
     const update: Record<string, any> = {
-      photo: photo ?? null,
-      animalName: animalName.trim(),
-      microchip: microchip ?? "",
-      species: species ?? "",
-      breed: breed ?? "",
-      sex: sex ?? "",
-      dateOfBirth: dateOfBirth ?? "",
-      temperament: temperament ?? "",
-      size: size ?? "",
-      coat: coat ?? "",
-      neutered: neutered ?? "",
-      rga: rga ?? "",
-      planName: planName ?? "",
-      cardNumber: cardNumber ?? "",
-      cardValidity: cardValidity ?? "",
-      allergies: allergies ?? "",
-      chronicDiseases: chronicDiseases ?? "",
-      otherInformation: otherInformation ?? "",
-      internalNotes: internalNotes ?? "",
+      photo: asPhotoUrl((body as any).photo),
+      animalName,
+      microchip: asOptionalTrimmedString((body as any).microchip),
+      species: asOptionalTrimmedString((body as any).species),
+      breed: asOptionalTrimmedString((body as any).breed),
+      sex,
+      dateOfBirth: asOptionalTrimmedString((body as any).dateOfBirth),
+      temperament: asOptionalTrimmedString((body as any).temperament),
+      size: asOptionalTrimmedString((body as any).size),
+      coat: asOptionalTrimmedString((body as any).coat),
+      neutered,
+      rga: asOptionalTrimmedString((body as any).rga),
+      planName: asOptionalTrimmedString((body as any).planName),
+      cardNumber: asOptionalTrimmedString((body as any).cardNumber),
+      cardValidity: asOptionalTrimmedString((body as any).cardValidity),
+      allergies: asOptionalTrimmedString((body as any).allergies),
+      chronicDiseases: asOptionalTrimmedString((body as any).chronicDiseases),
+      otherInformation: asOptionalTrimmedString((body as any).otherInformation),
+      internalNotes: asOptionalTrimmedString((body as any).internalNotes),
       isAlive: typeof isAlive === "boolean" ? isAlive : true,
     };
 

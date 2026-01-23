@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       taxId,
       dateOfBirth,
       address,
+      country,
       city,
       state,
       postalCode,
@@ -228,6 +229,9 @@ export async function POST(req: NextRequest) {
       if (!address) {
         return NextResponse.json({ error: "Address is required" }, { status: 400 });
       }
+      if (!country) {
+        return NextResponse.json({ error: "Country is required" }, { status: 400 });
+      }
       if (!city) {
         return NextResponse.json({ error: "City is required" }, { status: 400 });
       }
@@ -277,6 +281,7 @@ export async function POST(req: NextRequest) {
         taxId,
         dateOfBirth,
         address,
+        country,
         city,
         state,
         postalCode,

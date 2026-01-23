@@ -56,3 +56,20 @@ export function toPaginationMeta({ page, pageSize, total }: PaginationArgs): Pag
     hasNextPage: totalPages > 0 && page < totalPages,
   }
 }
+
+export function asNonEmptyTrimmedString(value: unknown): string | null {
+  if (typeof value !== "string") return null
+  const trimmed = value.trim()
+  return trimmed ? trimmed : null
+}
+
+export function asOptionalTrimmedString(value: unknown): string {
+  if (typeof value !== "string") return ""
+  return value.trim()
+}
+
+export function isMongoObjectId(value: unknown): value is string {
+  if (typeof value !== "string") return false
+  const trimmed = value.trim()
+  return /^[a-fA-F0-9]{24}$/.test(trimmed)
+}
