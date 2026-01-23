@@ -642,7 +642,7 @@ export default function AddPatientMultiStep() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Plan Name</label>
+                    <label className="block text-sm text-gray-900 mb-2">Health Plan Name</label>
                     <input
                       type="text"
                       placeholder="Enter health plan name"
@@ -653,10 +653,10 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Card number</label>
+                    <label className="block text-sm text-gray-900 mb-2">Plan card number</label>
                     <input
                       type="text"
-                      placeholder="Enter health plan number"
+                      placeholder="Enter plan card number"
                       value={formData.cardNumber}
                       onChange={(e) => handleChange('cardNumber', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
