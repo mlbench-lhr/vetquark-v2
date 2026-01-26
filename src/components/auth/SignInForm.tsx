@@ -200,8 +200,6 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useAppDispatch } from '@/store/hooks';
 import { setProfile as setUserProfile } from '@/store/userProfileSlice';
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ProfileType = 'veterinarian' | 'guardian';
 
@@ -209,7 +207,6 @@ export default function SignInForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [profile, setProfileType] = useState<ProfileType>('veterinarian');
-  const [language, setLanguage] = useState<"en" | "pt">("en");
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -257,15 +254,10 @@ export default function SignInForm() {
     <div className="min-h-[calc(100dvh-32px)] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-end">
-        <Select value={language} onValueChange={(v) => setLanguage(v as "en" | "pt")}>
-          <SelectTrigger className="h-auto w-auto flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg transition-colors border-0 shadow-none focus:ring-0 focus:ring-offset-0 text-gray-700 [&>svg]:text-gray-700 [&>svg]:opacity-100">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 shadow-lg">
-            <SelectItem value="en">🇬🇧 English</SelectItem>
-            <SelectItem value="pt">🇵🇹 Portuguese</SelectItem>
-          </SelectContent>
-        </Select>
+        <select className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg transition-colors border-0 cursor-pointer text-gray-700">
+          <option value="en">🇬🇧 English</option>
+          <option value="pt">🇵🇹 Portuguese</option>
+        </select>
       </div>
 
       <div className="flex-1">
@@ -337,12 +329,12 @@ export default function SignInForm() {
             <label className="block text-gray-900 font-medium mb-2">
               Email
             </label>
-            <Input
+            <input
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 rounded-lg border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none text-gray-800 placeholder-gray-400"
+              className="w-full px-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-400"
             />
           </div>
 
@@ -351,12 +343,12 @@ export default function SignInForm() {
               Password
             </label>
             <div className="relative">
-              <Input
+              <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 rounded-lg border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none text-gray-800 placeholder-gray-400 pr-12"
+                className="w-full px-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-400 pr-12"
               />
               <button
                 type="button"

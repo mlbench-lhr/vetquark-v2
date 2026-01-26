@@ -1,11 +1,4 @@
 import React, { useState } from "react";
-import {
-  Select as ShadSelect,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface Option {
   value: string;
@@ -30,33 +23,41 @@ const Select: React.FC<SelectProps> = ({
   // Manage the selected value
   const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
 
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedValue(value);
+    onChange(value); // Trigger parent handler
+  };
+
   return (
-    <ShadSelect
+    <select
+      className={`h-11 w-full appearance-none rounded-lg border border-gray-300  px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10  ${
+        selectedValue
+          ? "text-gray-800 "
+          : "text-gray-400 "
+      } ${className}`}
       value={selectedValue}
-      onValueChange={(value) => {
-        setSelectedValue(value);
-        onChange(value);
-      }}
+      onChange={handleChange}
     >
-      <SelectTrigger
-        className={`h-11 w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-11 text-sm shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 bg-transparent ${
-          selectedValue ? "text-gray-800" : "text-gray-400"
-        } [&>svg]:text-gray-500 [&>svg]:opacity-100 ${className}`}
+      {/* Placeholder option */}
+      <option
+        value=""
+        disabled
+        className="text-gray-700  "
       >
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent className="bg-white border border-gray-200 shadow-lg">
-        {options.map((option) => (
-          <SelectItem
-            key={option.value}
-            value={option.value}
-            className="text-gray-700 focus:bg-primary/5 focus:text-gray-900"
-          >
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </ShadSelect>
+        {placeholder}
+      </option>
+      {/* Map over options */}
+      {options.map((option) => (
+        <option
+          key={option.value}
+          value={option.value}
+          className="text-gray-700  "
+        >
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 };
 

@@ -151,7 +151,7 @@ const PatientProfilePage: React.FC = () => {
       ) : activeTab === 'information' ? (
         <PatientInfoCard {...patientData} patientId={patientId} />
       ) : (
-        <Progress />
+        <Progress patientId={patientId} />
       )}
     </div>
   );
