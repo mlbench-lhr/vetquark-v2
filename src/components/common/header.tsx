@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Search, Bell, Edit2, Eye, Download, Plus, ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from "react-i18next";
 
 // Header Component
 interface HeaderProps {
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ title }) => {
     const router = useRouter();
+    const { t } = useTranslation();
     const onBack = () => {
         router.back();
     };
@@ -18,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             <div className="flex items-center gap-3 w-full justify-center">
                 <button
                     onClick={onBack}
-                    aria-label="Back"
+                    aria-label={t("common.back")}
                     className="w-fit h-fit rounded-full bg-gray-10 flex absolute left-4 items-center justify-center hover:bg-gray-200"
                 >
                     <ChevronLeft size={20} className="text-gray-700" />

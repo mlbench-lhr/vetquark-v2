@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import Patient from "@/lib/models/Patient";
 import User from "@/lib/models/User";
+import Notification from "@/lib/models/Notification";
+import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { asNonEmptyTrimmedString, asOptionalTrimmedString, isMongoObjectId } from "@/lib/utils";
 import jwt from "jsonwebtoken";
 
@@ -85,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     await connectMongo();
 
-    const veterinarian = await User.findById(veterinarianId).select("_id role").lean();
+    const veterinarian = await User.findById(veterinarianId).select("_id role fullName tradeName").lean();
     if (!veterinarian || veterinarian.role !== "Veterinarian") {
       return NextResponse.json({ error: "Veterinarian not found" }, { status: 404 });
     }
@@ -120,8 +122,33 @@ export async function POST(req: NextRequest) {
       isAlive: typeof isAlive === "boolean" ? isAlive : true,
     });
 
+    const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
+    const title = "New patient added";
+    const message = `${vetName} added ${animalName} to your pets.`;
+    const url = `/Guardian/home/petDetails/${encodeURIComponent(String(doc._id))}`;
+
+    const notification = await Notification.create({
+      user: guardianId,
+      type: "patient_added",
+      title,
+      message,
+      url,
+      readAt: null,
+    });
+
+    const pusher = getPusherServer();
+    await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+      id: String(notification._id),
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      url: notification.url,
+      createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+    });
+
     return NextResponse.json({ id: String(doc._id) }, { status: 201 });
   } catch (e) {
+    console.log("e----", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -197,8 +224,36 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Patient not found" }, { status: 404 });
     }
 
+    const guardianId = String(updated.guardian);
+    if (isMongoObjectId(guardianId)) {
+      const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
+      const title = "Patient details updated";
+      const message = `${vetName} updated the details for ${animalName}.`;
+      const url = `/Guardian/home/petDetails/${encodeURIComponent(String(updated._id))}`;
+
+      const notification = await Notification.create({
+        user: guardianId,
+        type: "patient_updated",
+        title,
+        message,
+        url,
+        readAt: null,
+      });
+
+      const pusher = getPusherServer();
+      await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+        id: String(notification._id),
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        url: notification.url,
+        createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+      });
+    }
+
     return NextResponse.json({ id: String(updated._id) }, { status: 200 });
   } catch (e) {
+    console.log("e----", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

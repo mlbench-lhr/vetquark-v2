@@ -6,6 +6,8 @@ import User from "@/lib/models/User";
 import Patient from "@/lib/models/Patient";
 import Reading, { CollectionMethod, ReadingResultStatus } from "@/lib/models/Reading";
 import PaymentLink from "@/lib/models/PaymentLink";
+import Notification from "@/lib/models/Notification";
+import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -165,12 +167,12 @@ export async function POST(req: NextRequest) {
 
     await connectMongo();
 
-    const veterinarian = await User.findById(veterinarianId).select("_id role").lean();
+    const veterinarian = await User.findById(veterinarianId).select("_id role fullName tradeName").lean();
     if (!veterinarian || veterinarian.role !== "Veterinarian") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const patient = await Patient.findOne({ _id: patientId, veterinarian: veterinarianId }).select("_id guardian").lean();
+    const patient = await Patient.findOne({ _id: patientId, veterinarian: veterinarianId }).select("_id guardian animalName").lean();
     if (!patient) {
       return NextResponse.json({ error: "Patient not found" }, { status: 404 });
     }
@@ -210,7 +212,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (paymentLinkId && paymentLinkReadingId && mongoose.Types.ObjectId.isValid(paymentLinkReadingId)) {
-      const updated = await Reading.findOneAndUpdate(
+      const updatedReading = await Reading.findOneAndUpdate(
         { _id: paymentLinkReadingId, veterinarian: veterinarianId, $or: [{ signedAt: { $exists: false } }, { signedAt: null }] },
         {
           $set: {
@@ -245,8 +247,34 @@ export async function POST(req: NextRequest) {
         { new: true }
       ).lean();
 
-      if (updated?._id) {
-        return NextResponse.json({ id: String(updated._id) }, { status: 201 });
+      if (updatedReading?._id) {
+        const guardianId = String((patient as any).guardian || "");
+        const petName = String((patient as any).animalName || "your pet");
+        const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
+        const title = "New reading available";
+        const message = `${vetName} added a new reading for ${petName}.`;
+        const url = `/Guardian/history/detail/${encodeURIComponent(String(updatedReading._id))}`;
+
+        const notification = await Notification.create({
+          user: guardianId,
+          type: "reading_signed",
+          title,
+          message,
+          url,
+          readAt: null,
+        });
+
+        const pusher = getPusherServer();
+        await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+          id: String(notification._id),
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          url: notification.url,
+          createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+        });
+
+        return NextResponse.json({ id: String(updatedReading._id) }, { status: 201 });
       }
     }
 
@@ -292,6 +320,34 @@ export async function POST(req: NextRequest) {
         await Reading.deleteOne({ _id: created._id });
         return NextResponse.json({ error: "Payment link already used" }, { status: 409 });
       }
+    }
+
+    {
+      const guardianId = String((patient as any).guardian || "");
+      const petName = String((patient as any).animalName || "your pet");
+      const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
+      const title = "New reading available";
+      const message = `${vetName} added a new reading for ${petName}.`;
+      const url = `/Guardian/history/detail/${encodeURIComponent(String(created._id))}`;
+
+      const notification = await Notification.create({
+        user: guardianId,
+        type: "reading_signed",
+        title,
+        message,
+        url,
+        readAt: null,
+      });
+
+      const pusher = getPusherServer();
+      await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+        id: String(notification._id),
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        url: notification.url,
+        createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+      });
     }
 
     return NextResponse.json({ id: String(created._id) }, { status: 201 });

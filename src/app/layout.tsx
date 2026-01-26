@@ -8,6 +8,7 @@ import { UserProvider } from '@/context/authContext';
 import { ToastContainer } from 'react-toastify';
 import { Metadata } from 'next';
 import ReduxProvider from '@/store/ReduxProvider';
+import I18nProvider from '@/i18n/I18nProvider';
 
 
 const outfit = Outfit({
@@ -34,23 +35,25 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.className} `} suppressHydrationWarning>
         <ReduxProvider>
-          <UserProvider>
-            <ThemeProvider>
-              <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="colored"
-              />
-              <SidebarProvider>{children}</SidebarProvider>
-            </ThemeProvider>
-          </UserProvider>
+          <I18nProvider>
+            <UserProvider>
+              <ThemeProvider>
+                <ToastContainer
+                  position="top-right"
+                  autoClose={3000}
+                  hideProgressBar={false}
+                  newestOnTop={false}
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                  theme="colored"
+                />
+                <SidebarProvider>{children}</SidebarProvider>
+              </ThemeProvider>
+            </UserProvider>
+          </I18nProvider>
         </ReduxProvider>
       </body>
     </html>

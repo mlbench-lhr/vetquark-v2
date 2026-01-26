@@ -15,61 +15,18 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { useAppSelector } from "@/store/hooks";
 import { UserContext } from "@/context/authContext";
-
-const menuItems = [
-  {
-    id: "pricing",
-    icon: DollarSign,
-    title: "Pricing",
-    description: "Manage your pricing details",
-  },
-  {
-    id: "fee-payouts",
-    icon: FileText,
-    title: "Fee & Payouts",
-    description: "Get info regarding fee & payouts",
-  },
-  {
-    id: "tax-profile",
-    icon: ClipboardList,
-    title: "Tax Info & Professional Profile",
-    description: "Update your tax info & profile",
-  },
-  {
-    id: "clinic-reports",
-    icon: Building2,
-    title: "Clinic & Reports",
-    description: "Customise the look of your reports.",
-  },
-  {
-    id: "security",
-    icon: Lock,
-    title: "Security",
-    description: "Manage your security & sessions",
-  },
-  {
-    id: "notifications",
-    icon: Bell,
-    title: "Notifications",
-    description: "Manage notification alerts",
-  },
-  {
-    id: "language",
-    icon: Languages,
-    title: "Language",
-    description: "Update your language preferences",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export default function MenuPage() {
   const router = useRouter()
   const profile = useAppSelector((s) => s.userProfile.profile);
   const { logout } = useContext(UserContext);
+  const { t } = useTranslation();
 
-  const name = profile?.fullName ?? "User";
+  const name = profile?.fullName ?? t("common.user");
   const email = profile?.email ?? "";
   const avatarUrl =
     profile?.profileImageUrl ??
@@ -77,10 +34,58 @@ export default function MenuPage() {
   const balance = "925.00";
   const currency = "R$";
 
+  const menuItems = useMemo(
+    () => [
+      {
+        id: "pricing",
+        icon: DollarSign,
+        title: t("menu.pricing"),
+        description: t("menu.pricingDesc"),
+      },
+      {
+        id: "fee-payouts",
+        icon: FileText,
+        title: t("menu.feePayouts"),
+        description: t("menu.feePayoutsDesc"),
+      },
+      {
+        id: "tax-profile",
+        icon: ClipboardList,
+        title: t("menu.taxProfile"),
+        description: t("menu.taxProfileDesc"),
+      },
+      {
+        id: "clinic-reports",
+        icon: Building2,
+        title: t("menu.clinicReports"),
+        description: t("menu.clinicReportsDesc"),
+      },
+      {
+        id: "security",
+        icon: Lock,
+        title: t("menu.security"),
+        description: t("menu.securityDesc"),
+      },
+      {
+        id: "notifications",
+        icon: Bell,
+        title: t("menu.notifications"),
+        description: t("menu.notificationsDesc"),
+      },
+      {
+        id: "language",
+        icon: Languages,
+        title: t("menu.language"),
+        description: t("menu.languageDesc"),
+      },
+    ],
+    [t]
+  );
+
   return (
     <div className="bg-background min-h-screen flex flex-col">
       {/* Header Section */}
-      <Header title="Menu" />
+      <Header title={t("menu.menu")} />
       <div className="px-4 pt-6 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -101,7 +106,7 @@ export default function MenuPage() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
           >
             <Pencil className="h-3.5 w-3.5" />
-            Edit
+            {t("menu.edit")}
           </Link>
         </div>
       </div>
@@ -121,7 +126,7 @@ export default function MenuPage() {
                   <Wallet className="h-3 w-3 text-primary-foreground" />
                 </div>
                 <span className="text-sm text-primary-foreground/80">
-                  Available Balance
+                  {t("wallet.availableBalance")}
                 </span>
               </div>
               <p className="text-2xl font-bold text-primary-foreground">
@@ -170,7 +175,7 @@ export default function MenuPage() {
           <div className="w-10 h-10 rounded-full bg-[#F5F6F6] flex items-center justify-center flex-shrink-0">
             <LogOut className="h-5 w-5 text-[#839297]" />
           </div>
-          <p className="text-sm font-medium text-foreground">Log out</p>
+          <p className="text-sm font-medium text-foreground">{t("common.logout")}</p>
         </button>
       </div>
 

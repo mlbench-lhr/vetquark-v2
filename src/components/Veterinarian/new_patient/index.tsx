@@ -280,7 +280,7 @@ export default function AddPatientGuardian() {
                         <PatientCard
                             key={guardian.id}
                             patient={guardian}
-                            onClickNavigate={`/Veterinarian/patient/new_patient?guardianId=${guardian.id}&guardianName=${encodeURIComponent(guardian.name)}&guardianTaxId=${encodeURIComponent(guardian.taxId)}`}
+                            onClickNavigate={`/Veterinarian/patient/new_patient?guardianId=${guardian.id}&guardianName=${encodeURIComponent(guardian.name)}&guardianTaxId=${encodeURIComponent(guardian.taxId)}&guardianImage=${encodeURIComponent(guardian.image || '')}`}
                         />
                         // <button
                         //     key={guardian.id}

@@ -4,6 +4,7 @@ import React from "react";
 import Header from "@/components/common/header";
 import { Laptop, Monitor, Smartphone, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 type SessionRow = {
   id: string;
@@ -17,6 +18,7 @@ type SessionRow = {
 };
 
 export default function SecurityPage() {
+  const { t } = useTranslation();
   const [changeOpen, setChangeOpen] = React.useState(false);
   const [currentPassword, setCurrentPassword] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
@@ -27,7 +29,7 @@ export default function SecurityPage() {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   const sessions: SessionRow[] = [
-    { id: "iphone", label: "iPhone 17 Pro Max", rightLabel: "This device", icon: { type: "smartphone" } },
+    { id: "iphone", label: "iPhone 17 Pro Max", rightLabel: t("security.thisDevice"), icon: { type: "smartphone" } },
     { id: "macbook", label: "Macbook Computer", icon: { type: "laptop" } },
     { id: "pixel", label: "Google Pixel 9", icon: { type: "google" } },
     { id: "windows", label: "Windows Computer", icon: { type: "monitor" } },
@@ -35,33 +37,33 @@ export default function SecurityPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F6F6]">
-      <Header title="Security" />
+      <Header title={t("menu.security")} />
 
       <div className="px-4 pt-4 pb-10">
         <div className="space-y-3">
           <div className="rounded-2xl bg-white px-4 py-4 flex items-center justify-between">
-            <div className="text-[15px] text-[#111827] font-medium">Two-Factor Authentication (2FA)</div>
+            <div className="text-[15px] text-[#111827] font-medium">{t("security.twoFactorAuth")}</div>
             <button
               type="button"
               className="h-10 px-6 rounded-full bg-[#4A7BF7] text-white text-[14px] font-medium"
             >
-              Activate
+              {t("security.activate")}
             </button>
           </div>
 
           <div className="rounded-2xl bg-white px-4 py-4 flex items-center justify-between">
-            <div className="text-[15px] text-[#111827] font-medium">Change Password</div>
+            <div className="text-[15px] text-[#111827] font-medium">{t("security.changePassword")}</div>
             <button
               type="button"
               onClick={() => setChangeOpen(true)}
               className="h-10 px-6 rounded-full bg-[#4A7BF7] text-white text-[14px] font-medium"
             >
-              Change
+              {t("security.change")}
             </button>
           </div>
 
           <div className="rounded-3xl bg-white px-4 pt-4 pb-5">
-            <div className="text-[15px] text-[#111827] font-semibold mb-3">Active Sessions</div>
+            <div className="text-[15px] text-[#111827] font-semibold mb-3">{t("security.activeSessions")}</div>
 
             <div className="rounded-2xl bg-[#F5F6F6] p-2 space-y-2">
               {sessions.map((s) => (
@@ -89,7 +91,7 @@ export default function SecurityPage() {
               type="button"
               className="w-full mt-4 text-center text-[15px] font-medium text-[#EF4444]"
             >
-              Disconnect from all devices
+              {t("security.disconnectAllDevices")}
             </button>
           </div>
         </div>
@@ -98,11 +100,11 @@ export default function SecurityPage() {
       {changeOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
           <div className="w-full max-w-md rounded-3xl bg-white p-5">
-            <div className="text-[16px] font-semibold text-[#111827]">Change Password</div>
+            <div className="text-[16px] font-semibold text-[#111827]">{t("security.changePassword")}</div>
 
             <div className="mt-4 space-y-3">
               <div>
-                <div className="text-[14px] font-medium text-[#111827]">Current password</div>
+                <div className="text-[14px] font-medium text-[#111827]">{t("security.currentPassword")}</div>
                 <div className="relative mt-2">
                   <input
                     type={showCurrentPassword ? "text" : "password"}
@@ -124,7 +126,7 @@ export default function SecurityPage() {
                 </div>
               </div>
               <div>
-                <div className="text-[14px] font-medium text-[#111827]">New password</div>
+                <div className="text-[14px] font-medium text-[#111827]">{t("security.newPassword")}</div>
                 <div className="relative mt-2">
                   <input
                     type={showNewPassword ? "text" : "password"}
@@ -146,7 +148,7 @@ export default function SecurityPage() {
                 </div>
               </div>
               <div>
-                <div className="text-[14px] font-medium text-[#111827]">Confirm new password</div>
+                <div className="text-[14px] font-medium text-[#111827]">{t("security.confirmNewPassword")}</div>
                 <div className="relative mt-2">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
@@ -175,11 +177,11 @@ export default function SecurityPage() {
                 disabled={saving}
                 onClick={async () => {
                   if (!currentPassword || !newPassword) {
-                    toast.error("Please fill all fields");
+                    toast.error(t("security.pleaseFillAllFields"));
                     return;
                   }
                   if (newPassword !== confirmPassword) {
-                    toast.error("Passwords do not match");
+                    toast.error(t("security.passwordsDoNotMatch"));
                     return;
                   }
                   try {
@@ -192,10 +194,10 @@ export default function SecurityPage() {
                     });
                     const json = await res.json().catch(() => ({}));
                     if (!res.ok) {
-                      toast.error(typeof json?.error === "string" ? json.error : "Failed to change password");
+                      toast.error(typeof json?.error === "string" ? json.error : t("security.failedToChangePassword"));
                       return;
                     }
-                    toast.success("Password changed");
+                    toast.success(t("security.passwordChanged"));
                     setChangeOpen(false);
                     setCurrentPassword("");
                     setNewPassword("");
@@ -206,7 +208,7 @@ export default function SecurityPage() {
                 }}
                 className="h-[52px] w-full rounded-full bg-[#4A7BF7] text-[15px] font-medium text-white disabled:opacity-60"
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? t("common.saving") : t("common.save")}
               </button>
               <button
                 type="button"
@@ -218,7 +220,7 @@ export default function SecurityPage() {
                 }}
                 className="h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-[#111827]"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           </div>

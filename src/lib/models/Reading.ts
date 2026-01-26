@@ -46,6 +46,7 @@ export interface IReading {
     veterinarianNotes: string;
   };
   signedAt?: Date;
+  viewedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -93,6 +94,7 @@ const ReadingSchema = new Schema<IReading>(
       veterinarianNotes: { type: String, default: "" },
     },
     signedAt: { type: Date },
+    viewedAt: { type: Date },
   },
   { timestamps: true }
 );

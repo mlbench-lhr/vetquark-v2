@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
+import Notification from "@/lib/models/Notification";
+import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -164,7 +166,32 @@ export async function POST(req: NextRequest) {
     };
 
     const result = await mongoose.connection.collection("store_orders").insertOne(doc);
-    return NextResponse.json({ order: { id: String(result.insertedId) } }, { status: 200 });
+    const orderId = String(result.insertedId);
+
+    const title = "Store order created";
+    const message = `Order ${orderId} created with ${items.length} item(s).`;
+    const url = "/Veterinarian/store/orders";
+
+    const notification = await Notification.create({
+      user: userId,
+      type: "order_created",
+      title,
+      message,
+      url,
+      readAt: null,
+    });
+
+    const pusher = getPusherServer();
+    await pusher.trigger(notificationsChannelForUser(userId), "notification:new", {
+      id: String(notification._id),
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      url: notification.url,
+      createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+    });
+
+    return NextResponse.json({ order: { id: orderId } }, { status: 200 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

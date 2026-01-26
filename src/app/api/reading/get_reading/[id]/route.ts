@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import Reading from "@/lib/models/Reading";
+import Notification from "@/lib/models/Notification";
+import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -78,6 +80,37 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
         { error: "Payment required", paymentStatus, paymentLinkId, patientId },
         { status: 402 },
       );
+    }
+
+    if (user.role === "Guardian" && !(doc as any).viewedAt && (doc as any).veterinarian) {
+      await Reading.updateOne({ _id: doc._id }, { $set: { viewedAt: new Date() } });
+
+      const vetId = String((doc as any).veterinarian._id || (doc as any).veterinarian);
+      if (mongoose.Types.ObjectId.isValid(vetId)) {
+        const patientName = (doc as any).patient?.animalName || "a patient";
+        const title = "Reading viewed";
+        const message = `Guardian viewed the reading for ${patientName}.`;
+        const url = `/Veterinarian/history/detail/${encodeURIComponent(String(doc._id))}`;
+
+        const notification = await Notification.create({
+          user: vetId,
+          type: "reading_viewed",
+          title,
+          message,
+          url,
+          readAt: null,
+        });
+
+        const pusher = getPusherServer();
+        await pusher.trigger(notificationsChannelForUser(vetId), "notification:new", {
+          id: String(notification._id),
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          url: notification.url,
+          createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+        });
+      }
     }
 
     const reading = {
