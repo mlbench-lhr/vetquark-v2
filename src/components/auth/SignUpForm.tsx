@@ -438,7 +438,6 @@ export default function SignUpForm() {
       handleNext();
     } finally {
       setSubmitting(false);
-      handleNext();
     }
   };
 
