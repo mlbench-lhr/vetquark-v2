@@ -1,26 +1,118 @@
-// import { NotificationList } from "@/components/NotificationList";
 'use client'
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Header from "@/components/common/header";
+import { useParams, useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 const Page = () => {
+  const router = useRouter();
+  const params = useParams<{ patient_id: string }>();
+  const patientId = useMemo(() => String(params?.patient_id || "").trim(), [params]);
+  const [patientName, setPatientName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState<ReportHistoryItem[]>([]);
+
+  useEffect(() => {
+    if (!patientId) return;
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+
+        const [patientRes, readingsRes] = await Promise.all([
+          fetch(`/api/patient/get_patient_details?patientId=${encodeURIComponent(patientId)}`),
+          fetch(`/api/reading/get_readings?page=1&pageSize=500&patientId=${encodeURIComponent(patientId)}`),
+        ]);
+
+        const [patientData, readingsData] = await Promise.all([
+          patientRes.json().catch(() => null),
+          readingsRes.json().catch(() => null),
+        ]);
+
+        if (!mounted) return;
+
+        if (!patientRes.ok) {
+          const msg =
+            typeof (patientData as any)?.error === "string" ? (patientData as any).error : "Failed to load patient";
+          throw new Error(msg);
+        }
+
+        const nextPatientName = String((patientData as any)?.item?.animalName || "").trim();
+        setPatientName(nextPatientName);
+
+        if (!readingsRes.ok) {
+          const msg =
+            typeof (readingsData as any)?.error === "string" ? (readingsData as any).error : "Failed to load reports";
+          throw new Error(msg);
+        }
+
+        const rawItems = Array.isArray((readingsData as any)?.items) ? (readingsData as any).items : [];
+        setItems(
+          rawItems.map((it: any) => ({
+            id: String(it.id || ""),
+            date: String(it.date || ""),
+            signed: String(it.status || "") === "signed",
+            avatarUrl: String(it.avatarSrc || ""),
+          })),
+        );
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to load reports";
+        toast.error(msg);
+        setPatientName("");
+        setItems([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [patientId]);
+
+  const title = useMemo(() => (patientName ? `${patientName} History` : "Pet History"), [patientName]);
+
+  const handleDownload = useCallback(async (readingId: string) => {
+    if (!readingId) return;
+    try {
+      await downloadReadingReport(readingId);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to download report";
+      toast.error(msg);
+    }
+  }, []);
+
+  const handleDetails = useCallback(
+    (readingId: string) => {
+      if (!readingId) return;
+      router.push(`/Veterinarian/history/detail/${encodeURIComponent(readingId)}`);
+    },
+    [router],
+  );
+
   return (
     <div className="min-h-screen bg-background p-6">
-      <Header title="Pet History" />
+      <Header title={title} />
 
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Report Card */}
-        <div className="w-full">
-          <ReportCard
-            title="Urinalysis Report"
-            date="24/05/2024"
-            signed
-            onDownload={() => console.log("Download clicked")}
-            onDetails={() => console.log("Details clicked")}
-          />
-        </div>
-
-        {/* Notification List */}
-        {/* <NotificationList /> */}
+        {loading ? (
+          <div className="text-sm text-gray-500">Loading...</div>
+        ) : items.length === 0 ? (
+          <div className="text-sm text-gray-500">No reports yet.</div>
+        ) : (
+          <div className="space-y-4">
+            {items.map((it) => (
+              <ReportCard
+                key={it.id}
+                title="Urinalysis Report"
+                date={formatDateLabel(it.date)}
+                avatarUrl={it.avatarUrl || undefined}
+                signed={it.signed}
+                onDownload={() => handleDownload(it.id)}
+                onDetails={() => handleDetails(it.id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -29,7 +121,7 @@ const Page = () => {
 export default Page;
 
 
-import { Check, FileText } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ReportCardProps {
@@ -39,6 +131,37 @@ interface ReportCardProps {
   avatarUrl?: string;
   onDownload?: () => void;
   onDetails?: () => void;
+}
+
+type ReportHistoryItem = {
+  id: string;
+  date: string;
+  signed: boolean;
+  avatarUrl: string;
+};
+
+function formatDateLabel(value: string) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("en-GB");
+}
+
+async function downloadReadingReport(readingId: string) {
+  const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to download report";
+    throw new Error(msg);
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `urinalysis-report-${readingId}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 export function ReportCard({

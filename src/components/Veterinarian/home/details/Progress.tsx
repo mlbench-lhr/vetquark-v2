@@ -63,7 +63,7 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
     );
 };
 
-const ProgressView = () => {
+const ProgressView = ({ patientId }: { patientId?: string }) => {
     const physicalParams: ParameterData[] = [
         { name: "Specific Gravity", normal: "1.015-1.030", value: "1.000", change: 1, status: "improving", barColor: "#f59e0b", barWidth: 70 },
         { name: "pH", normal: "5.5-7.0", value: "8.5", change: -2, status: "declining", barColor: "#f59e0b", barWidth: 85 },
@@ -97,10 +97,15 @@ const ProgressView = () => {
                     <h2 className="text-lg font-semibold text-foreground">Overall Progress</h2>
                     <p className="text-xs text-muted-foreground">Last test: May 20, 2024</p>
                 </div>
-                <Link href={`/Veterinarian/home/patientHistory/${1}`} className="flex items-center gap-1 text-sm text-primary font-medium">
-                    <Clock className="w-4 h-4" />
-                    View History
-                </Link>
+                {patientId ? (
+                    <Link
+                        href={`/Veterinarian/home/patientHistory/${encodeURIComponent(patientId)}`}
+                        className="flex items-center gap-1 text-sm text-primary font-medium"
+                    >
+                        <Clock className="w-4 h-4" />
+                        View History
+                    </Link>
+                ) : null}
             </div>
 
             {/* Summary Stats */}

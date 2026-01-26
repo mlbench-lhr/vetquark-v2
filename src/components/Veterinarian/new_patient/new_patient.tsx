@@ -1,6 +1,6 @@
 'use client'
-import { useCallback, useEffect, useState, ChangeEvent } from 'react';
-import { RefreshCw, Upload, ChevronDown, ChevronLeft } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, ChangeEvent } from 'react';
+import { RefreshCw, Calendar, Upload, ChevronDown, ChevronLeft } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -8,7 +8,6 @@ import { asNonEmptyTrimmedString, isMongoObjectId } from '@/lib/utils';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
-import CustomDatePicker from '@/components/ui/dropdown/datepicker';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -48,6 +47,8 @@ export default function AddPatientMultiStep() {
   const userId = profile?.id || '';
   const [unreadCount, setUnreadCount] = useState(0);
   const patientId = (searchParams.get('patientId') || '').trim() || null;
+  const dobRef = useRef<HTMLInputElement | null>(null);
+  const cardValidityRef = useRef<HTMLInputElement | null>(null);
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [isAlive, setIsAlive] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -528,13 +529,28 @@ export default function AddPatientMultiStep() {
 
                   <div>
                     <label className="block text-sm text-gray-900 mb-2">Date Of Birth</label>
-                    <CustomDatePicker
-                      value={formData.dateOfBirth}
-                      onChange={(next) => handleChange('dateOfBirth', next)}
-                      placeholder="Select date of birth"
-                      max={new Date().toISOString().slice(0, 10)}
-                      triggerClassName="bg-gray-100 rounded-lg focus:ring-2 focus:ring-primary"
-                    />
+                    <div className="relative">
+                      <input
+                        ref={dobRef}
+                        type="date"
+                        max={new Date().toISOString().slice(0, 10)}
+                        placeholder="Select date of birth"
+                        value={formData.dateOfBirth}
+                        onChange={(e) => handleChange('dateOfBirth', e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
+                        style={{ colorScheme: 'light' }}
+                      />
+                      <Calendar
+                        color="#3F78D8"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
+                        onClick={() => {
+                          const el = dobRef.current as any;
+                          if (!el) return;
+                          if (typeof el.showPicker === 'function') el.showPicker();
+                          else el.click();
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -649,12 +665,27 @@ export default function AddPatientMultiStep() {
 
                   <div>
                     <label className="block text-sm text-gray-900 mb-2">Card Validity</label>
-                    <CustomDatePicker
-                      value={formData.cardValidity}
-                      onChange={(next) => handleChange('cardValidity', next)}
-                      placeholder="Select card validity"
-                      triggerClassName="bg-gray-100 rounded-lg focus:ring-2 focus:ring-primary"
-                    />
+                    <div className="relative">
+                      <input
+                        ref={cardValidityRef}
+                        type="date"
+                        placeholder="Select date of birth"
+                        value={formData.cardValidity}
+                        onChange={(e) => handleChange('cardValidity', e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
+                        style={{ colorScheme: 'light' }}
+                      />
+                      <Calendar
+                        color="#3F78D8"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
+                        onClick={() => {
+                          const el = cardValidityRef.current as any;
+                          if (!el) return;
+                          if (typeof el.showPicker === 'function') el.showPicker();
+                          else el.click();
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
