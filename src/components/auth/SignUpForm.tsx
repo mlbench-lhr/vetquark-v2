@@ -10,6 +10,7 @@ import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useAppDispatch } from "@/store/hooks";
 import { setProfile as setUserProfile } from "@/store/userProfileSlice";
+import { useTranslation } from "react-i18next";
 
 type ProfileType = "veterinarian" | "tutor";
 
@@ -67,6 +68,7 @@ export default function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const initialProfileType = (() => {
     const raw = String(searchParams.get("profile") || searchParams.get("type") || "").toLowerCase().trim();
     if (raw === "guardian" || raw === "tutor") return "tutor" as const;
@@ -92,47 +94,47 @@ export default function SignUpForm() {
   const [uploadingClinicLogo, setUploadingClinicLogo] = useState(false);
 
   const expertiseOptions = [
-    { value: "acupuncture", text: "Acupuncture", selected: false },
-    { value: "anesthesia", text: "Anesthesia", selected: false },
-    { value: "beef-dairy-cattle", text: "Beef/Dairy Cattle", selected: false },
-    { value: "cardiology", text: "Cardiology", selected: false },
-    { value: "surgical-clinic-large-animals", text: "Surgical Clinic (Large Animals)", selected: false },
-    { value: "surgical-clinic-small-animals", text: "Surgical Clinic (Small Animals)", selected: false },
-    { value: "feline-medicine", text: "Feline Medicine", selected: false },
-    { value: "medical-clinic-large-animals", text: "Medical Clinic (Large Animals)", selected: false },
-    { value: "medical-clinic-small-animals", text: "Medical Clinic (Small Animals)", selected: false },
-    { value: "behavioral-medicine", text: "Behavioral Medicine", selected: false },
-    { value: "dermatology", text: "Dermatology", selected: false },
-    { value: "endocrinology", text: "Endocrinology", selected: false },
-    { value: "physiotherapy", text: "Physiotherapy", selected: false },
-    { value: "flower-therapy", text: "Flower Therapy", selected: false },
-    { value: "gastroenterology", text: "Gastroenterology", selected: false },
-    { value: "geriatrics", text: "Geriatrics", selected: false },
-    { value: "homeopathy", text: "Homeopathy", selected: false },
-    { value: "immunology", text: "Immunology", selected: false },
-    { value: "alternative-medicine", text: "Alternative Medicine", selected: false },
-    { value: "diagnostic-medicine", text: "Diagnostic Medicine", selected: false },
-    { value: "nephrology", text: "Nephrology", selected: false },
-    { value: "neurology", text: "Neurology", selected: false },
-    { value: "nutrition", text: "Nutrition", selected: false },
-    { value: "dentistry", text: "Dentistry", selected: false },
-    { value: "ophthalmology", text: "Ophthalmology", selected: false },
-    { value: "oncology", text: "Oncology", selected: false },
-    { value: "orthopedics", text: "Orthopedics", selected: false },
-    { value: "parasitology", text: "Parasitology", selected: false },
-    { value: "pediatrics", text: "Pediatrics", selected: false },
-    { value: "animal-production", text: "Animal Production", selected: false },
-    { value: "reiki", text: "Reiki", selected: false },
-    { value: "reproduction-large-animals", text: "Reproduction (Large Animals)", selected: false },
-    { value: "reproduction-small-animals", text: "Reproduction (Small Animals)", selected: false },
-    { value: "intensive-care", text: "Intensive Care", selected: false },
+    { value: "acupuncture", text: t("auth.acupuncture"), selected: false },
+    { value: "anesthesia", text: t("auth.anesthesia"), selected: false },
+    { value: "beef-dairy-cattle", text: t("auth.beefDairyCattle"), selected: false },
+    { value: "cardiology", text: t("auth.cardiology"), selected: false },
+    { value: "surgical-clinic-large-animals", text: t("auth.surgicalClinicLarge"), selected: false },
+    { value: "surgical-clinic-small-animals", text: t("auth.surgicalClinicSmall"), selected: false },
+    { value: "feline-medicine", text: t("auth.felineMedicine"), selected: false },
+    { value: "medical-clinic-large-animals", text: t("auth.medicalClinicLarge"), selected: false },
+    { value: "medical-clinic-small-animals", text: t("auth.medicalClinicSmall"), selected: false },
+    { value: "behavioral-medicine", text: t("auth.behavioralMedicine"), selected: false },
+    { value: "dermatology", text: t("auth.dermatology"), selected: false },
+    { value: "endocrinology", text: t("auth.endocrinology"), selected: false },
+    { value: "physiotherapy", text: t("auth.physiotherapy"), selected: false },
+    { value: "flower-therapy", text: t("auth.flowerTherapy"), selected: false },
+    { value: "gastroenterology", text: t("auth.gastroenterology"), selected: false },
+    { value: "geriatrics", text: t("auth.geriatrics"), selected: false },
+    { value: "homeopathy", text: t("auth.homeopathy"), selected: false },
+    { value: "immunology", text: t("auth.immunology"), selected: false },
+    { value: "alternative-medicine", text: t("auth.alternativeMedicine"), selected: false },
+    { value: "diagnostic-medicine", text: t("auth.diagnosticMedicine"), selected: false },
+    { value: "nephrology", text: t("auth.nephrology"), selected: false },
+    { value: "neurology", text: t("auth.neurology"), selected: false },
+    { value: "nutrition", text: t("auth.nutrition"), selected: false },
+    { value: "dentistry", text: t("auth.dentistry"), selected: false },
+    { value: "ophthalmology", text: t("auth.ophthalmology"), selected: false },
+    { value: "oncology", text: t("auth.oncology"), selected: false },
+    { value: "orthopedics", text: t("auth.orthopedics"), selected: false },
+    { value: "parasitology", text: t("auth.parasitology"), selected: false },
+    { value: "pediatrics", text: t("auth.pediatrics"), selected: false },
+    { value: "animal-production", text: t("auth.animalProduction"), selected: false },
+    { value: "reiki", text: t("auth.reiki"), selected: false },
+    { value: "reproduction-large-animals", text: t("auth.reproductionLarge"), selected: false },
+    { value: "reproduction-small-animals", text: t("auth.reproductionSmall"), selected: false },
+    { value: "intensive-care", text: t("auth.intensiveCare"), selected: false },
   ];
 
   const operateOptions = [
-    { value: "Clinic/pet Shop Service", text: "Clinic/pet Shop Service" },
-    { value: "Home Care", text: "Home Care" },
-    { value: "Clinic/pet Shop Management", text: "Clinic/pet Shop Management" },
-    { value: "Other", text: "Other" },
+    { value: "Clinic/pet Shop Service", text: t("auth.clinicPetShopService") },
+    { value: "Home Care", text: t("auth.homeCare") },
+    { value: "Clinic/pet Shop Management", text: t("auth.clinicPetShopManagement") },
+    { value: "Other", text: t("auth.other") },
   ];
 
   const brazilianStateOptions = [
@@ -509,10 +511,10 @@ export default function SignUpForm() {
         return (
           <div className="pt-8">
             <h1 className="text-2xl font-medium text-gray-900">
-              Select Account Type
+              {t("auth.selectAccountType")}
             </h1>
             <p className="text-sm text-tertiary ">
-              Choose your desired account type below
+              {t("auth.chooseAccountType")}
             </p>
 
             <div className="space-y-3 mt-4">
@@ -538,7 +540,7 @@ export default function SignUpForm() {
                       <path d="M6.65289 6.79678C7.49169 6.65278 8.11449 5.88958 8.20809 4.97878C8.30529 4.04998 8.52129 0.320381 7.12089 0.557981C3.48849 1.17358 3.74409 7.28998 6.65289 6.79678ZM11.4301 6.79678C14.3389 7.28998 14.5945 1.17358 10.9621 0.557981C9.56169 0.320381 9.77769 4.04998 9.87489 4.97878C9.96849 5.89318 10.5913 6.65638 11.4301 6.79678ZM5.15889 9.68038C5.15889 9.19438 4.98609 8.75518 4.70529 8.43478C4.24809 7.83358 2.78649 6.62398 2.43009 6.93358C1.68129 7.58518 1.70649 9.18358 2.15649 10.3464C2.38689 10.9944 2.94849 11.448 3.60009 11.448C4.46049 11.448 5.15889 10.656 5.15889 9.68038ZM15.6493 6.93358C15.2929 6.62398 13.8313 7.83718 13.3741 8.43478C13.0969 8.75518 12.9205 9.19438 12.9205 9.68038C12.9205 10.656 13.6189 11.448 14.4793 11.448C15.1345 11.448 15.6925 10.9944 15.9229 10.3464C16.3729 9.18358 16.3981 7.58518 15.6493 6.93358ZM12.7189 12.4344C11.3941 11.7756 11.4373 10.5048 11.1349 9.34558C10.8973 8.42038 10.0477 7.73638 9.03969 7.73638C8.05329 7.73638 7.21809 8.39158 6.95889 9.28798C6.63849 10.3968 6.82929 11.6892 5.38929 12.4272C4.21929 12.8088 3.74409 13.3668 3.74409 14.6844C3.74409 15.7536 4.66209 16.902 5.85009 17.0424C7.17489 17.2404 8.20449 16.9812 9.04329 16.506C9.87849 16.9812 10.9117 17.244 12.2365 17.0424C13.4209 16.8984 14.3425 15.7572 14.3425 14.6844C14.3425 13.338 13.8961 12.8376 12.7225 12.4344H12.7189ZM11.1565 14.0436H9.78489L9.78849 15.4836H8.29089L8.29449 14.0436H6.84009V12.6036H8.29809L8.29449 11.1636H9.79209V12.6036H11.1637V14.0436H11.1565Z" fill="black" />
                     </svg>
                   )}
-                  <span className="font-medium">Veterinary Surgeon</span>
+                  <span className="font-medium">{t("auth.veterinarian")}</span>
                 </div>
                 {profileType === "veterinarian" && (
                   <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
@@ -562,7 +564,7 @@ export default function SignUpForm() {
                 <div className="flex items-center gap-3">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path d="M9 9C7.9 9 6.95833 8.60833 6.175 7.825C5.39167 7.04167 5 6.1 5 5C5 3.9 5.39167 2.95833 6.175 2.175C6.95833 1.39167 7.9 1 9 1C10.1 1 11.0417 1.39167 11.825 2.175C12.6083 2.95833 13 3.9 13 5C13 6.1 12.6083 7.04167 11.825 7.825C11.0417 8.60833 10.1 9 9 9ZM1 15V14.2C1 13.6333 1.146 13.1127 1.438 12.638C1.73 12.1633 2.11733 11.8007 2.6 11.55C3.63333 11.0333 4.68333 10.646 5.75 10.388C6.81667 10.13 7.9 10.0007 9 10C10.1 9.99933 11.1833 10.1287 12.25 10.388C13.3167 10.6473 14.3667 11.0347 15.4 11.55C15.8833 11.8 16.271 12.1627 16.563 12.638C16.855 13.1133 17.0007 13.634 17 14.2V15C17 15.55 16.8043 16.021 16.413 16.413C16.0217 16.805 15.5507 17.0007 15 17H3C2.45 17 1.97933 16.8043 1.588 16.413C1.19667 16.0217 1.00067 15.5507 1 15Z" fill={profileType === 'tutor' ? "#3F78D8" : "#2B2B2B"} />
-                  </svg>                  <span className="font-medium">Guardian</span>
+                  </svg>                  <span className="font-medium">{t("auth.guardian")}</span>
                 </div>
                 {profileType === "tutor" && (
                   <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
@@ -581,12 +583,12 @@ export default function SignUpForm() {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-900 text-sm mb-2 ">
-                  Full Name
+                  {t("auth.fullName")}
                 </label>
                 <input
                   type="text"
                   name="fullName"
-                  placeholder="Enter your full name"
+                  placeholder={t("auth.enterFullName")}
                   value={formData.fullName}
                   onChange={handleInputChange}
                   required
@@ -596,12 +598,12 @@ export default function SignUpForm() {
 
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  Email
+                  {t("auth.email")}
                 </label>
                 <input
                   type="email"
                   name="email"
-                  placeholder="Enter your email"
+                  placeholder={t("auth.enterEmail")}
                   value={formData.email}
                   onChange={handleInputChange}
                   required
@@ -611,7 +613,7 @@ export default function SignUpForm() {
 
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  Phone Number
+                  {t("auth.phoneNumber")}
                 </label>
                 <PhoneInput
                   name="phone"
@@ -627,20 +629,20 @@ export default function SignUpForm() {
 
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  Password
+                  {t("auth.password")}
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    placeholder="Enter your password"
+                    placeholder={t("auth.enterPassword")}
                     value={formData.password}
                     onChange={handleInputChange}
                     onInput={(e) => e.currentTarget.setCustomValidity("")}
                     onInvalid={(e) => {
                       const el = e.currentTarget;
                       if (el.validity.valueMissing) {
-                        el.setCustomValidity("Password is required");
+                        el.setCustomValidity(t("auth.passwordRequired"));
                       }
                     }}
                     autoComplete="new-password"
@@ -670,20 +672,20 @@ export default function SignUpForm() {
 
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  Confirm Password
+                  {t("auth.confirmPassword")}
                 </label>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
-                    placeholder="Confirm your password"
+                    placeholder={t("auth.confirmPassword")}
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     onInput={(e) => (e.currentTarget.setCustomValidity(""))}
                     onInvalid={(e) => {
                       const el = e.currentTarget;
                       if (el.validity.valueMissing) {
-                        el.setCustomValidity("Confirm password is required");
+                        el.setCustomValidity(t("auth.passwordRequired"));
                       }
                     }}
                     autoComplete="new-password"
@@ -718,10 +720,10 @@ export default function SignUpForm() {
         return (
           <form id="signup-step-3" onSubmit={handleVerifySubmit} className="pt-8">
             <h1 className="text-2xl font-medium text-gray-900 mb-2">
-              Email Verification
+              {t("auth.emailVerification")}
             </h1>
             <p className="text-sm text-tertiary ">
-              Enter the verification code we sent on your email
+              {t("auth.enterVerificationCode")}
             </p>
             <p className="text-primary font-medium mb-8">00:{countdown.toString().padStart(2, '0')}</p>
 
@@ -749,12 +751,12 @@ export default function SignUpForm() {
               type="submit"
               className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0"
             >
-              Verify
+              {t("auth.verify")}
             </button>
             <p className="text-center text-gray-600 mt-4">
-              Didn&apos;t get the code?{" "}
+              {t("auth.didntGetCode")}{" "}
               <button onClick={handleResendOtp} disabled={countdown > 0} className="text-primary hover:text-blue-700 font-medium bg-transparent border-0 cursor-pointer disabled:opacity-50">
-                {countdown > 0 ? `Resend in 00:${countdown.toString().padStart(2, '0')}` : 'Send again'}
+                {countdown > 0 ? `${t("auth.resendIn")} 00:${countdown.toString().padStart(2, '0')}` : t("auth.sendAgain")}
               </button>
             </p>
 
@@ -767,7 +769,7 @@ export default function SignUpForm() {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  {profileType === "tutor" ? "Enter National ID" : "Tax Identification Number"}
+                  {profileType === "tutor" ? t("auth.enterNationalId") : t("auth.taxId")}
                 </label>
                 <input
                   type="text"
@@ -782,7 +784,7 @@ export default function SignUpForm() {
 
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  Date Of Birth
+                  {t("auth.dateOfBirth")}
                 </label>
                 <div className="relative">
                   <input
@@ -804,12 +806,12 @@ export default function SignUpForm() {
 
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  Address
+                  {t("auth.address")}
                 </label>
                 <input
                   type="text"
                   name="address"
-                  placeholder="Enter your address"
+                  placeholder={t("auth.enterAddress")}
                   value={formData.address}
                   onChange={handleInputChange}
                   required
@@ -819,11 +821,11 @@ export default function SignUpForm() {
 
               <div>
                 <DropdownSelect
-                  label="State"
+                  label={t("auth.state")}
                   options={brazilianStateOptions}
                   value={formData.state}
                   onChange={(value) => setFormData((prev) => ({ ...prev, state: value }))}
-                  placeholder="Select a state"
+                  placeholder={t("auth.selectState")}
                   placement="up"
                   name="state"
                   required
@@ -831,12 +833,12 @@ export default function SignUpForm() {
               </div>
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  City
+                  {t("auth.city")}
                 </label>
                 <input
                   type="text"
                   name="city"
-                  placeholder="Enter your city name"
+                  placeholder={t("auth.enterCity")}
                   value={formData.city}
                   onChange={handleInputChange}
                   required
@@ -846,12 +848,12 @@ export default function SignUpForm() {
 
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  Postal Code
+                  {t("auth.postalCode")}
                 </label>
                 <input
                   type="number"
                   name="postalCode"
-                  placeholder="Enter postal code i.e 27492"
+                  placeholder={t("auth.enterPostalCode")}
                   value={formData.postalCode}
                   onChange={handleInputChange}
                   required
@@ -870,13 +872,13 @@ export default function SignUpForm() {
                   className="mt-1 w-5 h-5 text-primary rounded border-gray-300 focus:ring-primary"
                 />
                 <label htmlFor="terms" className="text-sm text-gray-700">
-                  By continuing you agree to our{" "}
+                  {t("auth.agreeToTermsPrefix")}
                   <button className="text-primary hover:text-blue-700 bg-transparent border-0 cursor-pointer">
-                    Terms of use
+                    {t("auth.termsOfUse")}
                   </button>
                   {" & "}
                   <button className="text-primary hover:text-blue-700 bg-transparent border-0 cursor-pointer">
-                    LGPD/Privacy
+                    {t("auth.privacyPolicy")}
                   </button>
                 </label>
               </div>
@@ -890,12 +892,12 @@ export default function SignUpForm() {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-900 font-medium mb-2">
-                  CRMV
+                  {t("auth.crmv")}
                 </label>
                 <input
                   type="text"
                   name="crmv"
-                  placeholder="Enter CRMV code"
+                  placeholder={t("auth.enterCrmv")}
                   value={formData.crmv}
                   onChange={handleInputChange}
                   required
@@ -905,11 +907,11 @@ export default function SignUpForm() {
 
               <div>
                 <DropdownSelect
-                  label="CRMV State"
+                  label={t("auth.crmvState")}
                   options={brazilianStateOptions}
                   value={formData.crmvState}
                   onChange={(value) => setFormData((prev) => ({ ...prev, crmvState: value }))}
-                  placeholder="Select a state"
+                  placeholder={t("auth.selectState")}
                   name="crmvState"
                   required
                 />
@@ -917,13 +919,13 @@ export default function SignUpForm() {
 
               <div>
                 <label className="block text-gray-900 font-medium mb-2">
-                  Registration with MAPA{" "}
-                  <span className="text-gray-500 font-normal">(optional)</span>
+                  {t("auth.mapaRegistration")}{" "}
+                  <span className="text-gray-500 font-normal">{t("auth.optional")}</span>
                 </label>
                 <input
                   type="text"
                   name="mapaRegistration"
-                  placeholder="Enter your registration with MAPA"
+                  placeholder={t("auth.enterMapa")}
                   value={formData.mapaRegistration}
                   onChange={handleInputChange}
                   required
@@ -933,11 +935,11 @@ export default function SignUpForm() {
 
               <div>
                 <DropdownSelect
-                  label="How do you operate?"
+                  label={t("auth.operateHow")}
                   options={operateOptions}
                   value={formData.operateHow}
                   onChange={(value) => setFormData((prev) => ({ ...prev, operateHow: value }))}
-                  placeholder="Select an option"
+                  placeholder={t("auth.selectOption")}
                   name="operateHow"
                   required
                 />
@@ -945,11 +947,11 @@ export default function SignUpForm() {
 
               <div>
                 <MultiSelect
-                  label="Area of expertise"
+                  label={t("auth.expertise")}
                   options={expertiseOptions}
                   defaultSelected={formData.expertise}
                   onChange={(values) => setFormData((prev) => ({ ...prev, expertise: values }))}
-                  placeholder="Select options"
+                  placeholder={t("auth.selectOptions")}
                   showInlineChips={false}
                   showDoneButton={true}
                   maxSelected={5}
@@ -958,7 +960,7 @@ export default function SignUpForm() {
                 />
                 <div className="mt-2 flex flex-wrap gap-2 bg-gray-50 p-5 rounded-[12px]">
                   {formData.expertise.length === 0 ? (
-                    <span className="text-sm text-gray-500">No expertise selected</span>
+                    <span className="text-sm text-gray-500">{t("auth.noExpertiseSelected")}</span>
                   ) : (
                     formData.expertise.map((v) => {
                       const opt = expertiseOptions.find((o) => o.value === v);
@@ -979,7 +981,7 @@ export default function SignUpForm() {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-900 font-medium mb-2">
-                  Clinic Logo <span className="text-gray-500 font-normal">(optional)</span>
+                  {t("auth.clinicLogo")} <span className="text-gray-500 font-normal">{t("auth.optional")}</span>
                 </label>
                 <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
                   {formData.clinicLogoUrl ? (
@@ -987,15 +989,15 @@ export default function SignUpForm() {
                       <img src={formData.clinicLogoUrl} alt="Clinic logo" className="w-32 h-32 object-contain rounded-lg bg-white" />
                       <label className="inline-block">
                         <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
-                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? "Uploading..." : "Change Logo"}</span>
+                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? t("auth.uploading") : t("auth.changeLogo")}</span>
                       </label>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="text-gray-600 text-sm">Upload your clinic logo (optional)</div>
+                      <div className="text-gray-600 text-sm">{t("auth.uploadClinicLogo")}</div>
                       <label className="inline-block">
                         <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
-                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? "Uploading..." : "Select File"}</span>
+                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? t("auth.uploading") : t("auth.selectFile")}</span>
                       </label>
                     </div>
                   )}
@@ -1003,11 +1005,11 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">Trade Name</label>
+                <label className="block text-gray-900 font-medium mb-2">{t("auth.tradeName")}</label>
                 <input
                   type="text"
                   name="tradeName"
-                  placeholder="Enter your trade name"
+                  placeholder={t("auth.enterTradeName")}
                   value={formData.tradeName}
                   onChange={handleInputChange}
                   required
@@ -1017,12 +1019,12 @@ export default function SignUpForm() {
 
               <div>
                 <label className="block text-gray-900 font-medium mb-2">
-                  CNPJ/IE <span className="text-gray-500 font-normal">(optional)</span>
+                  {t("auth.cnpjIe")} <span className="text-gray-500 font-normal">{t("auth.optional")}</span>
                 </label>
                 <input
                   type="text"
                   name="cnpjIe"
-                  placeholder="Enter your CNPJ/IE"
+                  placeholder={t("auth.enterCnpjIe")}
                   value={formData.cnpjIe}
                   onChange={(e) => setFormData((prev) => ({ ...prev, cnpjIe: e.target.value.replace(/\D/g, "") }))}
                   inputMode="numeric"
@@ -1032,11 +1034,11 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">Address (for header)</label>
+                <label className="block text-gray-900 font-medium mb-2">{t("auth.reportHeaderAddress")}</label>
                 <input
                   type="text"
                   name="reportHeaderAddress"
-                  placeholder="Enter your address for the report header"
+                  placeholder={t("auth.enterReportHeaderAddress")}
                   value={formData.reportHeaderAddress}
                   onChange={handleInputChange}
                   required
@@ -1045,10 +1047,10 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">Footer of the Report</label>
+                <label className="block text-gray-900 font-medium mb-2">{t("auth.reportFooter")}</label>
                 <textarea
                   name="reportFooter"
-                  placeholder="Enter the footer text for reports"
+                  placeholder={t("auth.enterReportFooter")}
                   value={formData.reportFooter}
                   onChange={handleInputChange}
                   rows={4}
@@ -1077,16 +1079,16 @@ export default function SignUpForm() {
         </button>
 
         <h2 className="text-sm font-medium text-gray-900">
-          {step === 1 && "Create Account"}
-          {step === 2 && "Personal Details"}
+          {step === 1 && t("auth.createAccount")}
+          {step === 2 && t("auth.personalDetails")}
           {step === 3 && ""}
-          {step === 4 && (profileType === "tutor" ? "ID & Address Info" : "Tax & Address Info")}
-          {step === 5 && "Professional Registration"}
-          {step === 6 && "Clinic & Reports"}
+          {step === 4 && (profileType === "tutor" ? t("auth.idAddressInfo") : t("auth.taxAddressInfo"))}
+          {step === 5 && t("auth.professionalRegistration")}
+          {step === 6 && t("auth.clinicReports")}
         </h2>
 
         <div className="text-primary font-medium text-sm">
-          Step {step}/{finalStep}
+          {t("auth.step")} {step}/{finalStep}
         </div>
       </div>
 
@@ -1105,13 +1107,13 @@ export default function SignUpForm() {
             disabled={submitting || uploadingClinicLogo}
             className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {profileType === "veterinarian" && step === finalStep ? (submitting ? "Creating..." : "Create Account") : "Next"}
+            {profileType === "veterinarian" && step === finalStep ? (submitting ? t("auth.creating") : t("auth.createAccount")) : t("auth.next")}
           </button>
           {(step === 1 || step === 2) && (
             <p className="text-center text-gray-600 mt-4">
-              Already have an account?{" "}
+              {t("auth.alreadyHaveAccount")}{" "}
               <button className="text-primary hover:text-blue-700 font-semibold bg-transparent border-0 cursor-pointer" onClick={() => router.push("/signin")}>
-                Sign in
+                {t("auth.signIn")}
               </button>
             </p>
           )}

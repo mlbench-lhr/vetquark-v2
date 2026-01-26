@@ -9,6 +9,7 @@ import { buildRequestBody } from "@/utils/apiWrapper";
 import { redirect } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 
 export default function ForgetForm() {
@@ -21,6 +22,7 @@ export default function ForgetForm() {
     const [email, setEmail] = useState("")
     const router = useRouter();
     const [cooldown, setCooldown] = useState(0);
+    const { t } = useTranslation();
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -111,14 +113,14 @@ export default function ForgetForm() {
             });
             const result = await response.json();
             if (!response.ok) {
-                toast.error(typeof result.message === "string" ? result.message : "Failed to send OTP");
+                toast.error(typeof result.message === "string" ? result.message : t("auth.failedToSendOtp"));
                 return;
             }
-            toast.success(result.message ?? "OTP sent to your email");
+            toast.success(result.message ?? t("auth.otpSentToEmail"));
             setIsApiSent(true);
             setCooldown(35);
         } catch (error) {
-            toast.error('Network error while sending OTP');
+            toast.error(t("auth.networkErrorSendingOtp"));
             console.error("Network Error:", error);
         } finally {
             setIsOTPLoading(false);
@@ -146,7 +148,7 @@ export default function ForgetForm() {
             const result = await response.json();
 
             if (!response.ok) {
-                toast.error(typeof result.error === "string" ? result.error : "Verification failed");
+                toast.error(typeof result.error === "string" ? result.error : t("auth.verificationFailed"));
                 return;
             }
 
@@ -157,7 +159,7 @@ export default function ForgetForm() {
             sessionStorage.setItem("token", token);
             router.push("/reset-password");
         } catch (error) {
-            toast.error("Network error while verifying OTP");
+            toast.error(t("auth.networkErrorVerifyingOtp"));
             console.error("Network Error:", error);
         } finally {
             setIsVerificationLoading(false);
@@ -180,10 +182,10 @@ export default function ForgetForm() {
                     <div>
                         <div className="mb-5 sm:mb-8">
                             <h1 className="mb-2 font-medium text-gray-800 text-3xl">
-                                Forgot Password?
+                                {t("auth.forgotPasswordTitle")}
                             </h1>
                             <p className="text-sm text-tertiary ">
-                                Don’t worry it happens, we will send the password reset guidelines to your email which you will enter below.
+                                {t("auth.forgotPasswordDesc")}
                             </p>
                         </div>
                         <div>
@@ -193,10 +195,10 @@ export default function ForgetForm() {
                                 <div className="space-y-4">
                                     <div>
                                         <Label>
-                                            Email <span className="text-error-500">*</span>
+                                            {t("auth.email")} <span className="text-error-500">*</span>
                                         </Label>
                                         <input
-                                            placeholder="info@gmail.com"
+                                            placeholder={t("auth.enterEmail")}
                                             type="email"
                                             required
                                             value={email}
@@ -211,10 +213,9 @@ export default function ForgetForm() {
                                                 disabled={isOTPLoading || cooldown > 0}
                                                 className="text-primary font-medium underline hover:text-blue-700 transition-colors disabled:opacity-50"
                                             >
-                                                {cooldown > 0 ? `Resend OTP in ${cooldown}s` : "Send OTP"}
+                                                {cooldown > 0 ? `${t("auth.resendIn")} ${cooldown}s` : t("auth.sendOtp")}
                                             </button>
                                         </div>
-
                                     }
 
                                     {!isApiSent && (
@@ -226,10 +227,10 @@ export default function ForgetForm() {
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                         </svg>
-                                                        Sending OTP Link
+                                                        {t("auth.sendingOtpLink")}
                                                     </div>
                                                 ) : (
-                                                    'Send Reset Link'
+                                                    t("auth.sendResetLink")
                                                 )}
                                             </button>
                                         </div>
@@ -275,10 +276,10 @@ export default function ForgetForm() {
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                     </svg>
-                                                    Verifying...
+                                                    {t("auth.verifying")}
                                                 </div>
                                             ) : (
-                                                'Verify OTP'
+                                                t("auth.verifyOtp")
                                             )}
                                         </button>
                                     </div>
@@ -290,12 +291,12 @@ export default function ForgetForm() {
             </div>
             <div className="mt-5">
                 <p className="text-sm font-normal text-center text-gray-700  sm:text-start">
-                    Remember Your password?{" "}
+                    {t("auth.rememberPassword")}{" "}
                     <Link
                         href="/signin"
                         className="text-primary hover:text-brand-600 "
                     >
-                        Sign In
+                        {t("auth.signIn")}
                     </Link>
                 </p>
             </div>

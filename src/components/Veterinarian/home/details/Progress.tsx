@@ -41,8 +41,8 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
             <div className="flex items-center gap-3">
 
                 <svg xmlns="http://www.w3.org/2000/svg" width="60" height="24" viewBox="0 0 60 24" fill="none">
-                    <g clip-path="url(#clip0_761_5785)">
-                        <path d="M0.967529 23.0647L15.4775 15.6841L29.9874 12.7318L44.4974 8.30345L59.0073 0.922852" stroke="#F59E0B" stroke-width="1.88978" stroke-linecap="round" stroke-linejoin="round" />
+                    <g clipPath="url(#clip0_761_5785)">
+                        <path d="M0.967529 23.0647L15.4775 15.6841L29.9874 12.7318L44.4974 8.30345L59.0073 0.922852" stroke="#F59E0B" strokeWidth="1.88978" strokeLinecap="round" strokeLinejoin="round" />
                     </g>
                     <defs>
                         <clipPath id="clip0_761_5785">
