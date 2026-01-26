@@ -438,6 +438,7 @@ export default function SignUpForm() {
       handleNext();
     } finally {
       setSubmitting(false);
+      handleNext();
     }
   };
 
@@ -785,43 +786,19 @@ export default function SignUpForm() {
                   Date Of Birth
                 </label>
                 <div className="relative">
-                  {profileType === "tutor" && (
-                    <input
-                      type="text"
-                      placeholder="Select date of birth"
-                      value={formData.dateOfBirth}
-                      readOnly
-                      onClick={() => {
-                        const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
-                        if (!el) return;
-                        if (typeof el.showPicker === "function") el.showPicker();
-                        else el.click();
-                      }}
-                      className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 pr-12 cursor-pointer"
-                    />
-                  )}
                   <input
-                    ref={dobRef}
                     type="date"
                     name="dateOfBirth"
                     value={formData.dateOfBirth}
                     onChange={handleInputChange}
                     required
-                    className={profileType === "tutor"
-                      ? "absolute inset-0 opacity-0 pointer-events-none"
-                      : "w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12 [&::-webkit-calendar-picker-indicator]:opacity-0"}
+                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12 [&::-webkit-calendar-picker-indicator]:opacity-0"
                     style={{ colorScheme: 'light' }}
                   />
                   <Calendar
                     color='#3F78D8'
-                    className="absolute pointer-events-none right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
+                    className="absolute pointer-events-none right-3 top-1/2 -translate-y-1/2 text-gray-400"
                     size={20}
-                  // onClick={() => {
-                  //   const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
-                  //   if (!el) return;
-                  //   if (typeof el.showPicker === "function") el.showPicker();
-                  //   else el.click();
-                  // }}
                   />
                 </div>
               </div>
