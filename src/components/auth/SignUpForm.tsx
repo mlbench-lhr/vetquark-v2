@@ -73,7 +73,7 @@ export default function SignUpForm() {
     if (raw === "vet" || raw === "veterinarian") return "veterinarian" as const;
     return "veterinarian" as const;
   })();
-  const [step, setStep] = useState(() => (initialProfileType === "tutor" ? 2 : 1));
+  const [step, setStep] = useState(() => (initialProfileType === "tutor" ? 2 : 4));
   const [profileType, setProfileType] = useState<ProfileType>(() => initialProfileType);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -814,14 +814,14 @@ export default function SignUpForm() {
                   />
                   <Calendar
                     color='#3F78D8'
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
+                    className="absolute pointer-events-none right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
                     size={20}
-                    onClick={() => {
-                      const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
-                      if (!el) return;
-                      if (typeof el.showPicker === "function") el.showPicker();
-                      else el.click();
-                    }}
+                  // onClick={() => {
+                  //   const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
+                  //   if (!el) return;
+                  //   if (typeof el.showPicker === "function") el.showPicker();
+                  //   else el.click();
+                  // }}
                   />
                 </div>
               </div>
