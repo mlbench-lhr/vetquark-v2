@@ -4,6 +4,9 @@ import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import PaymentLink from "@/lib/models/PaymentLink";
 import Reading from "@/lib/models/Reading";
+import Patient from "@/lib/models/Patient";
+import Notification from "@/lib/models/Notification";
+import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 
 function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2).replace(".", ",")}`;
@@ -106,10 +109,11 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const link: any = await PaymentLink.findOne({ _id: id, guardian: userId }).select("_id status reading expiresAt createdAt").lean();
+    const link: any = await PaymentLink.findOne({ _id: id, guardian: userId }).select("_id status reading expiresAt createdAt veterinarian patient").lean();
     if (!link) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    if (link.status !== "paid") {
+    const wasPaid = link.status === "paid";
+    if (!wasPaid) {
       await PaymentLink.updateOne({ _id: id, guardian: userId }, { $set: { status: "paid" } });
     }
 
@@ -119,6 +123,61 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         { _id: readingId },
         { $set: { paymentStatus: "paid", paymentLink: link._id } },
       );
+    }
+
+    if (!wasPaid) {
+      const veterinarianId = String(link.veterinarian || "").trim();
+      const patientId = String(link.patient || "").trim();
+
+      if (mongoose.Types.ObjectId.isValid(veterinarianId) && mongoose.Types.ObjectId.isValid(patientId)) {
+        const patient = await Patient.findById(patientId).select("_id animalName").lean();
+        const petName = String((patient as any)?.animalName || "a patient");
+
+        const guardianTitle = "Payment completed";
+        const guardianMessage = `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
+        const guardianUrl = `/Guardian/payment/${encodeURIComponent(id)}`;
+
+        const guardianNotification = await Notification.create({
+          user: userId,
+          type: "payment_received",
+          title: guardianTitle,
+          message: guardianMessage,
+          url: guardianUrl,
+          readAt: null,
+        });
+
+        const pusher = getPusherServer();
+        await pusher.trigger(notificationsChannelForUser(userId), "notification:new", {
+          id: String(guardianNotification._id),
+          type: guardianNotification.type,
+          title: guardianNotification.title,
+          message: guardianNotification.message,
+          url: guardianNotification.url,
+          createdAt: guardianNotification.createdAt ? new Date(guardianNotification.createdAt).toISOString() : new Date().toISOString(),
+        });
+
+        const title = "Payment received";
+        const message = `Payment completed for ${petName}. You can now complete the reading.`;
+        const url = `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(id)}&step=timer`;
+
+        const notification = await Notification.create({
+          user: veterinarianId,
+          type: "payment_received",
+          title,
+          message,
+          url,
+          readAt: null,
+        });
+
+        await pusher.trigger(notificationsChannelForUser(veterinarianId), "notification:new", {
+          id: String(notification._id),
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          url: notification.url,
+          createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+        });
+      }
     }
 
     return NextResponse.json({ ok: true, status: "paid" }, { status: 200 });

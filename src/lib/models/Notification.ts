@@ -1,6 +1,18 @@
 import { Schema, model, models } from "mongoose";
 
-export type NotificationType = "payment_link";
+export type NotificationType =
+  | "payment_link"
+  | "patient_created"
+  | "patient_added"
+  | "reading_created"
+  | "reading_signed"
+  | "payment_received"
+  | "payment_success"
+  | "patient_updated"
+  | "reading_viewed"
+  | "guardian_updated"
+  | "profile_picture_updated"
+  | "order_created";
 
 export interface INotification {
   _id?: string;
@@ -17,7 +29,25 @@ export interface INotification {
 const NotificationSchema = new Schema<INotification>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    type: { type: String, enum: ["payment_link"], required: true, index: true },
+    type: {
+      type: String,
+      enum: [
+        "payment_link",
+        "patient_created",
+        "patient_added",
+        "reading_created",
+        "reading_signed",
+        "payment_received",
+        "payment_success",
+        "patient_updated",
+        "reading_viewed",
+        "guardian_updated",
+        "profile_picture_updated",
+        "order_created",
+      ],
+      required: true,
+      index: true,
+    },
     title: { type: String, required: true, trim: true },
     message: { type: String, required: true, trim: true },
     url: { type: String, required: true, trim: true },

@@ -5,6 +5,7 @@ import Header from "@/components/common/header";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAppSelector } from "@/store/hooks";
+import { useTranslation } from "react-i18next";
 
 interface Transaction {
     id: string;
@@ -31,7 +32,7 @@ const defaultTransactions: Transaction[] = [
         id: "1",
         type: "credit",
         title: "Wolfy",
-        subtitle: "Urinalysis Report",
+    subtitle: "Urinalysis Report",
         amount: "5,00",
         avatarUrl: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&h=100&fit=crop&crop=face",
     },
@@ -60,6 +61,7 @@ export default function WalletCard({
     onWithdraw,
     onBankDetails,
 }: WalletCardProps) {
+    const { t } = useTranslation();
     const [period, setPeriod] = useState<"7d" | "30d" | "90d">("7d");
     const [filter, setFilter] = useState<"all" | "credits" | "withdrawals">("all");
     const router = useRouter()
@@ -83,10 +85,10 @@ export default function WalletCard({
 
     return (
         <div className="bg-background min-h-screen">
-            <Header title="Wallet" />
+            <Header title={t("wallet.wallet")} />
             {/* Balance Card */}
             <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5 text-white">
-                <p className="text-sm opacity-90 mb-1 text-black">Available Balance</p>
+                <p className="text-sm opacity-90 mb-1 text-black">{t("wallet.availableBalance")}</p>
                 <p className="text-3xl font-bold text-primary">
                     {currency} {balance}
                 </p>
@@ -97,7 +99,7 @@ export default function WalletCard({
                     variant="secondary"
                     className="flex-1 h-12 rounded-full bg-[#F5F6F6] text-foreground font-medium hover:bg-white/90"
                 >
-                    Withdraw
+                    {t("wallet.withdraw")}
                 </Button>
                 <Button
                     onClick={() => {
@@ -106,7 +108,7 @@ export default function WalletCard({
                     variant="outline"
                     className="flex-1 h-12 rounded-full border-white/40 bg-[#F5F6F6] text-black font-medium hover:bg-white/10"
                 >
-                    Bank Details
+                    {t("wallet.bankDetails")}
                 </Button>
             </div>
 
@@ -126,7 +128,7 @@ export default function WalletCard({
             {/* Statement Section */}
             <div className="mx-4 mt-6">
                 <div className="flex items-center justify-between mb-1">
-                    <h2 className="text-lg font-semibold text-foreground">Statement</h2>
+                    <h2 className="text-lg font-semibold text-foreground">{t("wallet.statement")}</h2>
                     <div className="flex gap-1">
                         {(["7d", "30d", "90d"] as const).map((p) => (
                             <button
@@ -141,14 +143,14 @@ export default function WalletCard({
                         ))}
                     </div>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">Your recent transactions</p>
+                <p className="text-sm text-muted-foreground mb-4">{t("wallet.recentTransactions")}</p>
 
                 {/* Filter Tabs */}
                 <div className="flex gap-2 mb-4">
                     {([
-                        { key: "all", label: "All" },
-                        { key: "credits", label: "Credits" },
-                        { key: "withdrawals", label: "Withdrawals" },
+                        { key: "all", label: t("wallet.all") },
+                        { key: "credits", label: t("wallet.credits") },
+                        { key: "withdrawals", label: t("wallet.withdrawals") },
                     ] as const).map((f) => (
                         <button
                             key={f.key}
@@ -188,7 +190,9 @@ export default function WalletCard({
                                     {transaction.title}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    {transaction.subtitle || transaction.date}
+                                    {transaction.subtitle === "Urinalysis Report"
+                                        ? t("reports.urinalysisReport")
+                                        : transaction.subtitle || transaction.date}
                                 </p>
                             </div>
                             {transaction.amount ? (
@@ -207,7 +211,7 @@ export default function WalletCard({
                                             : "text-red-500"
                                             }`}
                                     >
-                                        {transaction.type === "credit" ? "Credits" : "Withdrawal"}
+                                        {transaction.type === "credit" ? t("wallet.credits") : t("wallet.withdrawal")}
                                     </p>
                                 </div>
                             ) : (

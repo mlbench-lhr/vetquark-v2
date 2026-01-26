@@ -6,12 +6,15 @@ import Header from "@/components/common/header";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n/i18n";
 
 type Lang = "en" | "pt";
 
 export default function Page() {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.userProfile.profile);
+  const { t } = useTranslation();
 
   const initialLang = useMemo<Lang>(() => (profile?.preferredLanguage === "pt" ? "pt" : "en"), [profile?.preferredLanguage]);
   const [lang, setLang] = useState<Lang>(initialLang);
@@ -32,24 +35,27 @@ export default function Page() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+        toast.error(typeof json?.error === "string" ? json.error : t("common.failedToSaveChanges"));
         return;
       }
       if (json?.profile) dispatch(setProfile(json.profile));
-      toast.success("Saved changes");
+      toast.success(t("common.savedChanges"));
     } finally {
       setSaving(false);
     }
   };
 
-  const items: Array<{ id: Lang; label: string; flag: string }> = [
-    { id: "en", label: "English", flag: "🇬🇧" },
-    { id: "pt", label: "Portuguese", flag: "🇵🇹" },
-  ];
+  const items: Array<{ id: Lang; label: string; flag: string }> = useMemo(
+    () => [
+      { id: "en", label: t("common.english"), flag: "🇬🇧" },
+      { id: "pt", label: t("common.portuguese"), flag: "🇵🇹" },
+    ],
+    [t]
+  );
 
   return (
     <div className="min-h-screen bg-white">
-      <Header title="Language" />
+      <Header title={t("settings.languageTitle")} />
 
       <div className="flex min-h-[calc(100dvh-72px)] flex-col px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div className="space-y-3">
@@ -59,7 +65,11 @@ export default function Page() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setLang(item.id)}
+                onClick={() => {
+                  setLang(item.id);
+                  i18n.changeLanguage(item.id);
+                  if (typeof window !== "undefined") window.localStorage.setItem("ui_language_v1", item.id);
+                }}
                 className={`flex h-[56px] w-full items-center justify-between rounded-[16px] px-4 ${
                   selected ? "bg-[#EEF4FF]" : "bg-[#F5F6F6]"
                 }`}
@@ -94,11 +104,10 @@ export default function Page() {
             disabled={saving}
             className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? t("common.saving") : t("common.saveChanges")}
           </button>
         </div>
       </div>
     </div>
   );
 }
-

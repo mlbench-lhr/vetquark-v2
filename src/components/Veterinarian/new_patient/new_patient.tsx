@@ -312,15 +312,15 @@ export default function AddPatientMultiStep() {
         body: JSON.stringify(
           isEditing
             ? {
-                patientId,
-                isAlive,
-                ...formData,
-              }
+              patientId,
+              isAlive,
+              ...formData,
+            }
             : {
-                guardianId,
-                isAlive,
-                ...formData,
-              }
+              guardianId,
+              isAlive,
+              ...formData,
+            }
         ),
       });
       if (!res.ok) {
@@ -487,7 +487,7 @@ export default function AddPatientMultiStep() {
                   <div>
                     <label className="block text-sm text-gray-900 mb-2">Microchip</label>
                     <input
-                      type="text"
+                      type="number"
                       placeholder="Enter microchip number"
                       value={formData.microchip}
                       onChange={(e) => handleChange('microchip', e.target.value)}
@@ -528,17 +528,15 @@ export default function AddPatientMultiStep() {
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleChange('sex', 'Male')}
-                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
-                          formData.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
-                        }`}
+                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
+                          }`}
                       >
                         Male
                       </button>
                       <button
                         onClick={() => handleChange('sex', 'Female')}
-                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
-                          formData.sex === 'Female' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
-                        }`}
+                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.sex === 'Female' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
+                          }`}
                       >
                         Female
                       </button>
@@ -620,17 +618,15 @@ export default function AddPatientMultiStep() {
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleChange('neutered', 'Yes')}
-                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
-                          formData.neutered === 'Yes' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
-                        }`}
+                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.neutered === 'Yes' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
+                          }`}
                       >
                         Yes
                       </button>
                       <button
                         onClick={() => handleChange('neutered', 'No')}
-                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
-                          formData.neutered === 'No' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
-                        }`}
+                        className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.neutered === 'No' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
+                          }`}
                       >
                         No
                       </button>
@@ -673,7 +669,7 @@ export default function AddPatientMultiStep() {
                   <div>
                     <label className="block text-sm text-gray-900 mb-2">Plan card number</label>
                     <input
-                      type="text"
+                      type="number"
                       placeholder="Enter plan card number"
                       value={formData.cardNumber}
                       onChange={(e) => handleChange('cardNumber', e.target.value)}

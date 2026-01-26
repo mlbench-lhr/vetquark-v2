@@ -16,6 +16,7 @@ import { useContext, useMemo } from "react";
 import { toast } from "react-toastify";
 import { useAppSelector } from "@/store/hooks";
 import { UserContext } from "@/context/authContext";
+import { useTranslation } from "react-i18next";
 
 type MenuItem = {
   id: string;
@@ -31,8 +32,9 @@ export default function MenuPage() {
   const router = useRouter();
   const profile = useAppSelector((s) => s.userProfile.profile);
   const { logout } = useContext(UserContext);
+  const { t } = useTranslation();
 
-  const name = profile?.fullName ?? "User";
+  const name = profile?.fullName ?? t("common.user");
   const email = profile?.email ?? "";
   const avatarUrl =
     profile?.profileImageUrl ??
@@ -42,48 +44,48 @@ export default function MenuPage() {
     () => [
       {
         id: "payment-methods",
-        title: "Payment Methods",
-        description: "Manage your payment details for exam fee",
+        title: t("menu.paymentMethods"),
+        description: t("menu.paymentMethodsDesc"),
         href: "/Guardian/Menu/wallet/bankDetails",
         icon: { kind: "text", value: "R$" },
       },
       {
         id: "id-address",
-        title: "ID & Address Info",
-        description: "Update your id info & profile",
+        title: t("menu.idAddressInfo"),
+        description: t("menu.idAddressInfoDesc"),
         href: "/Guardian/Menu/tax-profile",
         icon: { kind: "lucide", Component: IdCard },
       },
       {
         id: "change-language",
-        title: "Change Language",
-        description: "Update your language preferences",
+        title: t("menu.changeLanguage"),
+        description: t("menu.languageDesc"),
         href: "/Guardian/Menu/language",
         icon: { kind: "lucide", Component: Languages },
       },
       {
         id: "security",
-        title: "Security",
-        description: "Manage your security & sessions",
+        title: t("menu.security"),
+        description: t("menu.securityDesc"),
         href: "/Guardian/Menu/security",
         icon: { kind: "lucide", Component: Lock },
       },
       {
         id: "notifications",
-        title: "Notifications",
-        description: "Manage notification alerts",
+        title: t("menu.notifications"),
+        description: t("menu.notificationsDesc"),
         href: "/Guardian/Menu/notifications",
         icon: { kind: "lucide", Component: Bell },
       },
       {
         id: "help-centre",
-        title: "Help Centre",
-        description: "Get info regarding platform",
+        title: t("menu.helpCentre"),
+        description: t("menu.helpCentreDesc"),
         href: "/Guardian/Menu/help-centre",
         icon: { kind: "lucide", Component: LifeBuoy },
       },
     ],
-    [],
+    [t],
   );
 
   const handleMenuItemClick = (item: MenuItem) => {
@@ -91,12 +93,12 @@ export default function MenuPage() {
       router.push(item.href);
       return;
     }
-    toast.info("Coming soon");
+    toast.info(t("common.comingSoon"));
   };
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
-      <Header title="Menu" />
+      <Header title={t("menu.menu")} />
       <div className="px-4 pt-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -117,7 +119,7 @@ export default function MenuPage() {
             className="flex h-10 items-center gap-2 rounded-full bg-[#F5F6F6] px-5 text-[14px] font-medium text-[#111827]"
           >
             <Pencil className="h-4 w-4" />
-            Edit
+            {t("menu.edit")}
           </Link>
         </div>
       </div>
@@ -182,7 +184,7 @@ export default function MenuPage() {
           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F5F6F6]">
             <LogOut className="h-5 w-5 text-[#9AA4AF]" />
           </div>
-          <div className="text-[16px] font-medium leading-[20px]">Log out</div>
+          <div className="text-[16px] font-medium leading-[20px]">{t("common.logout")}</div>
         </button>
       </div>
     </div>

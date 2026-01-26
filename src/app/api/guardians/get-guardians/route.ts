@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import Patient from "@/lib/models/Patient";
+import Notification from "@/lib/models/Notification";
+import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { parsePagination, toPaginationMeta } from "@/lib/utils";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -257,6 +259,30 @@ export async function PUT(req: NextRequest) {
     if (!updated?._id) {
       return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
     }
+
+    const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
+    const title = "Profile details updated";
+    const message = `${vetName} updated your profile details.`;
+    const url = `/Guardian/profile`;
+
+    const notification = await Notification.create({
+      user: resolvedGuardianId,
+      type: "guardian_updated",
+      title,
+      message,
+      url,
+      readAt: null,
+    });
+
+    const pusher = getPusherServer();
+    await pusher.trigger(notificationsChannelForUser(resolvedGuardianId), "notification:new", {
+      id: String(notification._id),
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      url: notification.url,
+      createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+    });
 
     return NextResponse.json({ id: String(updated._id) }, { status: 200 });
   } catch (e) {
