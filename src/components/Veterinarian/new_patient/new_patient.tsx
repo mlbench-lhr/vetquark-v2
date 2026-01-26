@@ -8,6 +8,7 @@ import { asNonEmptyTrimmedString, isMongoObjectId } from '@/lib/utils';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -54,7 +55,12 @@ export default function AddPatientMultiStep() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingPatient, setLoadingPatient] = useState(false);
-  const [linkedGuardian, setLinkedGuardian] = useState<{ id: string; fullName: string; taxId: string } | null>(null);
+  const [linkedGuardian, setLinkedGuardian] = useState<{
+    id: string;
+    fullName: string;
+    taxId: string;
+    imageUrl?: string;
+  } | null>(null);
   const [formData, setFormData] = useState<PatientFormData>({
     photo: null,
     animalName: '',
@@ -171,6 +177,7 @@ export default function AddPatientMultiStep() {
                 id: gid,
                 fullName: String(g.fullName || '').trim() || 'N/A',
                 taxId: String(g.taxId || '').trim(),
+                imageUrl: String(g.profileImageUrl || g.avatarUrl || '').trim(),
               });
             }
           }
@@ -186,8 +193,14 @@ export default function AddPatientMultiStep() {
     const guardianId = (searchParams.get('guardianId') || '').trim();
     const guardianName = (searchParams.get('guardianName') || '').trim();
     const guardianTaxId = (searchParams.get('guardianTaxId') || '').trim();
+    const guardianImage = (searchParams.get('guardianImage') || '').trim();
     if (guardianId) {
-      setLinkedGuardian({ id: guardianId, fullName: guardianName || 'N/A', taxId: guardianTaxId });
+      setLinkedGuardian({
+        id: guardianId,
+        fullName: guardianName || 'N/A',
+        taxId: guardianTaxId,
+        imageUrl: guardianImage,
+      });
     } else {
       setLinkedGuardian(null);
     }
@@ -381,7 +394,12 @@ export default function AddPatientMultiStep() {
         <p className="text-sm text-gray-500 mb-3">Linked Guardian</p>
         <div className="flex items-center justify-between bg-gray-100 p-2 rounded-[12px]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-300 to-orange-400 rounded-full"></div>
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={linkedGuardian?.imageUrl || ''} alt={linkedGuardian?.fullName || 'Guardian'} />
+              <AvatarFallback>
+                {(linkedGuardian?.fullName || 'G').slice(0, 1).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <div>
               <p className="font-medium text-gray-900">{linkedGuardian?.fullName ?? 'N/A'}</p>
               <p className="text-xs text-tertiary">CPF: {linkedGuardian?.taxId || 'N/A'}</p>
