@@ -1,11 +1,14 @@
 'use client'
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Calendar, ChevronDown, ChevronRight } from 'lucide-react'
+import { Calendar, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import LinkGenerated from './LinkGenerated'
 import { IdentificationDraft, PatientListItem } from './types'
 import { toast } from 'react-toastify'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import CustomDatePicker from '@/components/ui/dropdown/datepicker'
 
 type Props = {
   value: IdentificationDraft
@@ -23,7 +26,6 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   const [sending, setSending] = useState(false)
 
   const collectionRef = useRef<HTMLInputElement | null>(null)
-  const stripExpiryRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     ; (async () => {
@@ -180,31 +182,31 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
 
         <div>
           <div className="text-sm text-gray-900 mb-2">Collection Method</div>
-          <div className="relative">
-            <select
-              value={value.collectionMethod}
-              onChange={(e) => onChange({ collectionMethod: e.target.value as IdentificationDraft["collectionMethod"] })}
-              className="w-full px-4 py-4 bg-gray-100 rounded-2xl appearance-none text-gray-700"
-            >
-              <option value="">Select a method</option>
-              <option value="free_catch">Free catch</option>
-              <option value="cystocentesis">Cystocentesis</option>
-              <option value="catheter">Catheter</option>
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
-          </div>
+          <Select
+            value={value.collectionMethod}
+            onValueChange={(next) => onChange({ collectionMethod: next as IdentificationDraft["collectionMethod"] })}
+          >
+            <SelectTrigger className="w-full px-4 py-4 bg-gray-100 rounded-2xl border-0 shadow-none text-gray-700 focus:ring-0 focus:ring-offset-0 [&>svg]:text-primary [&>svg]:opacity-100">
+              <SelectValue placeholder="Select a method" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg">
+              <SelectItem value="free_catch">Free catch</SelectItem>
+              <SelectItem value="cystocentesis">Cystocentesis</SelectItem>
+              <SelectItem value="catheter">Catheter</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
           <div className="text-sm text-gray-900 mb-2">Date and Time of Collection</div>
           <div className="relative">
-            <input
+            <Input
               ref={collectionRef}
               type="datetime-local"
               value={value.collectionAt}
               max={new Date().toISOString().slice(0, 16)}
               onChange={(e) => onChange({ collectionAt: e.target.value })}
-              className="w-full px-4 py-4 bg-gray-100 rounded-2xl  text-gray-700"
+              className="w-full px-4 py-4 bg-gray-100 rounded-2xl  text-gray-700 border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none"
               style={{ colorScheme: 'light' }}
             />
             <Calendar
@@ -218,47 +220,24 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
 
         <div>
           <div className="text-sm text-gray-900 mb-2">Strip Lot</div>
-          <input
+          <Input
             type='number'
             value={value.stripLot}
             onChange={(e) => onChange({ stripLot: e.target.value })}
             placeholder="Enter Strip Lot Number"
-            className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700"
+            className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none"
           />
         </div>
 
         <div className="text-sm text-gray-900 mb-2">Strip Expiry</div>
-        <div className="w-full flex justify-start items-center gap-2 relative">
-          <div className="relative w-[calc(100%-0px)]">
-            <div className="relative">
-              <input
-                ref={stripExpiryRef}
-                type="date"
-                value={value.stripExpiry}
-                min={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => onChange({ stripExpiry: e.target.value })}
-                placeholder="Enter Strip Expiry Date"
-                className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 pr-12"
-                style={{ colorScheme: 'light' }}
-              />
-              <Calendar
-                color='#3F78D8'
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-00 cursor-pointer"
-                onClick={() => {
-                  const el = stripExpiryRef.current as any
-                  if (!el) return
-                  if (typeof el.showPicker === 'function') el.showPicker()
-                  else el.click()
-                }}
-              />
-            </div>
-          </div>
-          {/* <div className='w-[56px] h-[56px] flex justify-center items-center bg-[#EBF2FF] rounded-[20px]'>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M3 11H11V3H3V11ZM5 5H9V9H5V5ZM3 21H11V13H3V21ZM5 15H9V19H5V15ZM13 3V11H21V3H13ZM19 9H15V5H19V9ZM13.01 13H15.01V15H13.01V13ZM15.01 15H17.01V17H15.01V15ZM13.01 17H15.01V19H13.01V17ZM17.01 17H19.01V19H17.01V17ZM19.01 19H21.01V21H19.01V19ZM15.01 19H17.01V21H15.01V19ZM17.01 13H19.01V15H17.01V13ZM19.01 15H21.01V17H19.01V15Z" fill="#3F78D8" />
-            </svg>
-          </div> */}
-        </div>
+        <CustomDatePicker
+          value={value.stripExpiry}
+          onChange={(next) => onChange({ stripExpiry: next })}
+          placeholder="Enter Strip Expiry Date"
+          min={new Date().toISOString().slice(0, 10)}
+          triggerClassName="px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 pr-12"
+          iconClassName="right-4 w-5 h-5"
+        />
 
         <button
           onClick={async () => {

@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
+import CustomDatePicker from "@/components/ui/dropdown/datepicker";
+import { Input } from "@/components/ui/input";
 
 function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
@@ -81,30 +83,29 @@ export default function Page() {
       <div className="flex min-h-[calc(100dvh-72px)] flex-col px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div>
           <div className="text-[14px] font-medium leading-[18px] text-[#111827]">National ID</div>
-          <input
+          <Input
             value={nationalId}
             onChange={(e) => setNationalId(e.target.value)}
-            className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
           />
 
           <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">Date of Birth</div>
-          <div className="relative mt-3">
-            <input
-              type="date"
+          <div className="mt-3">
+            <CustomDatePicker
               value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              className="h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 pr-12 text-[16px] leading-[20px] text-[#111827] outline-none"
+              onChange={setDateOfBirth}
+              placeholder="Select date"
+              max={new Date().toISOString().slice(0, 10)}
+              triggerClassName="h-[56px] rounded-[16px] bg-[#F5F6F6] px-4 pr-12 text-[16px] leading-[20px] text-[#111827]"
+              iconClassName="right-4 h-5 w-5 text-[#9AA4AF]"
             />
-            <Calendar
-              color='#3F78D8'
-              className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9AA4AF]" />
           </div>
 
           <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">Address</div>
-          <input
+          <Input
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
           />
         </div>
 

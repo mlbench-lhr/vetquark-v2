@@ -2,7 +2,7 @@
 
 import React from "react";
 import Header from "@/components/common/header";
-import { Laptop, Monitor, Smartphone } from "lucide-react";
+import { Laptop, Monitor, Smartphone, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 
 type SessionRow = {
@@ -10,10 +10,10 @@ type SessionRow = {
   label: string;
   rightLabel?: string;
   icon:
-    | { type: "smartphone" }
-    | { type: "laptop" }
-    | { type: "monitor" }
-    | { type: "google" };
+  | { type: "smartphone" }
+  | { type: "laptop" }
+  | { type: "monitor" }
+  | { type: "google" };
 };
 
 export default function SecurityPage() {
@@ -22,6 +22,9 @@ export default function SecurityPage() {
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [saving, setSaving] = React.useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = React.useState(false);
+  const [showNewPassword, setShowNewPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   const sessions: SessionRow[] = [
     { id: "iphone", label: "iPhone 17 Pro Max", rightLabel: "This device", icon: { type: "smartphone" } },
@@ -29,6 +32,9 @@ export default function SecurityPage() {
     { id: "pixel", label: "Google Pixel 9", icon: { type: "google" } },
     { id: "windows", label: "Windows Computer", icon: { type: "monitor" } },
   ];
+  const showToast = (message: string, type: 'success' | 'error') => {
+    console.log(`${type}: ${message}`);
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F6F6]">
@@ -100,30 +106,72 @@ export default function SecurityPage() {
             <div className="mt-4 space-y-3">
               <div>
                 <div className="text-[14px] font-medium text-[#111827]">Current password</div>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="mt-2 h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 text-[15px] text-[#111827] outline-none"
-                />
+                <div className="relative mt-2">
+                  <input
+                    placeholder="Enter current password"
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showCurrentPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
               <div>
                 <div className="text-[14px] font-medium text-[#111827]">New password</div>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="mt-2 h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 text-[15px] text-[#111827] outline-none"
-                />
+                <div className="relative mt-2">
+                  <input
+                    placeholder="Enter new password"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
               <div>
                 <div className="text-[14px] font-medium text-[#111827]">Confirm new password</div>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-2 h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 text-[15px] text-[#111827] outline-none"
-                />
+                <div className="relative mt-2">
+                  <input
+                    placeholder="Confirm new password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -133,11 +181,11 @@ export default function SecurityPage() {
                 disabled={saving}
                 onClick={async () => {
                   if (!currentPassword || !newPassword) {
-                    toast.error("Please fill all fields");
+                    showToast("Please fill all fields", "error");
                     return;
                   }
                   if (newPassword !== confirmPassword) {
-                    toast.error("Passwords do not match");
+                    showToast("Passwords do not match", "error");
                     return;
                   }
                   try {

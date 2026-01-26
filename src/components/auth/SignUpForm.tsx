@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, EyeOff, Calendar, Check, ChevronLeft } from "lucide-react";
+import { Eye, EyeOff, Check, ChevronLeft } from "lucide-react";
 import MultiSelect from "@/components/form/MultiSelect";
 import DropdownSelect from "@/components/form/DropdownSelect";
+import CustomDatePicker from "@/components/ui/dropdown/datepicker";
+import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 import PhoneInput from "@/components/form/group-input/PhoneInput";
@@ -87,7 +89,6 @@ export default function SignUpForm() {
     const id = setTimeout(() => setCountdown((c) => (c > 0 ? c - 1 : 0)), 1000);
     return () => clearTimeout(id);
   }, [step, countdown]);
-  const dobRef = useRef<HTMLInputElement | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingClinicLogo, setUploadingClinicLogo] = useState(false);
 
@@ -388,7 +389,7 @@ export default function SignUpForm() {
         const loginRes = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: formData.email, password: formData.password }),
+          body: JSON.stringify({ email: formData.email, password: formData.password, role: profileType }),
           credentials: "include",
         });
         const loginData = await loginRes.json().catch(() => null);
@@ -769,7 +770,7 @@ export default function SignUpForm() {
                 <label className="block text-gray-900 text-sm mb-2">
                   {profileType === "tutor" ? "Enter National ID" : "Tax Identification Number"}
                 </label>
-                <input
+                <Input
                   type="text"
                   name="taxId"
                   placeholder="i.e AB374892928"
@@ -784,72 +785,23 @@ export default function SignUpForm() {
                 <label className="block text-gray-900 text-sm mb-2">
                   Date Of Birth
                 </label>
-                <div className="relative">
-                  {profileType === "tutor" && (
-                    <input
-                      type="text"
-                      placeholder="Select date of birth"
-                      value={formData.dateOfBirth}
-                      readOnly
-                      onClick={() => {
-                        const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
-                        if (!el) return;
-                        if (typeof el.showPicker === "function") el.showPicker();
-                        else el.click();
-                      }}
-                      className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 pr-12 cursor-pointer"
-                    />
-                  )}
-                  <input
-                    ref={dobRef}
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange}
-                    required
-                    className={profileType === "tutor"
-                      ? "absolute inset-0 opacity-0 pointer-events-none"
-                      : "w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12 [&::-webkit-calendar-picker-indicator]:opacity-0"}
-                    style={{ colorScheme: 'light' }}
-                  />
-                  <Calendar
-                    color='#3F78D8'
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
-                    size={20}
-                    onClick={() => {
-                      const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
-                      if (!el) return;
-                      if (typeof el.showPicker === "function") el.showPicker();
-                      else el.click();
-                    }}
-                  />
-                </div>
+                <CustomDatePicker
+                  value={formData.dateOfBirth}
+                  onChange={(next) => setFormData((prev) => ({ ...prev, dateOfBirth: next }))}
+                  placeholder="Select date of birth"
+                  max={new Date().toISOString().slice(0, 10)}
+                />
               </div>
 
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
                   Address
                 </label>
-                <input
+                <Input
                   type="text"
                   name="address"
                   placeholder="Enter your address"
                   value={formData.address}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  City
-                </label>
-                <input
-                  type="text"
-                  name="city"
-                  placeholder="Enter your city name"
-                  value={formData.city}
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
@@ -868,13 +820,27 @@ export default function SignUpForm() {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-gray-900 text-sm mb-2">
+                  City
+                </label>
+                <Input
+                  type="text"
+                  name="city"
+                  placeholder="Enter your city name"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
+                />
+              </div>
 
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
                   Postal Code
                 </label>
-                <input
-                  type="text"
+                <Input
+                  type="number"
                   name="postalCode"
                   placeholder="Enter postal code i.e 27492"
                   value={formData.postalCode}

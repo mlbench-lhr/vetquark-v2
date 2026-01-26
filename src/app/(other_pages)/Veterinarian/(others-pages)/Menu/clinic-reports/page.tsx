@@ -162,7 +162,7 @@ export default function ClinicReportsPage() {
                     </label>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex flex-col items-center justify-center gap-3 h-[200px]">
                     <div className="text-gray-600 text-sm">Upload your clinic logo (optional)</div>
                     <label className="inline-block">
                       <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />

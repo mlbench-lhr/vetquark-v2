@@ -63,7 +63,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     const validationError = validatePasswords();
     if (validationError) {
       onError(validationError);

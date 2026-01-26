@@ -106,7 +106,7 @@ function Header({ name }: HeaderProps) {
 
 function PetSelector({ pets, activePetId, onSelect, loading }: PetSelectorProps) {
     return (
-        <div className="flex gap-3 mb-6">
+        <div className="flex gap-3 mb-6 justify-start items-center overflow-auto">
             {loading ? (
                 <div className="text-sm text-gray-500">Loading pets...</div>
             ) : pets.length === 0 ? (
@@ -115,25 +115,24 @@ function PetSelector({ pets, activePetId, onSelect, loading }: PetSelectorProps)
                 pets.map((pet) => {
                     const active = pet.id === activePetId;
                     return (
-                        <button
+                        <div
                             key={pet.id}
-                            type="button"
                             onClick={() => onSelect(pet.id)}
-                            className={`flex items-center p-2 rounded-full transition-all ${active
+                            className={`flex w-fit! cursor-pointer gap-2 items-center p-2 justify-start rounded-full transition-all ${active
                                 ? 'bg-[#EBF2FF] text-primary'
                                 : 'bg-[#F5F6F6] text-black'
                                 }`}
                         >
                             <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-                                <img
+                                <Image
                                     src={pet.image || "/images/product/product-01.jpg"}
                                     alt={pet.name}
                                     width={40}
                                     height={40}
                                 />
                             </div>
-                            <span className="font-medium px-4">{pet.name}</span>
-                        </button>
+                            <div className="font-medium w-[100px]! truncate">{pet.name}</div>
+                        </div>
                     );
                 })
             )}
