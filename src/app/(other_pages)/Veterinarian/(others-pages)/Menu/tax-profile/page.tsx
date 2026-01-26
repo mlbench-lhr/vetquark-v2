@@ -2,9 +2,10 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Header from "@/components/common/header";
-import { Calendar } from "lucide-react";
 import DropdownSelect from "@/components/form/DropdownSelect";
 import MultiSelect from "@/components/form/MultiSelect";
+import CustomDatePicker from "@/components/ui/dropdown/datepicker";
+import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
@@ -98,7 +99,6 @@ const brazilianStateOptions = [
 export default function TaxInfoAndProfessionalProfilePage() {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.userProfile.profile);
-  const dobRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -171,7 +171,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
           <div className="space-y-4">
             <div>
               <label className="block text-gray-900 font-medium mb-2">National ID</label>
-              <input
+              <Input
                 type="text"
                 name="taxId"
                 placeholder="i.e AB374892928"
@@ -186,7 +186,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
               <label className="block text-gray-900 font-medium mb-2">
                 Tax ID <span className="text-gray-500 font-normal">(optional)</span>
               </label>
-              <input
+              <Input
                 type="text"
                 name="cnpjIe"
                 placeholder="i.e 12.345.678/0001-99"
@@ -198,34 +198,17 @@ export default function TaxInfoAndProfessionalProfilePage() {
 
             <div>
               <label className="block text-gray-900 font-medium mb-2">Date Of Birth</label>
-              <div className="relative">
-                <input
-                  ref={dobRef}
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, dateOfBirth: e.target.value }))}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12 [&::-webkit-calendar-picker-indicator]:opacity-0"
-                  style={{ colorScheme: "light" }}
-                />
-                <Calendar
-                  color='#3F78D8'
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
-                  size={20}
-                  onClick={() => {
-                    const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
-                    if (!el) return;
-                    if (typeof el.showPicker === "function") el.showPicker();
-                    else el.click();
-                  }}
-                />
-              </div>
+              <CustomDatePicker
+                value={formData.dateOfBirth}
+                onChange={(next) => setFormData((prev) => ({ ...prev, dateOfBirth: next }))}
+                placeholder="Select date of birth"
+                max={new Date().toISOString().slice(0, 10)}
+              />
             </div>
 
             <div>
               <label className="block text-gray-900 font-medium mb-2">Address</label>
-              <input
+              <Input
                 type="text"
                 name="address"
                 placeholder="Enter your address"
@@ -239,7 +222,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-gray-900 font-medium mb-2">CRMV</label>
-                <input
+                <Input
                   type="text"
                   name="crmv"
                   placeholder="Enter CRMV code"
@@ -265,7 +248,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
               <label className="block text-gray-900 font-medium mb-2">
                 Registration with MAPA <span className="text-gray-500 font-normal">(optional)</span>
               </label>
-              <input
+              <Input
                 type="text"
                 name="mapaRegistration"
                 placeholder="Enter your registration with MAPA"

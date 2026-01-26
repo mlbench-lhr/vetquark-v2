@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { toast } from "react-toastify";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const brazilianStateOptions = [
     { value: "AC", text: "Acre" },
@@ -293,9 +295,9 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                     ? "Checkout"
                                     : step === "success"
                                         ? "Order Confirmed"
-                                    : step === "change-address"
-                                        ? "Change Address"
-                                        : "Add New Address"}
+                                        : step === "change-address"
+                                            ? "Change Address"
+                                            : "Add New Address"}
                     </h1>
                     {
                         step === "store" ?
@@ -317,12 +319,12 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                 {
                     step === "store" ?
                         <div className="flex-1 relative mx-2">
-                            <input
+                            <Input
                                 type="text"
                                 placeholder="Search for an item"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full px-4 py-3 pl-12  rounded-xl focus:outline-none focus:border-primary bg-gray-100"
+                                className="w-full px-4 py-3 pl-12  rounded-xl bg-gray-100 border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none"
                             />
                             <svg
                                 className="w-5 h-5 text-primary absolute left-4 top-1/2 -translate-y-1/2"
@@ -345,11 +347,11 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
                                     Address Label
                                 </div>
-                                <input
+                                <Input
                                     value={newAddressForm.label}
                                     onChange={(e) => setNewAddressForm((p) => ({ ...p, label: e.target.value }))}
                                     placeholder="e.g. My Clinic"
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
+                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                                 />
                             </div>
 
@@ -373,11 +375,11 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
                                     Address
                                 </div>
-                                <input
+                                <Input
                                     value={newAddressForm.address}
                                     onChange={(e) => setNewAddressForm((p) => ({ ...p, address: e.target.value }))}
                                     placeholder="Enter your address"
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
+                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                                 />
                             </div>
 
@@ -385,11 +387,11 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
                                     City
                                 </div>
-                                <input
+                                <Input
                                     value={newAddressForm.city}
                                     onChange={(e) => setNewAddressForm((p) => ({ ...p, city: e.target.value }))}
                                     placeholder="Enter your city name"
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
+                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                                 />
                             </div>
 
@@ -397,31 +399,33 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
                                     State
                                 </div>
-                                <select
+                                <Select
                                     value={newAddressForm.state}
-                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, state: e.target.value }))}
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
+                                    onValueChange={(value) => setNewAddressForm((p) => ({ ...p, state: value }))}
                                 >
-                                    <option value="" disabled>
-                                        Select a state
-                                    </option>
-                                    {brazilianStateOptions.map((opt) => (
-                                        <option key={opt.value} value={opt.value}>
-                                            {opt.text}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <SelectTrigger className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] outline-none border-0 shadow-none focus:ring-0 focus:ring-offset-0 [&>svg]:opacity-100 [&>svg]:text-[#111827]">
+                                        <SelectValue placeholder="Select a state" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                                        {brazilianStateOptions.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                {opt.text}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div>
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
                                     Postal Code
                                 </div>
-                                <input
+                                <Input
+                                    type="number"
                                     value={newAddressForm.postalCode}
                                     onChange={(e) => setNewAddressForm((p) => ({ ...p, postalCode: e.target.value }))}
                                     placeholder="Enter postal code i.e 27492"
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
+                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                                 />
                             </div>
                         </div>

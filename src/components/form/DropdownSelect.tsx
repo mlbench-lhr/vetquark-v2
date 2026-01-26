@@ -1,5 +1,12 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Option = { value: string; text: string };
 
@@ -28,83 +35,46 @@ export default function DropdownSelect({
   name,
   required,
 }: DropdownSelectProps) {
-  const [open, setOpen] = useState(false);
-  const selectedLabel = options.find((o) => o.value === value)?.text;
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent | TouchEvent) => {
-      if (!open) return;
-      const target = e.target as Node | null;
-      if (containerRef.current && target && !containerRef.current.contains(target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    document.addEventListener("touchstart", handler);
-    return () => {
-      document.removeEventListener("mousedown", handler);
-      document.removeEventListener("touchstart", handler);
-    };
-  }, [open]);
-
   return (
     <div className="w-full">
       {label && <label className="block text-gray-900 font-medium mb-2">{label}</label>}
-      <div className="relative" ref={containerRef}>
-        {name && (
-          <input
-            tabIndex={-1}
-            aria-hidden
-            className="sr-only"
-            type="text"
-            name={name}
-            value={value || ""}
-            required={required}
-            readOnly
-          />
-        )}
-        <button
-          type="button"
-          onClick={() => !disabled && setOpen((v) => !v)}
-          className={`w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none ${value ? "text-gray-800" : "text-gray-400"} pr-12 text-left ${className}`}
+      {name && (
+        <input
+          tabIndex={-1}
+          aria-hidden
+          className="sr-only"
+          type="text"
+          name={name}
+          value={value || ""}
+          required={required}
+          readOnly
+        />
+      )}
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
+        <SelectTrigger
+          className={`w-full h-[48px] px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus:ring-0 focus:ring-offset-0 focus:outline-none pr-12 text-left ${
+            value ? "text-gray-800" : "text-gray-400"
+          } [&>svg]:text-primary [&>svg]:opacity-100 ${className}`}
         >
-          {selectedLabel || placeholder}
-        </button>
-        <svg
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none"
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent
+          side={placement === "up" ? "top" : "bottom"}
+          className="z-50 w-[--radix-select-trigger-width] bg-white border border-gray-200 rounded-xl shadow-lg p-1"
         >
-          <path d="M5 7.5l5 5 5-5" />
-        </svg>
-        {open && (
-          <div className={`absolute left-0 ${placement === "up" ? "bottom-full mb-2" : "top-full mt-2"} z-50 w-full bg-white border border-gray-200 rounded-xl shadow-lg`}>
-            <ul className="max-h-60 overflow-auto py-1">
-              {options.map((opt) => (
-                <li key={opt.value}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChange(opt.value);
-                      setOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 hover:bg-primary/5 ${
-                      value === opt.value ? "bg-primary/10 text-gray-900" : "text-gray-800"
-                    }`}
-                  >
-                    {opt.text}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+          {options.map((opt) => (
+            <SelectItem
+              key={opt.value}
+              value={opt.value}
+              className={`w-full cursor-pointer rounded-lg px-3 py-2 focus:bg-primary/5 focus:text-gray-900 ${
+                value === opt.value ? "bg-primary/10 text-gray-900" : "text-gray-800"
+              }`}
+            >
+              {opt.text}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

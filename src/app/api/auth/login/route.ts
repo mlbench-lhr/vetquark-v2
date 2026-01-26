@@ -78,9 +78,18 @@ function toSafeProfile(user: LeanUser) {
   };
 }
 
+function normalizeRole(value: unknown): "Veterinarian" | "Guardian" | null {
+  if (typeof value !== "string") return null;
+  const v = value.trim().toLowerCase();
+  if (!v) return null;
+  if (v === "veterinarian" || v === "vet") return "Veterinarian";
+  if (v === "guardian" || v === "tutor") return "Guardian";
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, role, profileType } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
@@ -95,6 +104,14 @@ export async function POST(req: NextRequest) {
 
     if (!user.emailVerified) {
       return NextResponse.json({ error: "Email not verified" }, { status: 403 });
+    }
+
+    const requestedRole = normalizeRole(role ?? profileType);
+    if (requestedRole && user.role !== requestedRole) {
+      return NextResponse.json(
+        { error: `This account is ${user.role === "Veterinarian" ? "a Veterinarian" : "a Guardian"}. Please use the correct login type.` },
+        { status: 403 }
+      );
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash);

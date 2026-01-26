@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const config = {
-  matcher: ["/api/:path*", "/((?!api|_next/static|_next/image|favicon.ico|signin|signup|forget-password|verify_email|reset-password|upload-profile-picture).*)"],
+  matcher: [
+    "/api/:path*",
+    "/((?!api|_next/static|_next/image|favicon.ico|images|fonts|robots.txt|sitemap.xml|manifest.json|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map)$).*)",
+  ],
 };
 
 function base64UrlToBase64(s: string) {
@@ -23,7 +26,13 @@ function toBase64Url(buffer: ArrayBuffer): string {
   return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function verifyHS256(token: string, secret: string) {
+type TokenPayload = {
+  exp?: number;
+  sub?: string;
+  role?: unknown;
+};
+
+async function verifyHS256(token: string, secret: string): Promise<TokenPayload | null> {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   const [h, p, s] = parts;
@@ -42,15 +51,21 @@ async function verifyHS256(token: string, secret: string) {
   const expected = toBase64Url(sig);
   if (expected !== s) return null;
 
-  const payload = decodeJson<{ exp?: number; sub?: string }>(p);
+  const payload = decodeJson<TokenPayload>(p);
   const now = Math.floor(Date.now() / 1000);
   if (typeof payload.exp === "number" && now >= payload.exp) return null;
   return payload;
 }
 
+function homeForRole(role: unknown) {
+  if (role === "Veterinarian") return "/Veterinarian/home";
+  if (role === "Guardian") return "/Guardian/home";
+  return null;
+}
+
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/api/auth") ||pathname.includes("cloudinary")) {
+  if (pathname.startsWith("/api/auth") || pathname.includes("cloudinary")) {
     return NextResponse.next();
   }
 
@@ -61,6 +76,27 @@ export default async function middleware(req: NextRequest) {
 
   const secret = process.env.AUTH_SECRET;
   const isApi = pathname.startsWith("/api");
+
+  const publicRoutes = new Set([
+    "/signin",
+    "/signup",
+    "/forget-password",
+    "/verify_email",
+    "/reset-password",
+    "/upload-profile-picture",
+    "/professional_registration",
+    "/error-404",
+  ]);
+
+  if (publicRoutes.has(pathname)) {
+    if (!token || !secret) return NextResponse.next();
+    const payload = await verifyHS256(token, secret);
+    const userId = payload?.sub;
+    if (!userId) return NextResponse.next();
+    const home = homeForRole(payload?.role);
+    if (!home) return NextResponse.next();
+    return NextResponse.redirect(new URL(home, req.nextUrl.origin));
+  }
 
   if (!token || !secret) {
     if (isApi) {
@@ -76,6 +112,14 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     return NextResponse.redirect(new URL("/signin", req.nextUrl.origin));
+  }
+
+  const home = homeForRole(payload?.role);
+  if (pathname.startsWith("/Veterinarian") && payload?.role !== "Veterinarian") {
+    return NextResponse.redirect(new URL(home ?? "/signin", req.nextUrl.origin));
+  }
+  if (pathname.startsWith("/Guardian") && payload?.role !== "Guardian") {
+    return NextResponse.redirect(new URL(home ?? "/signin", req.nextUrl.origin));
   }
 
   const headers = new Headers(req.headers);
