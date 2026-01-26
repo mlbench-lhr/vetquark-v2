@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Stepper from './Stepper'
-import { NewReadingDraft, NewReadingStep, ReviewResultDraft } from './types'
+import { NewReadingDraft, NewReadingStep, ReviewResultDraft, ReviewSelectionMap } from './types'
 import IdentificationStep from './IdentificationStep'
 import TimerStep from './TimerStep'
 import ReviewStep from './ReviewStep'
@@ -323,9 +323,13 @@ export default function NewReadingWizard() {
               setDraft((prev) => ({ ...prev, timer: { ...prev.timer, selectedSeconds: next } }))
             }
             onBack={() => setStep('identification')}
-            onAnalyzeAndProceed={() => {
+            onAnalyzeAndProceed={(results: ReviewSelectionMap) => {
               const dummy = makeDummyAnalysis()
-              setDraft((prev) => ({ ...prev, timer: { ...prev.timer, analyzedAt: dummy.analyzedAt, analysis: dummy.analysis } }))
+              setDraft((prev) => ({
+                ...prev,
+                timer: { ...prev.timer, analyzedAt: dummy.analyzedAt, analysis: dummy.analysis },
+                reviewSelections: results
+              }))
               setStep('review')
             }}
           />

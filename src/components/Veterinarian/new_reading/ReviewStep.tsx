@@ -27,7 +27,7 @@ type ResultRowConfig = {
   defaultIndex: number
 }
 
-const RESULT_ROWS: ResultRowConfig[] = [
+export const RESULT_ROWS: ResultRowConfig[] = [
   {
     key: 'leukocytes',
     label: 'Leukocytes',

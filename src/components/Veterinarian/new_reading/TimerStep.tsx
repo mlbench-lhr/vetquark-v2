@@ -1,12 +1,16 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { transformTestBoxes } from '../../../lib/helper/transformRespose'
+import { RESULT_ROWS } from './ReviewStep'
+import { ReviewSelectionMap } from './types'
+import { toast } from 'react-toastify'
 
 type Props = {
   selectedSeconds: number
   onChangeSelectedSeconds: (nextSeconds: number) => void
   onBack: () => void
-  onAnalyzeAndProceed: () => void
+  onAnalyzeAndProceed: (results: ReviewSelectionMap) => void
 }
 
 const marks = [30, 40, 60, 120]
@@ -67,6 +71,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [images, setImages] = useState<CapturedImage[]>([])
   const [secondsLeft, setSecondsLeft] = useState(() => Math.max(selectedSeconds, requiredTotalSeconds))
   const [running, setRunning] = useState(true)
+  const [analyzing, setAnalyzing] = useState(false)
 
   useEffect(() => {
     if (selectedSeconds < requiredTotalSeconds) {
@@ -208,6 +213,48 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
   const displayTimerLabel = captureProgress.allDone ? '00:00' : nextCaptureLabel
 
+  const handleAnalyze = async () => {
+    try {
+      setAnalyzing(true)
+      const payload = {
+        images: images.map((img) => ({
+          image: img.dataUrl.replace(/^data:image\/\w+;base64,/, ''),
+          time: String(img.atSeconds),
+        })),
+      }
+
+      const res = await fetch('https://waqassultani-best-matching-backend.hf.space/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        throw new Error('Analysis failed')
+      }
+
+      const data = await res.json()
+      const numericResults = transformTestBoxes(data)
+
+      const mappedResults: ReviewSelectionMap = {}
+      
+      Object.entries(numericResults).forEach(([key, value]) => {
+        const index = parseInt(key) - 1
+        if (index >= 0 && index < RESULT_ROWS.length) {
+          const rowKey = RESULT_ROWS[index].key
+          mappedResults[rowKey] = value
+        }
+      })
+
+      onAnalyzeAndProceed(mappedResults)
+    } catch (e) {
+      console.error(e)
+      toast.error('Failed to analyze images')
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
   return (
     <div className="">
       <h2 className="text-lg font-medium text-gray-900">Timers and Capture</h2>
@@ -293,17 +340,14 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       <div className="mt-6 space-y-3">
         <button
-          onClick={() => {
-            console.log('Captured images:', images)
-            onAnalyzeAndProceed()
-          }}
-          disabled={!captureProgress.allDone}
-          className={`w-full py-4 rounded-full font-medium ${captureProgress.allDone
+          onClick={handleAnalyze}
+          disabled={!captureProgress.allDone || analyzing}
+          className={`w-full py-4 rounded-full font-medium ${captureProgress.allDone && !analyzing
             ? 'bg-primary text-white'
             : 'bg-gray-200 text-gray-500 cursor-not-allowed'
             }`}
         >
-          Analyse & Proceed
+          {analyzing ? 'Analyzing...' : 'Analyze & Proceed'}
         </button>
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
           Go Back
