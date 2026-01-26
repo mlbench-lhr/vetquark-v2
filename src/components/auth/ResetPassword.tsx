@@ -9,10 +9,12 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import Button from "../ui/button/Button";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 
 export default function ResetPassword() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +28,7 @@ export default function ResetPassword() {
         const resetToken = sessionStorage.getItem("reset_token")
 
         if (password !== confirmPassword) {
-            toast.error("Passwords do not match");
+            toast.error(t("auth.passwordsDoNotMatch"));
             setIsLoading(false);
             return;
         }
@@ -38,14 +40,14 @@ export default function ResetPassword() {
             });
             const result = await response.json();
             if (!response.ok) {
-                toast.error(typeof result.error === 'string' ? result.error : 'Failed to reset password');
+                toast.error(typeof result.error === 'string' ? result.error : t("auth.failedToResetPassword"));
                 console.error("Server Error:", result.message || result.error || result);
                 return;
             }
-            toast.success(result.message ?? "Password reset successfully");
+            toast.success(result.message ?? t("auth.passwordResetSuccessfully"));
             router.push("/signin")
         } catch (error) {
-            toast.error('Network error while resetting password');
+            toast.error(t("auth.networkErrorResettingPassword"));
             console.error("Network Error", error);
         } finally {
             setIsLoading(false);
@@ -66,10 +68,10 @@ export default function ResetPassword() {
                 <div>
                     <div className="mb-5 sm:mb-8">
                         <h1 className="mb-2 font-medium text-gray-800 text-3xl">
-                            Reset Password?
+                            {t("auth.resetPasswordTitle")}
                         </h1>
                         <p className="text-sm text-tertiary ">
-                           Create a new password below
+                           {t("auth.createNewPassword")}
                         </p>
                     </div>
                     <div className="mt-3">
@@ -78,12 +80,12 @@ export default function ResetPassword() {
                                 {/* Password */}
                                 <div>
                                     <label className="block text-sm font-medium">
-                                        Password <span className="text-error-500">*</span>
+                                        {t("auth.password")} <span className="text-error-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <input
                                             type={showPassword ? "text" : "password"}
-                                            placeholder="Enter your password"
+                                            placeholder={t("auth.enterPassword")}
                                             required
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
@@ -105,12 +107,12 @@ export default function ResetPassword() {
                                 {/* Confirm Password */}
                                 <div>
                                     <label className="block text-sm font-medium">
-                                        Confirm Password <span className="text-error-500">*</span>
+                                        {t("auth.confirmPassword")} <span className="text-error-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <input
                                             type={showConfirmPassword ? "text" : "password"}
-                                            placeholder="Confirm your password"
+                                            placeholder={t("auth.confirmNewPassword")}
                                             required
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -142,10 +144,10 @@ export default function ResetPassword() {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                Reseting...
+                                                {t("auth.reseting")}
                                             </div>
                                         ) : (
-                                            'Continue'
+                                            t("auth.continue")
                                         )}
                                     </button>
                                 </div>

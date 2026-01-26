@@ -15,6 +15,8 @@ type ResultStatus = 'Normal' | 'Abnormal'
 
 type DotOption = {
   topLabel: string
+  topSubLabel?: string
+  bottomLabel?: string
   color: string
 }
 
@@ -23,6 +25,7 @@ type ResultRowConfig = {
   label: string
   status: ResultStatus
   unit: string
+  subUnit?: string
   options: DotOption[]
   defaultIndex: number
 }
@@ -36,10 +39,10 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     defaultIndex: 2,
     options: [
       { topLabel: 'Neg', color: 'white' },
-      { topLabel: '15', color: '#D8B4FE' },
-      { topLabel: '70', color: '#C084FC' },
-      { topLabel: '125', color: '#A855F7' },
-      { topLabel: '500', color: '#7E22CE' },
+      { topLabel: '15', color: '#CC93BA', bottomLabel: "Trace" },
+      { topLabel: '70', color: '#966D94', bottomLabel: "Low" },
+      { topLabel: '125', color: '#8F678C', bottomLabel: "Moderate" },
+      { topLabel: '500', color: '#845883', bottomLabel: "High" },
     ],
   },
   {
@@ -50,7 +53,7 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     defaultIndex: 1,
     options: [
       { topLabel: 'Neg', color: 'white' },
-      { topLabel: 'Pos', color: '#EC4899' },
+      { topLabel: 'Positive', color: '#E780AF' },
     ],
   },
   {
@@ -60,11 +63,11 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'µmol/L',
     defaultIndex: 2,
     options: [
-      { topLabel: '0.1', color: '#FCE7F3' },
-      { topLabel: '1', color: '#FBCFE8' },
-      { topLabel: '2', color: '#F9A8D4' },
-      { topLabel: '4', color: '#F472B6' },
-      { topLabel: '8', color: '#EC4899' },
+      { topLabel: '3.3', color: '#FBE8D4' },
+      { topLabel: '16', color: '#F8D5CA' },
+      { topLabel: '33++', color: '#F6CECE' },
+      { topLabel: '66++', color: '#F3BAC3' },
+      { topLabel: '131+++', color: '#EE9FA4' },
     ],
   },
   {
@@ -74,11 +77,12 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'g/L',
     defaultIndex: 2,
     options: [
-      { topLabel: 'Neg', color: '#FEF9C3' },
-      { topLabel: '0.3', color: '#FDE68A' },
-      { topLabel: '1.0', color: '#FCD34D' },
-      { topLabel: '3.0', color: '#A7F3D0' },
-      { topLabel: '10.0', color: '#34D399' },
+      { topLabel: 'Neg', color: '#FFF6AD' },
+      { topLabel: 'Trace±', color: '#F5F2AC' },
+      { topLabel: '0.3+', color: '#E5EAAC' },
+      { topLabel: '1.0++', color: '#C1DDBC' },
+      { topLabel: '3.0+++', color: '#9BCEC2' },
+      { topLabel: '≥10.0++++', color: '#7DBBBF' },
     ],
   },
   {
@@ -88,11 +92,13 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: '',
     defaultIndex: 0,
     options: [
-      { topLabel: '5.0', color: '#F59E0B' },
-      { topLabel: '6.0', color: '#FBBF24' },
-      { topLabel: '6.5', color: '#A3E635' },
-      { topLabel: '7.0', color: '#22C55E' },
-      { topLabel: '8.5', color: '#16A34A' },
+      { topLabel: '5.0', color: '#F6B641' },
+      { topLabel: '6.0', color: '#F9C551' },
+      { topLabel: '6.5', color: '#FCD469' },
+      { topLabel: '7.0', color: '#EDD56B' },
+      { topLabel: '7.5', color: '#C3C474' },
+      { topLabel: '8.0', color: '#B0B872' },
+      { topLabel: '8.5', color: '#8FA971' },
     ],
   },
   {
@@ -102,11 +108,12 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'cells/µL',
     defaultIndex: 2,
     options: [
-      { topLabel: 'Neg', color: '#DCFCE7' },
-      { topLabel: '10', color: '#BBF7D0' },
-      { topLabel: '80', color: '#86EFAC' },
-      { topLabel: '200', color: '#4ADE80' },
-      { topLabel: '250', color: '#16A34A' },
+      { topLabel: 'Neg', color: '#F9CD8A' },
+      { topLabel: '0', color: '#CFC69D' },
+      { topLabel: '10', color: '#B0B99B' },
+      { topLabel: '25', color: '#708E85' },
+      { topLabel: '80', color: '#5C8075' },
+      { topLabel: '200', color: '#336F73' },
     ],
   },
   {
@@ -116,11 +123,13 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: '',
     defaultIndex: 0,
     options: [
-      { topLabel: '1.000', color: '#FEF9C3' },
-      { topLabel: '1.005', color: '#FDE68A' },
-      { topLabel: '1.010', color: '#FCD34D' },
-      { topLabel: '1.020', color: '#F59E0B' },
-      { topLabel: '1.030', color: '#B45309' },
+      { topLabel: '1.000', color: '#3C7F9D' },
+      { topLabel: '1.005', color: '#899264' },
+      { topLabel: '1.010', color: '#AAA661' },
+      { topLabel: '1.015', color: '#B9B062' },
+      { topLabel: '1.020', color: '#C9B64F' },
+      { topLabel: '1.025', color: '#D3B94F' },
+      { topLabel: '1.030', color: '#DAB54C' },
     ],
   },
   {
@@ -130,11 +139,11 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'mmol/L',
     defaultIndex: 0,
     options: [
-      { topLabel: '0', color: '#CFFAFE' },
-      { topLabel: '10', color: '#A5F3FC' },
-      { topLabel: '20', color: '#67E8F9' },
-      { topLabel: '40', color: '#22D3EE' },
-      { topLabel: '80', color: '#0891B2' },
+      { topLabel: '0', color: '#0098BF' },
+      { topLabel: '0.6', color: '#6FB6CD' },
+      { topLabel: '1.4', color: '#A7D2D8' },
+      { topLabel: '2.8', color: '#D3E4D4' },
+      { topLabel: '5.6', color: '#FDFAD4' },
     ],
   },
   {
@@ -144,11 +153,11 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'mmol/L',
     defaultIndex: 1,
     options: [
-      { topLabel: 'Neg', color: '#FFEDD5' },
-      { topLabel: '0.5', color: '#FED7AA' },
-      { topLabel: '1.5', color: '#FBCFE8' },
-      { topLabel: '4.0', color: '#D8B4FE' },
-      { topLabel: '8.0', color: '#7C3AED' },
+      { topLabel: 'Neg', color: '#FAE0C7' },
+      { topLabel: '0.5', bottomLabel: "Trace", color: '#F5C7BD' },
+      { topLabel: '4.0', bottomLabel: "Moderate", color: '#DC99A2' },
+      { topLabel: '8.0', bottomLabel: "High", color: '#C9728E' },
+      { topLabel: '16', color: '#861459' },
     ],
   },
   {
@@ -158,11 +167,10 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'µmol/L',
     defaultIndex: 1,
     options: [
-      { topLabel: 'Neg', color: '#FCE7F3' },
-      { topLabel: '17', color: '#FBCFE8' },
-      { topLabel: '50', color: '#F9A8D4' },
-      { topLabel: '100', color: '#F472B6' },
-      { topLabel: '250', color: '#DB2777' },
+      { topLabel: 'Neg', color: 'white' },
+      { topLabel: '17', color: '#F8DFEC' },
+      { topLabel: '50', color: '#EFAFCE' },
+      { topLabel: '100', color: '#E780AF' },
     ],
   },
   {
@@ -172,11 +180,12 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'mmol/L',
     defaultIndex: 2,
     options: [
-      { topLabel: 'Neg', color: '#DCFCE7' },
-      { topLabel: '2.8', color: '#BBF7D0' },
-      { topLabel: '5.6', color: '#86EFAC' },
-      { topLabel: '14', color: '#4ADE80' },
-      { topLabel: '55', color: '#16A34A' },
+      { topLabel: 'Neg', color: '#B4DDE7' },
+      { topLabel: '2.8', color: '#ADD4BA' },
+      { topLabel: '5.6', color: '#BDDAB2' },
+      { topLabel: '14++', color: '#C3DAA0' },
+      { topLabel: '28++', color: '#CED292' },
+      { topLabel: '56+++', color: '#BFA471' },
     ],
   },
   {
@@ -186,25 +195,24 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'g/L',
     defaultIndex: 0,
     options: [
-      { topLabel: '0', color: '#ECFEFF' },
-      { topLabel: '0.3', color: '#CFFAFE' },
-      { topLabel: '1.0', color: '#A5F3FC' },
-      { topLabel: '3.0', color: '#67E8F9' },
-      { topLabel: '15', color: '#22D3EE' },
+      { topLabel: '0', color: '#CCE6E2' },
+      { topLabel: '0.03', color: '#B4DCDF' },
+      { topLabel: '0.08', color: '#9AD1DC' },
+      { topLabel: '0.15', color: '#7FC7D9' },
     ],
   },
   {
-    key: 'creatinine',
-    label: 'Creatinine',
+    key: 'creatine',
+    label: 'Creatine',
     status: 'Normal',
     unit: 'mmol/L',
     defaultIndex: 1,
     options: [
-      { topLabel: '0', color: '#FEF9C3' },
-      { topLabel: '0.3', color: '#FDE68A' },
-      { topLabel: '1.0', color: '#FCD34D' },
-      { topLabel: '3.0', color: '#F59E0B' },
-      { topLabel: '10', color: '#B45309' },
+      { topLabel: '0.9', color: '#E9DF9D' },
+      { topLabel: '4.4', color: '#D4D39A' },
+      { topLabel: '8.8', color: '#BDC597' },
+      { topLabel: '17.7', color: '#AABD96' },
+      { topLabel: '26.5', color: '#9EB995' },
     ],
   },
   {
@@ -214,25 +222,26 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'mmol/L',
     defaultIndex: 1,
     options: [
-      { topLabel: '0', color: '#BFDBFE' },
-      { topLabel: '2.5', color: '#93C5FD' },
-      { topLabel: '7.5', color: '#60A5FA' },
-      { topLabel: '15', color: '#6366F1' },
-      { topLabel: '25', color: '#4338CA' },
+      { topLabel: '0', color: '#A7C5D9' },
+      { topLabel: '2.5', color: '#919FC7' },
+      { topLabel: '7.5', color: '#7679AE' },
+      { topLabel: '15', color: '#828BBA' },
     ],
   },
   {
     key: 'magnesium',
     label: 'Magnesium',
     status: 'Normal',
-    unit: 'mmol/L',
+    unit: 'mg/dL',
+    subUnit: 'mmol/L',
     defaultIndex: 2,
     options: [
-      { topLabel: '0', color: '#DBEAFE' },
-      { topLabel: '1.5', color: '#93C5FD' },
-      { topLabel: '3.0', color: '#3B82F6' },
-      { topLabel: '6.0', color: '#1D4ED8' },
-      { topLabel: '15', color: '#7C3AED' },
+      { topLabel: '0', color: '#0077AB' },
+      { topLabel: '1.5', topSubLabel: "0.625", color: '#4378A8' },
+      { topLabel: '6.0', topSubLabel: "1.25", color: '#45669B' },
+      { topLabel: '3.0', topSubLabel: "2.5", color: '#78578D' },
+      { topLabel: '15', topSubLabel: "5", color: '#A85288' },
+      { topLabel: '15', topSubLabel: "10", color: '#B6558A' },
     ],
   },
   {
@@ -240,13 +249,16 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     label: 'Ammonium Chloride',
     status: 'Normal',
     unit: 'mg/L',
+    subUnit: 'g/L',
     defaultIndex: 0,
     options: [
-      { topLabel: '0', color: '#F3F4F6' },
-      { topLabel: '50', color: '#E5E7EB' },
-      { topLabel: '100', color: '#D1D5DB' },
-      { topLabel: '200', color: '#9CA3AF' },
-      { topLabel: '300', color: '#6B7280' },
+      { topLabel: '0', color: '#FFF' },
+      { topLabel: '50', topSubLabel: '0.5', color: '#EEE' },
+      { topLabel: '100', topSubLabel: '1.0', color: '#DDD' },
+      { topLabel: '150', topSubLabel: '1.5', color: '#CCC' },
+      { topLabel: '200', topSubLabel: '2.0', color: '#BBB' },
+      { topLabel: '250', topSubLabel: '2.5', color: '#AAA' },
+      { topLabel: '300', topSubLabel: '3.0', color: '#999' },
     ],
   },
 ]
@@ -255,7 +267,7 @@ function StatusPill({ status }: { status: ResultStatus }) {
   const isNormal = status === 'Normal'
   return (
     <div
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] leading-[12px] font-medium ${isNormal ? 'bg-[#ECFDF5] text-[#059669]' : 'bg-[#FFF7ED] text-[#F97316]'
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] leading-[12px] font-medium ${isNormal ? 'bg-[#ECFDF5] text-[#059669] border border-[#D0FAE5]' : 'bg-[#FFF7ED] text-[#BB4D00] border border-[#FEF3C6]'
         }`}
     >
       {isNormal ? <Check className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
@@ -273,7 +285,7 @@ function ResultRow({
   selectedIndex: number
   onSelect: (index: number) => void
 }) {
-  const cols = row.options.length
+  const cols = row.unit ? row.options.length + 1 : row.options.length
   return (
     <div className="py-4 px-3">
       <div className="flex items-center opa justify-between">
@@ -282,32 +294,55 @@ function ResultRow({
       </div>
 
       <div
-        className="mt-3 grid gap-0"
+        className="mt-3 grid gap-"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
         {row.options.map((opt, idx) => {
           const active = idx === selectedIndex
           return (
-            <div key={`${row.key}-${idx}`} className="flex flex-col items-center">
+            <div key={`${row.key}-${idx}`} className="flex flex-col items-center justify-end">
               <div className="text-[10px] leading-[12px] text-[#9CA3AF]">{opt.topLabel}</div>
+              {
+                opt.topSubLabel &&
+                <div className="text-[8px] leading-[8px] text-[#839297]">({opt.topSubLabel})</div>
+              }
               <div
-                // onClick={() => onSelect(idx)}
-                className={`mt-2 h-6 w-6 relative rounded-full ${opt.topLabel === "Neg" && "border"} ${active ? 'shadow-md!' : ''}`}
-                style={{ backgroundColor: opt.color }}
+                className={`mt-2 h-7 ${opt.topLabel === "Positive" ? " w-[200px] " : " w-7 "} relative rounded-full ${opt.topLabel === "Neg" && "border"} ${active ? 'shadow-md!' : ''}`}
+                style={{ background: opt.topLabel === "Positive" ? "linear-gradient(180deg, #F7E9EE 0%, #E780AF 100%)" : opt.color }}
               >
                 {
-                  active &&
-                  <div className='absolute top-1/2 left-1/2 h-1 w-1 bg-white/50 rounded-full -translate-x-1/2 -translate-y-1/2'></div>
+                  opt.topLabel === "Positive" &&
+                  <div className='text-[10px] flex justify-center text-white items-center text-center leading-[10px] h-full' >
+                    {
+                      active &&
+                      <div className='absolute top-1/2 shadow-md! border left-6 h-1 w-1 bg-white/50 rounded-full -translate-x-1/2 -translate-y-1/2'></div>
+                    }
+                    Any degree of <br /> uniform pink coloration
+                  </div>
+                }
+                {
+                  active && opt.topLabel !== "Positive" &&
+                  <div className='absolute top-1/2 shadow-md! border left-1/2 h-1 w-1 bg-white/50 rounded-full -translate-x-1/2 -translate-y-1/2'></div>
                 }
               </div>
+              {
+                opt.bottomLabel &&
+                <div className="text-[10px] leading-[12px] text-[#9CA3AF] mt-1">{opt.bottomLabel}</div>
+              }
             </div>
           )
         })}
+        {row.unit ?
+          <div className="border-l mt-2 flex justify-end gap-1 items-center pb-2 flex-col text-[10px] leading-[12px] text-[#9CA3AF]">{row.unit}
+            {row.subUnit && (
+              <div className="text-[8px] leading-[10px] text-[#9CA3AF]">({row.subUnit})
+              </div>
+            )}
+          </div>
+          : null}
       </div>
 
-      {row.unit ? (
-        <div className="mt-2 flex justify-end text-[10px] leading-[12px] text-[#9CA3AF]">{row.unit}</div>
-      ) : null}
+
     </div>
   )
 }

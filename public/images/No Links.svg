@@ -4,7 +4,7 @@
 <path d="M84.9998 115.6C100.022 115.6 112.2 103.422 112.2 88.4002C112.2 73.378 100.022 61.2002 84.9998 61.2002C69.9777 61.2002 57.7998 73.378 57.7998 88.4002C57.7998 103.422 69.9777 115.6 84.9998 115.6Z" fill="white"/>
 <path d="M99.7329 122.4H70.2662C68.3884 122.4 66.8662 123.922 66.8662 125.8C66.8662 127.678 68.3884 129.2 70.2662 129.2H99.7329C101.611 129.2 103.133 127.678 103.133 125.8C103.133 123.922 101.611 122.4 99.7329 122.4Z" fill="#F4F5F7"/>
 <path d="M109.934 136H60.067C58.1892 136 56.667 137.522 56.667 139.4C56.667 141.278 58.1892 142.8 60.067 142.8H109.934C111.811 142.8 113.334 141.278 113.334 139.4C113.334 137.522 111.811 136 109.934 136Z" fill="#F4F5F7"/>
-<path d="M87.9902 96H89.5002C92.5202 96 95.0002 93.53 95.0002 90.5C95.0002 87.48 92.5302 85 89.5002 85H87.9902" stroke="#4958E9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M82 85H80.5C77.47 85 75 87.47 75 90.5C75 93.52 77.47 96 80.5 96H82" stroke="#4958E9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M81 90.5H89" stroke="#4958E9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M87.9902 96H89.5002C92.5202 96 95.0002 93.53 95.0002 90.5C95.0002 87.48 92.5302 85 89.5002 85H87.9902" stroke="#4958E9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+<path d="M82 85H80.5C77.47 85 75 87.47 75 90.5C75 93.52 77.47 96 80.5 96H82" stroke="#4958E9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+<path d="M81 90.5H89" stroke="#4958E9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
 </svg>

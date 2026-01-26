@@ -65,6 +65,7 @@ export default function Page() {
 
           <button
             type="button"
+            onClick={() => router.push("/Guardian/Menu/help-centre/urine-collection-guide")}
             className="mt-4 h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white"
           >
             View Step By Step
@@ -158,4 +159,3 @@ export default function Page() {
     </div>
   );
 }
-
