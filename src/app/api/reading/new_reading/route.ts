@@ -63,6 +63,17 @@ function isResultStatus(value: unknown): value is ReadingResultStatus {
   return value === "Normal" || value === "Abnormal";
 }
 
+function isAllowedCloudinaryUrl(value: unknown): boolean {
+  if (typeof value !== "string" || !value.trim()) return false;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:") return false;
+    return url.hostname.endsWith("res.cloudinary.com");
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { userId: veterinarianId, error } = getUserIdFromRequest(req);
@@ -165,6 +176,11 @@ export async function POST(req: NextRequest) {
     const otherInformation = String(report.otherInformation || "");
     const veterinarianNotes = String(report.veterinarianNotes || "");
 
+    const signatureImageUrl = String((body as any).signatureImageUrl || "").trim();
+    if (!signatureImageUrl || !isAllowedCloudinaryUrl(signatureImageUrl)) {
+      return NextResponse.json({ error: "Invalid signatureImageUrl" }, { status: 400 });
+    }
+
     await connectMongo();
 
     const veterinarian = await User.findById(veterinarianId).select("_id role fullName tradeName").lean();
@@ -241,6 +257,7 @@ export async function POST(req: NextRequest) {
               otherInformation,
               veterinarianNotes,
             },
+            signatureImageUrl,
             signedAt: new Date(),
           },
         },
@@ -308,6 +325,7 @@ export async function POST(req: NextRequest) {
         otherInformation,
         veterinarianNotes,
       },
+      signatureImageUrl,
       signedAt: new Date(),
     });
 

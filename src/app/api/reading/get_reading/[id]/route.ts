@@ -118,6 +118,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       testType: (doc as any).testType ?? "urine",
       signedAt: (doc as any).signedAt ?? null,
       createdAt: (doc as any).createdAt ?? null,
+      signatureImageUrl: (doc as any).signatureImageUrl ?? null,
       paymentStatus: paymentStatus || null,
       paymentLinkId,
       identification: (doc as any).identification ?? null,

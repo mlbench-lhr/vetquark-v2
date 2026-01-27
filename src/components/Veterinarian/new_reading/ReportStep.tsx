@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import SignaturePad from 'signature_pad'
 import { ReportDraft } from './types'
 
 type Props = {
@@ -15,15 +16,67 @@ type Props = {
   onChangeReport: (patch: Partial<ReportDraft>) => void
   onBack: () => void
   onComplete: () => void | Promise<void>
+  signatureImageUrl?: string
+  onChangeSignatureUrl?: (url: string) => void
   submitting?: boolean
 }
 
-export default function ReportStep({ patientPreview, collectionAt, report, onChangeReport, onBack, onComplete, submitting }: Props) {
+export default function ReportStep({ patientPreview, collectionAt, report, onChangeReport, onBack, onComplete, signatureImageUrl = "", onChangeSignatureUrl, submitting }: Props) {
   const patientName = patientPreview?.animalName || '—'
   const breed = patientPreview?.breed || '—'
   const species = patientPreview?.species || '—'
   const guardianName = patientPreview?.guardianName || '—'
   const appointment = collectionAt ? new Date(collectionAt).toLocaleString() : '—'
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const sigPadRef = useRef<SignaturePad | null>(null)
+  const [uploading, setUploading] = useState(false)
+
+  useEffect(() => {
+    if (!canvasRef.current) return
+    sigPadRef.current = new SignaturePad(canvasRef.current)
+  }, [])
+
+  async function ensureSignatureUploaded() {
+    if (signatureImageUrl) return true
+    if (!sigPadRef.current || sigPadRef.current.isEmpty()) return false
+    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+    const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY
+    if (!CLOUD_NAME || !API_KEY) return false
+    setUploading(true)
+    try {
+      const dataUrl = sigPadRef.current.toDataURL('image/png')
+      const resBlob = await fetch(dataUrl)
+      const blob = await resBlob.blob()
+      const file = new File([blob], 'signature.png', { type: 'image/png' })
+      const signRes = await fetch(`/api/cloudinary/upload?folder=reading_signatures`)
+      const signJson = await signRes.json().catch(() => null)
+      if (!signRes.ok) return false
+      const timestamp = String(signJson?.timestamp || '')
+      const signature = String(signJson?.signature || '')
+      if (!timestamp || !signature) return false
+      const data = new FormData()
+      data.append('file', file)
+      data.append('api_key', API_KEY)
+      data.append('timestamp', timestamp)
+      data.append('signature', signature)
+      data.append('folder', 'reading_signatures')
+      const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: data })
+      const uploadJson = await uploadRes.json().catch(() => null)
+      if (!uploadRes.ok) return false
+      const url = String(uploadJson?.secure_url || uploadJson?.url || '')
+      if (!url) return false
+      onChangeSignatureUrl?.(url)
+      return true
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function handleRetake() {
+    if (uploading || submitting) return
+    onChangeSignatureUrl?.('')
+    sigPadRef.current?.clear()
+  }
 
   return (
     <div className="">
@@ -47,6 +100,48 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
           Conferido, liberado e assinado.
           <br />
           <span className='text-xs font-normal'>A interpretação dos exames laboratoriais deverá ser realizada pelo médico veterinário responsável, mediante a sintomatologia clínica do animal.</span>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <div className="text-sm text-gray-900 mb-2">Signature</div>
+        <div className="rounded-2xl bg-gray-100 p-1">
+          <canvas ref={canvasRef} width={320} height={160} className="w-full h-40 bg-white rounded-xl" />
+          <div className="mt-1 flex items-center gap-1">
+            {
+              !signatureImageUrl &&
+              <button
+                type="button"
+                onClick={() => sigPadRef.current?.clear()}
+                className="px-4 py-2 rounded-full bg-white text-gray-700 font-medium"
+                disabled={uploading || !!submitting}
+              >
+                Clear
+              </button>
+            }
+            <button
+              type="button"
+              onClick={ensureSignatureUploaded}
+              className="px-4 py-2 rounded-full bg-primary text-white font-medium disabled:opacity-70"
+              disabled={uploading || !!submitting}
+            >
+              {uploading ? 'Uploading...' : signatureImageUrl ? 'Signature Ready' : 'Save'}
+            </button>
+            {
+              !!signatureImageUrl && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleRetake}
+                    className="px-4 py-2 rounded-full bg-white text-primary font-medium border border-primary"
+                    disabled={uploading || !!submitting}
+                  >
+                    Retake
+                  </button>
+                </>
+              )
+            }
+          </div>
         </div>
       </div>
 
@@ -90,8 +185,12 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
       </div>
       <div className="mt-6 space-y-3">
         <button
-          onClick={onComplete}
-          disabled={!!submitting}
+          onClick={async () => {
+            const ok = await ensureSignatureUploaded()
+            if (!ok) return
+            onComplete()
+          }}
+          disabled={!!submitting || uploading || !signatureImageUrl}
           className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-70"
         >
           {submitting ? 'Signing...' : 'Sign & Complete'}

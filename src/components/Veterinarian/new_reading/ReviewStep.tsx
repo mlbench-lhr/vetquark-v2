@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useEffect, useMemo } from 'react'
-import { AlertTriangle, Check } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { AlertTriangle, Check, Pencil, X } from 'lucide-react'
 import { ReviewResultDraft, ReviewSelectionMap } from './types'
 
 type Props = {
@@ -236,7 +236,7 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     subUnit: 'mmol/L',
     defaultIndex: 2,
     options: [
-      { topLabel: '0', color: '#0077AB' },
+      { topLabel: '0', topSubLabel: '0', color: '#0077AB' },
       { topLabel: '1.5', topSubLabel: "0.625", color: '#4378A8' },
       { topLabel: '6.0', topSubLabel: "1.25", color: '#45669B' },
       { topLabel: '3.0', topSubLabel: "2.5", color: '#78578D' },
@@ -252,7 +252,7 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     subUnit: 'g/L',
     defaultIndex: 0,
     options: [
-      { topLabel: '0', color: '#FFF' },
+      { topLabel: '0', topSubLabel: '0', color: '#FFF' },
       { topLabel: '50', topSubLabel: '0.5', color: '#EEE' },
       { topLabel: '100', topSubLabel: '1.0', color: '#DDD' },
       { topLabel: '150', topSubLabel: '1.5', color: '#CCC' },
@@ -285,12 +285,60 @@ function ResultRow({
   selectedIndex: number
   onSelect: (index: number) => void
 }) {
+  const [editing, setEditing] = useState(false)
+  const [prevIndex, setPrevIndex] = useState<number | null>(null)
+  const handleStartEdit = () => {
+    setPrevIndex(selectedIndex)
+    setEditing(true)
+  }
+  const handleCancel = () => {
+    if (prevIndex != null) onSelect(prevIndex)
+    setEditing(false)
+    setPrevIndex(null)
+  }
+  const handleSave = () => {
+    setEditing(false)
+    setPrevIndex(null)
+  }
   const cols = row.unit ? row.options.length + 1 : row.options.length
   return (
-    <div className="py-4 px-3">
+    <div className={`py-4 px-3 ${editing ? 'bg-[#F5F6F6] rounded-xl' : ''}`}>
       <div className="flex items-center opa justify-between">
         <div className="text-[14px] leading-[18px] font-medium text-[#111827]">{row.label}</div>
-        <StatusPill status={row.status} />
+        <div className="flex items-center gap-1">
+          {editing ? (
+            <>
+              <span className='text-xs text-muted-foreground me-1'>
+                Select a value
+              </span>
+              <button
+                type="button"
+                className="p-1 rounded-full border text-gray-700"
+                onClick={handleCancel}
+                aria-label="Cancel"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className="p-1 rounded-full bg-primary text-white"
+                onClick={handleSave}
+                aria-label="Save"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="p-1 text-primary text-[12px] leading-[14px]"
+              onClick={handleStartEdit}
+            >
+              <Pencil size={14} />
+            </button>
+          )}
+          <StatusPill status={row.status} />
+        </div>
       </div>
 
       <div
@@ -300,30 +348,37 @@ function ResultRow({
         {row.options.map((opt, idx) => {
           const active = idx === selectedIndex
           return (
-            <div key={`${row.key}-${idx}`} className="flex flex-col items-center justify-end">
+            <div key={`${row.key}-${idx}`} className="flex flex-col items-center justify-start">
               <div className="text-[10px] leading-[12px] text-[#9CA3AF]">{opt.topLabel}</div>
               {
                 opt.topSubLabel &&
-                <div className="text-[8px] leading-[8px] text-[#839297]">({opt.topSubLabel})</div>
+                <div className={`text-[8px] leading-[8px] ${opt.topSubLabel === "0" ? "text-transparent" : "text-[#839297]"}`}>({opt.topSubLabel})</div>
               }
               <div
-                className={`mt-2 h-7 ${opt.topLabel === "Positive" ? " w-[200px] " : " w-7 "} relative rounded-full ${opt.topLabel === "Neg" && "border"} ${active ? 'shadow-md!' : ''}`}
+                className={`mt-2 h-7 ${opt.topLabel === "Positive" ? " w-[200px] " : " w-7 "} relative rounded-full ${opt.topLabel === "Neg" ? "border" : ""} ${active ? 'border-2 border-primary ring-2 ring-primary ring-offset-2 ring-offset-white shadow-theme-xs scale-[1.03] transition-transform' : ''} ${editing ? 'cursor-pointer' : ''}`}
                 style={{ background: opt.topLabel === "Positive" ? "linear-gradient(180deg, #F7E9EE 0%, #E780AF 100%)" : opt.color }}
+                onClick={() => {
+                  if (!editing) return
+                  onSelect(idx)
+                }}
               >
                 {
                   opt.topLabel === "Positive" &&
                   <div className='text-[10px] flex justify-center text-white items-center text-center leading-[10px] h-full' >
-                    {
-                      active &&
-                      <div className='absolute top-1/2 shadow-md! border left-6 h-1 w-1 bg-white/50 rounded-full -translate-x-1/2 -translate-y-1/2'></div>
-                    }
                     Any degree of <br /> uniform pink coloration
                   </div>
                 }
-                {
-                  active && opt.topLabel !== "Positive" &&
-                  <div className='absolute top-1/2 shadow-md! border left-1/2 h-1 w-1 bg-white/50 rounded-full -translate-x-1/2 -translate-y-1/2'></div>
-                }
+                {active && (
+                  opt.topLabel === "Positive" ? (
+                    <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-white flex items-center justify-center shadow-md">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Check className={`h-3 w-3 ${opt.topLabel === 'Neg' ? 'text-primary' : 'text-white'}`} />
+                    </div>
+                  )
+                )}
               </div>
               {
                 opt.bottomLabel &&

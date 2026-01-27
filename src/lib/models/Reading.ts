@@ -45,6 +45,7 @@ export interface IReading {
     otherInformation: string;
     veterinarianNotes: string;
   };
+  signatureImageUrl?: string;
   signedAt?: Date;
   viewedAt?: Date;
   createdAt?: Date;
@@ -93,6 +94,7 @@ const ReadingSchema = new Schema<IReading>(
       otherInformation: { type: String, default: "" },
       veterinarianNotes: { type: String, default: "" },
     },
+    signatureImageUrl: { type: String, trim: true, default: "" },
     signedAt: { type: Date },
     viewedAt: { type: Date },
   },
