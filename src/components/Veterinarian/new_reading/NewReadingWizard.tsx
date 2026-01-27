@@ -23,6 +23,7 @@ export default function NewReadingWizard() {
   const [step, setStep] = useState<NewReadingStep>('identification')
   const [submitting, setSubmitting] = useState(false)
   const [paymentLinkStatus, setPaymentLinkStatus] = useState<"unknown" | "pending" | "paid" | "expired">("unknown")
+  const [signatureImageUrl, setSignatureImageUrl] = useState<string>("")
 
   const [draft, setDraft] = useState<NewReadingDraft>(() => ({
     identification: {
@@ -192,8 +193,8 @@ export default function NewReadingWizard() {
 
   const canSubmit = useMemo(() => {
     const i = draft.identification
-    return !!i.patientId && !!i.collectionMethod && !!i.collectionAt && !!i.stripLot && !!i.stripExpiry && !!draft.timer.analysis && draft.results.length > 0
-  }, [draft.identification, draft.timer.analysis, draft.results.length])
+    return !!i.patientId && !!i.collectionMethod && !!i.collectionAt && !!i.stripLot && !!i.stripExpiry && !!draft.timer.analysis && draft.results.length > 0 && !!signatureImageUrl
+  }, [draft.identification, draft.timer.analysis, draft.results.length, signatureImageUrl])
 
   function makeDummyAnalysis(): { analyzedAt: string; analysis: { summary: string; confidence: number; flags: string[] } } {
     const analyzedAt = new Date().toISOString()
@@ -235,6 +236,7 @@ export default function NewReadingWizard() {
           },
           results: draft.results,
           report: draft.report,
+          signatureImageUrl,
         }),
       })
       const data = await res.json().catch(() => null)
@@ -251,6 +253,7 @@ export default function NewReadingWizard() {
         results: [],
         report: { summaryAndInterpretation: "", otherInformation: "", veterinarianNotes: "" },
       }))
+      setSignatureImageUrl("")
       setStep("identification")
     } catch {
       toast.error("Network error while saving reading")
@@ -360,6 +363,8 @@ export default function NewReadingWizard() {
           }
           onBack={() => setStep('review')}
           onComplete={submitReading}
+          signatureImageUrl={signatureImageUrl}
+          onChangeSignatureUrl={setSignatureImageUrl}
           submitting={submitting}
         />
       )}
