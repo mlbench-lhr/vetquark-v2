@@ -5,6 +5,7 @@ import Link from 'next/link';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Patient } from './types';
+import { useTranslation } from 'react-i18next';
 
 type ExamSuggestion = {
   id: string;
@@ -22,6 +23,7 @@ const SearchBar: React.FC = () => {
   const [examSuggestions, setExamSuggestions] = useState<ExamSuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   const trimmedQuery = useMemo(() => query.trim(), [query]);
 
@@ -133,7 +135,7 @@ const SearchBar: React.FC = () => {
       <div className="flex-1 relative">
         <input
           type="text"
-          placeholder="Search for patient or exam..."
+          placeholder={t('dashboard.searchPatientsOrExam')}
           value={query}
           onFocus={() => {
             if (trimmedQuery) setOpen(true);
@@ -172,13 +174,13 @@ const SearchBar: React.FC = () => {
         {open && trimmedQuery ? (
           <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
             {loading ? (
-              <div className="px-4 py-3 text-sm text-gray-500">Searching...</div>
+              <div className="px-4 py-3 text-sm text-gray-500">{t('dashboard.searching')}</div>
             ) : patientSuggestions.length === 0 && examSuggestions.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-gray-500">No results found</div>
+              <div className="px-4 py-3 text-sm text-gray-500">{t('dashboard.noResults')}</div>
             ) : (
               <div className="max-h-80 overflow-auto">
                 {patientSuggestions.length ? (
-                  <div className="px-4 pt-3 pb-2 text-xs font-semibold text-gray-400">Patients</div>
+                  <div className="px-4 pt-3 pb-2 text-xs font-semibold text-gray-400">{t('dashboard.patientsLabel')}</div>
                 ) : null}
                 {patientSuggestions.map((p) => (
                   <button
@@ -198,7 +200,7 @@ const SearchBar: React.FC = () => {
                 ))}
 
                 {examSuggestions.length ? (
-                  <div className="px-4 pt-3 pb-2 text-xs font-semibold text-gray-400">Exams</div>
+                  <div className="px-4 pt-3 pb-2 text-xs font-semibold text-gray-400">{t('dashboard.examsLabel')}</div>
                 ) : null}
                 {examSuggestions.map((r) => (
                   <button
@@ -213,7 +215,7 @@ const SearchBar: React.FC = () => {
                     </div>
                     <div className="shrink-0 text-right">
                       <div className={`text-xs font-medium ${r.status === 'signed' ? 'text-green-600' : 'text-amber-600'}`}>
-                        {r.status === 'signed' ? 'Signed' : 'Pending'}
+                        {r.status === 'signed' ? t('history.signed') : t('history.pending')}
                       </div>
                       <div className="text-xs text-gray-400">{formatExamDate(r.date)}</div>
                     </div>
@@ -226,7 +228,7 @@ const SearchBar: React.FC = () => {
       </div>
       <Link href={"/Veterinarian/store"} className="px-4 py-3 rounded-xl flex items-center gap-2 bg-gray-100" >
         <ShoppingCartIcon className="w-5 h-5 text-primary" />
-        <span className="text-black font-light">Store</span>
+        <span className="text-black font-light">{t('dashboard.store')}</span>
       </Link>
 
     </div>

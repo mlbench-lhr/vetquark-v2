@@ -261,7 +261,7 @@ function PageContent() {
   }, []);
 
   return (
-    <div className="h-[100dvh] w-full bg-white">
+    <div className="h-[calc(100dvh-80px)] w-full bg-white">
       <div className="mx-auto w-full h-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
         <div className="flex items-start justify-between gap- flex-col px-4">
           <h1 className="text-[16px] font-[500] text-[#2B2B2B]">

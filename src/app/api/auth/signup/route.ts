@@ -226,6 +226,19 @@ export async function POST(req: NextRequest) {
       if (!dateOfBirth) {
         return NextResponse.json({ error: "Date of birth is required" }, { status: 400 });
       }
+      {
+        const dob = new Date(String(dateOfBirth));
+        if (!Number.isFinite(dob.getTime())) {
+          return NextResponse.json({ error: "Invalid date of birth" }, { status: 400 });
+        }
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+        if (age < 10) {
+          return NextResponse.json({ error: "Guardian must be at least 10 years old" }, { status: 400 });
+        }
+      }
       if (!address) {
         return NextResponse.json({ error: "Address is required" }, { status: 400 });
       }
@@ -382,6 +395,23 @@ export async function POST(req: NextRequest) {
       if (!existing.emailVerified) {
         return NextResponse.json({ error: "Email not verified" }, { status: 400 });
       }
+      if (normalizedProfile === "Guardian") {
+        const dobStr = String(dateOfBirth || "").trim();
+        if (!dobStr) {
+          return NextResponse.json({ error: "Date of birth is required" }, { status: 400 });
+        }
+        const dob = new Date(dobStr);
+        if (!Number.isFinite(dob.getTime())) {
+          return NextResponse.json({ error: "Invalid date of birth" }, { status: 400 });
+        }
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+        if (age < 10) {
+          return NextResponse.json({ error: "Guardian must be at least 10 years old" }, { status: 400 });
+        }
+      }
       const update: Partial<IUser> = {
         fullName,
         taxId,
@@ -454,6 +484,23 @@ export async function POST(req: NextRequest) {
       reportHeaderAddress,
       reportFooter,
     };
+    if (normalizedProfile === "Guardian") {
+      const dobStr = String(dateOfBirth || "").trim();
+      if (!dobStr) {
+        return NextResponse.json({ error: "Date of birth is required" }, { status: 400 });
+      }
+      const dob = new Date(dobStr);
+      if (!Number.isFinite(dob.getTime())) {
+        return NextResponse.json({ error: "Invalid date of birth" }, { status: 400 });
+      }
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+      if (age < 10) {
+        return NextResponse.json({ error: "Guardian must be at least 10 years old" }, { status: 400 });
+      }
+    }
 
     const created = await User.create(doc);
 

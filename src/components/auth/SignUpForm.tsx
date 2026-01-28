@@ -342,6 +342,26 @@ export default function SignUpForm() {
     }
     try {
       setSubmitting(true);
+      if (profileType === "tutor") {
+        const dateOfBirthStr = String(formData.dateOfBirth || "").trim();
+        if (!dateOfBirthStr) {
+          toast.error(t("auth.dateOfBirthRequired"));
+          return;
+        }
+        const dob = new Date(dateOfBirthStr);
+        if (!Number.isFinite(dob.getTime())) {
+          toast.error("Invalid date of birth");
+          return;
+        }
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+        if (age < 10) {
+          toast.error("Guardian must be at least 10 years old");
+          return;
+        }
+      }
       const basePayload = {
         mode: "complete" as const,
         fullName: formData.fullName,
@@ -793,6 +813,7 @@ export default function SignUpForm() {
                     value={formData.dateOfBirth}
                     onChange={handleInputChange}
                     required
+                    max={(profileType === "tutor" ? new Date(new Date().setFullYear(new Date().getFullYear() - 10)) : new Date()).toISOString().slice(0, 10)}
                     className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12 [&::-webkit-calendar-picker-indicator]:opacity-0"
                     style={{ colorScheme: 'light' }}
                   />

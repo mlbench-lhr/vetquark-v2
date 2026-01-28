@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
+import { useTranslation } from 'react-i18next'
 
 type PatientRow = {
   id: string
@@ -14,6 +15,7 @@ type PatientRow = {
 
 export default function Page() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [selectedId, setSelectedId] = useState('')
 
   const [query, setQuery] = useState('')
@@ -77,7 +79,7 @@ export default function Page() {
           >
             <ChevronLeft className="h-6 w-6 text-[#111827]" />
           </button>
-          <div className="text-[16px] leading-[20px] font-medium text-[#111827]">All Patients</div>
+          <div className="text-[16px] leading-[20px] font-medium text-[#111827]">{t('dashboard.allPatientsTitle')}</div>
         </div>
 
         <div className="relative mt-4">
@@ -88,7 +90,7 @@ export default function Page() {
               setQuery(e.target.value)
               setPage(1)
             }}
-            placeholder="Search by patient or guardian name"
+            placeholder={t('dashboard.searchPlaceholder')}
             className="h-[48px] w-full rounded-2xl bg-[#F3F4F6] pl-12 pr-4 text-[14px] leading-[18px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
           />
         </div>
@@ -111,7 +113,7 @@ export default function Page() {
               </div>
             ))
           ) : filtered.length === 0 ? (
-            <div className="text-[14px] leading-[18px] text-[#6B7280]">No patients found.</div>
+            <div className="text-[14px] leading-[18px] text-[#6B7280]">{t('dashboard.noPatientsFound')}</div>
           ) : (
             filtered.map((p) => {
               const active = !!selectedId && p.id === selectedId
@@ -130,7 +132,7 @@ export default function Page() {
                       <div className="min-w-0">
                         <div className="truncate text-[14px] leading-[18px] font-medium text-[#111827]">{p.name}</div>
                         <div className="mt-1 truncate text-[12px] leading-[16px] text-[#9CA3AF]">{p.owner}</div>
-                        <div className="mt-0.5 truncate text-[12px] leading-[16px] text-[#9CA3AF]">ID: {p.id}</div>
+                        <div className="mt-0.5 truncate text-[12px] leading-[16px] text-[#9CA3AF]">{t('registrations.idLabel')}: {p.id}</div>
                       </div>
                     </div>
                     <ChevronRight className="h-5 w-5 shrink-0 text-[#3F78D8]" />
@@ -162,7 +164,7 @@ export default function Page() {
           className="h-[56px] rounded-full bg-[#3F78D8] px-6 text-[16px] font-medium text-white shadow-theme-lg flex items-center gap-3"
         >
           <Plus className="h-5 w-5" />
-          Add New Patient
+          {t('registrations.addNewPatientButton')}
         </button>
       </div>
     </div>

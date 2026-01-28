@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Pusher from "pusher-js";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 type NotificationItem = {
   id: string;
@@ -24,6 +25,7 @@ function timeLabel(iso: string | null) {
 
 export default function GuardianNotificationsPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>("");
@@ -41,7 +43,7 @@ export default function GuardianNotificationsPage() {
         const data = await res.json().catch(() => null);
         if (!mounted) return;
         if (!res.ok) {
-          toast.error(typeof data?.error === "string" ? data.error : "Failed to load notifications");
+          toast.error(typeof data?.error === "string" ? data.error : t("notifications.failedToLoad"));
           return;
         }
         if (Array.isArray(data?.items)) setItems(data.items);
@@ -99,15 +101,15 @@ export default function GuardianNotificationsPage() {
           <button type="button" onClick={() => router.back()} className="absolute left-0 top-1/2 -translate-y-1/2 p-1">
             <ChevronLeft className="h-6 w-6 text-[#111827]" />
           </button>
-          <div className="text-[16px] leading-[20px] font-medium text-[#111827]">Notifications</div>
+          <div className="text-[16px] leading-[20px] font-medium text-[#111827]">{t("notifications.title")}</div>
         </div>
       </div>
 
       <div className="px-5 pb-8">
         {loading ? (
-          <div className="text-[14px] text-[#9CA3AF]">Loading...</div>
+          <div className="text-[14px] text-[#9CA3AF]">{t("notifications.loading")}</div>
         ) : displayItems.length === 0 ? (
-          <div className="text-[14px] text-[#9CA3AF]">No notifications yet.</div>
+          <div className="text-[14px] text-[#9CA3AF]">{t("notifications.noNotificationsYet")}</div>
         ) : (
           <div>
             {displayItems.map((n) => (

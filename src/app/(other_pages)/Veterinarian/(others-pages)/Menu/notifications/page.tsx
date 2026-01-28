@@ -5,6 +5,7 @@ import Header from "@/components/common/header";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 type ToggleItem = {
   id: string;
@@ -81,47 +82,48 @@ function SettingCard({
 export default function NotificationsSettingsPage() {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.userProfile.profile);
+  const { t } = useTranslation();
 
   const pushItems: ToggleItem[] = useMemo(
     () => [
       {
         id: "signed-report",
-        title: "Signed report",
-        description: "When a report is finalised by the owner.",
+        title: t("notifications.settings.signedReportTitle"),
+        description: t("notifications.settings.signedReportDesc"),
         defaultOn: true,
       },
       {
         id: "payment-received",
-        title: "Payment received",
-        description: "Confirmation of payment for an exam.",
+        title: t("notifications.settings.paymentReceivedTitle"),
+        description: t("notifications.settings.paymentReceivedDesc"),
         defaultOn: true,
       },
       {
         id: "pending-expired-payment",
-        title: "Pending/expired payment",
-        description: "Reminders for outstanding payments.",
+        title: t("notifications.settings.pendingExpiredPaymentTitle"),
+        description: t("notifications.settings.pendingExpiredPaymentDesc"),
         defaultOn: false,
       },
     ],
-    []
+    [t]
   );
 
   const emailItems: ToggleItem[] = useMemo(
     () => [
       {
         id: "clinic-report-copy",
-        title: "Copy of the report for the clinic",
-        description: "Send a PDF of the report to the clinic's email.",
+        title: t("notifications.settings.clinicReportCopyTitle"),
+        description: t("notifications.settings.clinicReportCopyDesc"),
         defaultOn: true,
       },
       {
         id: "daily-summary",
-        title: "Daily summary of exams",
-        description: "A report at the end of the day with the exams performed.",
+        title: t("notifications.settings.dailySummaryTitle"),
+        description: t("notifications.settings.dailySummaryDesc"),
         defaultOn: true,
       },
     ],
-    []
+    [t]
   );
 
   const initialPush = useMemo(() => {
@@ -168,11 +170,11 @@ export default function NotificationsSettingsPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+        toast.error(typeof json?.error === "string" ? json.error : t("common.failedToSaveChanges"));
         return;
       }
       if (json?.profile) dispatch(setProfile(json.profile));
-      toast.success("Saved changes");
+      toast.success(t("common.savedChanges"));
     } finally {
       setSaving(false);
     }
@@ -180,11 +182,11 @@ export default function NotificationsSettingsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header title="Notifications" />
+      <Header title={t("menu.notifications")} />
 
       <div className="px-4 pb-10 pt-2">
         <div className="text-[18px] leading-[26px] font-normal text-[#111827] mb-3">
-          Push Notifications (Mobile)
+          {t("notifications.settings.pushTitle")}
         </div>
 
         <div className="space-y-4">
@@ -202,7 +204,7 @@ export default function NotificationsSettingsPage() {
         <div className="h-8" />
 
         <div className="text-[18px] leading-[26px] font-normal text-[#111827] mb-3">
-          Email Notifications
+          {t("notifications.settings.emailTitle")}
         </div>
 
         <div className="space-y-4">
@@ -224,7 +226,7 @@ export default function NotificationsSettingsPage() {
             disabled={saving}
             className="h-[56px] w-full rounded-full bg-[#4A7BF7] text-[15px] font-medium text-white"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? t("common.saving") : t("common.saveChanges")}
           </button>
         </div>
       </div>

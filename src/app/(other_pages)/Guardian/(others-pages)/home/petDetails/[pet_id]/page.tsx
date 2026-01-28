@@ -7,6 +7,7 @@ import { PatientInfoCard } from '@/components/Veterinarian/home/details/Informat
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { Check } from 'lucide-react';
+import ProgressView from '@/components/Veterinarian/home/details/Progress';
 
 interface TabsProps {
   activeTab: string;
@@ -304,7 +305,8 @@ export default function Page() {
           <PatientInfoCard {...petData} />
         </div>
       ) : (
-        <ExamsTab />
+        // <ExamsTab />
+        <ProgressView />
       )}
     </div>
   );

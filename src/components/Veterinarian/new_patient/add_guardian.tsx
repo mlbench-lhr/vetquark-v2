@@ -11,6 +11,7 @@ import { useModal } from '@/hooks/useModal';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
+import { useTranslation } from 'react-i18next';
 
 function digitsOnly(value: string) {
     return value.replace(/\D/g, "");
@@ -169,6 +170,7 @@ interface FormData {
 }
 
 export default function GuardianRegistration() {
+    const { t } = useTranslation();
     const router = useRouter();
     const searchParams = useSearchParams();
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
@@ -399,12 +401,12 @@ export default function GuardianRegistration() {
         if (isEditing) return;
         const email = String(formData.email || '').trim().toLowerCase();
         if (!email) {
-            toast.error("Email is required");
+            toast.error(t('auth.emailRequired'));
             return;
         }
         const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         if (!emailOk) {
-            toast.error("Please enter a valid email");
+            toast.error(t('auth.invalidEmail'));
             return;
         }
 
@@ -417,13 +419,13 @@ export default function GuardianRegistration() {
             });
             const result = await res.json();
             if (!res.ok) {
-                toast.error(typeof result?.error === "string" ? result.error : "Failed to send verification code");
+                toast.error(typeof result?.error === "string" ? result.error : t('auth.failedToSendOtp'));
                 return;
             }
-            toast.success(typeof result?.message === "string" ? result.message : "OTP sent");
+            toast.success(typeof result?.message === "string" ? result.message : t('auth.otpSentToEmail'));
             openOtpModal();
         } catch {
-            toast.error("Network error while sending verification code");
+            toast.error(t('auth.networkErrorSendingOtp'));
         } finally {
             setSendingOtp(false);
         }
@@ -434,7 +436,7 @@ export default function GuardianRegistration() {
         const email = String(formData.email || '').trim().toLowerCase();
         const code = otp.replace(/\D/g, '').slice(0, 5);
         if (code.length !== 5) {
-            toast.error("Please enter the 5-digit code");
+            toast.error(t('auth.enterOtpCode'));
             return;
         }
         try {
@@ -446,20 +448,20 @@ export default function GuardianRegistration() {
             });
             const result = await res.json();
             if (!res.ok) {
-                toast.error(typeof result?.error === "string" ? result.error : "Verification failed");
+                toast.error(typeof result?.error === "string" ? result.error : t('auth.verificationFailed'));
                 return;
             }
             const verificationId = typeof result?.verificationId === "string" ? result.verificationId : null;
             if (!verificationId) {
-                toast.error("Verification failed");
+                toast.error(t('auth.verificationFailed'));
                 return;
             }
             setEmailVerified(true);
             setEmailVerificationId(verificationId);
             closeOtpModal();
-            toast.success("Email verified");
+            toast.success(t('auth.emailVerified'));
         } catch {
-            toast.error("Network error while verifying code");
+            toast.error(t('auth.networkErrorVerifyingOtp'));
         } finally {
             setVerifyingOtp(false);
         }
@@ -470,13 +472,13 @@ export default function GuardianRegistration() {
             setSubmitting(true);
             const fullName = formData.fullName.trim();
             if (!fullName) {
-                toast.error("Full name is required");
+                toast.error(t('auth.fullNameRequired'));
                 return;
             }
 
             const idCard = formData.idCard.trim();
             if (!idCard) {
-                toast.error("ID Card is required");
+                toast.error(t('auth.idCardRequired'));
                 return;
             }
             // if (!isValidCpf(idCard)) {
@@ -486,7 +488,7 @@ export default function GuardianRegistration() {
 
             const postalCode = formData.postalCode.trim();
             if (!postalCode) {
-                toast.error("Postal Code is required");
+                toast.error(t('auth.postalCodeRequired'));
                 return;
             }
             // if (!isValidPostalCode(postalCode)) {
@@ -496,12 +498,12 @@ export default function GuardianRegistration() {
 
             const mobileRaw = String(formData.mobile || "").trim();
             if (!mobileRaw) {
-                toast.error("Phone number is required");
+                toast.error(t('auth.phoneNumberRequired'));
                 return;
             }
             const parsedPhone = parsePhoneNumberFromString(mobileRaw);
             if (!parsedPhone?.isValid()) {
-                toast.error("Please enter a valid phone number");
+                toast.error(t('auth.invalidPhoneNumber'));
                 return;
             }
             const normalizedPhone = parsedPhone.number;
@@ -509,57 +511,72 @@ export default function GuardianRegistration() {
             const email = String(formData.email || '').trim().toLowerCase();
             if (!isEditing) {
                 if (!email) {
-                    toast.error("Email is required");
+                    toast.error(t('auth.emailRequired'));
                     return;
                 }
                 const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
                 if (!emailOk) {
-                    toast.error("Please enter a valid email");
+                    toast.error(t('auth.invalidEmail'));
                     return;
                 }
             }
 
             const dateOfBirth = String(formData.dateOfBirth || '').trim();
             if (!dateOfBirth) {
-                toast.error("Date of birth is required");
+                toast.error(t('auth.dateOfBirthRequired'));
                 return;
+            }
+            {
+                const dob = new Date(dateOfBirth);
+                if (!Number.isFinite(dob.getTime())) {
+                    toast.error('Invalid date of birth');
+                    return;
+                }
+                const today = new Date();
+                let age = today.getFullYear() - dob.getFullYear();
+                const m = today.getMonth() - dob.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                if (age < 10) {
+                    toast.error('Guardian must be at least 10 years old');
+                    return;
+                }
             }
 
             const address = String(formData.address || '').trim();
             if (!address) {
-                toast.error("Address is required");
+                toast.error(t('auth.addressRequired'));
                 return;
             }
 
             const country = String(formData.country || '').trim();
             if (!country) {
-                toast.error("Country is required");
+                toast.error(t('auth.countryRequired'));
                 return;
             }
 
             const selectedState = String(formData.state || '').trim();
             if (!selectedState) {
-                toast.error("State is required");
+                toast.error(t('auth.stateRequired'));
                 return;
             }
             const selectedStateMeta = stateOptions.find((o) => o.value === selectedState) || null;
             if (!selectedStateMeta) {
-                toast.error("Please select a valid state");
+                toast.error(t('auth.invalidState'));
                 return;
             }
 
             const city = String(formData.city || '').trim();
             if (!city) {
-                toast.error("City is required");
+                toast.error(t('auth.cityRequired'));
                 return;
             }
             if (!cityOptions.includes(city)) {
-                toast.error("Please select a valid city");
+                toast.error(t('auth.invalidCity'));
                 return;
             }
 
             if (!isEditing && formData.acceptTerms !== true) {
-                toast.error("Terms must be accepted");
+                toast.error(t('auth.mustAcceptTerms'));
                 return;
             }
 
@@ -583,7 +600,7 @@ export default function GuardianRegistration() {
                 });
                 const result = await res.json().catch(() => null);
                 if (!res.ok) {
-                    toast.error(typeof result?.error === "string" ? result.error : "Failed to update guardian");
+                    toast.error(typeof result?.error === "string" ? result.error : t('newPatient.guardian.failedToUpdateGuardian'));
                     return;
                 }
                 const updatedId = String(result?.id || guardianId);
@@ -592,7 +609,7 @@ export default function GuardianRegistration() {
             }
 
             if (!emailVerified || !emailVerificationId) {
-                toast.error("Please verify the email first");
+                toast.error(t('auth.verifyEmailFirst'));
                 return;
             }
 
@@ -618,12 +635,12 @@ export default function GuardianRegistration() {
             });
             const result = await res.json();
             if (!res.ok) {
-                toast.error(typeof result?.error === "string" ? result.error : "Failed to create guardian");
+                toast.error(typeof result?.error === "string" ? result.error : t('newPatient.guardian.failedToCreateGuardian'));
                 return;
             }
             router.push(`/Veterinarian/patient/new_patient?guardianId=${result.id}&guardianName=${encodeURIComponent(formData.fullName)}`);
         } catch (e) {
-            toast.error(isEditing ? "Network error while updating guardian" : "Network error while creating guardian");
+            toast.error(isEditing ? t('newPatient.guardian.networkErrorUpdatingGuardian') : t('newPatient.guardian.networkErrorCreatingGuardian'));
             console.error(isEditing ? 'Error updating guardian:' : 'Error creating guardian:', e);
         } finally {
             setSubmitting(false);
@@ -637,7 +654,7 @@ export default function GuardianRegistration() {
                 <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={() => router.back()}>
                     <ChevronLeft className="w-6 h-6 text-gray-700" />
                 </button>
-                    <h1 className="text-base font-medium text-gray-900">{isEditing ? "Edit Guardian" : "Guardian Registration"}</h1>
+                    <h1 className="text-base font-medium text-gray-900">{isEditing ? t('newPatient.guardian.editGuardianTitle') : t('newPatient.guardian.registrationTitle')}</h1>
                 <button className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                     {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
                     <span className="text-white text-sm">
@@ -656,16 +673,16 @@ export default function GuardianRegistration() {
 
                 {/* Section 1: Identification */}
                 <div className="mb-8">
-                    <h2 className="text-base font-semibold text-gray-900 mb-4">1-Identification</h2>
+                    <h2 className="text-base font-semibold text-gray-900 mb-4">{t('newPatient.guardian.identificationSectionTitle')}</h2>
 
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Full Name<span className="text-red-500">*</span>
+                                {t('auth.fullName')}<span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                placeholder="Guardian's Name"
+                                placeholder={t('newPatient.guardian.guardianNamePlaceholder')}
                                 value={formData.fullName}
                                 onChange={(e) => handleChange('fullName', e.target.value)}
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -687,11 +704,11 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                ID Card<span className="text-red-500">*</span>
+                                {t('newPatient.guardian.idCardLabel')}<span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                placeholder="i.e 000.000.000-00"
+                                placeholder={t('newPatient.guardian.idCardPlaceholder')}
                                 value={formData.idCard}
                                 onChange={(e) => handleChange('idCard', e.target.value)}
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -713,14 +730,14 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Date Of Birth<span className="text-red-500">*</span>
+                                {t('auth.dateOfBirth')}<span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                                 <input
                                     ref={dobRef}
                                     type="date"
-                                    max={new Date().toISOString().slice(0, 10)}
-                                    placeholder="Select date of birth"
+                                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 10)).toISOString().slice(0, 10)}
+                                    placeholder={t('newPatient.patientForm.selectDateOfBirth')}
                                     value={formData.dateOfBirth}
                                     onChange={(e) => handleChange('dateOfBirth', e.target.value)}
                                     className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
@@ -743,7 +760,7 @@ export default function GuardianRegistration() {
 
                 {/* Section 2: Contact Details */}
                 <div className="mb-8">
-                    <h2 className="text-base font-semibold text-gray-900 mb-4">2-Contact Details</h2>
+                    <h2 className="text-base font-semibold text-gray-900 mb-4">{t('newPatient.guardian.contactDetailsSectionTitle')}</h2>
 
                     <div className="space-y-4">
                         {/* <div>
@@ -761,7 +778,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Phone Number<span className="text-red-500">*</span>
+                                {t('auth.phoneNumber')}<span className="text-red-500">*</span>
                             </label>
                             <PhoneInput
                                 name="mobile"
@@ -777,12 +794,12 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Email<span className="text-red-500">*</span>
+                                {t('auth.email')}<span className="text-red-500">*</span>
                             </label>
                             <div className="flex gap-2">
                                 <input
                                     type="email"
-                                    placeholder="Enter email here"
+                                    placeholder={t('auth.enterEmail')}
                                     value={formData.email}
                                     onChange={(e) => handleChange('email', e.target.value)}
                                     disabled={isEditing}
@@ -795,7 +812,7 @@ export default function GuardianRegistration() {
                                         disabled={sendingOtp || emailVerified}
                                         className="shrink-0 px-4 py-3 rounded-lg bg-primary text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                                     >
-                                        {emailVerified ? "Verified" : sendingOtp ? "Sending..." : "Verify"}
+                                        {emailVerified ? t('auth.verified') : sendingOtp ? t('auth.sending') : t('auth.verify')}
                                     </button>
                                 ) : null}
                             </div>
@@ -805,16 +822,16 @@ export default function GuardianRegistration() {
 
                 {/* Section 3: Address Details */}
                 <div className="mb-8">
-                    <h2 className="text-base font-semibold text-gray-900 mb-4">3-Address Details</h2>
+                    <h2 className="text-base font-semibold text-gray-900 mb-4">{t('newPatient.guardian.addressDetailsSectionTitle')}</h2>
 
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Address<span className="text-red-500">*</span>
+                                {t('auth.address')}<span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                placeholder="Enter your address"
+                                placeholder={t('auth.enterAddress')}
                                 value={formData.address}
                                 onChange={(e) => handleChange('address', e.target.value)}
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -823,7 +840,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Country<span className="text-red-500">*</span>
+                                {t('auth.country')}<span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={formData.country}
@@ -831,7 +848,7 @@ export default function GuardianRegistration() {
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                             >
                                 <option value="" disabled>
-                                    Select a country
+                                    {t('auth.selectCountry')}
                                 </option>
                                 {countryOptions.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
@@ -843,7 +860,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                State<span className="text-red-500">*</span>
+                                {t('auth.state')}<span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={formData.state}
@@ -852,7 +869,7 @@ export default function GuardianRegistration() {
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                             >
                                 <option value="" disabled>
-                                    {!formData.country ? "Select a country first" : loadingStates ? "Loading states..." : "Select a state"}
+                                    {!formData.country ? t('auth.selectCountryFirst') : loadingStates ? t('auth.loadingStates') : t('auth.selectState')}
                                 </option>
                                 {stateOptions.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
@@ -864,7 +881,7 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                City<span className="text-red-500">*</span>
+                                {t('auth.city')}<span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={formData.city}
@@ -873,7 +890,7 @@ export default function GuardianRegistration() {
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                             >
                                 <option value="" disabled>
-                                    {!formData.state ? "Select a state first" : loadingCities ? "Loading cities..." : "Select a city"}
+                                    {!formData.state ? t('auth.selectStateFirst') : loadingCities ? t('auth.loadingCities') : t('auth.selectCity')}
                                 </option>
                                 {cityOptions.map((city) => (
                                     <option key={city} value={city}>
@@ -885,11 +902,11 @@ export default function GuardianRegistration() {
 
                         <div>
                             <label className="block text-sm text-gray-900 mb-2">
-                                Postal Code<span className="text-red-500">*</span>
+                                {t('auth.postalCode')}<span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                placeholder="Enter postal code i.e 27492"
+                                placeholder={t('auth.enterPostalCode')}
                                 value={formData.postalCode}
                                 onChange={(e) => handleChange('postalCode', e.target.value)}
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -905,9 +922,7 @@ export default function GuardianRegistration() {
                                 className="mt-1 w-5 h-5 text-primary rounded border-gray-300 focus:ring-primary"
                             />
                             <label className="text-sm text-gray-700">
-                                By continuing you agree to our{" "}
-                                <span className="text-primary font-medium">Terms of use</span> &{" "}
-                                <span className="text-primary font-medium">LGPD/Privacy</span>
+                                {t('auth.acceptTerms')}
                             </label>
                         </div>
                     </div>
@@ -923,7 +938,7 @@ export default function GuardianRegistration() {
                         className="w-full bg-primary hover:bg-primary/70 text-white font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         <Plus className="w-5 h-5" />
-                        {submitting || loadingGuardian ? (isEditing ? "Saving..." : "Adding...") : (isEditing ? "Save Changes" : "Add Guardian")}
+                        {submitting || loadingGuardian ? (isEditing ? t('common.saving') : t('newPatient.guardian.adding')) : (isEditing ? t('common.saveChanges') : t('newPatient.guardian.addGuardianButton'))}
                     </button>
                 </div>
             </div>
@@ -931,8 +946,8 @@ export default function GuardianRegistration() {
             <Modal isOpen={otpModalOpen && !isEditing} onClose={closeOtpModal} className="max-w-[420px] mx-4 p-6">
                 <div className="flex items-start justify-between gap-4">
                     <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Email Verification</h3>
-                        <p className="text-sm text-gray-600 mt-1">Enter the 5-digit code sent to {String(formData.email || '').trim()}</p>
+                        <h3 className="text-lg font-semibold text-gray-900">{t('auth.emailVerification')}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{t('auth.enterVerificationCode')} {String(formData.email || '').trim()}</p>
                     </div>
                     <button type="button" onClick={closeOtpModal} className="p-2 rounded-lg hover:bg-gray-100">
                         <X className="w-5 h-5 text-gray-700" />
@@ -953,7 +968,7 @@ export default function GuardianRegistration() {
                         disabled={verifyingOtp}
                         className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                        {verifyingOtp ? "Verifying..." : "Verify Code"}
+                        {verifyingOtp ? t('auth.verifying') : t('auth.verifyOtp')}
                     </button>
                 </div>
             </Modal>

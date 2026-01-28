@@ -390,7 +390,7 @@ export default function Home() {
 
     return (
         <main className="min-h-screen bg-gray-5 p-6">
-            <div className="max-w-md mx-auto">
+            <div className=" mx-auto">
                 <Header name={profile?.fullName || 'User'} />
                 <PetSelector pets={pets} activePetId={activePetId} onSelect={setActivePetId} loading={loadingPets} />
                 <CurrentHealth

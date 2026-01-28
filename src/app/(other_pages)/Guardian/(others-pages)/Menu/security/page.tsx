@@ -99,7 +99,7 @@ export default function SecurityPage() {
 
       {changeOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
-          <div className="w-full max-w-md rounded-3xl bg-white p-5">
+          <div className="w-full rounded-3xl bg-white p-5">
             <div className="text-[16px] font-semibold text-[#111827]">{t("security.changePassword")}</div>
 
             <div className="mt-4 space-y-3">

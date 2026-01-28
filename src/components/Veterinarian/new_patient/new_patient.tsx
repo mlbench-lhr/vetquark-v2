@@ -9,6 +9,7 @@ import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useTranslation } from 'react-i18next';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -47,6 +48,7 @@ export default function AddPatientMultiStep() {
   const profile = useAppSelector((s: RootState) => s.userProfile.profile);
   const userId = profile?.id || '';
   const [unreadCount, setUnreadCount] = useState(0);
+  const { t } = useTranslation();
   const patientId = (searchParams.get('patientId') || '').trim() || null;
   const dobRef = useRef<HTMLInputElement | null>(null);
   const cardValidityRef = useRef<HTMLInputElement | null>(null);
@@ -212,14 +214,14 @@ export default function AddPatientMultiStep() {
     if (!patientId) {
       const guardianId = linkedGuardian?.id || '';
       if (!guardianId || !isMongoObjectId(guardianId)) {
-        toast.error('Please link a guardian first');
+        toast.error(t('newPatient.patientForm.linkGuardianFirst'));
         return false;
       }
     }
 
     const animalName = asNonEmptyTrimmedString(formData.animalName);
     if (!animalName) {
-      toast.error('Animal name is required');
+      toast.error(t('newPatient.patientForm.animalNameRequired'));
       return false;
     }
 
@@ -234,7 +236,7 @@ export default function AddPatientMultiStep() {
     const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
     if (!CLOUD_NAME || !API_KEY) {
-      toast.error('Photo upload is not configured');
+      toast.error(t('newPatient.patientForm.photoUploadNotConfigured'));
       console.error('Cloudinary env not set: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_API_KEY');
       return;
     }
@@ -242,7 +244,7 @@ export default function AddPatientMultiStep() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('File too large (max 10MB)');
+      toast.error(t('newPatient.patientForm.fileTooLarge'));
       console.error('File too large (max 10MB)');
       return;
     }
@@ -253,7 +255,7 @@ export default function AddPatientMultiStep() {
       const signRes = await fetch(`/api/cloudinary/upload?folder=patients`);
       const signJson = await signRes.json();
       if (!signRes.ok) {
-        toast.error('Failed to prepare photo upload');
+        toast.error(t('newPatient.patientForm.failedToPreparePhotoUpload'));
         console.error('Failed to get Cloudinary signature:', signJson);
         return;
       }
@@ -272,7 +274,7 @@ export default function AddPatientMultiStep() {
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error('Photo upload failed');
+        toast.error(t('newPatient.patientForm.photoUploadFailed'));
         console.error('Cloudinary upload failed:', json);
         return;
       }
@@ -281,7 +283,7 @@ export default function AddPatientMultiStep() {
         setFormData(prev => ({ ...prev, photo: url }));
       }
     } catch (err) {
-      toast.error('Photo upload failed');
+      toast.error(t('newPatient.patientForm.photoUploadFailed'));
       console.error('Cloudinary error:', err);
     } finally {
       setUploadingPhoto(false);
@@ -299,6 +301,13 @@ export default function AddPatientMultiStep() {
     try {
       if (!validateStep(1)) {
         setCurrentStep(1);
+        return;
+      }
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const cardValidityStr = String(formData.cardValidity || '').trim();
+      if (cardValidityStr && cardValidityStr <= todayStr) {
+        toast.error('Card validity must be a future date');
         return;
       }
 
@@ -325,14 +334,14 @@ export default function AddPatientMultiStep() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({} as any));
-        toast.error(typeof (json as any)?.error === 'string' ? (json as any).error : 'Failed to save patient');
+        toast.error(typeof (json as any)?.error === 'string' ? (json as any).error : t('newPatient.patientForm.failedToSavePatient'));
         return;
       }
       const result = await res.json().catch(() => ({} as any));
-      toast.success(patientId ? 'Saved changes' : 'Patient created');
+      toast.success(patientId ? t('common.savedChanges') : t('newPatient.patientForm.patientCreated'));
       router.push(`/Veterinarian/home/patientDetails/${result?.id}`);
     } catch (e) {
-      toast.error(patientId ? 'Network error while saving changes' : 'Network error while creating patient');
+      toast.error(patientId ? t('newPatient.patientForm.networkErrorSavingChanges') : t('newPatient.patientForm.networkErrorCreatingPatient'));
       console.error('Error saving patient:', e);
     } finally {
       setSubmitting(false);
@@ -346,7 +355,7 @@ export default function AddPatientMultiStep() {
         <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={() => router.back()}>
           <ChevronLeft className="w-6 h-6 text-gray-700" />
         </button>
-        <h1 className="text-base font-medium text-gray-900">{patientId ? 'Edit Patient' : 'Add new Patient'}</h1>
+        <h1 className="text-base font-medium text-gray-900">{patientId ? t('newPatient.editPatientTitle') : t('newPatient.addNewPatientTitle')}</h1>
         <button className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
           {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
           <span className="text-white text-sm">
@@ -371,7 +380,7 @@ export default function AddPatientMultiStep() {
                 height={24}
               />
             </div>
-            <span className="text-xs font-medium text-gray-900">Guardian</span>
+            <span className="text-xs font-medium text-gray-900">{t('newPatient.guardianStep')}</span>
           </div>
           <div className="w-32 h-1 bg-primary rounded-full w-[100%] absolute left-0 top-1/2 z-0"></div>
 
@@ -384,14 +393,14 @@ export default function AddPatientMultiStep() {
                 height={24}
               />
             </div>
-            <span className="text-xs font-medium text-gray-500">Patient Details</span>
+            <span className="text-xs font-medium text-gray-500">{t('newPatient.patientDetailsStep')}</span>
           </div>
         </div>
       </div>
 
       {/* Guardian Info */}
       <div className="">
-        <p className="text-sm text-gray-500 mb-3">Linked Guardian</p>
+        <p className="text-sm text-gray-500 mb-3">{t('newPatient.patientForm.linkedGuardian')}</p>
         <div className="flex items-center justify-between bg-gray-100 p-2 rounded-[12px]">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -402,21 +411,21 @@ export default function AddPatientMultiStep() {
             </Avatar>
             <div>
               <p className="font-medium text-gray-900">{linkedGuardian?.fullName ?? 'N/A'}</p>
-              <p className="text-xs text-tertiary">CPF: {linkedGuardian?.taxId || 'N/A'}</p>
+              <p className="text-xs text-tertiary">{t('profile.nationalId')}: {linkedGuardian?.taxId || 'N/A'}</p>
             </div>
           </div>
           {!patientId && (
             <button className="flex items-center gap-1 text-primary text-sm font-medium" onClick={() => router.push('/Veterinarian/patient')}>
               <RefreshCw className="w-4 h-4" />
-              Change
+              {t('common.change')}
             </button>
           )}
         </div>
 
         <div className="flex items-center justify-between bg-gray-100 p-2 mt-2 rounded-[12px]">
           <div>
-            <p className="font-medium text-gray-900 text-sm">Animal Status</p>
-            <p className="text-xs text-tertiary">Is the animal alive?</p>
+            <p className="font-medium text-gray-900 text-sm">{t('newPatient.patientForm.animalStatusTitle')}</p>
+            <p className="text-xs text-tertiary">{t('newPatient.patientForm.animalAliveQuestion')}</p>
           </div>
           <button
             onClick={() => setIsAlive(!isAlive)}
@@ -434,14 +443,14 @@ export default function AddPatientMultiStep() {
       {/* Form Content */}
       <div className="p">
         {loadingPatient ? (
-          <div className="text-sm text-gray-500 py-6">Loading patient...</div>
+          <div className="text-sm text-gray-500 py-6">{t('newPatient.patientForm.loadingPatient')}</div>
         ) : (
           <>
             {currentStep === 1 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">Identifications</h2>
-                  <span className="text-sm text-primary">Step 1/4</span>
+                  <h2 className="text-lg font-medium text-gray-900">{t('newPatient.patientForm.identificationsTitle')}</h2>
+                  <span className="text-sm text-primary">{t('auth.step')} 1/4</span>
                 </div>
 
                 <div className="space-y-4">
@@ -452,32 +461,32 @@ export default function AddPatientMultiStep() {
                         <label className="inline-block mt-2">
                           <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                           <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
-                            {uploadingPhoto ? 'Uploading...' : 'Change Photo'}
+                            {uploadingPhoto ? t('auth.uploading') : t('newPatient.patientForm.changePhoto')}
                           </span>
                         </label>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-2">
                         <Upload className="w-8 h-8 text-primary mx-auto" />
-                        <p className="text-sm text-gray-700">Drag and drop the photo here, or click to select</p>
+                        <p className="text-sm text-gray-700">{t('newPatient.patientForm.dragDropPhoto')}</p>
                         <label className="inline-block">
                           <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                           <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
-                            {uploadingPhoto ? 'Uploading...' : 'Select Photo'}
+                            {uploadingPhoto ? t('auth.uploading') : t('newPatient.patientForm.selectPhoto')}
                           </span>
                         </label>
-                        <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 10MB</p>
+                        <p className="text-xs text-gray-500">{t('newPatient.patientForm.photoFormatsHint')}</p>
                       </div>
                     )}
                   </div>
 
                   <div>
                     <label className="block text-sm text-gray-900 mb-2">
-                      Animal Name<span className="text-red-500">*</span>
+                      {t('newPatient.patientForm.animalNameLabel')}<span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Pet's Name"
+                      placeholder={t('newPatient.patientForm.animalNamePlaceholder')}
                       value={formData.animalName}
                       onChange={(e) => handleChange('animalName', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -485,10 +494,10 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Microchip</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.microchipLabel')}</label>
                     <input
                       type="number"
-                      placeholder="Enter microchip number"
+                      placeholder={t('newPatient.patientForm.microchipPlaceholder')}
                       value={formData.microchip}
                       onChange={(e) => handleChange('microchip', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -496,27 +505,27 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Species</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.speciesLabel')}</label>
                     <div className="relative">
                       <select
                         value={formData.species}
                         onChange={(e) => handleChange('species', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-primary"
                       >
-                        <option value="">Select an option</option>
-                        <option value="dog">Dog</option>
-                        <option value="cat">Cat</option>
-                        <option value="bird">Bird</option>
+                        <option value="">{t('auth.selectOption')}</option>
+                        <option value="dog">{t('newPatient.speciesDog')}</option>
+                        <option value="cat">{t('newPatient.speciesCat')}</option>
+                        <option value="bird">{t('newPatient.speciesBird')}</option>
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Breed</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.breedLabel')}</label>
                     <input
                       type="text"
-                      placeholder="E.g. Labrador, Siamese..."
+                      placeholder={t('newPatient.patientForm.breedPlaceholder')}
                       value={formData.breed}
                       onChange={(e) => handleChange('breed', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -524,33 +533,33 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Sex</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.sexLabel')}</label>
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleChange('sex', 'Male')}
                         className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
                           }`}
                       >
-                        Male
+                        {t('common.male')}
                       </button>
                       <button
                         onClick={() => handleChange('sex', 'Female')}
                         className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.sex === 'Female' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
                           }`}
                       >
-                        Female
+                        {t('common.female')}
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Date Of Birth</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('profile.dateOfBirth')}</label>
                     <div className="relative">
                       <input
                         ref={dobRef}
                         type="date"
                         max={new Date().toISOString().slice(0, 10)}
-                        placeholder="Select date of birth"
+                        placeholder={t('newPatient.patientForm.selectDateOfBirth')}
                         value={formData.dateOfBirth}
                         onChange={(e) => handleChange('dateOfBirth', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
@@ -575,16 +584,16 @@ export default function AddPatientMultiStep() {
             {currentStep === 2 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">Additional Information</h2>
-                  <span className="text-sm text-primary">Step 2/4</span>
+                  <h2 className="text-lg font-medium text-gray-900">{t('newPatient.patientForm.additionalInfoTitle')}</h2>
+                  <span className="text-sm text-primary">{t('auth.step')} 2/4</span>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Temperament</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.temperamentLabel')}</label>
                     <input
                       type="text"
-                      placeholder="E.g. Gentle, Agitated"
+                      placeholder={t('newPatient.patientForm.temperamentPlaceholder')}
                       value={formData.temperament}
                       onChange={(e) => handleChange('temperament', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -592,10 +601,10 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Size</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.sizeLabel')}</label>
                     <input
                       type="text"
-                      placeholder="E.g. Small, Medium, Large"
+                      placeholder={t('newPatient.patientForm.sizePlaceholder')}
                       value={formData.size}
                       onChange={(e) => handleChange('size', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -603,10 +612,10 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Coat</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.coatLabel')}</label>
                     <input
                       type="text"
-                      placeholder="E.g. Short, Long, Smooth"
+                      placeholder={t('newPatient.patientForm.coatPlaceholder')}
                       value={formData.coat}
                       onChange={(e) => handleChange('coat', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -614,30 +623,30 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Neutered</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.neuteredLabel')}</label>
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleChange('neutered', 'Yes')}
                         className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.neutered === 'Yes' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
                           }`}
                       >
-                        Yes
+                        {t('common.yes')}
                       </button>
                       <button
                         onClick={() => handleChange('neutered', 'No')}
                         className={`flex-1 py-3 rounded-lg font-medium transition-colors ${formData.neutered === 'No' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
                           }`}
                       >
-                        No
+                        {t('common.no')}
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">RGA</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.rgaLabel')}</label>
                     <input
                       type="text"
-                      placeholder="Enter animal health registration"
+                      placeholder={t('newPatient.patientForm.rgaPlaceholder')}
                       value={formData.rga}
                       onChange={(e) => handleChange('rga', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -650,16 +659,16 @@ export default function AddPatientMultiStep() {
             {currentStep === 3 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">Health Plan</h2>
-                  <span className="text-sm text-primary">Step 3/4</span>
+                  <h2 className="text-lg font-medium text-gray-900">{t('newPatient.patientForm.healthPlanTitle')}</h2>
+                  <span className="text-sm text-primary">{t('auth.step')} 3/4</span>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Health Plan Name</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.healthPlanNameLabel')}</label>
                     <input
                       type="text"
-                      placeholder="Enter health plan name"
+                      placeholder={t('newPatient.patientForm.healthPlanNamePlaceholder')}
                       value={formData.planName}
                       onChange={(e) => handleChange('planName', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -667,10 +676,10 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Plan card number</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.planCardNumberLabel')}</label>
                     <input
                       type="number"
-                      placeholder="Enter plan card number"
+                      placeholder={t('newPatient.patientForm.planCardNumberPlaceholder')}
                       value={formData.cardNumber}
                       onChange={(e) => handleChange('cardNumber', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -678,12 +687,13 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Card Validity</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.cardValidityLabel')}</label>
                     <div className="relative">
                       <input
                         ref={cardValidityRef}
                         type="date"
-                        placeholder="Select date of birth"
+                        min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
+                        placeholder={t('newPatient.patientForm.selectDate')}
                         value={formData.cardValidity}
                         onChange={(e) => handleChange('cardValidity', e.target.value)}
                         className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
@@ -708,15 +718,15 @@ export default function AddPatientMultiStep() {
             {currentStep === 4 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">Clinical Information</h2>
-                  <span className="text-sm text-primary">Step 4/4</span>
+                  <h2 className="text-lg font-medium text-gray-900">{t('newPatient.patientForm.clinicalInfoTitle')}</h2>
+                  <span className="text-sm text-primary">{t('auth.step')} 4/4</span>
                 </div>
 
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Allergies</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.allergiesLabel')}</label>
                     <textarea
-                      placeholder="Write any known allergies"
+                      placeholder={t('newPatient.patientForm.allergiesPlaceholder')}
                       value={formData.allergies}
                       onChange={(e) => handleChange('allergies', e.target.value)}
                       rows={3}
@@ -725,9 +735,9 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Chronic Diseases</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.chronicDiseasesLabel')}</label>
                     <textarea
-                      placeholder="Write existing chronic diseases"
+                      placeholder={t('newPatient.patientForm.chronicDiseasesPlaceholder')}
                       value={formData.chronicDiseases}
                       onChange={(e) => handleChange('chronicDiseases', e.target.value)}
                       rows={3}
@@ -736,9 +746,9 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Other Information</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.otherInformationLabel')}</label>
                     <textarea
-                      placeholder="Write existing chronic diseases"
+                      placeholder={t('newPatient.patientForm.otherInformationPlaceholder')}
                       value={formData.otherInformation}
                       onChange={(e) => handleChange('otherInformation', e.target.value)}
                       rows={3}
@@ -747,9 +757,9 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">Internal Notes</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.internalNotesLabel')}</label>
                     <textarea
-                      placeholder="Write your notes about animal"
+                      placeholder={t('newPatient.patientForm.internalNotesPlaceholder')}
                       value={formData.internalNotes}
                       onChange={(e) => handleChange('internalNotes', e.target.value)}
                       rows={3}
@@ -771,7 +781,11 @@ export default function AddPatientMultiStep() {
             disabled={submitting || uploadingPhoto || loadingPatient}
             className="w-full bg-primary hover:bg-blue-600 text-white font-medium py-4 rounded-2xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {currentStep === 4 ? (submitting ? (patientId ? 'Saving...' : 'Creating...') : (patientId ? 'Save Changes' : 'Add Animal')) : 'Next'}
+            {currentStep === 4
+              ? (submitting
+                  ? (patientId ? t('common.saving') : t('auth.creating'))
+                  : (patientId ? t('common.saveChanges') : t('newPatient.patientForm.addAnimalButton')))
+              : t('auth.next')}
           </button>
 
         </div>

@@ -85,6 +85,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid isAlive" }, { status: 400 });
     }
 
+    const cardValidityStr = asOptionalTrimmedString((body as any).cardValidity);
+    if (cardValidityStr) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      if (cardValidityStr <= todayStr) {
+        return NextResponse.json({ error: "Card validity must be a future date" }, { status: 400 });
+      }
+    }
+
     await connectMongo();
 
     const veterinarian = await User.findById(veterinarianId).select("_id role fullName tradeName").lean();
@@ -182,6 +190,14 @@ export async function PUT(req: NextRequest) {
     const isAlive = (body as any).isAlive;
     if (isAlive !== undefined && typeof isAlive !== "boolean") {
       return NextResponse.json({ error: "Invalid isAlive" }, { status: 400 });
+    }
+
+    const cardValidityStr = asOptionalTrimmedString((body as any).cardValidity);
+    if (cardValidityStr) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      if (cardValidityStr <= todayStr) {
+        return NextResponse.json({ error: "Card validity must be a future date" }, { status: 400 });
+      }
     }
 
     await connectMongo();

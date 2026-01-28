@@ -8,9 +8,11 @@ import Pagination from '@/components/tables/Pagination';
 import { ChevronLeft, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 export default function Page() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
@@ -66,7 +68,7 @@ export default function Page() {
                 >
                     <ChevronLeft className="w-6 h-6 text-gray-700" />
                 </button>
-                <h1 className="text-base font-medium text-gray-900">All Patients</h1>
+                <h1 className="text-base font-medium text-gray-900">{t('dashboard.allPatientsTitle')}</h1>
                 <button className="w-12 h-12 bg-gray-10 rounded-full flex items-center justify-center">
                     {/* <span className="text-white text-sm">
                         <Image
@@ -83,7 +85,7 @@ export default function Page() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
                 <input
                     type="text"
-                    placeholder="Search by patient or guardian name..."
+                    placeholder={t('dashboard.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => {
                         setSearchQuery(e.target.value);
@@ -107,7 +109,7 @@ export default function Page() {
                         </div>
                     ))
                 ) : filteredPatients.length === 0 ? (
-                    <div className="text-tertiary text-sm">No patients found.</div>
+                    <div className="text-tertiary text-sm">{t('dashboard.noPatientsFound')}</div>
                 ) : (
                     filteredPatients.map((patient, index) => (
                         <PatientCard key={patient.id} patient={patient} featured={index === 0} />
@@ -133,7 +135,7 @@ export default function Page() {
                     <circle cx="12" cy="12" r="10" strokeWidth="2" />
                     <path d="M12 8v8m-4-4h8" strokeWidth="2" strokeLinecap="round" />
                 </svg>
-                New Patient
+                {t('dashboard.newPatientButton')}
             </button>
         </div>
     );

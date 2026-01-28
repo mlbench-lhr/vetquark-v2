@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import LinkGenerated from './LinkGenerated'
 import { IdentificationDraft, PatientListItem } from './types'
 import { toast } from 'react-toastify'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   value: IdentificationDraft
@@ -15,6 +16,7 @@ type Props = {
 
 export default function IdentificationStep({ value, onChange, onNext }: Props) {
   const router = useRouter()
+  const { t } = useTranslation()
   const [patients, setPatients] = useState<PatientListItem[]>([])
   const [showLink, setShowLink] = useState(false)
   const [paymentLinkId, setPaymentLinkId] = useState<string | null>((value.paymentLinkId || '').trim() || null)
@@ -96,7 +98,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         onSend={async () => {
           if (sending || generating) return
           if (!paymentLinkId) {
-            toast.error("Payment link is not ready yet")
+            toast.error(t("reading.identification.paymentLinkNotReady"))
             return
           }
           try {
@@ -117,13 +119,13 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
             })
             const data = await res.json().catch(() => null)
             if (!res.ok) {
-              toast.error(typeof data?.error === "string" ? data.error : "Failed to send payment link")
+              toast.error(typeof data?.error === "string" ? data.error : t("reading.identification.failedToSendPaymentLink"))
               return
             }
-            toast.success("Payment link sent to guardian")
+            toast.success(t("reading.identification.paymentLinkSent"))
             onNext()
           } catch {
-            toast.error("Network error while sending payment link")
+            toast.error(t("reading.identification.networkErrorSendingPaymentLink"))
           } finally {
             setSending(false)
           }
@@ -138,12 +140,12 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
 
   return (
     <div className="">
-      <h2 className="text-lg font-medium">Test Identification</h2>
-      <p className="text-sm text-tertiary">Fill in the basic details to start a new urine test.</p>
+      <h2 className="text-lg font-medium">{t("reading.identification.title")}</h2>
+      <p className="text-sm text-tertiary">{t("reading.identification.desc")}</p>
 
       <div className="mt-6 space-y-5">
         <div>
-          <div className="text-sm text-gray-900 mb-2">Patient</div>
+          <div className="text-sm text-gray-900 mb-2">{t("reading.identification.patient")}</div>
           <div className="w-full flex justify-start items-center gap-2 relative">
             <button
               type="button"
@@ -153,9 +155,9 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
               {value.patientId
                 ? (() => {
                   const p = patients.find((x) => x.id === value.patientId)
-                  return p ? `${p.name}${p.owner ? ` — ${p.owner}` : ''}` : 'Select a patient'
+                  return p ? `${p.name}${p.owner ? ` — ${p.owner}` : ''}` : t("reading.identification.selectPatient")
                 })()
-                : 'Select a patient'}
+                : t("reading.identification.selectPatient")}
               <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
             </button>
             <button
@@ -179,24 +181,24 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         </div>
 
         <div>
-          <div className="text-sm text-gray-900 mb-2">Collection Method</div>
+          <div className="text-sm text-gray-900 mb-2">{t("reading.identification.collectionMethod")}</div>
           <div className="relative">
             <select
               value={value.collectionMethod}
               onChange={(e) => onChange({ collectionMethod: e.target.value as IdentificationDraft["collectionMethod"] })}
               className="w-full px-4 py-4 bg-gray-100 rounded-2xl appearance-none text-gray-700"
             >
-              <option value="">Select a method</option>
-              <option value="free_catch">Free catch</option>
-              <option value="cystocentesis">Cystocentesis</option>
-              <option value="catheter">Catheter</option>
+              <option value="">{t("reading.identification.selectMethod")}</option>
+              <option value="free_catch">{t("reading.identification.freeCatch")}</option>
+              <option value="cystocentesis">{t("reading.identification.cystocentesis")}</option>
+              <option value="catheter">{t("reading.identification.catheter")}</option>
             </select>
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
           </div>
         </div>
 
         <div>
-          <div className="text-sm text-gray-900 mb-2">Date and Time of Collection</div>
+          <div className="text-sm text-gray-900 mb-2">{t("reading.identification.collectionDateTime")}</div>
           <div className="relative">
             <input
               ref={collectionRef}
@@ -217,17 +219,17 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         <div className="pt-2 border-t border-gray-200" />
 
         <div>
-          <div className="text-sm text-gray-900 mb-2">Strip Lot</div>
+          <div className="text-sm text-gray-900 mb-2">{t("reading.identification.stripLot")}</div>
           <input
             type='number'
             value={value.stripLot}
             onChange={(e) => onChange({ stripLot: e.target.value })}
-            placeholder="Enter Strip Lot Number"
+            placeholder={t("reading.identification.enterStripLot")}
             className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700"
           />
         </div>
 
-        <div className="text-sm text-gray-900 mb-2">Strip Expiry</div>
+        <div className="text-sm text-gray-900 mb-2">{t("reading.identification.stripExpiry")}</div>
         <div className="w-full flex justify-start items-center gap-2 relative">
           <div className="relative w-[calc(100%-0px)]">
             <div className="relative">
@@ -237,7 +239,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
                 value={value.stripExpiry}
                 min={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => onChange({ stripExpiry: e.target.value })}
-                placeholder="Enter Strip Expiry Date"
+                placeholder={t("reading.identification.enterStripExpiry")}
                 className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 pr-12"
                 style={{ colorScheme: 'light' }}
               />
@@ -270,7 +272,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
                 const res = await fetch(`/api/payment_links/get/${encodeURIComponent(existingId)}`)
                 const data = await res.json().catch(() => null)
                 if (!res.ok) {
-                  toast.error(typeof data?.error === "string" ? data.error : "Failed to load payment link")
+                  toast.error(typeof data?.error === "string" ? data.error : t("reading.identification.failedToLoadPaymentLink"))
                   return
                 }
                 const nextAmountLabel = typeof data?.item?.amountLabel === "string" ? data.item.amountLabel : undefined
@@ -278,7 +280,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
                 setPaymentLinkId(existingId)
                 setShowLink(true)
               } catch {
-                toast.error("Network error while loading payment link")
+                toast.error(t("reading.identification.networkErrorLoadingPaymentLink"))
               } finally {
                 setGenerating(false)
               }
@@ -293,7 +295,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
               })
               const data = await res.json().catch(() => null)
               if (!res.ok) {
-                toast.error(typeof data?.error === "string" ? data.error : "Failed to generate payment link")
+                toast.error(typeof data?.error === "string" ? data.error : t("reading.identification.failedToGeneratePaymentLink"))
                 return
               }
               const id = String(data?.id || "")
@@ -302,7 +304,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
               setAmountLabel(typeof data?.amountLabel === "string" ? data.amountLabel : undefined)
               setShowLink(true)
             } catch {
-              toast.error("Network error while generating payment link")
+              toast.error(t("reading.identification.networkErrorGeneratingPaymentLink"))
             } finally {
               setGenerating(false)
             }
@@ -310,7 +312,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
           disabled={!canProceed}
           className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-60"
         >
-          {generating ? "Generating..." : (value.paymentLinkId || paymentLinkId ? "View Payment Link" : "Generate Payment Link")}
+          {generating ? t("reading.identification.generating") : (value.paymentLinkId || paymentLinkId ? t("reading.identification.viewPaymentLink") : t("reading.identification.generatePaymentLink"))}
         </button>
       </div>
     </div>

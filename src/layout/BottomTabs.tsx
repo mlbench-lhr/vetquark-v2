@@ -17,7 +17,7 @@ const VETERINARIAN_TABS = [
 
 const GUARDIAN_TABS = [
     { id: "start", labelKey: "tabs.start", icon: "/images/tabs/home.svg", icon_active: "/images/tabs/home-active.svg", href: "/Guardian/home" },
-    { id: "pets", labelKey: "tabs.pets", icon: "/images/tabs/paw.svg", icon_active: "/images/tabs/paw-active.svg", href: "/Guardian/home/pets" },
+    { id: "pets", labelKey: "tabs.pets", icon: "/images/tabs/paw.svg", icon_active: "/images/tabs/paw-active.svg", href: "/Guardian/pets" },
     { id: "history", labelKey: "tabs.reports", icon: "/images/tabs/clock.svg", icon_active: "/images/tabs/clock-active.svg", href: "/Guardian/history" },
     { id: "glossary", labelKey: "tabs.glossary", icon: "/images/tabs/glossary.svg", icon_active: "/images/tabs/glossary-active.svg", href: "/Guardian/glossary" },
     { id: "payment", labelKey: "tabs.payment", icon: "/images/tabs/payment.svg", icon_active: "/images/tabs/payment-active.svg", href: "/Guardian/payment" },
@@ -35,7 +35,7 @@ export default function BottomTabs() {
 
 
     return (
-        <nav className="fixed left-1/2 -translate-x-1/2 bottom-[calc(env(safe-area-inset-bottom)+0px)] w-full bg-white border border-gray-200 rounded- shadow-theme-lg">
+        <nav className="fixed left-1/2 h-[80px] -translate-x-1/2 bottom-[calc(env(safe-area-inset-bottom)+0px)] w-full bg-white border border-gray-200 rounded- shadow-theme-lg">
             <div className="flex items-center justify-between px-2 sm:px-4 py-2 relative">
                 {tabs.map((tab, index) => {
                     const isActive = pathname?.toLowerCase().startsWith(tab.href.toLowerCase()) ?? false;

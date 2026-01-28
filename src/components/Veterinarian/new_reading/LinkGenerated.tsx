@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   amountLabel?: string
@@ -10,13 +11,14 @@ type Props = {
 }
 
 export default function LinkGenerated({ amountLabel = 'R$ 5,00', onSend, onBack, sending }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="">
-      <h2 className="text-lg font-medium text-gray-900">Link Generated</h2>
-      <p className="text-sm text-tertiary">Send the link to the tutor and wait for payment confirmation.</p>
+      <h2 className="text-lg font-medium text-gray-900">{t('reading.identification.linkGeneratedTitle')}</h2>
+      <p className="text-sm text-tertiary">{t('reading.identification.linkGeneratedDesc')}</p>
 
       <div className="mt-6 rounded-2xl bg-linear-to-r to-[#EBF2FF] from-[#F5F6F6] px-5 py-4">
-        <div className="text-sm text-gray-700">Amount to be paid</div>
+        <div className="text-sm text-gray-700">{t('reading.identification.amountToBePaid')}</div>
         <div className="text-4xl font-bold text-primary mt-2">{amountLabel}</div>
       </div>
       {/* show while its generating... */}
@@ -38,10 +40,10 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', onSend, onBack,
           disabled={!!sending}
           className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-70"
         >
-          {sending ? "Sending..." : "Send Payment Link"}
+          {sending ? t('reading.identification.sending') : t('reading.identification.sendPaymentLink')}
         </button>
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
-          Go Back
+          {t('common.back')}
         </button>
       </div>
     </div>
