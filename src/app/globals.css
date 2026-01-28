@@ -953,3 +953,34 @@ select {
 }
 
 
+:root {
+  --placeholder-color: #9ca3af;
+}
+
+/* input placeholders */
+input::placeholder {
+  color: var(--placeholder-color);
+}
+
+/* select placeholder + disabled options */
+select {
+  color: var(--placeholder-color);
+}
+
+select:focus {
+  color: initial;
+}
+
+select option:disabled {
+  color: var(--placeholder-color);
+}
+
+/* date input (dd/mm/yy) */
+input[type="date"] {
+  color: var(--placeholder-color);
+}
+
+input[type="date"]:focus,
+input[type="date"]:valid {
+  color: initial;
+}

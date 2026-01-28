@@ -234,7 +234,20 @@ export async function PUT(req: NextRequest) {
     const update: Record<string, any> = {};
     if (typeof fullName === "string") update.fullName = fullName.trim();
     if (typeof taxId === "string") update.taxId = taxId.trim();
-    if (typeof dateOfBirth === "string") update.dateOfBirth = dateOfBirth.trim();
+    if (typeof dateOfBirth === "string") {
+      const dob = new Date(dateOfBirth.trim());
+      if (!Number.isFinite(dob.getTime())) {
+        return NextResponse.json({ error: "Invalid date of birth" }, { status: 400 });
+      }
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+      if (age < 10) {
+        return NextResponse.json({ error: "Guardian must be at least 10 years old" }, { status: 400 });
+      }
+      update.dateOfBirth = dateOfBirth.trim();
+    }
     if (typeof address === "string") update.address = address.trim();
     if (typeof country === "string") update.country = country.trim();
     if (typeof city === "string") update.city = city.trim();

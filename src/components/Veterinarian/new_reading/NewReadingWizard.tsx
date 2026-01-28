@@ -14,8 +14,10 @@ import Link from 'next/link'
 import { useAppSelector } from '@/store/hooks'
 import type { RootState } from '@/store/store'
 import Pusher from 'pusher-js'
+import { useTranslation } from 'react-i18next'
 
 export default function NewReadingWizard() {
+  const { t } = useTranslation()
   const searchParams = useSearchParams()
   const profile = useAppSelector((s: RootState) => s.userProfile.profile)
   const userId = profile?.id || ''
@@ -212,7 +214,7 @@ export default function NewReadingWizard() {
   async function submitReading() {
     if (submitting) return
     if (!canSubmit) {
-      toast.error("Please complete all steps before signing.")
+      toast.error(t("reading.wizard.pleaseCompleteBeforeSigning"))
       return
     }
     try {
@@ -241,10 +243,10 @@ export default function NewReadingWizard() {
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) {
-        toast.error(typeof data?.error === "string" ? data.error : "Failed to save reading")
+        toast.error(typeof data?.error === "string" ? data.error : t("reading.wizard.failedToSaveReading"))
         return
       }
-      toast.success("Reading saved successfully")
+      toast.success(t("reading.wizard.savedReading"))
       setDraft((prev) => ({
         ...prev,
         identification: { patientId: "", paymentLinkId: "", collectionMethod: "", collectionAt: "", stripLot: "", stripExpiry: "" },
@@ -265,7 +267,7 @@ export default function NewReadingWizard() {
   return (
     <div className="min-h-scree p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <div className="text-base font-medium">New Urine Test</div>
+        <div className="text-base font-medium">{t("reading.wizard.newUrineTest")}</div>
         <Link href={"/Veterinarian/notifications"} className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
           {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
           <Image src={"/images/home/bell.svg"} alt="Bell icon" width={24} height={24} />
@@ -287,9 +289,9 @@ export default function NewReadingWizard() {
       {step === 'timer' && (
         paymentLinkId && paymentLinkStatus !== "paid" ? (
           <div className="rounded-2xl bg-gray-100 px-5 py-6">
-            <div className="text-lg font-medium text-gray-900">Payment pending</div>
+            <div className="text-lg font-medium text-gray-900">{t("reading.wizard.paymentPendingTitle")}</div>
             <div className="mt-2 text-sm text-gray-600">
-              Waiting for the guardian to pay before starting the timer.
+              {t("reading.wizard.paymentPendingDesc")}
             </div>
             <div className="mt-6 flex gap-3">
               <button
@@ -297,7 +299,7 @@ export default function NewReadingWizard() {
                 onClick={() => setStep("identification")}
                 className="flex-1 py-3 rounded-full bg-white text-gray-700 font-medium"
               >
-                Back
+                {t("common.back")}
               </button>
               <button
                 type="button"
@@ -315,7 +317,7 @@ export default function NewReadingWizard() {
                 }}
                 className="flex-1 py-3 rounded-full bg-primary text-white font-medium"
               >
-                Refresh
+                {t("reading.wizard.refresh")}
               </button>
             </div>
           </div>

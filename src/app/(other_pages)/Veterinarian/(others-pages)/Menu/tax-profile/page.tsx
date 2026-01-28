@@ -299,6 +299,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 showDoneButton={true}
                 name="expertise"
                 required
+                maxSelected={5}
               />
               <div className="mt-2 flex flex-wrap gap-2 bg-gray-50 p-5 rounded-[12px]">
                 {formData.expertise.length === 0 ? (

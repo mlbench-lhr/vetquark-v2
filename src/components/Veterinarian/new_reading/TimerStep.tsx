@@ -5,6 +5,7 @@ import { transformTestBoxes } from '../../../lib/helper/transformRespose'
 import { RESULT_ROWS } from './ReviewStep'
 import { ReviewSelectionMap } from './types'
 import { toast } from 'react-toastify'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   selectedSeconds: number
@@ -60,6 +61,7 @@ async function getBackCameraStream(): Promise<MediaStream> {
 }
 
 export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, onBack, onAnalyzeAndProceed }: Props) {
+  const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -115,7 +117,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         setNeedsTap(false)
 
         if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-          setCameraError('Camera is not supported in this browser.')
+          setCameraError(t('reading.timer.cameraUnavailable'))
           setCameraReady(false)
           return
         }
@@ -139,8 +141,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         }
         setCameraReady(true)
       } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Failed to start camera'
-        setCameraError(msg)
+        setCameraError(t('reading.timer.cameraUnavailable'))
         setCameraReady(false)
       }
     }
@@ -154,7 +155,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       streamRef.current = null
       if (stream) stream.getTracks().forEach((t) => t.stop())
     }
-  }, [])
+  }, [t])
 
   const captureImage = useCallback(
     (atSeconds: number) => {
@@ -225,7 +226,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       if (alertedAtSetRef.current.has(at)) continue
       alertedAtSetRef.current.add(at)
       playBeep()
-      toast.info('Be ready: click the reading image', { autoClose: 3000 })
+      toast.info(t('reading.timer.prepClickImage'), { autoClose: 3000 })
     }
     for (const at of autoCaptureAtSeconds) {
       if (at > elapsed) continue
@@ -233,7 +234,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       capturedAtSetRef.current.add(at)
       captureImage(at)
     }
-  }, [cameraReady, captureImage, running, secondsLeft, selectedSeconds, playBeep, preAlertAtSeconds])
+  }, [cameraReady, captureImage, running, secondsLeft, selectedSeconds, playBeep, preAlertAtSeconds, t])
 
   const elapsedSeconds = useMemo(() => Math.max(0, selectedSeconds - secondsLeft), [selectedSeconds, secondsLeft])
 
@@ -258,11 +259,13 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   }, [nextCaptureSecondsLeft])
 
   const primaryButtonLabel = useMemo(() => {
-    if (!started) return 'Start'
-    if (captureProgress.total === 0) return running ? 'Capturing' : 'Resume'
-    if (captureProgress.allDone) return `Captured ${captureProgress.completed}/${captureProgress.total}`
-    return running ? `Capturing ${captureProgress.completed}/${captureProgress.total}` : 'Resume'
-  }, [started, captureProgress.allDone, captureProgress.completed, captureProgress.total, running])
+    if (!started) return t('reading.timer.start')
+    if (captureProgress.total === 0) return running ? t('reading.timer.capturing') : t('reading.timer.resume')
+    if (captureProgress.allDone) return t('reading.timer.capturedProgress', { completed: captureProgress.completed, total: captureProgress.total })
+    return running
+      ? t('reading.timer.capturingProgress', { completed: captureProgress.completed, total: captureProgress.total })
+      : t('reading.timer.resume')
+  }, [started, captureProgress.allDone, captureProgress.completed, captureProgress.total, running, t])
 
   const displayTimerLabel = captureProgress.allDone ? '00:00' : nextCaptureLabel
   const handlePrimaryClick = useCallback(() => {
@@ -318,7 +321,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       onAnalyzeAndProceed(mappedResults)
     } catch (e) {
       console.error(e)
-      toast.error('Failed to analyze images')
+      toast.error(t('reading.timer.failedToAnalyzeImages'))
     } finally {
       setAnalyzing(false)
     }
@@ -326,8 +329,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
   return (
     <div className="">
-      <h2 className="text-lg font-medium text-gray-900">Timers and Capture</h2>
-      <p className="text-sm text-tertiary">Follow the steps to complete the analysis.</p>
+      <h2 className="text-lg font-medium text-gray-900">{t('reading.timer.title')}</h2>
+      <p className="text-sm text-tertiary">{t('reading.timer.desc')}</p>
 
       <div className="mt-6 rounded-3xl border-2 border-primary overflow-hidden bg-black/10">
         <div className="relative h-72 bg-black">
@@ -335,7 +338,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           <canvas ref={canvasRef} className="hidden" />
           {!cameraReady ? (
             <div className="absolute inset-0 flex items-center justify-center text-sm text-white/80">
-              {cameraError ? cameraError : 'Starting camera...'}
+              {cameraError ? cameraError : t('reading.timer.startingCamera')}
             </div>
           ) : null}
         </div>
@@ -346,7 +349,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           <svg xmlns="http://www.w3.org/2000/svg" width="17" height="15" viewBox="0 0 17 15" fill="none">
             <path d="M1.66667 1.66667H4.16667L5.83333 0H10.8333L12.5 1.66667H15C15.442 1.66667 15.8659 1.84226 16.1785 2.15482C16.4911 2.46738 16.6667 2.89131 16.6667 3.33333V13.3333C16.6667 13.7754 16.4911 14.1993 16.1785 14.5118C15.8659 14.8244 15.442 15 15 15H1.66667C1.22464 15 0.800716 14.8244 0.488155 14.5118C0.175595 14.1993 0 13.7754 0 13.3333V3.33333C0 2.89131 0.175595 2.46738 0.488155 2.15482C0.800716 1.84226 1.22464 1.66667 1.66667 1.66667ZM8.33333 4.16667C7.22826 4.16667 6.16846 4.60565 5.38705 5.38705C4.60565 6.16846 4.16667 7.22826 4.16667 8.33333C4.16667 9.4384 4.60565 10.4982 5.38705 11.2796C6.16846 12.061 7.22826 12.5 8.33333 12.5C9.4384 12.5 10.4982 12.061 11.2796 11.2796C12.061 10.4982 12.5 9.4384 12.5 8.33333C12.5 7.22826 12.061 6.16846 11.2796 5.38705C10.4982 4.60565 9.4384 4.16667 8.33333 4.16667ZM8.33333 5.83333C8.99637 5.83333 9.63226 6.09672 10.1011 6.56557C10.5699 7.03441 10.8333 7.67029 10.8333 8.33333C10.8333 8.99637 10.5699 9.63226 10.1011 10.1011C9.63226 10.5699 8.99637 10.8333 8.33333 10.8333C7.67029 10.8333 7.03441 10.5699 6.56557 10.1011C6.09672 9.63226 5.83333 8.99637 5.83333 8.33333C5.83333 7.67029 6.09672 7.03441 6.56557 6.56557C7.03441 6.09672 7.67029 5.83333 8.33333 5.83333Z" fill="#3F78D8" />
           </svg>
-          <div className="text-sm font-medium text-gray-900">{cameraReady ? 'Camera Ready' : 'Camera Unavailable'}</div>
+          <div className="text-sm font-medium text-gray-900">{cameraReady ? t('reading.timer.cameraReady') : t('reading.timer.cameraUnavailable')}</div>
         </div>
         {needsTap ? (
           <button
@@ -354,10 +357,10 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
             onClick={() => videoRef.current?.play()}
             className="mt-1 text-sm text-primary underline"
           >
-            Tap to start camera
+            {t('reading.timer.tapToStartCamera')}
           </button>
         ) : (
-          <div className="text-sm text-tertiary">Position the strip and start the timer.</div>
+          <div className="text-sm text-tertiary">{t('reading.timer.positionStripStartTimer')}</div>
         )}
       </div>
 
@@ -371,7 +374,11 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         <div className="flex flex-col items-end">
           <div className="text-2xl font-semibold text-gray-900">{displayTimerLabel}</div>
           <div className="text-xs text-tertiary">
-            {captureProgress.allDone ? 'All captures complete' : captureProgress.next != null ? `Next at ${captureProgress.next}s` : '—'}
+            {captureProgress.allDone
+              ? t('reading.timer.allCapturesComplete')
+              : captureProgress.next != null
+              ? t('reading.timer.nextAt', { seconds: captureProgress.next })
+              : '—'}
           </div>
         </div>
       </div>
@@ -416,10 +423,10 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
             : 'bg-gray-200 text-gray-500 cursor-not-allowed'
             }`}
         >
-          {analyzing ? 'Analyzing...' : 'Analyze & Proceed'}
+          {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
         </button>
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
-          Go Back
+          {t('common.back')}
         </button>
       </div>
     </div>

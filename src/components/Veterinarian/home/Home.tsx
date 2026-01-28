@@ -11,11 +11,13 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import { ArrowRight, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 
 
 export default function Home() {
     const router = useRouter();
+    const { t } = useTranslation();
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [patientStats, setPatientStats] = useState<{ activePatients: number; newThisMonth: number }>({
@@ -126,11 +128,11 @@ export default function Home() {
             <SearchBar />
 
             <div className="mt-3 grid grid-cols-2 gap-3">
-                <StatCard number={examStats.todayTotal} label="Exams Today" sublabel={`${examStats.todayCompleted} completed`} variant="primary" />
+                <StatCard number={examStats.todayTotal} label={t('dashboard.examsToday')} sublabel={t('dashboard.completedCount', { count: examStats.todayCompleted })} variant="primary" />
                 <StatCard
                     number={patientStats.activePatients}
-                    label="Active Patients"
-                    sublabel={`+${patientStats.newThisMonth} new this month`}
+                    label={t('dashboard.activePatients')}
+                    sublabel={t('dashboard.newThisMonthCount', { count: patientStats.newThisMonth })}
                     variant="secondary"
                 />
             </div>
@@ -148,15 +150,15 @@ export default function Home() {
             <div className="mt-2">
                 <div className="flex items-center justify-between mb-3">
                     <div>
-                        <h2 className="text-base font-bold text-gray-800">Recent Patients</h2>
-                        <p className="text-xs text-gray-500">View recent pets at a glance</p>
+                        <h2 className="text-base font-bold text-gray-800">{t('dashboard.recentPatients')}</h2>
+                        <p className="text-xs text-gray-500">{t('dashboard.recentPatientsDesc')}</p>
                     </div>
                     <button
                         type="button"
                         className="px-3 py-2 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100"
                         onClick={() => router.push('/Veterinarian/home/patients')}
                     >
-                        View All
+                        {t('dashboard.viewAll')}
                         <ChevronRight size={14} color='#3F78D8' />
                     </button>
                 </div>

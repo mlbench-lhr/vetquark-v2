@@ -51,6 +51,8 @@ export default function Layout({
     const check = () => {
       const nextHasBackButton = !!document.querySelector(
         'button[aria-label="Back"]'
+      ) || !!document.querySelector(
+        'button[aria-label="Voltar"]'
       );
       setHasBackButton((prev) =>
         prev === nextHasBackButton ? prev : nextHasBackButton

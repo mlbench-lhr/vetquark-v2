@@ -6,6 +6,7 @@ import { GuardianInfoCard } from "./Information";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 interface Pet {
   id: string;
@@ -29,6 +30,7 @@ interface GuardianDetails {
 const GuardianProfilePage: React.FC = () => {
   const params = useParams<{ patient_id: string }>();
   const guardianId = params?.patient_id;
+  const { t } = useTranslation();
 
   const [guardian, setGuardian] = useState<GuardianDetails | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
@@ -141,7 +143,7 @@ const GuardianProfilePage: React.FC = () => {
 
   return (
     <div className="pb-5">
-      <Header title="Guardian Detail" />
+      <Header title={t("home.guardianDetailsTitle")} />
       {loading ? (
         <GuardianDetailsSkeleton />
       ) : (
@@ -149,13 +151,13 @@ const GuardianProfilePage: React.FC = () => {
           <GuardianInfoCard {...guardianCardData} />
           <div className="px-4 mt-4 flex flex-col grid grid-cols-1 gap-2">
             <div className="flex mb-2 justify-between items-center">
-              <h1 className="col-span-1 text-base font-normal">Pets</h1>
+              <h1 className="col-span-1 text-base font-normal">{t("tabs.pets")}</h1>
               {guardianId ? (
                 <Link
                   href={`/Veterinarian/home/guardianPatients/${encodeURIComponent(guardianId)}`}
                   className="col-span-1 text-base text-primary font-normal"
                 >
-                  View All
+                  {t("dashboard.viewAll")}
                 </Link>
               ) : null}
             </div>
@@ -173,7 +175,7 @@ const GuardianProfilePage: React.FC = () => {
                     <div>
                       <h3 className="font-semibold text-foreground text-[15px]">{pet.name}</h3>
                       <p className="text-sm text-black/70">
-                        {pet.species ? pet.species : "Pet"}
+                        {pet.species ? pet.species : t("home.petLabel")}
                         {pet.breed ? ` • ${pet.breed}` : ""}
                       </p>
                     </div>

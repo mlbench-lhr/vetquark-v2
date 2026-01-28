@@ -178,7 +178,7 @@ export default function ForgetForm() {
                         {/* Go Back */}
                     </Link>
                 </div>
-                <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+                <div className="flex flex-col justify-center flex-1 w-full mx-auto">
                     <div>
                         <div className="mb-5 sm:mb-8">
                             <h1 className="mb-2 font-medium text-gray-800 text-3xl">

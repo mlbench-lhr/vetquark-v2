@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Check, Pencil, X } from 'lucide-react'
 import { ReviewResultDraft, ReviewSelectionMap } from './types'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   selectedByKey: ReviewSelectionMap
@@ -264,6 +265,7 @@ export const RESULT_ROWS: ResultRowConfig[] = [
 ]
 
 function StatusPill({ status }: { status: ResultStatus }) {
+  const { t } = useTranslation()
   const isNormal = status === 'Normal'
   return (
     <div
@@ -271,7 +273,7 @@ function StatusPill({ status }: { status: ResultStatus }) {
         }`}
     >
       {isNormal ? <Check className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
-      {status}
+      {isNormal ? t('reading.review.statusNormal') : t('reading.review.statusAbnormal')}
     </div>
   )
 }
@@ -285,6 +287,7 @@ function ResultRow({
   selectedIndex: number
   onSelect: (index: number) => void
 }) {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
   const [prevIndex, setPrevIndex] = useState<number | null>(null)
   const handleStartEdit = () => {
@@ -309,13 +312,13 @@ function ResultRow({
           {editing ? (
             <>
               <span className='text-xs text-muted-foreground me-1'>
-                Select a value
+                {t('reading.review.selectValue')}
               </span>
               <button
                 type="button"
                 className="p-1 rounded-full border text-gray-700"
                 onClick={handleCancel}
-                aria-label="Cancel"
+                aria-label={t('common.cancel')}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -323,7 +326,7 @@ function ResultRow({
                 type="button"
                 className="p-1 rounded-full bg-primary text-white"
                 onClick={handleSave}
-                aria-label="Save"
+                aria-label={t('common.save')}
               >
                 <Check className="h-4 w-4" />
               </button>
@@ -365,7 +368,7 @@ function ResultRow({
                 {
                   opt.topLabel === "Positive" &&
                   <div className='text-[10px] flex justify-center text-white items-center text-center leading-[10px] h-full' >
-                    Any degree of <br /> uniform pink coloration
+                    {t('reading.review.uniformPinkNote')}
                   </div>
                 }
                 {active && (
@@ -410,6 +413,7 @@ function parseNumericValueLabel(valueLabel: string): number | undefined {
 }
 
 export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBack, onIssueReport }: Props) {
+  const { t } = useTranslation()
   useEffect(() => {
     if (Object.keys(selectedByKey).length > 0) return
     const defaults: ReviewSelectionMap = Object.fromEntries(RESULT_ROWS.map((r) => [r.key, r.defaultIndex]))
@@ -420,9 +424,9 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
 
   return (
     <div className="">
-      <h2 className="text-[18px] leading-[24px] font-semibold text-[#111827]">Review Of The Results</h2>
+      <h2 className="text-[18px] leading-[24px] font-semibold text-[#111827]">{t('reading.review.title')}</h2>
       <p className="mt-1 text-[13px] leading-[18px] text-[#6B7280]">
-        Adjust the results, add observations and proceed to issue the report.
+        {t('reading.review.desc')}
       </p>
 
       <div className="mt-5 divide-y divide-[#F1F5F9] border border-[#F1F5F9] rounded-[16px] shadow-2xs">
@@ -459,10 +463,10 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
           disabled={!canProceed}
           className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-60"
         >
-          Issue Report
+          {t('reading.review.issueReport')}
         </button>
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
-          Go Back
+          {t('common.back')}
         </button>
       </div>
     </div>

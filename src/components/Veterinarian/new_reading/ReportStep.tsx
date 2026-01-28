@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import SignaturePad from 'signature_pad'
 import { ReportDraft } from './types'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   patientPreview: {
@@ -22,6 +23,7 @@ type Props = {
 }
 
 export default function ReportStep({ patientPreview, collectionAt, report, onChangeReport, onBack, onComplete, signatureImageUrl = "", onChangeSignatureUrl, submitting }: Props) {
+  const { t } = useTranslation()
   const patientName = patientPreview?.animalName || '—'
   const breed = patientPreview?.breed || '—'
   const species = patientPreview?.species || '—'
@@ -80,31 +82,31 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
 
   return (
     <div className="">
-      <h2 className="text-lg font-medium text-gray-900">Final Preview and Editing of the Report</h2>
-      <p className="text-sm text-tertiary">Review and edit the report below. Once signed, it cannot be altered.</p>
+      <h2 className="text-lg font-medium text-gray-900">{t('reading.report.title')}</h2>
+      <p className="text-sm text-tertiary">{t('reading.report.desc')}</p>
 
       <div className="mt-6 rounded-3xl border border-gray-200 overflow-hidden bg-white p-4">
         <div className="text-center font-bold text-gray-900 text-lg">XEILXTE</div>
-        <div className="text-center text-sm text-gray-700">StripScan - Laboratório Veterinário</div>
-        <div className="text-center text-xs text-gray-500 mt-1">Rua Fictícia, 123 · Cidade, Estado · CEP 00000-000</div>
+        <div className="text-center text-sm text-gray-700">{t('reading.report.labName')}</div>
+        <div className="text-center text-xs text-gray-500 mt-1">{t('reading.report.labAddress')}</div>
 
         <div className="mt-4 border-t border-gray-200 pt-3 text-sm space-y-1">
-          <div><span className="font-semibold">Paciente:</span> {patientName}</div>
-          <div><span className="font-semibold">Raça:</span> {breed}</div>
-          <div><span className="font-semibold">Espécie:</span> {species}</div>
-          <div><span className="font-semibold">Guardian:</span> {guardianName}</div>
-          <div><span className="font-semibold">Atendimento:</span> {appointment}</div>
+          <div><span className="font-semibold">{t('reading.report.patientLabel')}:</span> {patientName}</div>
+          <div><span className="font-semibold">{t('reading.report.breedLabel')}:</span> {breed}</div>
+          <div><span className="font-semibold">{t('reading.report.speciesLabel')}:</span> {species}</div>
+          <div><span className="font-semibold">{t('reading.report.guardianLabel')}:</span> {guardianName}</div>
+          <div><span className="font-semibold">{t('reading.report.appointmentLabel')}:</span> {appointment}</div>
         </div>
 
         <div className="mt-4 border-t border-gray-200 pt-3 text-xs text-foreground font-semibold text-center">
-          Conferido, liberado e assinado.
+          {t('reading.report.disclaimerTitle')}
           <br />
-          <span className='text-xs font-normal'>A interpretação dos exames laboratoriais deverá ser realizada pelo médico veterinário responsável, mediante a sintomatologia clínica do animal.</span>
+          <span className='text-xs font-normal'>{t('reading.report.disclaimerNote')}</span>
         </div>
       </div>
 
       <div className="mt-6">
-        <div className="text-sm text-gray-900 mb-2">Signature</div>
+        <div className="text-sm text-gray-900 mb-2">{t('reading.report.signature')}</div>
         <div className="rounded-2xl bg-gray-100 p-1">
           <canvas ref={canvasRef} width={320} height={160} className="w-full h-40 bg-white rounded-xl" />
           <div className="mt-1 flex items-center gap-1">
@@ -116,7 +118,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
                 className="px-4 py-2 rounded-full bg-white text-gray-700 font-medium"
                 disabled={uploading || !!submitting}
               >
-                Clear
+                {t('reading.report.clear')}
               </button>
             }
             <button
@@ -125,7 +127,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
               className="px-4 py-2 rounded-full bg-primary text-white font-medium disabled:opacity-70"
               disabled={uploading || !!submitting}
             >
-              {uploading ? 'Uploading...' : signatureImageUrl ? 'Signature Ready' : 'Save'}
+              {uploading ? t('reading.report.uploading') : signatureImageUrl ? t('reading.report.signatureReady') : t('reading.report.save')}
             </button>
             {
               !!signatureImageUrl && (
@@ -136,7 +138,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
                     className="px-4 py-2 rounded-full bg-white text-primary font-medium border border-primary"
                     disabled={uploading || !!submitting}
                   >
-                    Retake
+                    {t('reading.report.retake')}
                   </button>
                 </>
               )
@@ -146,33 +148,33 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
       </div>
 
       <div className="mt-6">
-        <div className="text-sm text-gray-900 mb-2">Summary and Interpretation</div>
+        <div className="text-sm text-gray-900 mb-2">{t('reading.report.summaryInterpretation')}</div>
         <textarea
           value={report.summaryAndInterpretation}
           onChange={(e) => onChangeReport({ summaryAndInterpretation: e.target.value })}
-          placeholder="Enter your summary and interpretation"
+          placeholder={t('reading.report.enterSummaryInterpretation')}
           rows={2}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
         />
       </div>
 
       <div className="mt-4">
-        <div className="text-sm text-gray-900 mb-2">Other Information</div>
+        <div className="text-sm text-gray-900 mb-2">{t('reading.report.otherInformation')}</div>
         <textarea
           value={report.otherInformation}
           onChange={(e) => onChangeReport({ otherInformation: e.target.value })}
-          placeholder="Enter any other info"
+          placeholder={t('reading.report.enterOtherInformation')}
           rows={2}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
         />
       </div>
 
       <div className="mt-4">
-        <div className="text-sm text-gray-900 mb-2">Veterinarian&apos;s Notes:</div>
+        <div className="text-sm text-gray-900 mb-2">{t("reading.report.veterinarianNotes")}</div>
         <textarea
           value={report.veterinarianNotes}
           onChange={(e) => onChangeReport({ veterinarianNotes: e.target.value })}
-          placeholder="Enter your veterinarian's notes"
+          placeholder={t('reading.report.enterVeterinarianNotes')}
           rows={2}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
         />
@@ -181,7 +183,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
       <div className="w-full bg-red-30 flex justify-start items-center flex-col gap-0 px-4">
         <h1 className="text-[18px] font-medium">Dr. Vet</h1>
         <h2 className="text-[14px] font-normal">CRMV-SP 12345</h2>
-        <p className="text-[14px] font-normal text-black/60">Report generated on 05/12/2025, 11:12:47</p>
+        <p className="text-[14px] font-normal text-black/60">{t('reading.report.generatedOnPrefix')} {new Date().toLocaleString()}</p>
       </div>
       <div className="mt-6 space-y-3">
         <button
@@ -193,10 +195,10 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
           disabled={!!submitting || uploading || !signatureImageUrl}
           className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-70"
         >
-          {submitting ? 'Signing...' : 'Sign & Complete'}
+          {submitting ? t('reading.report.signing') : t('reading.report.signComplete')}
         </button>
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
-          Go Back
+          {t('common.back')}
         </button>
       </div>
     </div>

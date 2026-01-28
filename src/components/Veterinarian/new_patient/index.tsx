@@ -12,6 +12,7 @@ import { useModal } from '@/hooks/useModal';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
+import { useTranslation } from 'react-i18next';
 
 interface Guardian {
     id: string;
@@ -22,6 +23,7 @@ interface Guardian {
 }
 
 export default function AddPatientGuardian() {
+    const { t } = useTranslation()
     const router = useRouter();
     const inviteModal = useModal();
     const [searchQuery, setSearchQuery] = useState('');
@@ -134,12 +136,12 @@ export default function AddPatientGuardian() {
 
     const handleInviteGuardian = async () => {
         const url = getInviteLink();
-        const shareText = `Sign up as a Guardian on VetQuark: ${url}`;
+        const shareText = `${t('newPatient.guardianShareTextPrefix')} ${url}`;
 
         try {
             if (typeof navigator !== 'undefined' && 'share' in navigator) {
                 await (navigator as any).share({
-                    title: 'VetQuark Guardian Signup',
+                    title: t('newPatient.guardianSignupTitle'),
                     text: shareText,
                     url,
                 });
@@ -156,22 +158,22 @@ export default function AddPatientGuardian() {
         const url = getInviteLink();
         try {
             await navigator.clipboard.writeText(url);
-            toast.success('Link copied');
+            toast.success(t('newPatient.linkCopied'));
         } catch {
-            toast.error('Unable to copy link');
+            toast.error(t('newPatient.unableToCopyLink'));
         }
     };
 
     const handleShareWhatsApp = () => {
         const url = getInviteLink();
-        const text = `Sign up as a Guardian on VetQuark: ${url}`;
+        const text = `${t('newPatient.guardianShareTextPrefix')} ${url}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
     };
 
     const handleShareEmail = () => {
         const url = getInviteLink();
-        const subject = 'VetQuark Guardian Signup';
-        const body = `Please sign up using this link: ${url}`;
+        const subject = t('newPatient.emailSubject');
+        const body = `${t('newPatient.emailBodyPrefix')} ${url}`;
         window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     };
 
@@ -198,10 +200,10 @@ export default function AddPatientGuardian() {
     );
 
     return (
-        <div className="min-h-screen p-4 space-y-4">
+        <div className="min-h-[calc(100vh-80px)] p-4 space-y-4">
             {/* Header */}
             <div className="bg-white flex items-center justify-between">
-                <h1 className="text-base font-medium text-gray-900">Add New Patient</h1>
+                <h1 className="text-base font-medium text-gray-900">{t('newPatient.addNewPatientTitle')}</h1>
                 <Link href={"/Veterinarian/notifications"} className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                     {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
                     <span className="text-white text-sm">
@@ -227,7 +229,7 @@ export default function AddPatientGuardian() {
                                 height={24}
                             />
                         </div>
-                        <span className="text-xs font-medium text-gray-900">Guardian</span>
+                        <span className="text-xs font-medium text-gray-900">{t('newPatient.guardianStep')}</span>
                     </div>
                     <div className="w-32 h-1 bg-primary rounded-full w-[100%] absolute left-0 top-1/2 z-0"></div>
 
@@ -240,7 +242,7 @@ export default function AddPatientGuardian() {
                                 height={24}
                             />
                         </div>
-                        <span className="text-xs font-medium text-gray-500">Patient Details</span>
+                        <span className="text-xs font-medium text-gray-500">{t('newPatient.patientDetailsStep')}</span>
                     </div>
                 </div>
             </div>
@@ -248,9 +250,9 @@ export default function AddPatientGuardian() {
             {/* Main Content */}
             <div className="m">
                 <div className="mb-6">
-                    <h2 className="text-lg font-medium text-gray-900">Link Guardian</h2>
+                    <h2 className="text-lg font-medium text-gray-900">{t('newPatient.linkGuardianTitle')}</h2>
                     <p className="text-base text-tertiary">
-                        Select an existing guardian or register a new one to continue.
+                        {t('newPatient.linkGuardianDesc')}
                     </p>
                 </div>
 
@@ -259,7 +261,7 @@ export default function AddPatientGuardian() {
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary" />
                     <input
                         type="text"
-                        placeholder="Search by name or national ID..."
+                        placeholder={t('newPatient.searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => {
                             const v = e.target.value;
@@ -275,7 +277,7 @@ export default function AddPatientGuardian() {
                     {loading ? (
                         <GuardiansSkeleton />
                     ) : filteredGuardians.length === 0 ? (
-                        <div className="text-tertiary text-sm">No guardians found.</div>
+                        <div className="text-tertiary text-sm">{t('newPatient.noGuardiansFound')}</div>
                     ) : filteredGuardians.map((guardian) => (
                         <PatientCard
                             key={guardian.id}
@@ -315,7 +317,7 @@ export default function AddPatientGuardian() {
                 <div className="space-y-3">
                     <button className="w-full bg-primary hover:bg-primary/70 text-white font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors" onClick={() => router.push('/Veterinarian/patient/new_guardian')}>
                         <Plus className="w-5 h-5" />
-                        New Guardian
+                        {t('newPatient.newGuardianButton')}
                     </button>
 
                     <button
@@ -323,7 +325,7 @@ export default function AddPatientGuardian() {
                         className="w-full bg-[#EBF2FF] hover:bg-gray-200 text-primary font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors"
                     >
                         <Link2 className="w-5 h-5" />
-                        Invite Guardian
+                        {t('newPatient.inviteGuardianButton')}
                     </button>
                 </div>
             </div>
@@ -331,8 +333,8 @@ export default function AddPatientGuardian() {
             <Modal isOpen={inviteModal.isOpen} onClose={inviteModal.closeModal} className="max-w-[520px] mx-4 p-6">
                 <div className="flex items-start justify-between gap-4">
                     <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Invite Guardian</h3>
-                        <p className="text-sm text-gray-600 mt-1">Share this link so they can sign up as a Guardian.</p>
+                        <h3 className="text-lg font-semibold text-gray-900">{t('newPatient.inviteGuardianTitle')}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{t('newPatient.inviteGuardianDesc')}</p>
                     </div>
                     <button type="button" onClick={inviteModal.closeModal} className="p-2 rounded-lg hover:bg-gray-100">
                         <X className="w-5 h-5 text-gray-700" />
@@ -352,7 +354,7 @@ export default function AddPatientGuardian() {
                             onClick={handleCopyInviteLink}
                             className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg"
                         >
-                            Copy Link
+                            {t('newPatient.copyLink')}
                         </button>
                         <button
                             type="button"
@@ -360,7 +362,7 @@ export default function AddPatientGuardian() {
                             className="w-full bg-[#EBF2FF] hover:bg-gray-200 text-primary font-medium py-3 rounded-lg flex items-center justify-center gap-2"
                         >
                             <Link2 className="w-5 h-5" />
-                            WhatsApp
+                            {t('newPatient.whatsapp')}
                         </button>
                         <button
                             type="button"
@@ -368,7 +370,7 @@ export default function AddPatientGuardian() {
                             className="w-full bg-[#EBF2FF] hover:bg-gray-200 text-primary font-medium py-3 rounded-lg flex items-center justify-center gap-2 sm:col-span-2"
                         >
                             <Mail className="w-5 h-5" />
-                            Email
+                            {t('newPatient.email')}
                         </button>
                     </div>
 
@@ -377,7 +379,7 @@ export default function AddPatientGuardian() {
                         onClick={handleInviteGuardian}
                         className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 rounded-lg"
                     >
-                        Share…
+                        {t('newPatient.share')}
                     </button>
                 </div>
             </Modal>
