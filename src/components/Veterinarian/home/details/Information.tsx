@@ -3,6 +3,7 @@ import { PatientInfoCardProps, ReportsHistoryProps } from "../types";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import { t } from "i18next";
 
 export const PatientInfoCard: React.FC<PatientInfoCardProps> = ({
   name,
