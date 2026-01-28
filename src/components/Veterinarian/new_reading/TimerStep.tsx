@@ -64,14 +64,17 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const capturedAtSetRef = useRef<Set<number>>(new Set())
+  const alertedAtSetRef = useRef<Set<number>>(new Set())
+  const audioCtxRef = useRef<AudioContext | null>(null)
 
   const [cameraError, setCameraError] = useState('')
   const [needsTap, setNeedsTap] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
   const [images, setImages] = useState<CapturedImage[]>([])
   const [secondsLeft, setSecondsLeft] = useState(() => Math.max(selectedSeconds, requiredTotalSeconds))
-  const [running, setRunning] = useState(true)
+  const [running, setRunning] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
+  const [started, setStarted] = useState(false)
 
   useEffect(() => {
     if (selectedSeconds < requiredTotalSeconds) {
@@ -79,9 +82,11 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       return
     }
     setSecondsLeft(selectedSeconds)
-    setRunning(true)
+    setRunning(false)
     setImages([])
     capturedAtSetRef.current = new Set()
+    alertedAtSetRef.current = new Set()
+    setStarted(false)
   }, [onChangeSelectedSeconds, selectedSeconds])
 
   useEffect(() => {
@@ -90,6 +95,16 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     const id = setInterval(() => setSecondsLeft((s) => (s > 0 ? s - 1 : 0)), 1000)
     return () => clearInterval(id)
   }, [running, secondsLeft])
+
+  useEffect(() => {
+    return () => {
+      const ctx = audioCtxRef.current
+      audioCtxRef.current = null
+      if (ctx && typeof ctx.close === 'function') {
+        ctx.close().catch(() => { })
+      }
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -168,18 +183,57 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     [],
   )
 
+  const preAlertAtSeconds = useMemo(() => autoCaptureAtSeconds.map((s) => Math.max(0, s - 5)), [])
+
+  const playBeep = useCallback(() => {
+    try {
+      let ctx = audioCtxRef.current
+      const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext
+      if (!ctx && AC) {
+        ctx = new AC()
+        audioCtxRef.current = ctx
+      }
+      if (!ctx) return
+      if (typeof ctx.resume === 'function') {
+        ctx.resume().catch(() => { })
+      }
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.value = 880
+      gain.gain.value = 0.06
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start()
+      setTimeout(() => {
+        try {
+          osc.stop()
+          osc.disconnect()
+          gain.disconnect()
+        } catch { }
+      }, 800)
+    } catch { }
+  }, [])
+
   useEffect(() => {
     if (!running) return
     if (!cameraReady) return
 
     const elapsed = Math.max(0, selectedSeconds - secondsLeft)
+    for (const at of preAlertAtSeconds) {
+      if (at > elapsed) continue
+      if (alertedAtSetRef.current.has(at)) continue
+      alertedAtSetRef.current.add(at)
+      playBeep()
+      toast.info('Be ready: click the reading image', { autoClose: 3000 })
+    }
     for (const at of autoCaptureAtSeconds) {
       if (at > elapsed) continue
       if (capturedAtSetRef.current.has(at)) continue
       capturedAtSetRef.current.add(at)
       captureImage(at)
     }
-  }, [cameraReady, captureImage, running, secondsLeft, selectedSeconds])
+  }, [cameraReady, captureImage, running, secondsLeft, selectedSeconds, playBeep, preAlertAtSeconds])
 
   const elapsedSeconds = useMemo(() => Math.max(0, selectedSeconds - secondsLeft), [selectedSeconds, secondsLeft])
 
@@ -203,15 +257,30 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     return `${pad(m)}:${pad(s)}`
   }, [nextCaptureSecondsLeft])
 
-  const capturingLabel = useMemo(() => {
-    if (captureProgress.total === 0) return running ? 'Capturing' : 'Paused'
+  const primaryButtonLabel = useMemo(() => {
+    if (!started) return 'Start'
+    if (captureProgress.total === 0) return running ? 'Capturing' : 'Resume'
     if (captureProgress.allDone) return `Captured ${captureProgress.completed}/${captureProgress.total}`
-    return running
-      ? `Capturing ${captureProgress.completed}/${captureProgress.total}`
-      : `Paused ${captureProgress.completed}/${captureProgress.total}`
-  }, [captureProgress.allDone, captureProgress.completed, captureProgress.total, running])
+    return running ? `Capturing ${captureProgress.completed}/${captureProgress.total}` : 'Resume'
+  }, [started, captureProgress.allDone, captureProgress.completed, captureProgress.total, running])
 
   const displayTimerLabel = captureProgress.allDone ? '00:00' : nextCaptureLabel
+  const handlePrimaryClick = useCallback(() => {
+    if (!started) {
+      setStarted(true)
+      setRunning(true)
+      const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext
+      if (AC) {
+        const ctx = audioCtxRef.current || new AC()
+        audioCtxRef.current = ctx
+        if (typeof ctx.resume === 'function') {
+          ctx.resume().catch(() => { })
+        }
+      }
+      return
+    }
+    setRunning((r) => !r)
+  }, [started])
 
   const handleAnalyze = async () => {
     try {
@@ -294,10 +363,10 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       <div className="mt-4 flex items-center justify-between bg-[#F5F6F6] rounded-full pe-4">
         <button
-          onClick={() => setRunning((r) => !r)}
+          onClick={handlePrimaryClick}
           className="px-6 py-3 rounded-full bg-primary text-white font-medium"
         >
-          {capturingLabel}
+          {primaryButtonLabel}
         </button>
         <div className="flex flex-col items-end">
           <div className="text-2xl font-semibold text-gray-900">{displayTimerLabel}</div>
