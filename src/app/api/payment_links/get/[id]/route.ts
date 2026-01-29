@@ -7,6 +7,7 @@ import Reading from "@/lib/models/Reading";
 import Patient from "@/lib/models/Patient";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
+import { isPushEnabledForUser } from "@/lib/utils";
 
 function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2).replace(".", ",")}`;
@@ -137,46 +138,59 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         const guardianMessage = `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
         const guardianUrl = `/Guardian/payment/${encodeURIComponent(id)}`;
 
-        const guardianNotification = await Notification.create({
-          user: userId,
-          type: "payment_received",
-          title: guardianTitle,
-          message: guardianMessage,
-          url: guardianUrl,
-          readAt: null,
-        });
+        const guardianUser = await User.findById(userId).select("_id role notificationSettings").lean();
+        const canNotifyGuardian = isPushEnabledForUser(guardianUser, "payment_received");
+        const guardianNotification = canNotifyGuardian
+          ? await Notification.create({
+              user: userId,
+              type: "payment_received",
+              title: guardianTitle,
+              message: guardianMessage,
+              url: guardianUrl,
+              readAt: null,
+            })
+          : null;
 
-        const pusher = getPusherServer();
-        await pusher.trigger(notificationsChannelForUser(userId), "notification:new", {
-          id: String(guardianNotification._id),
-          type: guardianNotification.type,
-          title: guardianNotification.title,
-          message: guardianNotification.message,
-          url: guardianNotification.url,
-          createdAt: guardianNotification.createdAt ? new Date(guardianNotification.createdAt).toISOString() : new Date().toISOString(),
-        });
+        if (guardianNotification) {
+          const pusher = getPusherServer();
+          await pusher.trigger(notificationsChannelForUser(userId), "notification:new", {
+            id: String(guardianNotification._id),
+            type: guardianNotification.type,
+            title: guardianNotification.title,
+            message: guardianNotification.message,
+            url: guardianNotification.url,
+            createdAt: guardianNotification.createdAt ? new Date(guardianNotification.createdAt).toISOString() : new Date().toISOString(),
+          });
+        }
 
         const title = "Payment received";
         const message = `Payment completed for ${petName}. You can now complete the reading.`;
         const url = `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(id)}&step=timer`;
 
-        const notification = await Notification.create({
-          user: veterinarianId,
-          type: "payment_received",
-          title,
-          message,
-          url,
-          readAt: null,
-        });
+        const vetUser = await User.findById(veterinarianId).select("_id role notificationSettings").lean();
+        const canNotifyVet = isPushEnabledForUser(vetUser, "payment_received");
+        const notification = canNotifyVet
+          ? await Notification.create({
+              user: veterinarianId,
+              type: "payment_received",
+              title,
+              message,
+              url,
+              readAt: null,
+            })
+          : null;
 
-        await pusher.trigger(notificationsChannelForUser(veterinarianId), "notification:new", {
-          id: String(notification._id),
-          type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          url: notification.url,
-          createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-        });
+        if (notification) {
+          const pusher = getPusherServer();
+          await pusher.trigger(notificationsChannelForUser(veterinarianId), "notification:new", {
+            id: String(notification._id),
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            url: notification.url,
+            createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+          });
+        }
       }
     }
 

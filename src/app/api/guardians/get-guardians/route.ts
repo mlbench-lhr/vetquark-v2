@@ -4,7 +4,7 @@ import User from "@/lib/models/User";
 import Patient from "@/lib/models/Patient";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
-import { parsePagination, toPaginationMeta } from "@/lib/utils";
+import { parsePagination, toPaginationMeta, isPushEnabledForUser } from "@/lib/utils";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -278,24 +278,30 @@ export async function PUT(req: NextRequest) {
     const message = `${vetName} updated your profile details.`;
     const url = `/Guardian/profile`;
 
-    const notification = await Notification.create({
-      user: resolvedGuardianId,
-      type: "guardian_updated",
-      title,
-      message,
-      url,
-      readAt: null,
-    });
+    const guardianUser = await User.findById(resolvedGuardianId).select("_id role notificationSettings").lean();
+    const canNotifyGuardian = isPushEnabledForUser(guardianUser, "guardian_updated");
+    const notification = canNotifyGuardian
+      ? await Notification.create({
+          user: resolvedGuardianId,
+          type: "guardian_updated",
+          title,
+          message,
+          url,
+          readAt: null,
+        })
+      : null;
 
-    const pusher = getPusherServer();
-    await pusher.trigger(notificationsChannelForUser(resolvedGuardianId), "notification:new", {
-      id: String(notification._id),
-      type: notification.type,
-      title: notification.title,
-      message: notification.message,
-      url: notification.url,
-      createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-    });
+    if (notification) {
+      const pusher = getPusherServer();
+      await pusher.trigger(notificationsChannelForUser(resolvedGuardianId), "notification:new", {
+        id: String(notification._id),
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        url: notification.url,
+        createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json({ id: String(updated._id) }, { status: 200 });
   } catch (e) {

@@ -8,6 +8,7 @@ import Reading, { CollectionMethod, ReadingResultStatus } from "@/lib/models/Rea
 import PaymentLink from "@/lib/models/PaymentLink";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
+import { isPushEnabledForUser } from "@/lib/utils";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -272,24 +273,30 @@ export async function POST(req: NextRequest) {
         const message = `${vetName} added a new reading for ${petName}.`;
         const url = `/Guardian/history/detail/${encodeURIComponent(String(updatedReading._id))}`;
 
-        const notification = await Notification.create({
-          user: guardianId,
-          type: "reading_signed",
-          title,
-          message,
-          url,
-          readAt: null,
-        });
+        const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
+        const canNotifyGuardian = isPushEnabledForUser(guardianUser, "reading_signed");
+        const notification = canNotifyGuardian
+          ? await Notification.create({
+              user: guardianId,
+              type: "reading_signed",
+              title,
+              message,
+              url,
+              readAt: null,
+            })
+          : null;
 
-        const pusher = getPusherServer();
-        await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
-          id: String(notification._id),
-          type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          url: notification.url,
-          createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-        });
+        if (notification) {
+          const pusher = getPusherServer();
+          await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+            id: String(notification._id),
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            url: notification.url,
+            createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+          });
+        }
 
         return NextResponse.json({ id: String(updatedReading._id) }, { status: 201 });
       }
@@ -348,24 +355,30 @@ export async function POST(req: NextRequest) {
       const message = `${vetName} added a new reading for ${petName}.`;
       const url = `/Guardian/history/detail/${encodeURIComponent(String(created._id))}`;
 
-      const notification = await Notification.create({
-        user: guardianId,
-        type: "reading_signed",
-        title,
-        message,
-        url,
-        readAt: null,
-      });
+      const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
+      const canNotifyGuardian = isPushEnabledForUser(guardianUser, "reading_signed");
+      const notification = canNotifyGuardian
+        ? await Notification.create({
+            user: guardianId,
+            type: "reading_signed",
+            title,
+            message,
+            url,
+            readAt: null,
+          })
+        : null;
 
-      const pusher = getPusherServer();
-      await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
-        id: String(notification._id),
-        type: notification.type,
-        title: notification.title,
-        message: notification.message,
-        url: notification.url,
-        createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-      });
+      if (notification) {
+        const pusher = getPusherServer();
+        await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+          id: String(notification._id),
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          url: notification.url,
+          createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+        });
+      }
     }
 
     return NextResponse.json({ id: String(created._id) }, { status: 201 });

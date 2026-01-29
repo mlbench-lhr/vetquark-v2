@@ -7,6 +7,7 @@ import PaymentLink from "@/lib/models/PaymentLink";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import Reading from "@/lib/models/Reading";
+import { isPushEnabledForUser } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -103,24 +104,30 @@ export async function POST(req: NextRequest) {
     const title = "Payment link received";
     const message = `${vetName} sent a payment link for ${petName}.`;
 
-    const doc = await Notification.create({
-      user: guardianId,
-      type: "payment_link",
-      title,
-      message,
-      url,
-      readAt: null,
-    });
+    const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
+    const canNotify = isPushEnabledForUser(guardianUser, "payment_link");
+    const doc = canNotify
+      ? await Notification.create({
+          user: guardianId,
+          type: "payment_link",
+          title,
+          message,
+          url,
+          readAt: null,
+        })
+      : null;
 
-    const pusher = getPusherServer();
-    await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
-      id: String(doc._id),
-      type: doc.type,
-      title: doc.title,
-      message: doc.message,
-      url: doc.url,
-      createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : new Date().toISOString(),
-    });
+    if (doc) {
+      const pusher = getPusherServer();
+      await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+        id: String(doc._id),
+        type: doc.type,
+        title: doc.title,
+        message: doc.message,
+        url: doc.url,
+        createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch {

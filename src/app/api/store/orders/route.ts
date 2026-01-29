@@ -5,6 +5,7 @@ import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
+import { isPushEnabledForUser } from "@/lib/utils";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -172,24 +173,30 @@ export async function POST(req: NextRequest) {
     const message = `Order ${orderId} created with ${items.length} item(s).`;
     const url = "/Veterinarian/store/orders";
 
-    const notification = await Notification.create({
-      user: userId,
-      type: "order_created",
-      title,
-      message,
-      url,
-      readAt: null,
-    });
+    const vetUser = await User.findById(userId).select("_id role notificationSettings").lean();
+    const canNotifyVet = isPushEnabledForUser(vetUser, "order_created");
+    const notification = canNotifyVet
+      ? await Notification.create({
+          user: userId,
+          type: "order_created",
+          title,
+          message,
+          url,
+          readAt: null,
+        })
+      : null;
 
-    const pusher = getPusherServer();
-    await pusher.trigger(notificationsChannelForUser(userId), "notification:new", {
-      id: String(notification._id),
-      type: notification.type,
-      title: notification.title,
-      message: notification.message,
-      url: notification.url,
-      createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-    });
+    if (notification) {
+      const pusher = getPusherServer();
+      await pusher.trigger(notificationsChannelForUser(userId), "notification:new", {
+        id: String(notification._id),
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        url: notification.url,
+        createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json({ order: { id: orderId } }, { status: 200 });
   } catch {

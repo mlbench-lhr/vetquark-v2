@@ -5,6 +5,7 @@ import Patient from "@/lib/models/Patient";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import mongoose from "mongoose";
+import { isPushEnabledForUser } from "@/lib/utils";
 
 function isAllowedCloudinaryUrl(value: string): boolean {
   try {
@@ -56,23 +57,29 @@ export async function POST(req: NextRequest) {
 
       for (const vetId of vetIds) {
         if (mongoose.Types.ObjectId.isValid(vetId)) {
-          const notification = await Notification.create({
-            user: vetId,
-            type: "profile_picture_updated",
-            title,
-            message,
-            url,
-            readAt: null,
-          });
+          const vetUser = await User.findById(vetId).select("_id role notificationSettings").lean();
+          const canNotifyVet = isPushEnabledForUser(vetUser, "profile_picture_updated");
+          const notification = canNotifyVet
+            ? await Notification.create({
+                user: vetId,
+                type: "profile_picture_updated",
+                title,
+                message,
+                url,
+                readAt: null,
+              })
+            : null;
 
-          await pusher.trigger(notificationsChannelForUser(vetId), "notification:new", {
-            id: String(notification._id),
-            type: notification.type,
-            title: notification.title,
-            message: notification.message,
-            url: notification.url,
-            createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-          });
+          if (notification) {
+            await pusher.trigger(notificationsChannelForUser(vetId), "notification:new", {
+              id: String(notification._id),
+              type: notification.type,
+              title: notification.title,
+              message: notification.message,
+              url: notification.url,
+              createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+            });
+          }
         }
       }
     }

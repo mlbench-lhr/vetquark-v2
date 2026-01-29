@@ -4,7 +4,7 @@ import Patient from "@/lib/models/Patient";
 import User from "@/lib/models/User";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
-import { asNonEmptyTrimmedString, asOptionalTrimmedString, isMongoObjectId } from "@/lib/utils";
+import { asNonEmptyTrimmedString, asOptionalTrimmedString, isMongoObjectId, isPushEnabledForUser } from "@/lib/utils";
 import jwt from "jsonwebtoken";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Veterinarian not found" }, { status: 404 });
     }
 
-    const guardian = await User.findById(guardianId).select("_id role").lean();
+    const guardian = await User.findById(guardianId).select("_id role notificationSettings").lean();
     if (!guardian || guardian.role !== "Guardian") {
       return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
     }
@@ -135,24 +135,29 @@ export async function POST(req: NextRequest) {
     const message = `${vetName} added ${animalName} to your pets.`;
     const url = `/Guardian/home/petDetails/${encodeURIComponent(String(doc._id))}`;
 
-    const notification = await Notification.create({
-      user: guardianId,
-      type: "patient_added",
-      title,
-      message,
-      url,
-      readAt: null,
-    });
+    const canNotify = isPushEnabledForUser(guardian, "patient_added");
+    const notification = canNotify
+      ? await Notification.create({
+          user: guardianId,
+          type: "patient_added",
+          title,
+          message,
+          url,
+          readAt: null,
+        })
+      : null;
 
-    const pusher = getPusherServer();
-    await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
-      id: String(notification._id),
-      type: notification.type,
-      title: notification.title,
-      message: notification.message,
-      url: notification.url,
-      createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-    });
+    if (notification) {
+      const pusher = getPusherServer();
+      await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+        id: String(notification._id),
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        url: notification.url,
+        createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json({ id: String(doc._id) }, { status: 201 });
   } catch (e) {
@@ -242,29 +247,35 @@ export async function PUT(req: NextRequest) {
 
     const guardianId = String(updated.guardian);
     if (isMongoObjectId(guardianId)) {
+      const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
       const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
       const title = "Patient details updated";
       const message = `${vetName} updated the details for ${animalName}.`;
       const url = `/Guardian/home/petDetails/${encodeURIComponent(String(updated._id))}`;
 
-      const notification = await Notification.create({
-        user: guardianId,
-        type: "patient_updated",
-        title,
-        message,
-        url,
-        readAt: null,
-      });
+      const canNotify = isPushEnabledForUser(guardianUser, "patient_updated");
+      const notification = canNotify
+        ? await Notification.create({
+            user: guardianId,
+            type: "patient_updated",
+            title,
+            message,
+            url,
+            readAt: null,
+          })
+        : null;
 
-      const pusher = getPusherServer();
-      await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
-        id: String(notification._id),
-        type: notification.type,
-        title: notification.title,
-        message: notification.message,
-        url: notification.url,
-        createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-      });
+      if (notification) {
+        const pusher = getPusherServer();
+        await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+          id: String(notification._id),
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          url: notification.url,
+          createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+        });
+      }
     }
 
     return NextResponse.json({ id: String(updated._id) }, { status: 200 });
