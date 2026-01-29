@@ -9,6 +9,7 @@ import {
   Info,
   Thermometer,
 } from "lucide-react";
+import { pdf, Document, Page as PDFPage, Text, View, StyleSheet } from "@react-pdf/renderer";
 import Header from "@/components/common/header";
 
 function Step({
@@ -37,6 +38,134 @@ function Step({
 
 export default function Page() {
   const router = useRouter();
+  const guideStyles = StyleSheet.create({
+    page: { padding: 24, fontSize: 12, color: "#111827" },
+    title: { fontSize: 18, fontWeight: 700 },
+    subtitle: { marginTop: 6, fontSize: 12, color: "#9AA4AF" },
+    divider: { marginVertical: 12, height: 1, backgroundColor: "#E5E7EB" },
+    sectionTitle: { fontSize: 14, fontWeight: 700, marginTop: 10 },
+    stepBox: { padding: 10, borderRadius: 8, backgroundColor: "#F5F6F6", marginTop: 8 },
+    stepHeader: { display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8 },
+    stepIndex: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: "#3F78D8",
+      color: "#ffffff",
+      fontSize: 12,
+      fontWeight: 700,
+      textAlign: "center",
+      paddingTop: 4,
+    },
+    stepTitle: { fontSize: 12, fontWeight: 700 },
+    stepBody: { marginTop: 3, fontSize: 11, color: "#9AA4AF" },
+    cardBlue: { padding: 10, borderRadius: 8, backgroundColor: "#EBF2FF", marginTop: 12 },
+    cardYellow: { padding: 10, borderRadius: 8, backgroundColor: "#FFFBEB", marginTop: 12 },
+    bold: { fontWeight: 700, color: "#111827" },
+    listItem: { display: "flex", flexDirection: "row", gap: 6, marginTop: 4, alignItems: "flex-start" },
+  });
+
+  const steps = [
+    {
+      index: 1,
+      title: "Prepare the Materials",
+      body:
+        "Use a clean, wide-mouthed container (saucer or scoop) and a sterile collection bottle from a pharmacy or clinic.",
+    },
+    {
+      index: 2,
+      title: "Wait for the Right Moment",
+      body:
+        "Collect the first urine of the morning, as it is more concentrated and ideal for testing.",
+    },
+    {
+      index: 3,
+      title: "Position Your Pet",
+      body:
+        "Take your pet to the place where they usually urinate to reduce stress.",
+    },
+    {
+      index: 4,
+      title: "Collect the Sample",
+      body:
+        "Place the container under your pet and collect the midstream urine & discard the beginning and end of urination to avoid contamination.",
+    },
+    {
+      index: 5,
+      title: "Transfer & Label",
+      body:
+        "Transfer the urine into the collection bottle and seal it tightly & label with pet’s name and date/ time of collection.",
+    },
+  ];
+
+  const tips = [
+    "Have everything ready before starting",
+    "Avoid contamination with water, feces, soil, or cleaning products",
+    "For cats: use hydrophobic litter or an empty clean litter box",
+    "Confine cats in a bathroom if needed",
+    "If collection fails, contact your veterinarian for alternatives",
+  ];
+
+  const buildGuideDocument = () => (
+    <Document>
+      <PDFPage size="A4" style={guideStyles.page}>
+        <Text style={guideStyles.title}>Urine Collection Guide</Text>
+        <Text style={guideStyles.subtitle}>How to Collect Urine at Home</Text>
+        <View style={guideStyles.divider} />
+
+        <Text style={guideStyles.sectionTitle}>Step-by-Step</Text>
+        {steps.map((s) => (
+          <View key={s.index} style={guideStyles.stepBox}>
+            <View style={guideStyles.stepHeader}>
+              <Text style={guideStyles.stepIndex}>{String(s.index)}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={guideStyles.stepTitle}>{s.title}</Text>
+                <Text style={guideStyles.stepBody}>{s.body}</Text>
+              </View>
+            </View>
+          </View>
+        ))}
+
+        <View style={guideStyles.cardBlue}>
+          <Text style={guideStyles.sectionTitle}>Storage Instructions</Text>
+          <Text style={guideStyles.stepBody}>
+            The sample should be taken to the clinic within <Text style={guideStyles.bold}>2 hours</Text>. If this is not
+            possible, refrigerate it in the fridge for a maximum of 12 hours.
+          </Text>
+        </View>
+
+        <View style={guideStyles.cardBlue}>
+          <Text style={guideStyles.sectionTitle}>Useful Tips</Text>
+          {tips.map((t, i) => (
+            <View key={`${i}-${t}`} style={guideStyles.listItem}>
+              <Text>•</Text>
+              <Text style={{ flex: 1 }}>{t}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={guideStyles.cardYellow}>
+          <Text style={guideStyles.sectionTitle}>Important</Text>
+          <Text style={{ marginTop: 4, fontSize: 11 }}>
+            This guide is for informational purposes only. Always follow your veterinarian’s instructions.
+          </Text>
+          <Text style={{ marginTop: 2, fontSize: 11, color: "#9AA4AF" }}>If unsure, contact your clinic.</Text>
+        </View>
+      </PDFPage>
+    </Document>
+  );
+
+  const handleDownloadPdf = async () => {
+    const blob = await pdf(buildGuideDocument()).toBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "urine-collection-guide.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -176,6 +305,7 @@ export default function Page() {
           <button
             type="button"
             className="h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white flex items-center justify-center gap-2"
+            onClick={handleDownloadPdf}
           >
             <Download className="h-5 w-5" />
             Download Guide (PDF)
