@@ -45,9 +45,18 @@ export default function Page() {
         q: "Where can I view the test report?",
         a: "You can view all reports on the History screen. The most recent report also appears on the home screen.",
       },
-      { q: 'What does "Attention" mean in the result?', a: "" },
-      { q: "How do I switch pets to view the results?", a: "" },
-      { q: "I can't open the PDF of the report.", a: "" },
+      {
+        q: 'What does "Attention" mean in the result?',
+        a: '“Attention” indicates that one or more parameters are outside the usual range or trending toward abnormal. Review the flagged parameter and veterinarian notes. It is a caution, not an emergency—repeat the test in 24–48 hours or follow your veterinarian’s guidance. If symptoms appear or persist, contact your veterinarian.',
+      },
+      {
+        q: "How do I switch pets to view the results?",
+        a: "Use the pet selector at the top of the Home or History screens: tap the pet’s name/avatar to switch. You can also open the Pets tab and select a pet to view its recent reports.",
+      },
+      {
+        q: "I can't open the PDF of the report.",
+        a: "Ensure a PDF viewer is installed and up to date. If the file doesn’t open, download it again and open from your device’s Downloads folder. On iOS, allow pop‑ups for your browser; on Android, grant storage/file permissions. You can always tap Details to view the report inside the app. If the issue persists, try a different browser or device.",
+      },
     ],
     [],
   );
