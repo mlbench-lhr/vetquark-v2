@@ -1,8 +1,11 @@
 'use client'
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useContext } from "react";
 import { Bell, ChevronDown, ChevronLeft, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { useAppSelector } from "@/store/hooks";
+import { UserContext } from "@/context/authContext";
 
 function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
@@ -34,6 +37,8 @@ type FaqItem = {
 
 export default function Page() {
   const router = useRouter();
+  const profile = useAppSelector((s) => s.userProfile.profile);
+  const { user } = useContext(UserContext);
   const faqs = useMemo<FaqItem[]>(
     () => [
       {
@@ -49,6 +54,7 @@ export default function Page() {
 
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const [feedback, setFeedback] = useState("");
+  const [sending, setSending] = useState(false);
 
   return (
     <div className="min-h-screen bg-white">
@@ -150,9 +156,42 @@ export default function Page() {
 
           <button
             type="button"
-            className="mt-4 h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+            onClick={async () => {
+              const msg = feedback.trim();
+              if (!msg) {
+                toast.error("Please enter your feedback");
+                return;
+              }
+              setSending(true);
+              try {
+                const res = await fetch("/api/support/feedback", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    message: msg,
+                    fromEmail: profile?.email || user?.email,
+                    fromName: profile?.fullName || [user?.first_name, user?.last_name].filter(Boolean).join(" "),
+                    userId: profile?.id || user?.id,
+                    appVersion: "1.0.0",
+                  }),
+                });
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                  toast.error(typeof json?.error === "string" ? json.error : "Failed to send feedback");
+                } else {
+                  toast.success("Thanks for your feedback!");
+                  setFeedback("");
+                }
+              } catch {
+                toast.error("Failed to send feedback");
+              } finally {
+                setSending(false);
+              }
+            }}
+            disabled={sending || !feedback.trim()}
+            className="mt-4 h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Submit
+            {sending ? "Sending..." : "Submit"}
           </button>
         </div>
       </div>
