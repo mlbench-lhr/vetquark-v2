@@ -1,3 +1,4 @@
+'use client'
 import { TrendingUp, TrendingDown, Clock, ChevronDown } from "lucide-react";
 import {
     Accordion,
@@ -5,30 +6,146 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { format } from "date-fns";
 
 interface ParameterData {
     name: string;
     normal: string;
     value: string | number;
     change?: number;
-    status: "improving" | "declining" | "alert" | "stable";
+    status: "improving" | "alert" | "stable";
     barColor: string;
     barWidth: number;
+    sparkColor?: string;
+}
+
+type TrendType = "increasing" | "decreasing" | "normal";
+
+type ReadingResult = {
+    key: string;
+    label: string;
+    unit: string;
+    valueLabel: string;
+    numericValue?: number;
+};
+
+type ReadingItem = {
+    id: string;
+    date: string;
+};
+
+const INCREASING_COLOR = "#F59E0B";
+const NORMAL_COLOR = "#10B981";
+const DECREASING_COLOR = "#EF4444";
+
+const NORMALS: Record<string, { label: string; type: "range" | "exact" | "negative" | "lt" | "gt"; low?: number; high?: number; value?: number }> = {
+    "specific-gravity": { label: "1.015-1.030", type: "range", low: 1.015, high: 1.03 },
+    "ph": { label: "5.5-7.0", type: "range", low: 5.5, high: 7.0 },
+    "protein": { label: "0-15", type: "range", low: 0, high: 15 },
+    "glucose": { label: "Negative", type: "negative" },
+    "ketone-bodies": { label: "Negative", type: "negative" },
+    "bilirubin": { label: "Negative", type: "negative" },
+    "urobilinogen": { label: "0-1", type: "range", low: 0, high: 1 },
+    "nitrite": { label: "Negative", type: "negative" },
+    "ascorbic-acid": { label: "0", type: "exact", value: 0 },
+    "leukocytes": { label: "Negative", type: "negative" },
+    "blood": { label: "Negative", type: "negative" },
+    "microalbumin": { label: "< 0.03", type: "lt", value: 0.03 },
+    "creatine": { label: "0.9-26.5", type: "range", low: 0.9, high: 26.5 },
+    "calcium": { label: "0-2.5", type: "range", low: 0, high: 2.5 },
+    "magnesium": { label: "0-1.5", type: "range", low: 0, high: 1.5 },
+    "ammonium-chloride": { label: "0", type: "exact", value: 0 },
+};
+
+const LABEL_BY_KEY: Record<string, string> = {
+    "specific-gravity": "Specific Gravity",
+    "ph": "pH",
+    "protein": "Protein",
+    "glucose": "Glucose",
+    "ketone-bodies": "Ketone Bodies",
+    "bilirubin": "Bilirubin",
+    "urobilinogen": "Urobilinogen",
+    "nitrite": "Nitrite",
+    "ascorbic-acid": "Ascorbic Acid",
+    "leukocytes": "Leukocytes",
+    "blood": "Blood",
+    "microalbumin": "Microalbumin",
+    "creatine": "Creatine",
+    "calcium": "Calcium",
+    "magnesium": "Magnesium",
+    "ammonium-chloride": "Ammonium Chloride",
+};
+
+const PHYSICAL_KEYS = new Set<string>(["ph", "specific-gravity"]);
+const MICROSCOPIC_KEYS = new Set<string>(["leukocytes", "blood", "microalbumin", "creatine", "calcium", "magnesium", "ammonium-chloride"]);
+
+function parseNumeric(valueLabel: string): number | undefined {
+    const cleaned = String(valueLabel || "").replace(/[^\d.\-]/g, "");
+    if (!cleaned) return undefined;
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : undefined;
+}
+
+function isNormal(key: string, valueLabel: string, numeric?: number): boolean {
+    const rule = NORMALS[key];
+    if (!rule) return false;
+    if (rule.type === "negative") {
+        const v = String(valueLabel || "").toLowerCase();
+        return v === "neg" || v === "negative";
+    }
+    if (rule.type === "exact") {
+        if (numeric == null) {
+            const n = parseNumeric(valueLabel);
+            return n != null && Math.abs(n - (rule.value ?? 0)) < 1e-6;
+        }
+        return Math.abs(numeric - (rule.value ?? 0)) < 1e-6;
+    }
+    if (rule.type === "lt") {
+        const n = numeric ?? parseNumeric(valueLabel);
+        return n != null && n < (rule.value ?? Number.POSITIVE_INFINITY);
+    }
+    if (rule.type === "gt") {
+        const n = numeric ?? parseNumeric(valueLabel);
+        return n != null && n > (rule.value ?? Number.NEGATIVE_INFINITY);
+    }
+    if (rule.type === "range") {
+        const n = numeric ?? parseNumeric(valueLabel);
+        return n != null && n >= (rule.low ?? Number.NEGATIVE_INFINITY) && n <= (rule.high ?? Number.POSITIVE_INFINITY);
+    }
+    return false;
+}
+
+function classifyTrend(values: number[], key: string, lastLabel: string): TrendType {
+    if (values.length < 2) {
+        const last = values.length ? values[values.length - 1] : undefined;
+        if (last == null) return "normal";
+        return isNormal(key, lastLabel, last) ? "normal" : "increasing";
+    }
+    const prev = values[values.length - 2];
+    const last = values[values.length - 1];
+    if (last > prev) return "increasing";
+    if (last < prev) return "decreasing";
+    return isNormal(key, lastLabel, last) ? "normal" : "increasing";
+}
+
+function trendColor(trend: TrendType): string {
+    return trend === "increasing" ? INCREASING_COLOR : trend === "decreasing" ? DECREASING_COLOR : NORMAL_COLOR;
 }
 
 const ParameterRow = ({ param }: { param: ParameterData }) => {
     const getChangeColor = () => {
-        if (!param.change) return "text-muted-foreground";
-        if (param.status === "improving") return "text-emerald-500";
-        if (param.status === "declining") return "text-amber-500";
-        if (param.status === "alert") return "text-red-500";
-        return "text-muted-foreground";
+        if (!param.change && !param.sparkColor) return "text-muted-foreground";
+        if (param.sparkColor === NORMAL_COLOR) return "text-emerald-500";
+        if (param.sparkColor === INCREASING_COLOR) return "text-amber-500";
+        if (param.sparkColor === DECREASING_COLOR) return "text-red-500";
+        return "text-emerald-500";
     };
 
     const getChangeIcon = () => {
-        if (!param.change) return null;
-        if (param.change > 0) return <TrendingUp className="w-3 h-3" />;
-        if (param.change < 0) return <TrendingDown className="w-3 h-3" />;
+        if (param.sparkColor === INCREASING_COLOR) return <TrendingUp className="w-3 h-3" />;
+        if (param.sparkColor === DECREASING_COLOR) return <TrendingDown className="w-3 h-3" />;
         return null;
     };
 
@@ -42,7 +159,7 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
 
                 <svg xmlns="http://www.w3.org/2000/svg" width="60" height="24" viewBox="0 0 60 24" fill="none">
                     <g clipPath="url(#clip0_761_5785)">
-                        <path d="M0.967529 23.0647L15.4775 15.6841L29.9874 12.7318L44.4974 8.30345L59.0073 0.922852" stroke="#F59E0B" strokeWidth="1.88978" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M0.967529 23.0647L15.4775 15.6841L29.9874 12.7318L44.4974 8.30345L59.0073 0.922852" stroke={param.sparkColor || INCREASING_COLOR} strokeWidth="1.88978" strokeLinecap="round" strokeLinejoin="round" />
                     </g>
                     <defs>
                         <clipPath id="clip0_761_5785">
@@ -64,30 +181,162 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
 };
 
 const ProgressView = ({ patientId }: { patientId?: string }) => {
-    const physicalParams: ParameterData[] = [
-        { name: "Specific Gravity", normal: "1.015-1.030", value: "1.000", change: 1, status: "improving", barColor: "#f59e0b", barWidth: 70 },
-        { name: "pH", normal: "5.5-7.0", value: "8.5", change: -2, status: "declining", barColor: "#f59e0b", barWidth: 85 },
-    ];
+    const [loading, setLoading] = useState(false);
+    const [items, setItems] = useState<ReadingItem[]>([]);
+    const [seriesByKey, setSeriesByKey] = useState<Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>>({});
 
-    const chemicalParams: ParameterData[] = [
-        { name: "Protein", normal: "0-15", value: "≥10.0", change: 11, status: "improving", barColor: "#22c55e", barWidth: 65 },
-        { name: "Glucose", normal: "0", value: "Neg", change: 0, status: "stable", barColor: "#f59e0b", barWidth: 50 },
-        { name: "Ketone Bodies", normal: "Negative", value: "16", change: 0, status: "stable", barColor: "#f59e0b", barWidth: 45 },
-        { name: "Bilirubin", normal: "Negative", value: "Neg", change: 0, status: "stable", barColor: "#f59e0b", barWidth: 40 },
-        { name: "Urobilinogen", normal: "0-1", value: "16", change: 11, status: "improving", barColor: "#22c55e", barWidth: 75 },
-        { name: "Nitrite", normal: "Negative", value: "-", change: 0, status: "stable", barColor: "#94a3b8", barWidth: 20 },
-        { name: "Ascorbic Acid", normal: "0", value: "0", change: 0, status: "stable", barColor: "#94a3b8", barWidth: 10 },
-    ];
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            if (!patientId) return;
+            try {
+                setLoading(true);
+                const res = await fetch(`/api/reading/get_readings?patientId=${encodeURIComponent(patientId)}&page=1&pageSize=200`);
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                if (!res.ok) {
+                    setItems([]);
+                    return;
+                }
+                const rows: ReadingItem[] = Array.isArray((data as any)?.items)
+                    ? (data as any).items.map((r: any) => ({ id: String(r.id || r._id || ""), date: String(r.date || r.createdAt || "") }))
+                    : [];
+                setItems(rows);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [patientId]);
 
-    const microscopicParams: ParameterData[] = [
-        { name: "Leukocytes", normal: "Negative", value: "15", change: -33, status: "alert", barColor: "#ef4444", barWidth: 60 },
-        { name: "Blood", normal: "Negative", value: "200", change: 14, status: "improving", barColor: "#22c55e", barWidth: 90 },
-        { name: "Microalbumin", normal: "< 0.03", value: "0", change: 5, status: "improving", barColor: "#22c55e", barWidth: 30 },
-        { name: "Creatine", normal: "0.9-26.5", value: "0.9", change: 0, status: "stable", barColor: "#f59e0b", barWidth: 45 },
-        { name: "Calcium", normal: "0-2.5", value: "0", change: -5, status: "declining", barColor: "#f59e0b", barWidth: 25 },
-        { name: "Magnesium", normal: "0-1.5", value: "0", change: 2, status: "improving", barColor: "#22c55e", barWidth: 20 },
-        { name: "Ammonium Chloride", normal: "0", value: "0", change: 0, status: "stable", barColor: "#94a3b8", barWidth: 15 },
-    ];
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            if (!patientId || items.length === 0) {
+                setSeriesByKey({});
+                return;
+            }
+            const list = items.slice().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            const chunks = await Promise.all(
+                list.map(async (it) => {
+                    try {
+                        const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(it.id)}`);
+                        const data = await res.json().catch(() => null);
+                        if (!res.ok) return null;
+                        const results: ReadingResult[] = Array.isArray((data as any)?.reading?.results)
+                            ? (data as any).reading.results.map((r: any) => ({
+                                key: String(r.key || ""),
+                                label: String(r.label || ""),
+                                unit: String(r.unit || ""),
+                                valueLabel: String(r.valueLabel || ""),
+                                numericValue: typeof r.numericValue === "number" ? r.numericValue : parseNumeric(String(r.valueLabel || "")),
+                            }))
+                            : [];
+                        return { date: new Date(String((data as any)?.reading?.signedAt || (data as any)?.reading?.createdAt || it.date || "")), results };
+                    } catch {
+                        return null;
+                    }
+                })
+            );
+            const acc: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>> = {};
+            for (const chunk of chunks) {
+                if (!chunk) continue;
+                for (const r of chunk.results) {
+                    const n = r.numericValue ?? parseNumeric(r.valueLabel);
+                    if (n == null) continue;
+                    const arr = acc[r.key] || [];
+                    arr.push({ date: chunk.date, value: n, valueLabel: r.valueLabel, unit: r.unit });
+                    acc[r.key] = arr;
+                }
+            }
+            for (const k of Object.keys(acc)) {
+                acc[k].sort((a, b) => a.date.getTime() - b.date.getTime());
+            }
+            if (mounted) setSeriesByKey(acc);
+        })();
+        return () => { mounted = false; };
+    }, [items, patientId]);
+
+    const lastExamDateLabel = useMemo(() => {
+        const latest = items.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        if (!latest) return "";
+        const d = new Date(latest.date);
+        if (Number.isNaN(d.getTime())) return "";
+        return format(d, "d MMM yyyy");
+    }, [items]);
+
+    const physicalParams: ParameterData[] = useMemo(() => {
+        const rows: ParameterData[] = [];
+        for (const key of Array.from(PHYSICAL_KEYS)) {
+            const series = seriesByKey[key] || [];
+            const values = series.map((s) => s.value);
+            const last = series[series.length - 1];
+            const prev = series.length > 1 ? series[series.length - 2] : undefined;
+            const normalLabel = NORMALS[key]?.label ?? "";
+            const trend = classifyTrend(values, key, last?.valueLabel || "");
+            const changePct = prev && last ? Math.round(((last.value - prev.value) / Math.max(Math.abs(prev.value), 1e-9)) * 100) : 0;
+            rows.push({
+                name: LABEL_BY_KEY[key] || key,
+                normal: normalLabel,
+                value: last ? (last.unit ? `${last.valueLabel} ${last.unit}` : last.valueLabel) : "-",
+                change: changePct,
+                status: trend === "increasing" ? "improving" : trend === "decreasing" ? "alert" : "stable",
+                barColor: INCREASING_COLOR,
+                barWidth: 70,
+                sparkColor: trendColor(trend),
+            });
+        }
+        return rows;
+    }, [seriesByKey]);
+
+    const chemicalParams: ParameterData[] = useMemo(() => {
+        const rows: ParameterData[] = [];
+        for (const key of Object.keys(seriesByKey)) {
+            if (PHYSICAL_KEYS.has(key) || MICROSCOPIC_KEYS.has(key)) continue;
+            const series = seriesByKey[key] || [];
+            const values = series.map((s) => s.value);
+            const last = series[series.length - 1];
+            const prev = series.length > 1 ? series[series.length - 2] : undefined;
+            const normalLabel = NORMALS[key]?.label ?? "";
+            const trend = classifyTrend(values, key, last?.valueLabel || "");
+            const changePct = prev && last ? Math.round(((last.value - prev.value) / Math.max(Math.abs(prev.value), 1e-9)) * 100) : 0;
+            rows.push({
+                name: LABEL_BY_KEY[key] || key,
+                normal: normalLabel,
+                value: last ? (last.unit ? `${last.valueLabel} ${last.unit}` : last.valueLabel) : "-",
+                change: changePct,
+                status: trend === "increasing" ? "improving" : trend === "decreasing" ? "alert" : "stable",
+                barColor: INCREASING_COLOR,
+                barWidth: 65,
+                sparkColor: trendColor(trend),
+            });
+        }
+        return rows;
+    }, [seriesByKey]);
+
+    const microscopicParams: ParameterData[] = useMemo(() => {
+        const rows: ParameterData[] = [];
+        for (const key of Array.from(MICROSCOPIC_KEYS)) {
+            const series = seriesByKey[key] || [];
+            const values = series.map((s) => s.value);
+            const last = series[series.length - 1];
+            const prev = series.length > 1 ? series[series.length - 2] : undefined;
+            const normalLabel = NORMALS[key]?.label ?? "";
+            const trend = classifyTrend(values, key, last?.valueLabel || "");
+            const changePct = prev && last ? Math.round(((last.value - prev.value) / Math.max(Math.abs(prev.value), 1e-9)) * 100) : 0;
+            rows.push({
+                name: LABEL_BY_KEY[key] || key,
+                normal: normalLabel,
+                value: last ? (last.unit ? `${last.valueLabel} ${last.unit}` : last.valueLabel) : "-",
+                change: changePct,
+                status: trend === "increasing" ? "improving" : trend === "decreasing" ? "alert" : "stable",
+                barColor: INCREASING_COLOR,
+                barWidth: 60,
+                sparkColor: trendColor(trend),
+            });
+        }
+        return rows;
+    }, [seriesByKey]);
 
     return (
         <div className="space-y-4 px-4">
@@ -95,7 +344,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-lg font-semibold text-foreground">Overall Progress</h2>
-                    <p className="text-xs text-muted-foreground">Last test: May 20, 2024</p>
+                    <p className="text-xs text-muted-foreground">{lastExamDateLabel ? `Last test: ${lastExamDateLabel}` : ""}</p>
                 </div>
                 {patientId ? (
                     <Link
@@ -113,23 +362,23 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                 <div className="bg-emerald-50 rounded-xl h-[65px] flex flex-col justify-center items-start w-full text-emerald-500 px-3 text-center">
                     <div className="flex justify-between w-full">
                         <TrendingUp className="w-5 h-5   mb-1" />
-                        <p className="text-xl font-bold">9</p>
+                        <p className="text-xl font-bold">{chemicalParams.filter((p) => p.sparkColor === NORMAL_COLOR).length + physicalParams.filter((p) => p.sparkColor === NORMAL_COLOR).length + microscopicParams.filter((p) => p.sparkColor === NORMAL_COLOR).length}</p>
                     </div>
-                    <p className="text-xs ">Improving</p>
+                    <p className="text-xs ">Normal</p>
                 </div>
                 <div className="bg-amber-50 rounded-xl h-[65px] flex flex-col justify-center items-start w-full text-amber-500 px-3 text-center">
                     <div className="flex justify-between w-full">
                         <TrendingDown className="w-5 h-5   mb-1" />
-                        <p className="text-xl font-bold">9</p>
+                        <p className="text-xl font-bold">{chemicalParams.filter((p) => p.sparkColor === INCREASING_COLOR).length + physicalParams.filter((p) => p.sparkColor === INCREASING_COLOR).length + microscopicParams.filter((p) => p.sparkColor === INCREASING_COLOR).length}</p>
                     </div>
-                    <p className="text-xs ">Improving</p>
+                    <p className="text-xs ">Increasing</p>
                 </div>
                 <div className="bg-red-50 rounded-xl h-[65px] flex flex-col justify-center items-start w-full text-red-500 px-3 text-center">
                     <div className="flex justify-between w-full">
                         <Clock className="w-5 h-5   mb-1" />
-                        <p className="text-xl font-bold">9</p>
+                        <p className="text-xl font-bold">{chemicalParams.filter((p) => p.sparkColor === DECREASING_COLOR).length + physicalParams.filter((p) => p.sparkColor === DECREASING_COLOR).length + microscopicParams.filter((p) => p.sparkColor === DECREASING_COLOR).length}</p>
                     </div>
-                    <p className="text-xs ">Improving</p>
+                    <p className="text-xs ">Decreasing</p>
                 </div>
             </div>
 
@@ -194,7 +443,10 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
-            <ParameterProgress />
+            <ParameterProgress
+                dataByParameter={seriesByKey}
+                patientId={patientId}
+            />
         </div>
     );
 };
@@ -203,7 +455,6 @@ export default ProgressView;
 
 
 
-import { useState } from "react";
 import { Download, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -219,7 +470,6 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
 import {
     LineChart,
     Line,
@@ -228,51 +478,14 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
-import Link from "next/link";
 
 type ViewMode = "graph" | "table";
 
 interface ParameterProgressData {
     name: string;
     normalValue: string;
-    data: { month: string; value: number }[];
+    data: { label: string; value: number; valueLabel: string }[];
 }
-
-const parameters: Record<string, ParameterProgressData> = {
-    color: {
-        name: "Color",
-        normalValue: "Pale Yellow",
-        data: [
-            { month: "January", value: 10 },
-            { month: "February", value: 10 },
-            { month: "March", value: 10 },
-            { month: "April", value: 10 },
-            { month: "May", value: 10 },
-        ],
-    },
-    protein: {
-        name: "Protein",
-        normalValue: "6",
-        data: [
-            { month: "January", value: 1 },
-            { month: "February", value: 7.5 },
-            { month: "March", value: 3 },
-            { month: "April", value: 8.5 },
-            { month: "May", value: 5 },
-        ],
-    },
-    glucose: {
-        name: "Glucose",
-        normalValue: "100",
-        data: [
-            { month: "January", value: 95 },
-            { month: "February", value: 102 },
-            { month: "March", value: 98 },
-            { month: "April", value: 105 },
-            { month: "May", value: 99 },
-        ],
-    },
-};
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -285,18 +498,75 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-export function ParameterProgress() {
+export function ParameterProgress({ dataByParameter, patientId }: { dataByParameter: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>; patientId?: string }) {
     const [viewMode, setViewMode] = useState<ViewMode>("graph");
-    const [selectedParameter, setSelectedParameter] = useState("protein");
+    const [selectedParameter, setSelectedParameter] = useState<string>("");
     const [dateRange, setDateRange] = useState<{
         from: Date | undefined;
         to: Date | undefined;
     }>({
-        from: new Date(2024, 0, 15),
-        to: new Date(2024, 4, 20),
+        from: undefined,
+        to: undefined,
     });
 
-    const currentParam = parameters[selectedParameter];
+    const parameterOptions = useMemo(() => {
+        const keys = Object.keys(dataByParameter || {});
+        return keys.map((k) => ({ key: k, name: LABEL_BY_KEY[k] || k, normalValue: NORMALS[k]?.label || "" }));
+    }, [dataByParameter]);
+
+    useEffect(() => {
+        if (!selectedParameter && parameterOptions.length) {
+            setSelectedParameter(parameterOptions[0].key);
+        }
+    }, [parameterOptions, selectedParameter]);
+
+    const currentParam: ParameterProgressData | null = useMemo(() => {
+        if (!selectedParameter) return null;
+        const raw = (dataByParameter || {})[selectedParameter] || [];
+        const filtered = raw.filter((r) => {
+            const t = r.date.getTime();
+            const okFrom = !dateRange.from || t >= dateRange.from.getTime();
+            const okTo = !dateRange.to || t <= dateRange.to.getTime();
+            return okFrom && okTo;
+        });
+        const series = filtered.map((r) => ({
+            label: format(r.date, "MMM d"),
+            value: r.value,
+            valueLabel: r.valueLabel,
+        }));
+        return {
+            name: LABEL_BY_KEY[selectedParameter] || selectedParameter,
+            normalValue: NORMALS[selectedParameter]?.label || "",
+            data: series,
+        };
+    }, [selectedParameter, dataByParameter, dateRange.from, dateRange.to]);
+
+    const currentTrendColor = useMemo(() => {
+        if (!selectedParameter) return INCREASING_COLOR;
+        const raw = (dataByParameter || {})[selectedParameter] || [];
+        const vals = raw.map((r) => r.value);
+        const lastLabel = raw.length ? raw[raw.length - 1].valueLabel : "";
+        return trendColor(classifyTrend(vals, selectedParameter, lastLabel));
+    }, [selectedParameter, dataByParameter]);
+
+    const handleExport = () => {
+        if (!currentParam) return;
+        const rows = [["Date", "Parameter", "ValueLabel", "NumericValue"].join(",")];
+        for (const it of currentParam.data) {
+            const row = [it.label, currentParam.name, it.valueLabel, String(it.value)];
+            rows.push(row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","));
+        }
+        const csv = rows.join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${currentParam.name.replace(/\s+/g, "-").toLowerCase()}-${patientId || "patient"}-progress.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
 
     return (
         <div className="w-full max-w-2xl bg-card rounded-2xl p-4 shadow-sm border border-border">
@@ -341,9 +611,9 @@ export function ParameterProgress() {
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border border-border shadow-lg z-50">
-                        <SelectItem value="color">Color</SelectItem>
-                        <SelectItem value="protein">Protein</SelectItem>
-                        <SelectItem value="glucose">Glucose</SelectItem>
+                        {parameterOptions.map((opt) => (
+                            <SelectItem key={opt.key} value={opt.key}>{opt.name}</SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
 
@@ -383,13 +653,13 @@ export function ParameterProgress() {
             <div className="flex items-start justify-between mb-6">
                 <div>
                     <h3 className="text-base font-semibold text-card-foreground">
-                        {currentParam.name}
+                        {currentParam?.name || ""}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                        Normal: {currentParam.normalValue}
+                        Normal: {currentParam?.normalValue || ""}
                     </p>
                 </div>
-                <Button variant="outline" className="bg-[#F5F6F6] border-0 shadow-none rounded-full gap-2 ">
+                <Button onClick={handleExport} variant="outline" className="bg-[#F5F6F6] border-0 shadow-none rounded-full gap-2 ">
                     <Download className="h-4 w-4 text-primary" />
                     Export
                 </Button>
@@ -400,7 +670,7 @@ export function ParameterProgress() {
                 <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart
-                            data={currentParam.data}
+                            data={(currentParam?.data || []).map((d) => ({ ...d, month: d.label }))}
                             margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                         >
                             <XAxis
@@ -420,12 +690,12 @@ export function ParameterProgress() {
                             <Line
                                 type="monotone"
                                 dataKey="value"
-                                stroke="hsl(var(--chart-line))"
+                                stroke={currentTrendColor}
                                 strokeWidth={2.5}
                                 dot={false}
                                 activeDot={{
                                     r: 5,
-                                    fill: "hsl(var(--chart-line))",
+                                    fill: currentTrendColor,
                                     stroke: "hsl(var(--card))",
                                     strokeWidth: 2,
                                 }}
@@ -440,12 +710,12 @@ export function ParameterProgress() {
                         <span>Value</span>
                     </div>
                     <div className="divide-y divide-border">
-                        {currentParam.data.map((item) => (
+                        {(currentParam?.data || []).map((item) => (
                             <div
-                                key={item.month}
+                                key={item.label}
                                 className="flex justify-between py-3 text-card-foreground"
                             >
-                                <span>{item.month}</span>
+                                <span>{item.label}</span>
                                 <span className="font-medium">{item.value}</span>
                             </div>
                         ))}
