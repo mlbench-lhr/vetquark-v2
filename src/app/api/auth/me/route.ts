@@ -68,6 +68,7 @@ function toSafeProfile(user: LeanUser) {
     baseExamPrice: typeof user.baseExamPrice === "number" && Number.isFinite(user.baseExamPrice) ? user.baseExamPrice : undefined,
     notificationSettings: user.notificationSettings && typeof user.notificationSettings === "object" ? user.notificationSettings : undefined,
     payoutMethod: user.payoutMethod && typeof user.payoutMethod === "object" ? user.payoutMethod : undefined,
+    twoFactorEnabled: typeof (user as any).twoFactorEnabled === "boolean" ? (user as any).twoFactorEnabled : undefined,
     createdAt:
       typeof user.createdAt === "string" || typeof user.createdAt === "number" || user.createdAt instanceof Date
         ? new Date(user.createdAt).toISOString()

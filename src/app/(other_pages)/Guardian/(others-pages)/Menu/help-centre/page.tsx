@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useAppSelector } from "@/store/hooks";
 import { UserContext } from "@/context/authContext";
+import { useTranslation } from "react-i18next";
 
 function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
@@ -39,27 +40,11 @@ export default function Page() {
   const router = useRouter();
   const profile = useAppSelector((s) => s.userProfile.profile);
   const { user } = useContext(UserContext);
-  const faqs = useMemo<FaqItem[]>(
-    () => [
-      {
-        q: "Where can I view the test report?",
-        a: "You can view all reports on the History screen. The most recent report also appears on the home screen.",
-      },
-      {
-        q: 'What does "Attention" mean in the result?',
-        a: '“Attention” indicates that one or more parameters are outside the usual range or trending toward abnormal. Review the flagged parameter and veterinarian notes. It is a caution, not an emergency—repeat the test in 24–48 hours or follow your veterinarian’s guidance. If symptoms appear or persist, contact your veterinarian.',
-      },
-      {
-        q: "How do I switch pets to view the results?",
-        a: "Use the pet selector at the top of the Home or History screens: tap the pet’s name/avatar to switch. You can also open the Pets tab and select a pet to view its recent reports.",
-      },
-      {
-        q: "I can't open the PDF of the report.",
-        a: "Ensure a PDF viewer is installed and up to date. If the file doesn’t open, download it again and open from your device’s Downloads folder. On iOS, allow pop‑ups for your browser; on Android, grant storage/file permissions. You can always tap Details to view the report inside the app. If the issue persists, try a different browser or device.",
-      },
-    ],
-    [],
-  );
+  const { t } = useTranslation();
+  const faqs = useMemo<FaqItem[]>(() => {
+    const dict = t("helpCentre.faqs", { returnObjects: true }) as Record<string, FaqItem>;
+    return Object.values(dict);
+  }, [t]);
 
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const [feedback, setFeedback] = useState("");
@@ -67,15 +52,15 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-white">
-      <PageHeader title="Help Centre" onBack={() => router.back()} />
+      <PageHeader title={t("helpCentre.title")} onBack={() => router.back()} />
 
       <div className="px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div>
           <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">
-            Urine Collection Guide
+            {t("helpCentre.urineGuideTitle")}
           </div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
-            See the step-by-step process for collecting the sample at home.
+            {t("helpCentre.urineGuideSubtitle")}
           </div>
 
           <button
@@ -83,14 +68,14 @@ export default function Page() {
             onClick={() => router.push("/Guardian/Menu/help-centre/urine-collection-guide")}
             className="mt-4 h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white"
           >
-            View Step By Step
+            {t("helpCentre.viewStepByStep")}
           </button>
         </div>
 
         <div className="mt-5 h-[8px] w-full bg-[#F5F6F6]" />
 
         <div className="pt-5">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">Quick questions</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t("helpCentre.quickQuestionsTitle")}</div>
 
           <div className="mt-4 space-y-3">
             {faqs.map((item, idx) => {
@@ -127,39 +112,39 @@ export default function Page() {
         </div>
 
         <div className="mt-6">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">App Support</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t("helpCentre.supportTitle")}</div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
-            System status: All services online.
+            {t("helpCentre.supportStatusOnline")}
           </div>
 
           <button
             type="button"
             className="mt-4 h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white"
           >
-            Problemas comuns (Login, PDF)
+            {t("helpCentre.supportCommonIssuesButton")}
           </button>
           <button
             type="button"
             className="mt-3 h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white"
           >
-            Privacidade e Conta
+            {t("helpCentre.supportPrivacyAccountButton")}
           </button>
 
           <div className="mt-3 text-[12px] leading-[16px] text-[#9AA4AF]">
-            App version: 1.0.0 (Build 20240526)
+            {t("helpCentre.appVersionLabel", { version: "1.0.0", build: "20240526" })}
           </div>
         </div>
 
         <div className="mt-6">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">Feedback</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t("helpCentre.feedbackTitle")}</div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
-            Your opinion is important to us!
+            {t("helpCentre.feedbackSubtitle")}
           </div>
 
           <textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Leave your suggestion or report a problem..."
+            placeholder={t("helpCentre.feedbackPlaceholder")}
             className="mt-4 h-[120px] w-full resize-none rounded-[16px] bg-[#F5F6F6] px-4 py-4 text-[14px] leading-[18px] text-[#111827] placeholder:text-[#9AA4AF] outline-none"
           />
 
@@ -168,7 +153,7 @@ export default function Page() {
             onClick={async () => {
               const msg = feedback.trim();
               if (!msg) {
-                toast.error("Please enter your feedback");
+                toast.error(t("helpCentre.feedbackEnterMessage"));
                 return;
               }
               setSending(true);
@@ -186,13 +171,13 @@ export default function Page() {
                 });
                 const json = await res.json().catch(() => ({}));
                 if (!res.ok) {
-                  toast.error(typeof json?.error === "string" ? json.error : "Failed to send feedback");
+                  toast.error(typeof json?.error === "string" ? json.error : t("helpCentre.feedbackFailed"));
                 } else {
-                  toast.success("Thanks for your feedback!");
+                  toast.success(t("helpCentre.feedbackThanks"));
                   setFeedback("");
                 }
               } catch {
-                toast.error("Failed to send feedback");
+                toast.error(t("helpCentre.feedbackFailed"));
               } finally {
                 setSending(false);
               }
@@ -200,7 +185,7 @@ export default function Page() {
             disabled={sending || !feedback.trim()}
             className="mt-4 h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {sending ? "Sending..." : "Submit"}
+            {sending ? t("helpCentre.feedbackSending") : t("helpCentre.feedbackSubmit")}
           </button>
         </div>
       </div>

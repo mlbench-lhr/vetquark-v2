@@ -49,6 +49,12 @@ export interface IUser {
   resetTokenExpiresAt?: Date;
   passwordResetRequestedAt?: Date;
   passwordResetCompletedAt?: Date;
+  // Two-factor authentication
+  twoFactorEnabled?: boolean;
+  twoFactorOtp?: string;
+  twoFactorOtpExpiresAt?: Date;
+  twoFactorOtpAttempts?: number;
+  twoFactorOtpLastSentAt?: Date;
   // Timestamps
   createdAt?: Date;
   updatedAt?: Date;
@@ -101,6 +107,12 @@ const UserSchema = new Schema<IUser>(
     resetTokenExpiresAt: { type: Date },
     passwordResetRequestedAt: { type: Date },
     passwordResetCompletedAt: { type: Date },
+    // Two-factor authentication
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorOtp: { type: String },
+    twoFactorOtpExpiresAt: { type: Date },
+    twoFactorOtpAttempts: { type: Number, default: 0 },
+    twoFactorOtpLastSentAt: { type: Date },
   },
   { timestamps: true }
 );

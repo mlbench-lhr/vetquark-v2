@@ -19,6 +19,7 @@ type SessionRow = {
 
 export default function SecurityPage() {
   const { t } = useTranslation();
+  const [twoFactorEnabled, setTwoFactorEnabled] = React.useState<boolean | null>(null);
   const [changeOpen, setChangeOpen] = React.useState(false);
   const [currentPassword, setCurrentPassword] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
@@ -35,6 +36,22 @@ export default function SecurityPage() {
     { id: "windows", label: "Windows Computer", icon: { type: "monitor" } },
   ];
 
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.profile) {
+          setTwoFactorEnabled(Boolean(data.profile.twoFactorEnabled));
+        } else {
+          setTwoFactorEnabled(false);
+        }
+      } catch {
+        setTwoFactorEnabled(false);
+      }
+    })();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#F5F6F6]">
       <Header title={t("menu.security")} />
@@ -45,9 +62,29 @@ export default function SecurityPage() {
             <div className="text-[15px] text-[#111827] font-medium">{t("security.twoFactorAuth")}</div>
             <button
               type="button"
+              onClick={async () => {
+                try {
+                  const next = !Boolean(twoFactorEnabled);
+                  const res = await fetch("/api/user/two-factor", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ enabled: next }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  if (!res.ok) {
+                    toast.error(typeof data?.error === "string" ? data.error : "Failed to update 2FA");
+                    return;
+                  }
+                  setTwoFactorEnabled(next);
+                  toast.success(next ? "Two-factor enabled" : "Two-factor disabled");
+                } catch {
+                  toast.error("Network error updating 2FA");
+                }
+              }}
               className="h-10 px-6 rounded-full bg-[#4A7BF7] text-white text-[14px] font-medium"
             >
-              {t("security.activate")}
+              {twoFactorEnabled ? "Deactivate" : t("security.activate")}
             </button>
           </div>
 

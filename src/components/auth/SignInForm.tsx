@@ -214,6 +214,11 @@ export default function SignInForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState<AppLanguage>(() => (isAppLanguage(i18n.language) ? i18n.language : "en"));
+  const [twoFARequired, setTwoFARequired] = useState(false);
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", ""]);
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
+  const inputRefs = React.useRef<Array<HTMLInputElement | null>>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,6 +239,14 @@ export default function SignInForm() {
         console.error('Login error:', data.error || data);
         return;
       }
+      if (data?.twoFactorRequired) {
+        setTwoFARequired(true);
+        setOtp(["", "", "", "", ""]);
+        setTimeout(() => {
+          inputRefs.current[0]?.focus();
+        }, 0);
+        return;
+      }
       if (data?.profile) {
         dispatch(setUserProfile(data.profile));
       }
@@ -244,6 +257,72 @@ export default function SignInForm() {
     } catch (err) {
       toast.error(t("auth.networkErrorDuringLogin"));
       console.error('Login network error:', err);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    const v = value.replace(/\D/g, "").slice(0, 1);
+    const next = [...otp];
+    next[index] = v;
+    setOtp(next);
+    if (v && index < otp.length - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const verify2FA = async () => {
+    const code = otp.join("");
+    if (code.length !== 5) {
+      toast.error(t("auth.verificationFailed"));
+      return;
+    }
+    try {
+      setVerifying(true);
+      const res = await fetch("/api/auth/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, otp: code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(typeof data?.error === "string" ? data.error : t("auth.verificationFailed"));
+        return;
+      }
+      if (data?.profile) {
+        dispatch(setUserProfile(data.profile));
+      }
+      toast.success(t("auth.loggedInSuccessfully"));
+      const role = data?.profile?.role ?? data?.role;
+      if (role === 'Veterinarian') router.push('/Veterinarian/home');
+      else router.push('/Guardian/home');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const resend2FA = async () => {
+    try {
+      setResending(true);
+      const res = await fetch("/api/auth/2fa/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(typeof data?.error === "string" ? data.error : t("auth.loginFailed"));
+        return;
+      }
+      toast.success(data?.message ?? "Code resent");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -391,6 +470,45 @@ export default function SignInForm() {
             {t("auth.login")}
           </button>
         </form>
+
+        {twoFARequired && (
+          <div className="mt-8">
+            <h2 className="text-xl font-medium text-gray-900 mb-2">{t("auth.emailVerification")}</h2>
+            <p className="text-sm text-tertiary mb-4">{t("auth.enterVerificationCode")}</p>
+            <div className="flex justify-center gap-3 mb-6">
+              {otp.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={(el) => { inputRefs.current[i] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  value={digit}
+                  onChange={(e) => handleOtpChange(i, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                  className="w-12 h-12 text-center text-lg rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={verify2FA}
+                disabled={verifying}
+                className="px-6 h-10 rounded-full bg-primary text-white font-semibold disabled:opacity-60"
+              >
+                {verifying ? t("common.saving") : t("auth.verifyOtp")}
+              </button>
+              <button
+                type="button"
+                onClick={resend2FA}
+                disabled={resending}
+                className="px-6 h-10 rounded-full bg-gray-100 text-gray-900 font-semibold disabled:opacity-60"
+              >
+                {resending ? t("common.saving") : "Resend"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}

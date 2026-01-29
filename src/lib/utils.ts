@@ -73,3 +73,15 @@ export function isMongoObjectId(value: unknown): value is string {
   const trimmed = value.trim()
   return /^[a-fA-F0-9]{24}$/.test(trimmed)
 }
+
+export function isPushEnabledForUser(user: any, type: string): boolean {
+  try {
+    const settings = user && typeof user === "object" ? (user as any).notificationSettings : null
+    const push = settings && typeof settings === "object" ? (settings as any).push : null
+    const value = push && typeof push === "object" ? (push as any)[type] : undefined
+    if (typeof value === "boolean") return value
+    return true
+  } catch {
+    return true
+  }
+}

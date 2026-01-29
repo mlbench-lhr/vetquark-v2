@@ -498,7 +498,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-export function ParameterProgress({ dataByParameter, patientId }: { dataByParameter: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>; patientId?: string }) {
+export function ParameterProgress({ dataByParameter = {}, patientId }: { dataByParameter?: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>; patientId?: string }) {
     const [viewMode, setViewMode] = useState<ViewMode>("graph");
     const [selectedParameter, setSelectedParameter] = useState<string>("");
     const [dateRange, setDateRange] = useState<{

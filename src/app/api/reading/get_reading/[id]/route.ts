@@ -6,6 +6,7 @@ import User from "@/lib/models/User";
 import Reading from "@/lib/models/Reading";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
+import { isPushEnabledForUser } from "@/lib/utils";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -92,24 +93,30 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
         const message = `Guardian viewed the reading for ${patientName}.`;
         const url = `/Veterinarian/history/detail/${encodeURIComponent(String(doc._id))}`;
 
-        const notification = await Notification.create({
-          user: vetId,
-          type: "reading_viewed",
-          title,
-          message,
-          url,
-          readAt: null,
-        });
+        const vetUser = await User.findById(vetId).select("_id role notificationSettings").lean();
+        const canNotifyVet = isPushEnabledForUser(vetUser, "reading_viewed");
+        const notification = canNotifyVet
+          ? await Notification.create({
+              user: vetId,
+              type: "reading_viewed",
+              title,
+              message,
+              url,
+              readAt: null,
+            })
+          : null;
 
-        const pusher = getPusherServer();
-        await pusher.trigger(notificationsChannelForUser(vetId), "notification:new", {
-          id: String(notification._id),
-          type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          url: notification.url,
-          createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-        });
+        if (notification) {
+          const pusher = getPusherServer();
+          await pusher.trigger(notificationsChannelForUser(vetId), "notification:new", {
+            id: String(notification._id),
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            url: notification.url,
+            createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+          });
+        }
       }
     }
 
