@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import { sendTwoFactorEmail } from "@/lib/email";
+import UserSession from "@/lib/models/UserSession";
+import crypto from "crypto";
 
 type LeanUser = {
   _id: unknown;
@@ -153,8 +155,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Server auth misconfigured" }, { status: 500 });
     }
 
+    const sessionId = crypto.randomUUID();
+    const ua = String(req.headers.get("user-agent") || "");
+    const lower = ua.toLowerCase();
+    let deviceType: "ios" | "android" = lower.includes("android") ? "android" : "ios";
+    let deviceModel = deviceType === "android" ? "Android" : (lower.includes("ipad") ? "iPad" : "iPhone");
+    try {
+      await UserSession.create({ user: user._id as any, sessionId, deviceType, deviceModel });
+    } catch {}
+
     const token = jwt.sign(
-      { sub: String(user._id), role: user.role, email: user.email },
+      { sub: String(user._id), role: user.role, email: user.email, jti: sessionId },
       authSecret,
       { algorithm: "HS256", expiresIn: "7d" }
     );

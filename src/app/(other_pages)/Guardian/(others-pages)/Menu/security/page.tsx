@@ -29,12 +29,7 @@ export default function SecurityPage() {
   const [showNewPassword, setShowNewPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
-  const sessions: SessionRow[] = [
-    { id: "iphone", label: "iPhone 17 Pro Max", rightLabel: t("security.thisDevice"), icon: { type: "smartphone" } },
-    { id: "macbook", label: "Macbook Computer", icon: { type: "laptop" } },
-    { id: "pixel", label: "Google Pixel 9", icon: { type: "google" } },
-    { id: "windows", label: "Windows Computer", icon: { type: "monitor" } },
-  ];
+  const [sessions, setSessions] = React.useState<SessionRow[]>([]);
 
   React.useEffect(() => {
     (async () => {
@@ -52,6 +47,31 @@ export default function SecurityPage() {
     })();
   }, []);
 
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/sessions", { credentials: "include" });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && Array.isArray(data?.items)) {
+          const rows: SessionRow[] = data.items.map((it: any) => {
+            const os = it.type === "android" ? "Android" : "iOS";
+            const right = it.isCurrent ? `${os} • ${t("security.thisDevice")}` : os;
+            return {
+              id: String(it.id),
+              label: String(it.model),
+              rightLabel: right,
+              icon: { type: "smartphone" },
+            };
+          });
+          setSessions(rows);
+        } else {
+          setSessions([]);
+        }
+      } catch {
+        setSessions([]);
+      }
+    })();
+  }, [t]);
   return (
     <div className="min-h-screen bg-[#F5F6F6]">
       <Header title={t("menu.security")} />
@@ -124,12 +144,12 @@ export default function SecurityPage() {
               ))}
             </div>
 
-            <button
+            {/* <button
               type="button"
               className="w-full mt-4 text-center text-[15px] font-medium text-[#EF4444]"
             >
               {t("security.disconnectAllDevices")}
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

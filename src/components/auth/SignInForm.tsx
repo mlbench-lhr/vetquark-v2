@@ -202,6 +202,8 @@ import { useAppDispatch } from '@/store/hooks';
 import { setProfile as setUserProfile } from '@/store/userProfileSlice';
 import { useTranslation } from "react-i18next";
 import i18n, { isAppLanguage, type AppLanguage } from "@/i18n/i18n";
+import { Modal } from "@/components/ui/modal";
+import EmailVerification from "@/components/auth/EmailVerification";
 
 type ProfileType = 'veterinarian' | 'guardian';
 
@@ -215,10 +217,8 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState<AppLanguage>(() => (isAppLanguage(i18n.language) ? i18n.language : "en"));
   const [twoFARequired, setTwoFARequired] = useState(false);
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", ""]);
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
-  const inputRefs = React.useRef<Array<HTMLInputElement | null>>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,10 +241,6 @@ export default function SignInForm() {
       }
       if (data?.twoFactorRequired) {
         setTwoFARequired(true);
-        setOtp(["", "", "", "", ""]);
-        setTimeout(() => {
-          inputRefs.current[0]?.focus();
-        }, 0);
         return;
       }
       if (data?.profile) {
@@ -260,24 +256,7 @@ export default function SignInForm() {
     }
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    const v = value.replace(/\D/g, "").slice(0, 1);
-    const next = [...otp];
-    next[index] = v;
-    setOtp(next);
-    if (v && index < otp.length - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const verify2FA = async () => {
-    const code = otp.join("");
+  const verify2FA = async (code: string) => {
     if (code.length !== 5) {
       toast.error(t("auth.verificationFailed"));
       return;
@@ -299,6 +278,7 @@ export default function SignInForm() {
         dispatch(setUserProfile(data.profile));
       }
       toast.success(t("auth.loggedInSuccessfully"));
+      setTwoFARequired(false);
       const role = data?.profile?.role ?? data?.role;
       if (role === 'Veterinarian') router.push('/Veterinarian/home');
       else router.push('/Guardian/home');
@@ -471,44 +451,17 @@ export default function SignInForm() {
           </button>
         </form>
 
-        {twoFARequired && (
-          <div className="mt-8">
-            <h2 className="text-xl font-medium text-gray-900 mb-2">{t("auth.emailVerification")}</h2>
-            <p className="text-sm text-tertiary mb-4">{t("auth.enterVerificationCode")}</p>
-            <div className="flex justify-center gap-3 mb-6">
-              {otp.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={(el) => { inputRefs.current[i] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  value={digit}
-                  onChange={(e) => handleOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                  className="w-12 h-12 text-center text-lg rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={verify2FA}
-                disabled={verifying}
-                className="px-6 h-10 rounded-full bg-primary text-white font-semibold disabled:opacity-60"
-              >
-                {verifying ? t("common.saving") : t("auth.verifyOtp")}
-              </button>
-              <button
-                type="button"
-                onClick={resend2FA}
-                disabled={resending}
-                className="px-6 h-10 rounded-full bg-gray-100 text-gray-900 font-semibold disabled:opacity-60"
-              >
-                {resending ? t("common.saving") : "Resend"}
-              </button>
-            </div>
-          </div>
-        )}
+        <Modal isOpen={twoFARequired} onClose={() => setTwoFARequired(false)} className="max-w-[420px] p-0">
+          <EmailVerification
+            mode="modal"
+            title={t("auth.emailVerification")}
+            codeLength={5}
+            initialTimer={35}
+            onSubmit={(code) => verify2FA(code)}
+            onResend={() => resend2FA()}
+            onClose={() => setTwoFARequired(false)}
+          />
+        </Modal>
       </div>
 
       {/* Footer */}
