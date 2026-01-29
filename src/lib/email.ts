@@ -108,6 +108,40 @@ export async function sendWelcomeEmail(to: string, email: string, tempPassword: 
   return info;
 }
 
+export async function sendTwoFactorEmail(to: string, otp: string) {
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || "587", 10);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || "no-reply@yourdomain.com";
+
+  if (!host || !user || !pass) {
+    console.warn("SMTP not configured; logging 2FA OTP to console for dev.");
+    console.log(`[DEV] 2FA OTP for ${to}: ${otp}`);
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+
+  const subject = "Your 2FA login code";
+  const html = `<p>Your VetQuark two-factor login code is <strong>${otp}</strong>.</p><p>This code expires in 10 minutes.</p>`;
+
+  const info = await transporter.sendMail({
+    from,
+    to,
+    subject,
+    html,
+    text: `Your two-factor login code is ${otp}. It expires in 10 minutes.`,
+  });
+
+  return info;
+}
+
 export async function sendFeedbackEmail(
   to: string,
   message: string,

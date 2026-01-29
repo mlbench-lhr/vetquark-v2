@@ -33,6 +33,7 @@ export type UserProfile = {
   payoutMethod?: Record<string, any>;
   createdAt?: string;
   updatedAt?: string;
+  twoFactorEnabled?: boolean;
 };
 
 type UserProfileState = {

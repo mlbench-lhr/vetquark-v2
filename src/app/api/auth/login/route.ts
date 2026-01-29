@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
+import { sendTwoFactorEmail } from "@/lib/email";
 
 type LeanUser = {
   _id: unknown;
@@ -117,6 +118,34 @@ export async function POST(req: NextRequest) {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    if (user.twoFactorEnabled) {
+      const now = Date.now();
+      const last = user.twoFactorOtpLastSentAt ? new Date(user.twoFactorOtpLastSentAt).getTime() : 0;
+      const cooldownMs = 35 * 1000;
+      if (now - last < cooldownMs) {
+        const remaining = Math.ceil((cooldownMs - (now - last)) / 1000);
+        return NextResponse.json({ error: `Please wait ${remaining}s before requesting code` }, { status: 429 });
+      }
+      const otp = String(Math.floor(10000 + Math.random() * 90000));
+      const expiresAt = new Date(now + 10 * 60 * 1000);
+      await User.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            twoFactorOtp: otp,
+            twoFactorOtpExpiresAt: expiresAt,
+            twoFactorOtpLastSentAt: new Date(),
+            twoFactorOtpAttempts: 0,
+          },
+        }
+      );
+      try {
+        await sendTwoFactorEmail(String(user.email), otp);
+      } catch {
+      }
+      return NextResponse.json({ twoFactorRequired: true }, { status: 200 });
     }
 
     const authSecret = process.env.AUTH_SECRET;
