@@ -4,11 +4,29 @@ import React, { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function EmailVerification() {
+type Props = {
+  mode?: "page" | "modal";
+  title?: string;
+  codeLength?: number;
+  initialTimer?: number;
+  onSubmit?: (code: string) => void;
+  onResend?: () => void;
+  onClose?: () => void;
+};
+
+export default function EmailVerification({
+  mode = "page",
+  title = "Email verification",
+  codeLength = 6,
+  initialTimer = 30,
+  onSubmit,
+  onResend,
+  onClose,
+}: Props) {
     const router = useRouter();
     const [step, setStep] = useState<"code" | "success">("code");
-    const [code, setCode] = useState(["", "", "", "", "", ""]);
-    const [timer, setTimer] = useState(30);
+    const [code, setCode] = useState(Array.from({ length: codeLength }, () => ""));
+    const [timer, setTimer] = useState(initialTimer);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     useEffect(() => {
@@ -27,8 +45,7 @@ export default function EmailVerification() {
         newCode[index] = value;
         setCode(newCode);
 
-        // Auto-focus next input
-        if (value && index < 5) {
+        if (value && index < codeLength - 1) {
             inputRefs.current[index + 1]?.focus();
         }
     };
@@ -40,13 +57,22 @@ export default function EmailVerification() {
     };
 
     const handleContinue = () => {
+        const token = code.join("");
+        if (onSubmit) {
+            onSubmit(token);
+            return;
+        }
         setStep("success");
     };
 
     const handleRequestNewCode = () => {
-        setCode(["", "", "", "", "", ""]);
-        setTimer(30);
-        inputRefs.current[0]?.focus();
+        if (onResend) {
+            onResend();
+        } else {
+            setCode(Array.from({ length: codeLength }, () => ""));
+            setTimer(initialTimer);
+            inputRefs.current[0]?.focus();
+        }
     };
 
     const formatTime = (seconds: number) => {
@@ -57,22 +83,21 @@ export default function EmailVerification() {
 
     if (step === "success") {
         return (
-            <div className="w-full min-h-[100dvh] p-6 flex flex-col">
-                {/* Header */}
+            <div className={mode === "modal" ? "w-full p-4 flex flex-col" : "w-full min-h-[100dvh] p-6 flex flex-col"}>
                 <div className="flex items-center mb-8">
-                    <button className="mr-4 text-gray-600 hover:text-gray-800" onClick={() => router.back()}>
-                        <ArrowLeft size={24} />
-                    </button>
-                    <h1 className="text-3xl font-bold text-primary">Email verification</h1>
+                    {mode === "page" ? (
+                        <button className="mr-4 text-gray-600 hover:text-gray-800" onClick={() => router.back()}>
+                            <ArrowLeft size={24} />
+                        </button>
+                    ) : null}
+                    <h1 className={mode === "modal" ? "text-2xl font-bold text-primary" : "text-3xl font-bold text-primary"}>{title}</h1>
                 </div>
 
-                {/* Success Message */}
-                <p className="text-gray-700 text-lg mb-12">
+                <p className={mode === "modal" ? "text-gray-700 text-sm mb-10" : "text-gray-700 text-lg mb-12"}>
                     Email successfully verified!
                 </p>
 
-                {/* Success Icon */}
-                <div className="flex justify-center items-center my-20">
+                <div className={mode === "modal" ? "flex justify-center items-center my-12" : "flex justify-center items-center my-20"}>
                     <svg width="220" height="220" viewBox="0 0 220 220" className="block">
                         <defs>
                             <linearGradient id="ringGradient" x1="0" y1="0" x2="220" y2="220" gradientUnits="userSpaceOnUse">
@@ -95,10 +120,12 @@ export default function EmailVerification() {
                   .ring-path { animation: ring-draw 2.2s ease-out forwards; }
                 `}</style>
 
-                {/* Continue Button */}
                 <button
-                    onClick={() => router.push("/Guardian")}
-                    className="w-full py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg mt-auto"
+                    onClick={() => {
+                        if (onClose) onClose();
+                        else router.push("/Guardian");
+                    }}
+                    className={mode === "modal" ? "w-full py-3 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-sm mt-auto" : "w-full py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg mt-auto"}
                 >
                     Continue
                 </button>
@@ -109,24 +136,23 @@ export default function EmailVerification() {
     }
 
     return (
-        <div className="w-full flex flex-col min-h-[100dvh] p-6">
-            {/* Header */}
+        <div className={mode === "modal" ? "w-full p-4" : "w-full flex flex-col min-h-[100dvh] p-6"}>
             <div className="flex items-center mb-8">
-                <button className="mr-4 text-gray-600 hover:text-gray-800" onClick={() => router.back()}>
-                    <ArrowLeft size={24} />
-                </button>
-                <h1 className="text-3xl font-bold text-primary">Email verification</h1>
+                {mode === "page" ? (
+                    <button className="mr-4 text-gray-600 hover:text-gray-800" onClick={() => router.back()}>
+                        <ArrowLeft size={24} />
+                    </button>
+                ) : null}
+                <h1 className={mode === "modal" ? "text-2xl font-bold text-primary" : "text-3xl font-bold text-primary"}>{title}</h1>
             </div>
 
-            {/* Instruction Text */}
-            <p className="text-gray-700 text-lg mb-8">
+            <p className={mode === "modal" ? "text-gray-700 text-sm mb-6" : "text-gray-700 text-lg mb-8"}>
                 We sent a code to your email.
                 <br />
                 Enter it below to activate your account.
             </p>
 
-            {/* Code Input Fields */}
-            <div className="flex justify-center  gap-x-3 gap-y-4 mb-8">
+            <div className={mode === "modal" ? "flex justify-center gap-x-2 gap-y-3 mb-6" : "flex justify-center gap-x-3 gap-y-4 mb-8"}>
                 {code.map((digit, index) => (
                     <input
                         key={index}
@@ -137,33 +163,31 @@ export default function EmailVerification() {
                         value={digit}
                         onChange={(e) => handleCodeChange(index, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(index, e)}
-                        className="w-12 h-12 sm:w-16 sm:h-16 text-center text-xl sm:text-2xl font-semibold bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={mode === "modal" ? "w-10 h-10 sm:w-12 sm:h-12 text-center text-base sm:text-lg font-semibold bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500" : "w-12 h-12 sm:w-16 sm:h-16 text-center text-xl sm:text-2xl font-semibold bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"}
                     />
                 ))}
             </div>
 
-            {/* Resend Code Section */}
-            <div className="text-center mb-8">
-                <p className="text-primary font-semibold mb-2">Didn&apos;t receive the code?</p>
+            <div className={mode === "modal" ? "text-center mb-6" : "text-center mb-8"}>
+                <p className={mode === "modal" ? "text-primary font-semibold mb-2 text-sm" : "text-primary font-semibold mb-2"}>Didn&apos;t receive the code?</p>
                 {timer > 0 ? (
-                    <p className="text-gray-500">
+                    <p className={mode === "modal" ? "text-gray-500 text-sm" : "text-gray-500"}>
                         Request a new code in {formatTime(timer)}.
                     </p>
                 ) : (
                     <button
                         onClick={handleRequestNewCode}
-                        className="text-gray-600 underline hover:text-gray-800"
+                        className={mode === "modal" ? "text-gray-600 underline hover:text-gray-800 text-sm" : "text-gray-600 underline hover:text-gray-800"}
                     >
                         Request a new code
                     </button>
                 )}
             </div>
 
-            {/* Continue Button */}
             <button
                 onClick={handleContinue}
                 disabled={code.some((digit) => !digit)}
-                className="w-full py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg disabled:bg-gray-400 disabled:cursor-not-allowed mt-auto"
+                className={mode === "modal" ? "w-full py-3 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed mt-auto" : "w-full py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg disabled:bg-gray-400 disabled:cursor-not-allowed mt-auto"}
             >
                 Continue
             </button>
