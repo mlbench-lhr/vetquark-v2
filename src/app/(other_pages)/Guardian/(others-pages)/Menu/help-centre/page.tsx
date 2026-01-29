@@ -1,8 +1,11 @@
 'use client'
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useContext } from "react";
 import { Bell, ChevronDown, ChevronLeft, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { useAppSelector } from "@/store/hooks";
+import { UserContext } from "@/context/authContext";
 
 function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
@@ -34,21 +37,33 @@ type FaqItem = {
 
 export default function Page() {
   const router = useRouter();
+  const profile = useAppSelector((s) => s.userProfile.profile);
+  const { user } = useContext(UserContext);
   const faqs = useMemo<FaqItem[]>(
     () => [
       {
         q: "Where can I view the test report?",
         a: "You can view all reports on the History screen. The most recent report also appears on the home screen.",
       },
-      { q: 'What does "Attention" mean in the result?', a: "" },
-      { q: "How do I switch pets to view the results?", a: "" },
-      { q: "I can't open the PDF of the report.", a: "" },
+      {
+        q: 'What does "Attention" mean in the result?',
+        a: '“Attention” indicates that one or more parameters are outside the usual range or trending toward abnormal. Review the flagged parameter and veterinarian notes. It is a caution, not an emergency—repeat the test in 24–48 hours or follow your veterinarian’s guidance. If symptoms appear or persist, contact your veterinarian.',
+      },
+      {
+        q: "How do I switch pets to view the results?",
+        a: "Use the pet selector at the top of the Home or History screens: tap the pet’s name/avatar to switch. You can also open the Pets tab and select a pet to view its recent reports.",
+      },
+      {
+        q: "I can't open the PDF of the report.",
+        a: "Ensure a PDF viewer is installed and up to date. If the file doesn’t open, download it again and open from your device’s Downloads folder. On iOS, allow pop‑ups for your browser; on Android, grant storage/file permissions. You can always tap Details to view the report inside the app. If the issue persists, try a different browser or device.",
+      },
     ],
     [],
   );
 
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const [feedback, setFeedback] = useState("");
+  const [sending, setSending] = useState(false);
 
   return (
     <div className="min-h-screen bg-white">
@@ -150,9 +165,42 @@ export default function Page() {
 
           <button
             type="button"
-            className="mt-4 h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+            onClick={async () => {
+              const msg = feedback.trim();
+              if (!msg) {
+                toast.error("Please enter your feedback");
+                return;
+              }
+              setSending(true);
+              try {
+                const res = await fetch("/api/support/feedback", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    message: msg,
+                    fromEmail: profile?.email || user?.email,
+                    fromName: profile?.fullName || [user?.first_name, user?.last_name].filter(Boolean).join(" "),
+                    userId: profile?.id || user?.id,
+                    appVersion: "1.0.0",
+                  }),
+                });
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                  toast.error(typeof json?.error === "string" ? json.error : "Failed to send feedback");
+                } else {
+                  toast.success("Thanks for your feedback!");
+                  setFeedback("");
+                }
+              } catch {
+                toast.error("Failed to send feedback");
+              } finally {
+                setSending(false);
+              }
+            }}
+            disabled={sending || !feedback.trim()}
+            className="mt-4 h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Submit
+            {sending ? "Sending..." : "Submit"}
           </button>
         </div>
       </div>

@@ -107,3 +107,53 @@ export async function sendWelcomeEmail(to: string, email: string, tempPassword: 
 
   return info;
 }
+
+export async function sendFeedbackEmail(
+  to: string,
+  message: string,
+  meta?: { fromEmail?: string; fromName?: string; userId?: string; appVersion?: string }
+) {
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || "587", 10);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || "no-reply@yourdomain.com";
+
+  if (!host || !user || !pass) {
+    console.warn("SMTP not configured; logging feedback to console for dev.");
+    console.log(
+      `[DEV] Feedback to ${to}: from=${meta?.fromEmail || "anonymous"} (${meta?.fromName || ""}) id=${meta?.userId || ""} version=${meta?.appVersion || ""} message=${message}`
+    );
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+
+  const escape = (v: string) =>
+    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const subject = "New App Feedback";
+  const html = `
+    <p><strong>From:</strong> ${escape(meta?.fromName || "Anonymous")} (${escape(meta?.fromEmail || "unknown")})</p>
+    ${meta?.userId ? `<p><strong>User ID:</strong> ${escape(meta.userId)}</p>` : ""}
+    ${meta?.appVersion ? `<p><strong>App Version:</strong> ${escape(meta.appVersion)}</p>` : ""}
+    <p><strong>Message:</strong></p>
+    <pre style="white-space:pre-wrap;font-family:inherit">${escape(message)}</pre>
+  `;
+
+  const info = await transporter.sendMail({
+    from,
+    to,
+    subject,
+    html,
+    text: `From: ${meta?.fromName || "Anonymous"} (${meta?.fromEmail || "unknown"})\n${meta?.userId ? `User ID: ${meta.userId}\n` : ""}${meta?.appVersion ? `App Version: ${meta.appVersion}\n` : ""}\nMessage:\n${message}`,
+    ...(meta?.fromEmail ? { replyTo: meta.fromEmail } : {}),
+  });
+
+  return info;
+}
