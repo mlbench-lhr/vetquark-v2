@@ -21,6 +21,7 @@ type ReadingDetail = {
   id: string;
   signedAt: string | null;
   createdAt: string | null;
+  signatureImageUrl: string | null;
   results: ReadingResult[];
   report: {
     summaryAndInterpretation: string;
@@ -295,6 +296,20 @@ export default function ReportDetailsPage() {
               <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">
                 {reading.report?.veterinarianNotes || "N/A"}
               </div>
+              {reading.signatureImageUrl ? (
+                <div className="w-full mt-4">
+                  <div className="text-[14px] font-normal mb-1">Signature</div>
+                  <div className="rounded-[12px] bg-[#F5F6F6] p-4">
+                    <div className="w-full h-24 bg-white rounded-md flex items-center justify-center overflow-hidden">
+                      <img
+                        src={reading.signatureImageUrl}
+                        alt="Veterinarian signature"
+                        className="max-h-24 w-auto object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="bg-[#F5F6F6] w-full h-4 mt-4" />
