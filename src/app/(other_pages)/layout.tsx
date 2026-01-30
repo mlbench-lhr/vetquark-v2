@@ -49,11 +49,11 @@ export default function Layout({
 
   useEffect(() => {
     const check = () => {
-      const nextHasBackButton = !!document.querySelector(
+      const nextHasBackButton = (!!document.querySelector(
         'button[aria-label="Back"]'
       ) || !!document.querySelector(
         'button[aria-label="Voltar"]'
-      );
+      )) && pathname!=="/Guardian/pets";
       setHasBackButton((prev) =>
         prev === nextHasBackButton ? prev : nextHasBackButton
       );

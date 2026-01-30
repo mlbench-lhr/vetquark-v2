@@ -56,7 +56,7 @@ export default function Page() {
 
   return (
     <div className="min-h-scree px-3 py-5 relative">
-      <Header title='All Pets'/>
+      <Header title='View Pets'/>
       <div className="relative mt-2">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
         <input
