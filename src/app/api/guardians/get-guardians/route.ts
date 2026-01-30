@@ -53,6 +53,8 @@ export async function GET(req: NextRequest) {
     const guardianId = (url.searchParams.get("guardianId") || "").trim();
     const q = (url.searchParams.get("q") || "").trim();
     const sort = (url.searchParams.get("sort") || "name_az").trim();
+    const includeAllRaw = (url.searchParams.get("includeAll") || "").trim().toLowerCase();
+    const includeAll = includeAllRaw === "1" || includeAllRaw === "true" || includeAllRaw === "yes";
     const { page, pageSize, skip, limit } = parsePagination(url.searchParams, {
       defaultPageSize: 50,
       maxPageSize: 100,
@@ -74,10 +76,13 @@ export async function GET(req: NextRequest) {
         User.findById(guardianId)
           .select("_id role fullName email phone taxId dateOfBirth address country city state postalCode profileImageUrl")
           .lean(),
-        Patient.countDocuments({ guardian: guardianId }),
+        Patient.countDocuments({ veterinarian: veterinarianId, guardian: guardianId }),
       ]);
 
       if (!guardianUser || guardianUser.role !== "Guardian") {
+        return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
+      }
+      if (!patientCount) {
         return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
       }
 
@@ -103,34 +108,128 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const filter: any = { role: "Guardian" };
-    const qRegex = q ? new RegExp(escapeRegex(q), "i") : null;
-    if (qRegex) {
-      filter.$or = [{ fullName: { $regex: qRegex } }, { taxId: { $regex: qRegex } }];
+    if (includeAll && !guardianId) {
+      const userPipeline: any[] = [{ $match: { role: "Guardian" } }];
+      if (q) {
+        const qRegex = new RegExp(escapeRegex(q), "i");
+        userPipeline.push({
+          $match: {
+            $or: [{ fullName: { $regex: qRegex } }, { taxId: { $regex: qRegex } }],
+          },
+        });
+      }
+      const sortStage: any = sort === "recent" ? { createdAt: -1, _id: 1 } : { fullName: 1, _id: 1 };
+      userPipeline.push({
+        $facet: {
+          metadata: [{ $count: "total" }],
+          items: [
+            { $sort: sortStage },
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                _id: 1,
+                name: "$fullName",
+                idNumber: "$taxId",
+                avatarUrl: "$profileImageUrl",
+              },
+            },
+          ],
+        },
+      });
+      const agg = await User.aggregate(userPipeline);
+      const meta = agg?.[0]?.metadata?.[0] ?? null;
+      const total = typeof meta?.total === "number" ? meta.total : 0;
+      const items = Array.isArray(agg?.[0]?.items) ? agg[0].items : [];
+      return NextResponse.json(
+        {
+          items: items.map((it: any) => ({
+            id: String(it._id),
+            name: it.name ?? "N/A",
+            idNumber: it.idNumber ?? "",
+            avatarUrl: it.avatarUrl ?? "",
+            patientCount: 0,
+          })),
+          pagination: toPaginationMeta({ page, pageSize, total }),
+        },
+        { status: 200 }
+      );
     }
- 
+
+    const veterinarianObjectId = new mongoose.Types.ObjectId(veterinarianId);
+    const pipeline: any[] = [{ $match: { veterinarian: veterinarianObjectId } }];
+
+    pipeline.push({
+      $group: { _id: "$guardian", patientCount: { $sum: 1 } },
+    });
+
+    pipeline.push({
+      $lookup: {
+        from: "users",
+        localField: "_id",
+        foreignField: "_id",
+        as: "guardianUser",
+      },
+    });
+
+    pipeline.push({
+      $unwind: { path: "$guardianUser", preserveNullAndEmptyArrays: false },
+    });
+
+    pipeline.push({
+      $match: { "guardianUser.role": "Guardian" },
+    });
+
+    if (q) {
+      const qRegex = new RegExp(escapeRegex(q), "i");
+      pipeline.push({
+        $match: {
+          $or: [{ "guardianUser.fullName": { $regex: qRegex } }, { "guardianUser.taxId": { $regex: qRegex } }],
+        },
+      });
+    }
+
     const sortStage: any =
-      sort === "recent" ? { createdAt: -1, _id: 1 } : { fullName: 1, _id: 1 };
- 
-    const [total, docs] = await Promise.all([
-      User.countDocuments(filter),
-      User.find(filter)
-        .sort(sortStage)
-        .skip(skip)
-        .limit(limit)
-        .select("_id fullName taxId profileImageUrl")
-        .lean(),
-    ]);
- 
-    const items = docs.map((u: any) => ({
-      id: String(u._id),
-      name: u.fullName ?? "N/A",
-      idNumber: u.taxId ?? "",
-      avatarUrl: u.profileImageUrl ?? "",
-    }));
- 
+      sort === "recent"
+        ? { "guardianUser.createdAt": -1, _id: 1 }
+        : { "guardianUser.fullName": 1, _id: 1 };
+
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: "total" }],
+        items: [
+          { $sort: sortStage },
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              _id: 1,
+              patientCount: 1,
+              name: "$guardianUser.fullName",
+              idNumber: "$guardianUser.taxId",
+              avatarUrl: "$guardianUser.profileImageUrl",
+            },
+          },
+        ],
+      },
+    });
+
+    const agg = await Patient.aggregate(pipeline);
+    const meta = agg?.[0]?.metadata?.[0] ?? null;
+    const total = typeof meta?.total === "number" ? meta.total : 0;
+    const items = Array.isArray(agg?.[0]?.items) ? agg[0].items : [];
+
     return NextResponse.json(
-      { items, pagination: toPaginationMeta({ page, pageSize, total }) },
+      {
+        items: items.map((it: any) => ({
+          id: String(it._id),
+          name: it.name ?? "N/A",
+          idNumber: it.idNumber ?? "",
+          avatarUrl: it.avatarUrl ?? "",
+          patientCount: typeof it.patientCount === "number" ? it.patientCount : 0,
+        })),
+        pagination: toPaginationMeta({ page, pageSize, total }),
+      },
       { status: 200 }
     );
   } catch (e) {
