@@ -393,7 +393,7 @@ function RegistrationsListContent({
                       variant="default"
                       size="sm"
                       onClick={() => (onPatientAction ? onPatientAction(patient.id, "urinalysis") : handlePatientAction(patient.id, "urinalysis"))}
-                      className="text-black rounded-full h-9 col-span-2 px-4 text-sm font-normal bg-[#F5F6F6]"
+                      className="text-black rounded-full hover:bg-[#F5F6F6] h-9 col-span-2 px-4 text-sm font-normal bg-[#F5F6F6]"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="17" height="8" viewBox="0 0 17 8" fill="none">
                         <rect width="17" height="8" rx="1" fill="#2B2B2B" />
@@ -406,7 +406,7 @@ function RegistrationsListContent({
                       variant="default"
                       size="sm"
                       onClick={() => (onPatientAction ? onPatientAction(patient.id, "history") : handlePatientAction(patient.id, "history"))}
-                      className="text-black rounded-full h-9 px-4 text-sm font-normal bg-[#F5F6F6]"
+                      className="text-black rounded-full hover:bg-[#F5F6F6] h-9 px-4 text-sm font-normal bg-[#F5F6F6]"
                     >
                       <History className="h-4 w-4 mr-1.5" />
                       History
