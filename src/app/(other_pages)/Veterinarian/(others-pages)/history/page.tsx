@@ -256,7 +256,7 @@ function PageContent() {
         toast.info("Copy link: " + msg);
         return;
       }
-      toast.error(msg);
+      // toast.error(msg);
     }
   }, []);
 
