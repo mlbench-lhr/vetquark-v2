@@ -29,7 +29,7 @@ const tableData: Product[] = [
     category: "Laptop",
     price: "$2399.00",
     status: "Delivered",
-    image: "/images/product/product-01.jpg", // Replace with actual image URL
+    image: "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png", // Replace with actual image URL
   },
   {
     id: 2,

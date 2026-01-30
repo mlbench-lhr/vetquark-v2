@@ -144,18 +144,22 @@ export async function GET(req: NextRequest) {
         .lean(),
     ]);
 
-    const items = docs.map((r: any) => ({
-      id: String(r._id),
-      patientId: String(r.patient?._id ?? r.patient ?? ""),
-      patientName: r.patient?.animalName ?? "N/A",
-      guardianName: r.guardian?.fullName ?? "N/A",
-      veterinarianName: r.veterinarian?.tradeName ?? r.veterinarian?.fullName ?? "N/A",
-      date: (r.signedAt ?? r.createdAt ?? new Date()).toISOString?.() ?? String(r.signedAt ?? r.createdAt ?? ""),
-      status: r.signedAt ? "signed" : "pending",
-      avatarSrc: r.patient?.photo || "/images/product/product-01.jpg",
-      paymentStatus: typeof r.paymentStatus === "string" ? r.paymentStatus : null,
-      paymentLinkId: r.paymentLink ? String(r.paymentLink) : "",
-    }));
+    const items = docs.map((r: any) => {
+      const paymentStatus = typeof r.paymentStatus === "string" ? r.paymentStatus : null;
+      const isPaymentBlocking = paymentStatus === "pending" || paymentStatus === "expired";
+      return {
+        id: String(r._id),
+        patientId: String(r.patient?._id ?? r.patient ?? ""),
+        patientName: r.patient?.animalName ?? "N/A",
+        guardianName: r.guardian?.fullName ?? "N/A",
+        veterinarianName: r.veterinarian?.tradeName ?? r.veterinarian?.fullName ?? "N/A",
+        date: (r.signedAt ?? r.createdAt ?? new Date()).toISOString?.() ?? String(r.signedAt ?? r.createdAt ?? ""),
+        status: isPaymentBlocking ? "pending" : r.signedAt ? "signed" : "pending",
+        avatarSrc: r.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
+        paymentStatus,
+        paymentLinkId: r.paymentLink ? String(r.paymentLink) : "",
+      };
+    });
 
     return NextResponse.json(
       { items, pagination: toPaginationMeta({ page, pageSize, total }) },

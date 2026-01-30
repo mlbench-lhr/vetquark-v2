@@ -1,4 +1,7 @@
+ "use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 type PaymentItem = {
   id: string;
@@ -10,20 +13,47 @@ type PaymentItem = {
   petAvatarUrl: string;
 };
 
-const PAYMENTS_TODAY: PaymentItem[] = [
-  {
-    id: "1",
-    petName: "Wolfy",
-    reportName: "Urinalysis Report",
-    amountLabel: "R$ 5,00",
-    generatedBy: "Dr Vet",
-    date: "15/02/2026",
-    petAvatarUrl:
-      "https://images.unsplash.com/photo-1552053831-71594a27632d?w=200&h=200&fit=crop&crop=faces",
-  },
-];
-
 export default function Page() {
+  const [items, setItems] = useState<PaymentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/payment_links/list_for_guardian?status=pending`);
+        const data = await res.json().catch(() => null);
+        if (!mounted) return;
+        if (!res.ok) {
+          toast.error(typeof data?.error === "string" ? data.error : "Failed to load payments");
+          return;
+        }
+        const list: any[] = Array.isArray(data?.items) ? data.items : [];
+        const mapped: PaymentItem[] = list.map((it: any) => ({
+          id: String(it.id),
+          petName: String(it.patient?.name || "N/A"),
+          reportName: "Urinalysis Report",
+          amountLabel: String(it.amountLabel || ""),
+          generatedBy: String(it.veterinarian?.name || "N/A"),
+          date:
+            typeof it.createdAt === "string" && it.createdAt
+              ? new Date(it.createdAt).toLocaleDateString()
+              : "",
+          petAvatarUrl: String(it.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
+        }));
+        setItems(mapped);
+      } catch {
+        toast.error("Network error");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="min-h-scree bg-white px-5 pt-8">
       <div className="flex items-start justify-between">
@@ -49,7 +79,12 @@ export default function Page() {
         </div>
 
         <div className="mt-3 space-y-3">
-          {PAYMENTS_TODAY.map((item) => (
+          {loading ? (
+            <div className="text-[14px] leading-[18px] text-[#9AA4AF]">Loading...</div>
+          ) : items.length === 0 ? (
+            <div className="text-[14px] leading-[18px] text-[#9AA4AF]">No payments to show.</div>
+          ) : (
+            items.map((item) => (
             <Link
               key={item.id}
               href={`/Guardian/payment/${encodeURIComponent(item.id)}`}
@@ -91,7 +126,8 @@ export default function Page() {
                 </div>
               </div>
             </Link>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

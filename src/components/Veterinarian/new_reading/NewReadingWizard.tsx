@@ -287,58 +287,22 @@ export default function NewReadingWizard() {
       )}
 
       {step === 'timer' && (
-        paymentLinkId && paymentLinkStatus !== "paid" ? (
-          <div className="rounded-2xl bg-gray-100 px-5 py-6">
-            <div className="text-lg font-medium text-gray-900">{t("reading.wizard.paymentPendingTitle")}</div>
-            <div className="mt-2 text-sm text-gray-600">
-              {t("reading.wizard.paymentPendingDesc")}
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStep("identification")}
-                className="flex-1 py-3 rounded-full bg-white text-gray-700 font-medium"
-              >
-                {t("common.back")}
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const res = await fetch(`/api/payment_links/get/${encodeURIComponent(paymentLinkId)}`)
-                    const data = await res.json().catch(() => null)
-                    if (!res.ok) return
-                    const statusRaw = String(data?.item?.status || "")
-                    if (statusRaw === "paid" || statusRaw === "pending" || statusRaw === "expired") {
-                      setPaymentLinkStatus(statusRaw as any)
-                    }
-                  } catch {
-                  }
-                }}
-                className="flex-1 py-3 rounded-full bg-primary text-white font-medium"
-              >
-                {t("reading.wizard.refresh")}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <TimerStep
-            selectedSeconds={draft.timer.selectedSeconds}
-            onChangeSelectedSeconds={(next: number) =>
-              setDraft((prev) => ({ ...prev, timer: { ...prev.timer, selectedSeconds: next } }))
-            }
-            onBack={() => setStep('identification')}
-            onAnalyzeAndProceed={(results: ReviewSelectionMap) => {
-              const dummy = makeDummyAnalysis()
-              setDraft((prev) => ({
-                ...prev,
-                timer: { ...prev.timer, analyzedAt: dummy.analyzedAt, analysis: dummy.analysis },
-                reviewSelections: results
-              }))
-              setStep('review')
-            }}
-          />
-        )
+        <TimerStep
+          selectedSeconds={draft.timer.selectedSeconds}
+          onChangeSelectedSeconds={(next: number) =>
+            setDraft((prev) => ({ ...prev, timer: { ...prev.timer, selectedSeconds: next } }))
+          }
+          onBack={() => setStep('identification')}
+          onAnalyzeAndProceed={(results: ReviewSelectionMap) => {
+            const dummy = makeDummyAnalysis()
+            setDraft((prev) => ({
+              ...prev,
+              timer: { ...prev.timer, analyzedAt: dummy.analyzedAt, analysis: dummy.analysis },
+              reviewSelections: results
+            }))
+            setStep('review')
+          }}
+        />
       )}
 
       {step === 'review' && (
