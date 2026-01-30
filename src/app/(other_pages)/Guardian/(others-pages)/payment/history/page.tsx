@@ -1,8 +1,9 @@
 "use client";
 
 import { ChevronLeft } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 type PaymentStatus = "completed" | "pending";
 
@@ -18,37 +19,6 @@ type PaymentHistoryItem = {
   petAvatarUrl: string;
   vetAvatarUrl: string;
 };
-
-const ITEMS: PaymentHistoryItem[] = [
-  {
-    id: "1",
-    petName: "Wolfy",
-    reportName: "Urinalysis Report",
-    amountLabel: "R$ 5,00",
-    status: "completed",
-    vetName: "Dr. Vet",
-    vetCrmv: "CRMV-SP 12345",
-    date: "15/02/2026",
-    petAvatarUrl:
-      "https://images.unsplash.com/photo-1552053831-71594a27632d?w=200&h=200&fit=crop&crop=faces",
-    vetAvatarUrl:
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=faces",
-  },
-  {
-    id: "2",
-    petName: "Wolfy",
-    reportName: "Urinalysis Report",
-    amountLabel: "R$ 5,00",
-    status: "completed",
-    vetName: "Dr. Vet",
-    vetCrmv: "CRMV-SP 12345",
-    date: "15/02/2026",
-    petAvatarUrl:
-      "https://images.unsplash.com/photo-1552053831-71594a27632d?w=200&h=200&fit=crop&crop=faces",
-    vetAvatarUrl:
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=faces",
-  },
-];
 
 type FilterTab = "all" | "completed" | "pending";
 
@@ -92,13 +62,58 @@ function StatusLabel({ status }: { status: PaymentStatus }) {
 
 export default function Page() {
   const router = useRouter();
+  const [items, setItems] = useState<PaymentHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<FilterTab>("all");
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/payment_links/list_for_guardian?status=all`);
+        const data = await res.json().catch(() => null);
+        if (!mounted) return;
+        if (!res.ok) {
+          toast.error(typeof data?.error === "string" ? data.error : "Failed to load payment history");
+          return;
+        }
+        const list: any[] = Array.isArray(data?.items) ? data.items : [];
+        const mapped: PaymentHistoryItem[] = list.map((it: any) => ({
+          id: String(it.id),
+          petName: String(it.patient?.name || "N/A"),
+          reportName: "Urinalysis Report",
+          amountLabel: String(it.amountLabel || ""),
+          status: String(it.status) === "paid" ? "completed" : "pending",
+          vetName: String(it.veterinarian?.name || "N/A"),
+          vetCrmv:
+            it.veterinarian?.crmv && it.veterinarian?.crmvState
+              ? `CRMV-${String(it.veterinarian.crmvState).toUpperCase()} ${String(it.veterinarian.crmv)}`
+              : "",
+          date:
+            typeof it.createdAt === "string" && it.createdAt
+              ? new Date(it.createdAt).toLocaleDateString()
+              : "",
+          petAvatarUrl: String(it.patient?.photo || "/images/product/product-01.jpg"),
+          vetAvatarUrl: "/images/product/product-01.jpg",
+        }));
+        setItems(mapped);
+      } catch {
+        toast.error("Network error");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const filtered = useMemo(() => {
-    if (tab === "all") return ITEMS;
-    if (tab === "completed") return ITEMS.filter((i) => i.status === "completed");
-    return ITEMS.filter((i) => i.status === "pending");
-  }, [tab]);
+    if (tab === "all") return items;
+    if (tab === "completed") return items.filter((i) => i.status === "completed");
+    return items.filter((i) => i.status === "pending");
+  }, [tab, items]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -133,7 +148,12 @@ export default function Page() {
         </div>
 
         <div className="mt-4 space-y-3">
-          {filtered.map((item) => (
+          {loading ? (
+            <div className="text-[14px] leading-[18px] text-[#9AA4AF]">Loading...</div>
+          ) : filtered.length === 0 ? (
+            <div className="text-[14px] leading-[18px] text-[#9AA4AF]">No payments found.</div>
+          ) : (
+            filtered.map((item) => (
             <div key={item.id} className="rounded-[18px] bg-[#F5F6F6] px-4 py-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -190,10 +210,10 @@ export default function Page() {
                 </div>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>
   );
 }
-
