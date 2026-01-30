@@ -40,7 +40,7 @@ export default function Page() {
             typeof it.createdAt === "string" && it.createdAt
               ? new Date(it.createdAt).toLocaleDateString()
               : "",
-          petAvatarUrl: String(it.patient?.photo || "/images/product/product-01.jpg"),
+          petAvatarUrl: String(it.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
         }));
         setItems(mapped);
       } catch {

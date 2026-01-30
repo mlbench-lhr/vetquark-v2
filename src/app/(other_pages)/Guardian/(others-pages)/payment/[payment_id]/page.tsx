@@ -49,8 +49,8 @@ export default function Page() {
               ? `CRMV-${String(item.veterinarian.crmvState).toUpperCase()} ${String(item.veterinarian.crmv)}`
               : "",
           invoiceDate: typeof item.createdAt === "string" ? new Date(item.createdAt).toLocaleDateString() : "",
-          petAvatarUrl: String(item.patient?.photo || "/images/product/product-01.jpg"),
-          vetAvatarUrl: "/images/product/product-01.jpg",
+          petAvatarUrl: String(item.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
+          vetAvatarUrl: "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
         });
       } finally {
         if (mounted) setLoading(false);
@@ -70,8 +70,8 @@ export default function Page() {
         vetName: "",
         vetCrmv: "",
         invoiceDate: "",
-        petAvatarUrl: "/images/product/product-01.jpg",
-        vetAvatarUrl: "/images/product/product-01.jpg",
+        petAvatarUrl: "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
+        vetAvatarUrl: "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
       },
     [payment, paymentId]
   );

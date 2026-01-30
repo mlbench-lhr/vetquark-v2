@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       patient: {
         id: String(it.patient?._id ?? it.patient ?? ""),
         name: String(it.patient?.animalName ?? "N/A"),
-        photo: String(it.patient?.photo || "/images/product/product-01.jpg"),
+        photo: String(it.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
       },
       veterinarian: {
         id: String(it.veterinarian?._id ?? it.veterinarian ?? ""),

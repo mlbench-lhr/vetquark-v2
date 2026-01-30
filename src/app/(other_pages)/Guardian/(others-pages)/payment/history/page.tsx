@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import Image from "next/image";
 
 type PaymentStatus = "completed" | "pending";
 
@@ -35,9 +36,8 @@ function FilterPill({
     <button
       type="button"
       onClick={onClick}
-      className={`h-[36px] rounded-full px-6 text-[13px] font-medium transition-colors ${
-        active ? "bg-[#3F78D8] text-white" : "bg-[#F5F6F6] text-[#9AA4AF]"
-      }`}
+      className={`h-[36px] rounded-full px-6 text-[13px] font-medium transition-colors ${active ? "bg-[#3F78D8] text-white" : "bg-[#F5F6F6] text-[#9AA4AF]"
+        }`}
     >
       {label}
     </button>
@@ -94,8 +94,8 @@ export default function Page() {
             typeof it.createdAt === "string" && it.createdAt
               ? new Date(it.createdAt).toLocaleDateString()
               : "",
-          petAvatarUrl: String(it.patient?.photo || "/images/product/product-01.jpg"),
-          vetAvatarUrl: "/images/product/product-01.jpg",
+          petAvatarUrl: String(it.patient?.photo ),
+          vetAvatarUrl: "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
         }));
         setItems(mapped);
       } catch {
@@ -153,64 +153,67 @@ export default function Page() {
           ) : filtered.length === 0 ? (
             <div className="text-[14px] leading-[18px] text-[#9AA4AF]">No payments found.</div>
           ) : (
-            filtered.map((item) => (
-            <div key={item.id} className="rounded-[18px] bg-[#F5F6F6] px-4 py-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-[44px] w-[44px] rounded-full bg-[#3F78D8] p-[2px]">
-                    <img
-                      src={item.petAvatarUrl}
-                      alt={item.petName}
-                      className="h-full w-full rounded-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[15px] font-medium leading-[18px] text-[#111827]">
-                      {item.petName}
+            filtered.map((item) =>{console.log("petAvatarUrl====", item.petAvatarUrl);
+             return(
+              <div key={item.id} className="rounded-[18px] bg-[#F5F6F6] px-4 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-[44px] w-[44px] rounded-full bg-[#3F78D8] p-[2px]">
+                      <Image
+                        width={44}
+                        height={44}
+                        src={item.petAvatarUrl}
+                        alt={item.petName}
+                        className="h-full w-full rounded-full object-cover"
+                      />
                     </div>
-                    <div className="mt-1 text-[12px] leading-[14px] text-[#9AA4AF]">
-                      {item.reportName}
+                    <div className="min-w-0">
+                      <div className="text-[15px] font-medium leading-[18px] text-[#111827]">
+                        {item.petName}
+                      </div>
+                      <div className="mt-1 text-[12px] leading-[14px] text-[#9AA4AF]">
+                        {item.reportName}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-[16px] font-semibold leading-[18px] text-[#3F78D8]">
+                      {item.amountLabel}
+                    </div>
+                    <div className="mt-1">
+                      <StatusLabel status={item.status} />
                     </div>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="text-[16px] font-semibold leading-[18px] text-[#3F78D8]">
-                    {item.amountLabel}
+                <div className="mt-4 h-px w-full bg-[#E5E7EB]" />
+
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-[40px] w-[40px] rounded-full bg-white p-[2px]">
+                      <img
+                        src={item.vetAvatarUrl}
+                        alt={item.vetName}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[14px] font-semibold leading-[16px] text-[#111827]">
+                        {item.vetName}
+                      </div>
+                      <div className="mt-1 text-[12px] leading-[14px] text-[#9AA4AF]">
+                        {item.vetCrmv}
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-1">
-                    <StatusLabel status={item.status} />
+
+                  <div className="text-[12px] leading-[14px] text-[#9AA4AF]">
+                    {item.date}
                   </div>
                 </div>
               </div>
-
-              <div className="mt-4 h-px w-full bg-[#E5E7EB]" />
-
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-[40px] w-[40px] rounded-full bg-white p-[2px]">
-                    <img
-                      src={item.vetAvatarUrl}
-                      alt={item.vetName}
-                      className="h-full w-full rounded-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[14px] font-semibold leading-[16px] text-[#111827]">
-                      {item.vetName}
-                    </div>
-                    <div className="mt-1 text-[12px] leading-[14px] text-[#9AA4AF]">
-                      {item.vetCrmv}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-[12px] leading-[14px] text-[#9AA4AF]">
-                  {item.date}
-                </div>
-              </div>
-            </div>
-            ))
+            )})
           )}
         </div>
       </div>

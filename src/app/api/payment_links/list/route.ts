@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
       patientName: String(it.patient?.animalName ?? "N/A"),
       guardianName: String(it.guardian?.fullName ?? "N/A"),
       date: (it.createdAt ? new Date(it.createdAt).toISOString() : new Date().toISOString()),
-      avatarSrc: String(it.patient?.photo || "/images/product/product-01.jpg"),
+      avatarSrc: String(it.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
       paymentLinkStatus: String(it.status || "pending"),
     }));
 

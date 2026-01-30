@@ -410,7 +410,7 @@ export default function ReportDetailsPage() {
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#F5F6F6]">
                   <img
-                    src={reading.patient.photo || "/images/product/product-01.jpg"}
+                    src={reading.patient.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
                     alt={reading.patient.name}
                     className="h-full w-full object-cover"
                   />

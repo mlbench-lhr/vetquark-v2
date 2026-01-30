@@ -99,7 +99,7 @@ export default function Page() {
             id: String(r.id || r._id || ""),
             date: String(r.date || ""),
             status: r.status === "signed" ? "signed" : "pending",
-            avatarSrc: String(r.avatarSrc || pet?.photo || "/images/product/product-01.jpg"),
+            avatarSrc: String(r.avatarSrc || pet?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
           }))
         );
       } catch (e) {

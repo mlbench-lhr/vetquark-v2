@@ -152,7 +152,7 @@ export async function GET(req: NextRequest) {
       veterinarianName: r.veterinarian?.tradeName ?? r.veterinarian?.fullName ?? "N/A",
       date: (r.signedAt ?? r.createdAt ?? new Date()).toISOString?.() ?? String(r.signedAt ?? r.createdAt ?? ""),
       status: r.signedAt ? "signed" : "pending",
-      avatarSrc: r.patient?.photo || "/images/product/product-01.jpg",
+      avatarSrc: r.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
       paymentStatus: typeof r.paymentStatus === "string" ? r.paymentStatus : null,
       paymentLinkId: r.paymentLink ? String(r.paymentLink) : "",
     }));

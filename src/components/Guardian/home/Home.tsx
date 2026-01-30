@@ -125,7 +125,7 @@ function PetSelector({ pets, activePetId, onSelect, loading }: PetSelectorProps)
                         >
                             <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
                                 <Image
-                                    src={pet.image || "/images/product/product-01.jpg"}
+                                    src={pet.image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
                                     alt={pet.name}
                                     width={40}
                                     height={40}

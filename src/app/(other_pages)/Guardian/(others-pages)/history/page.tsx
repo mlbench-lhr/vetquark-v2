@@ -129,7 +129,7 @@ function PageContent() {
         const mapped = items.map((p: any) => ({
           id: String(p.id || p._id || ""),
           name: String(p.name || p.animalName || "N/A"),
-          avatarSrc: String(p.image || p.photo || "/images/product/product-01.jpg"),
+          avatarSrc: String(p.image || p.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
         }));
         setPets(mapped);
         setActivePetId((prev) => prev || initialPetId || mapped[0]?.id || "");
@@ -167,7 +167,7 @@ function PageContent() {
             title: "Urinalysis Report",
             dateLabel: formatDateLabel(String(r.date || "")),
             status: r.status === "signed" ? "signed" : "pending",
-            avatarSrc: String(r.avatarSrc || "/images/product/product-01.jpg"),
+            avatarSrc: String(r.avatarSrc || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
           }))
         );
       } catch (e) {
