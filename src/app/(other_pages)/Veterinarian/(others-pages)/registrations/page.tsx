@@ -280,8 +280,8 @@ function RegistrationsListContent({
   );
 
   return (
-    <div className="h-[100dvh] w-full bg-white">
-      <div className="mx-auto w-full h-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)] ">
+    <div className="h-[100vh pb-[80px w-full bg-white">
+      <div className="mx-auto w-full h-ful pb-12! pt-[calc(env(safe-area-inset-top)+20px)] ">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4 px-4">
@@ -337,7 +337,7 @@ function RegistrationsListContent({
         </div>
 
         {/* Content */}
-        <div className="mt-6 space-y-2 p-4 h-full rounded-t-[16px] bg-[#F5F6F6]">
+        <div className="mt-6 space-y-2 p-4 h-fu rounded-t-[16px] bg-[#F5F6F6]">
           {activeTab === "patients" ? (
             patientsLoading ? (
               patientsSkeletonRows.map((k) => (

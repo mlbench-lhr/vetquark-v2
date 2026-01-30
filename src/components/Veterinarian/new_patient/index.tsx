@@ -95,7 +95,7 @@ export default function AddPatientGuardian() {
         try {
             setLoading(true);
             const res = await fetch(
-                `/api/guardians/get-guardians?q=${encodeURIComponent(q)}&page=${pageToFetch}&pageSize=${pageSize}`
+                `/api/guardians/get-guardians?q=${encodeURIComponent(q)}&page=${pageToFetch}&pageSize=${pageSize}&includeAll=1`
             );
             const data = await res.json();
             if (res.ok) {

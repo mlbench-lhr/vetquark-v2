@@ -265,7 +265,7 @@ function PageContent() {
 
         </div>
 
-        <div className="mt-6 space-y-4 p-4 h-full rounded-[16px] bg-[#F5F6F6]">
+        <div className="mt-6 space-y-4 p-4 pb-20! h-ful rounded-[16px] bg-[#F5F6F6]">
           {loading ? (
             <div className="text-[14px] text-gray-500">Loading...</div>
           ) : sortedItems.length === 0 ? (
