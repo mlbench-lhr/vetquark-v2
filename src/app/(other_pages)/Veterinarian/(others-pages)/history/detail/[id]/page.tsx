@@ -125,16 +125,8 @@ export default function ReportDetailsPage() {
         const data = await res.json().catch(() => null);
         if (!mounted) return;
         if (res.status === 402) {
-          const patientId = String((data as any)?.patientId || "").trim();
-          const paymentLinkId = String((data as any)?.paymentLinkId || "").trim();
-          if (patientId && paymentLinkId) {
-            const params = new URLSearchParams();
-            params.set("patientId", patientId);
-            params.set("paymentLinkId", paymentLinkId);
-            params.set("step", "timer");
-            router.replace(`/Veterinarian/new-reading?${params.toString()}`);
-            return;
-          }
+          const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Payment required";
+          throw new Error(msg);
         }
         if (!res.ok) {
           const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load report";

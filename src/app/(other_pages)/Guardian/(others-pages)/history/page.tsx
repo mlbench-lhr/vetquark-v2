@@ -22,6 +22,40 @@ type ReportHistoryItem = {
   avatarSrc: string;
 };
 
+type ReadingResultStatus = "Normal" | "Abnormal";
+type ReadingResult = {
+  key: string;
+  label: string;
+  unit: string;
+  status: ReadingResultStatus;
+  selectedIndex: number;
+  valueLabel: string;
+  numericValue?: number;
+};
+type ReadingDetail = {
+  id: string;
+  signedAt: string | null;
+  createdAt: string | null;
+  identification?: {
+    collectionMethod?: string | null;
+    collectionAt?: string | null;
+    stripLot?: string | null;
+    stripExpiry?: string | null;
+  } | null;
+  results: ReadingResult[];
+  report: {
+    summaryAndInterpretation: string;
+    otherInformation: string;
+    veterinarianNotes: string;
+  } | null;
+  timer: {
+    analysis?: { summary?: string; confidence?: number; flags?: string[] };
+  } | null;
+  patient: { id: string; name: string; photo: string | null };
+  guardian: { id: string; fullName: string };
+  veterinarian: { id: string; fullName: string; crmv: string | null; crmvState: string | null };
+};
+
 function StatusPill({ status }: { status: ReportStatus }) {
   const label = status === "signed" ? "Signed" : "Pending";
   return (
@@ -32,22 +66,131 @@ function StatusPill({ status }: { status: ReportStatus }) {
   );
 }
 
-async function downloadReadingReport(readingId: string) {
+async function fetchReading(readingId: string) {
   const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
   const data = await res.json().catch(() => null);
   if (!res.ok) {
     const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to download report";
     throw new Error(msg);
   }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `urinalysis-report-${readingId}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  return (data as any)?.reading as ReadingDetail;
+}
+
+function toCsvCell(v: unknown): string {
+  const s = v === null || v === undefined ? "" : String(v);
+  const escaped = s.replace(/"/g, '""');
+  return `"${escaped}"`;
+}
+
+function buildCsvFromReading(r: ReadingDetail): string {
+  const lines: string[] = [];
+  const crmv =
+    r.veterinarian.crmvState && r.veterinarian.crmv
+      ? `CRMV-${r.veterinarian.crmvState} ${r.veterinarian.crmv}`
+      : "";
+  lines.push(["Patient Name", "Guardian Name", "Veterinarian", "CRMV", "Signed At", "Created At"].map(toCsvCell).join(","));
+  lines.push(
+    [
+      r.patient.name,
+      r.guardian.fullName,
+      r.veterinarian.fullName,
+      crmv,
+      r.signedAt || "",
+      r.createdAt || "",
+    ].map(toCsvCell).join(",")
+  );
+  if (r.identification) {
+    lines.push("");
+    lines.push(["Collection Method", "Collection At", "Strip Lot", "Strip Expiry"].map(toCsvCell).join(","));
+    lines.push(
+      [
+        r.identification.collectionMethod || "",
+        r.identification.collectionAt || "",
+        r.identification.stripLot || "",
+        r.identification.stripExpiry || "",
+      ].map(toCsvCell).join(",")
+    );
+  }
+  lines.push("");
+  lines.push(["Key", "Label", "Value", "Unit", "Status"].map(toCsvCell).join(","));
+  const results = Array.isArray(r.results) ? r.results : [];
+  results.forEach((it) => {
+    const value = it.valueLabel;
+    lines.push([it.key, it.label, value, it.unit || "", it.status].map(toCsvCell).join(","));
+  });
+  if (r.report) {
+    lines.push("");
+    lines.push(["Summary and Interpretation"].map(toCsvCell).join(","));
+    lines.push([r.report.summaryAndInterpretation || r.timer?.analysis?.summary || ""].map(toCsvCell).join(","));
+    lines.push(["Other Information"].map(toCsvCell).join(","));
+    lines.push([r.report.otherInformation || ""].map(toCsvCell).join(","));
+    lines.push(["Veterinarian Notes"].map(toCsvCell).join(","));
+    lines.push([r.report.veterinarianNotes || ""].map(toCsvCell).join(","));
+  }
+  return lines.join("\r\n");
+}
+
+function buildExcelHtmlFromReading(r: ReadingDetail): string {
+  const crmv =
+    r.veterinarian.crmvState && r.veterinarian.crmv
+      ? `CRMV-${r.veterinarian.crmvState} ${r.veterinarian.crmv}`
+      : "";
+  const rows = Array.isArray(r.results) ? r.results : [];
+  const metaRows = `
+      <tr><th>Patient Name</th><td>${r.patient.name}</td></tr>
+      <tr><th>Guardian Name</th><td>${r.guardian.fullName}</td></tr>
+      <tr><th>Veterinarian</th><td>${r.veterinarian.fullName}</td></tr>
+      <tr><th>CRMV</th><td>${crmv}</td></tr>
+      <tr><th>Signed At</th><td>${r.signedAt || ""}</td></tr>
+      <tr><th>Created At</th><td>${r.createdAt || ""}</td></tr>
+    `;
+  const idRows = r.identification
+    ? `
+      <tr><th>Collection Method</th><td>${r.identification.collectionMethod || ""}</td></tr>
+      <tr><th>Collection At</th><td>${r.identification.collectionAt || ""}</td></tr>
+      <tr><th>Strip Lot</th><td>${r.identification.stripLot || ""}</td></tr>
+      <tr><th>Strip Expiry</th><td>${r.identification.stripExpiry || ""}</td></tr>
+    `
+    : "";
+  const resultRows = rows
+    .map(
+      (it) =>
+        `<tr><td>${it.key}</td><td>${it.label}</td><td>${it.valueLabel}</td><td>${it.unit || ""}</td><td>${it.status}</td></tr>`
+    )
+    .join("");
+  const reportSection = r.report
+    ? `
+      <tr><th>Summary and Interpretation</th><td>${r.report.summaryAndInterpretation || r.timer?.analysis?.summary || ""}</td></tr>
+      <tr><th>Other Information</th><td>${r.report.otherInformation || ""}</td></tr>
+      <tr><th>Veterinarian Notes</th><td>${r.report.veterinarianNotes || ""}</td></tr>
+    `
+    : "";
+  const html = `
+    <html>
+      <head><meta charset="utf-8" /></head>
+      <body>
+        <table border="1" cellspacing="0" cellpadding="4">
+          <thead>
+            <tr><th colspan="2">Report Metadata</th></tr>
+          </thead>
+          <tbody>
+            ${metaRows}
+            ${idRows}
+            ${reportSection}
+          </tbody>
+        </table>
+        <br />
+        <table border="1" cellspacing="0" cellpadding="4">
+          <thead>
+            <tr><th>Key</th><th>Label</th><th>Value</th><th>Unit</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            ${resultRows}
+          </tbody>
+        </table>
+      </body>
+    </html>`;
+  return html;
 }
 
 function formatDateLabel(value: string) {
@@ -56,7 +199,16 @@ function formatDateLabel(value: string) {
   return d.toLocaleDateString("en-GB");
 }
 
-function ReportCard({ item, onDownload }: { item: ReportHistoryItem; onDownload: (id: string) => void }) {
+function ReportCard({
+  item,
+  onDownloadCsv,
+  onDownloadXls,
+}: {
+  item: ReportHistoryItem;
+  onDownloadCsv: (id: string) => void;
+  onDownloadXls: (id: string) => void;
+}) {
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   return (
     <div className="rounded-[16px] bg-white px-4 py-3 shadow-[0_1px_0_0_rgba(0,0,0,0.03)]">
       <div className="flex items-center justify-between gap-3">
@@ -75,22 +227,59 @@ function ReportCard({ item, onDownload }: { item: ReportHistoryItem; onDownload:
       </div>
 
       <div className="mt-3 flex items-center justify-end gap-3">
-        <button
-          type="button"
-          className="inline-flex h-[34px] items-center gap-2 rounded-full bg-[#3F78D8] px-4 text-[13px] font-medium text-white"
-          onClick={() => onDownload(item.id)}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17" fill="none">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M0 1.66364C0 1.22241 0.175276 0.79926 0.487268 0.487268C0.79926 0.175276 1.22241 0 1.66364 0L10.7659 0L14.4182 3.65224V14.9727C14.4182 15.414 14.2429 15.8371 13.9309 16.1491C13.6189 16.4611 13.1958 16.6364 12.7545 16.6364H1.66364C1.22241 16.6364 0.79926 16.4611 0.487268 16.1491C0.175276 15.8371 0 15.414 0 14.9727V1.66364ZM2.77273 6.65455H1.10909V12.2H2.21818V9.98182H2.77273C3.21395 9.98182 3.6371 9.80655 3.9491 9.49455C4.26109 9.18256 4.43636 8.75941 4.43636 8.31818C4.43636 7.87696 4.26109 7.45381 3.9491 7.14181C3.6371 6.82982 3.21395 6.65455 2.77273 6.65455ZM7.20909 6.65455H5.54546V12.2H7.20909C7.65032 12.2 8.07347 12.0247 8.38546 11.7127C8.69745 11.4007 8.87273 10.9776 8.87273 10.5364V8.31818C8.87273 7.87696 8.69745 7.45381 8.38546 7.14181C8.07347 6.82982 7.65032 6.65455 7.20909 6.65455ZM9.98182 12.2V6.65455H13.3091V7.76364H11.0909V8.87273H12.2V9.98182H11.0909V12.2H9.98182Z" fill="white" />
-          </svg>
-          Download
-        </button>
-        <Link
-          href={`/Guardian/history/detail/${item.id}`}
-          className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-[#3F78D8]"
-        >
-          Details
-        </Link>
+        <div className="relative">
+          <button
+            type="button"
+            disabled={item.status === "pending"}
+            className={`inline-flex h-[34px] items-center gap-2 rounded-full px-4 text-[13px] font-medium ${item.status === "pending" ? "bg-[#9CA3AF] text-white cursor-not-allowed" : "bg-[#3F78D8] text-white"}`}
+            onClick={() => setShowDownloadMenu((v) => !v)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17" fill="none">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0 1.66364C0 1.22241 0.175276 0.79926 0.487268 0.487268C0.79926 0.175276 1.22241 0 1.66364 0L10.7659 0L14.4182 3.65224V14.9727C14.4182 15.414 14.2429 15.8371 13.9309 16.1491C13.6189 16.4611 13.1958 16.6364 12.7545 16.6364H1.66364C1.22241 16.6364 0.79926 16.4611 0.487268 16.1491C0.175276 15.8371 0 15.414 0 14.9727V1.66364ZM2.77273 6.65455H1.10909V12.2H2.21818V9.98182H2.77273C3.21395 9.98182 3.6371 9.80655 3.9491 9.49455C4.26109 9.18256 4.43636 8.75941 4.43636 8.31818C4.43636 7.87696 4.26109 7.45381 3.9491 7.14181C3.6371 6.82982 3.21395 6.65455 2.77273 6.65455ZM7.20909 6.65455H5.54546V12.2H7.20909C7.65032 12.2 8.07347 12.0247 8.38546 11.7127C8.69745 11.4007 8.87273 10.9776 8.87273 10.5364V8.31818C8.87273 7.87696 8.69745 7.45381 8.38546 7.14181C8.07347 6.82982 7.65032 6.65455 7.20909 6.65455ZM9.98182 12.2V6.65455H13.3091V7.76364H11.0909V8.87273H12.2V9.98182H11.0909V12.2H9.98182Z" fill="white" />
+            </svg>
+            Download
+          </button>
+          {showDownloadMenu ? (
+            <div className="absolute right-0 mt-2 w-28 rounded-lg border bg-white shadow-theme-xs p-1 z-10">
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm"
+                onClick={() => {
+                  setShowDownloadMenu(false);
+                  onDownloadCsv(item.id);
+                }}
+              >
+                CSV
+              </button>
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm"
+                onClick={() => {
+                  setShowDownloadMenu(false);
+                  onDownloadXls(item.id);
+                }}
+              >
+                Excel
+              </button>
+            </div>
+          ) : null}
+        </div>
+        {item.status === "pending" ? (
+          <button
+            type="button"
+            disabled
+            className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-[#9CA3AF] cursor-not-allowed"
+          >
+            Details
+          </button>
+        ) : (
+          <Link
+            href={`/Guardian/history/detail/${item.id}`}
+            className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-[#3F78D8]"
+          >
+            Details
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -182,9 +371,39 @@ function PageContent() {
     };
   }, [activePetId]);
 
-  const handleDownload = useCallback(async (id: string) => {
+  const handleDownloadCsv = useCallback(async (id: string) => {
     try {
-      await downloadReadingReport(id);
+      const r = await fetchReading(id);
+      if (!r) throw new Error("Report not found");
+      const csv = buildCsvFromReading(r);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `urinalysis-report-${r.id}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Download failed");
+    }
+  }, []);
+
+  const handleDownloadXls = useCallback(async (id: string) => {
+    try {
+      const r = await fetchReading(id);
+      if (!r) throw new Error("Report not found");
+      const html = buildExcelHtmlFromReading(r);
+      const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `urinalysis-report-${r.id}.xls`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Download failed");
     }
@@ -236,7 +455,14 @@ function PageContent() {
           ) : reports.length === 0 ? (
             <div className="text-[14px] leading-[18px] text-[#9CA3AF]">No reports found.</div>
           ) : (
-            reports.map((item) => <ReportCard key={item.id} item={item} onDownload={handleDownload} />)
+            reports.map((item) => (
+              <ReportCard
+                key={item.id}
+                item={item}
+                onDownloadCsv={handleDownloadCsv}
+                onDownloadXls={handleDownloadXls}
+              />
+            ))
           )}
         </div>
       </div>

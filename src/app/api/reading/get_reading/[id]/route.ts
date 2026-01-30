@@ -76,7 +76,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     const paymentLinkId = (doc as any).paymentLink ? String((doc as any).paymentLink) : "";
     const patientId = String((doc as any).patient?._id ?? (doc as any).patient ?? "");
 
-    if (paymentStatus === "pending") {
+    if (user.role === "Guardian" && (paymentStatus === "pending" || paymentStatus === "expired")) {
       return NextResponse.json(
         { error: "Payment required", paymentStatus, paymentLinkId, patientId },
         { status: 402 },

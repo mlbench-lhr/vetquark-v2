@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Patient not found" }, { status: 404 });
     }
 
-    let paymentStatus: "paid" | null = null;
+    let paymentStatus: "pending" | "paid" | "expired" | null = null;
     let paymentLinkReadingId: string | null = null;
     if (paymentLinkId) {
       const link = await PaymentLink.findOne({ _id: paymentLinkId, veterinarian: veterinarianId, patient: patientId })
@@ -210,12 +210,10 @@ export async function POST(req: NextRequest) {
       const isExpired = expiresAt ? expiresAt.getTime() <= now.getTime() : fallbackExpired;
       if ((link as any).status === "pending" && isExpired) {
         await PaymentLink.updateOne({ _id: paymentLinkId, status: "pending" }, { $set: { status: "expired", expiresAt: expiresAt ?? createdAt } });
-        return NextResponse.json({ error: "Payment link expired" }, { status: 410 });
+        paymentStatus = "expired";
+      } else {
+        paymentStatus = (link as any).status === "paid" ? "paid" : "pending";
       }
-      if ((link as any).status !== "paid") {
-        return NextResponse.json({ error: "Payment pending" }, { status: 403 });
-      }
-      paymentStatus = "paid";
       paymentLinkReadingId = (link as any).reading ? String((link as any).reading) : null;
 
       if (paymentLinkReadingId && mongoose.Types.ObjectId.isValid(paymentLinkReadingId)) {
@@ -266,36 +264,38 @@ export async function POST(req: NextRequest) {
       ).lean();
 
       if (updatedReading?._id) {
-        const guardianId = String((patient as any).guardian || "");
-        const petName = String((patient as any).animalName || "your pet");
-        const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
-        const title = "New reading available";
-        const message = `${vetName} added a new reading for ${petName}.`;
-        const url = `/Guardian/history/detail/${encodeURIComponent(String(updatedReading._id))}`;
+        if (paymentStatus === "paid") {
+          const guardianId = String((patient as any).guardian || "");
+          const petName = String((patient as any).animalName || "your pet");
+          const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
+          const title = "New reading available";
+          const message = `${vetName} added a new reading for ${petName}.`;
+          const url = `/Guardian/history/detail/${encodeURIComponent(String(updatedReading._id))}`;
 
-        const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
-        const canNotifyGuardian = isPushEnabledForUser(guardianUser, "reading_signed");
-        const notification = canNotifyGuardian
-          ? await Notification.create({
-              user: guardianId,
-              type: "reading_signed",
-              title,
-              message,
-              url,
-              readAt: null,
-            })
-          : null;
+          const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
+          const canNotifyGuardian = isPushEnabledForUser(guardianUser, "reading_signed");
+          const notification = canNotifyGuardian
+            ? await Notification.create({
+                user: guardianId,
+                type: "reading_signed",
+                title,
+                message,
+                url,
+                readAt: null,
+              })
+            : null;
 
-        if (notification) {
-          const pusher = getPusherServer();
-          await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
-            id: String(notification._id),
-            type: notification.type,
-            title: notification.title,
-            message: notification.message,
-            url: notification.url,
-            createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-          });
+          if (notification) {
+            const pusher = getPusherServer();
+            await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+              id: String(notification._id),
+              type: notification.type,
+              title: notification.title,
+              message: notification.message,
+              url: notification.url,
+              createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+            });
+          }
         }
 
         return NextResponse.json({ id: String(updatedReading._id) }, { status: 201 });
@@ -348,36 +348,38 @@ export async function POST(req: NextRequest) {
     }
 
     {
-      const guardianId = String((patient as any).guardian || "");
-      const petName = String((patient as any).animalName || "your pet");
-      const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
-      const title = "New reading available";
-      const message = `${vetName} added a new reading for ${petName}.`;
-      const url = `/Guardian/history/detail/${encodeURIComponent(String(created._id))}`;
+      if (paymentStatus === "paid") {
+        const guardianId = String((patient as any).guardian || "");
+        const petName = String((patient as any).animalName || "your pet");
+        const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
+        const title = "New reading available";
+        const message = `${vetName} added a new reading for ${petName}.`;
+        const url = `/Guardian/history/detail/${encodeURIComponent(String(created._id))}`;
 
-      const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
-      const canNotifyGuardian = isPushEnabledForUser(guardianUser, "reading_signed");
-      const notification = canNotifyGuardian
-        ? await Notification.create({
-            user: guardianId,
-            type: "reading_signed",
-            title,
-            message,
-            url,
-            readAt: null,
-          })
-        : null;
+        const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
+        const canNotifyGuardian = isPushEnabledForUser(guardianUser, "reading_signed");
+        const notification = canNotifyGuardian
+          ? await Notification.create({
+              user: guardianId,
+              type: "reading_signed",
+              title,
+              message,
+              url,
+              readAt: null,
+            })
+          : null;
 
-      if (notification) {
-        const pusher = getPusherServer();
-        await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
-          id: String(notification._id),
-          type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          url: notification.url,
-          createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-        });
+        if (notification) {
+          const pusher = getPusherServer();
+          await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+            id: String(notification._id),
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            url: notification.url,
+            createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+          });
+        }
       }
     }
 
