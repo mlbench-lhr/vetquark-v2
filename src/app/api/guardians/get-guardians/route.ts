@@ -74,13 +74,10 @@ export async function GET(req: NextRequest) {
         User.findById(guardianId)
           .select("_id role fullName email phone taxId dateOfBirth address country city state postalCode profileImageUrl")
           .lean(),
-        Patient.countDocuments({ veterinarian: veterinarianId, guardian: guardianId }),
+        Patient.countDocuments({ guardian: guardianId }),
       ]);
 
       if (!guardianUser || guardianUser.role !== "Guardian") {
-        return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
-      }
-      if (!patientCount) {
         return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
       }
 
@@ -106,80 +103,34 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const veterinarianObjectId = new mongoose.Types.ObjectId(veterinarianId);
-    const pipeline: any[] = [{ $match: { veterinarian: veterinarianObjectId } }];
-
-    pipeline.push({
-      $group: { _id: "$guardian", patientCount: { $sum: 1 } },
-    });
-
-    pipeline.push({
-      $lookup: {
-        from: "users",
-        localField: "_id",
-        foreignField: "_id",
-        as: "guardianUser",
-      },
-    });
-
-    pipeline.push({
-      $unwind: { path: "$guardianUser", preserveNullAndEmptyArrays: false },
-    });
-
-    pipeline.push({
-      $match: { "guardianUser.role": "Guardian" },
-    });
-
-    if (q) {
-      const qRegex = new RegExp(escapeRegex(q), "i");
-      pipeline.push({
-        $match: {
-          $or: [{ "guardianUser.fullName": { $regex: qRegex } }, { "guardianUser.taxId": { $regex: qRegex } }],
-        },
-      });
+    const filter: any = { role: "Guardian" };
+    const qRegex = q ? new RegExp(escapeRegex(q), "i") : null;
+    if (qRegex) {
+      filter.$or = [{ fullName: { $regex: qRegex } }, { taxId: { $regex: qRegex } }];
     }
-
+ 
     const sortStage: any =
-      sort === "recent"
-        ? { "guardianUser.createdAt": -1, _id: 1 }
-        : { "guardianUser.fullName": 1, _id: 1 };
-
-    pipeline.push({
-      $facet: {
-        metadata: [{ $count: "total" }],
-        items: [
-          { $sort: sortStage },
-          { $skip: skip },
-          { $limit: limit },
-          {
-            $project: {
-              _id: 1,
-              patientCount: 1,
-              name: "$guardianUser.fullName",
-              idNumber: "$guardianUser.taxId",
-              avatarUrl: "$guardianUser.profileImageUrl",
-            },
-          },
-        ],
-      },
-    });
-
-    const agg = await Patient.aggregate(pipeline);
-    const meta = agg?.[0]?.metadata?.[0] ?? null;
-    const total = typeof meta?.total === "number" ? meta.total : 0;
-    const items = Array.isArray(agg?.[0]?.items) ? agg[0].items : [];
-
+      sort === "recent" ? { createdAt: -1, _id: 1 } : { fullName: 1, _id: 1 };
+ 
+    const [total, docs] = await Promise.all([
+      User.countDocuments(filter),
+      User.find(filter)
+        .sort(sortStage)
+        .skip(skip)
+        .limit(limit)
+        .select("_id fullName taxId profileImageUrl")
+        .lean(),
+    ]);
+ 
+    const items = docs.map((u: any) => ({
+      id: String(u._id),
+      name: u.fullName ?? "N/A",
+      idNumber: u.taxId ?? "",
+      avatarUrl: u.profileImageUrl ?? "",
+    }));
+ 
     return NextResponse.json(
-      {
-        items: items.map((it: any) => ({
-          id: String(it._id),
-          name: it.name ?? "N/A",
-          idNumber: it.idNumber ?? "",
-          avatarUrl: it.avatarUrl ?? "",
-          patientCount: typeof it.patientCount === "number" ? it.patientCount : 0,
-        })),
-        pagination: toPaginationMeta({ page, pageSize, total }),
-      },
+      { items, pagination: toPaginationMeta({ page, pageSize, total }) },
       { status: 200 }
     );
   } catch (e) {
