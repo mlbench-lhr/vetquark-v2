@@ -24,7 +24,7 @@ const VetGuardianEmailVerificationSchema = new Schema<IVetGuardianEmailVerificat
     verifiedExpiresAt: { type: Date },
     verificationId: { type: String },
     consumedAt: { type: Date },
-    cleanupAt: { type: Date, required: true, index: true },
+    cleanupAt: { type: Date, required: true },
   },
   { timestamps: true }
 );
