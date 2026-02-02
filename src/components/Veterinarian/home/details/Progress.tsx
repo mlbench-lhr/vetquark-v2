@@ -338,6 +338,11 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
         return rows;
     }, [seriesByKey]);
 
+    if (items.length<1){
+        return(
+            <div className="text-[14px] text-gray-500 px-4">No progress yet.</div>
+        )
+    }
     return (
         <div className="space-y-4 px-4">
             {/* Header */}
@@ -621,7 +626,7 @@ export function ParameterProgress({ dataByParameter = {}, patientId }: { dataByP
                     <PopoverTrigger className="col-span-3 text-[12px]! shadow-none" asChild>
                         <Button
                             variant="secondary"
-                            className="bg-secondary border-0 rounded-lg font-normal"
+                            className="bg-secondary border-0 rounded-lg font-normal flex justify-start items-center"
                         >
                             <span>
                                 {dateRange.from && dateRange.to

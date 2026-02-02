@@ -2,6 +2,7 @@ import Header from '@/components/common/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 interface Guardian {
   id: string;
   name: string;
@@ -9,7 +10,8 @@ interface Guardian {
   avatarUrl?: string;
 }
 
-function page() {
+function Page() {
+  const { t } = useTranslation();
   const guardians: Guardian[] = [
     {
       id: "1",
@@ -33,7 +35,7 @@ function page() {
   return (
     <>
       <div className="px-4 mt-4 flex flex-col grid grid-cols-1 gap-2">
-        <Header title="View Pets" />
+        <Header title={t('home.viewPetsTitle')} />
         {
           guardians.map((guardian) => (
             <div
@@ -68,4 +70,4 @@ function page() {
   )
 }
 
-export default page
+export default Page

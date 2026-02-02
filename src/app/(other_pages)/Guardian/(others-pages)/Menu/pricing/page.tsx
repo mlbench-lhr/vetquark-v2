@@ -2,11 +2,13 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Pencil } from "lucide-react";
 import Header from "@/components/common/header";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 
 export default function BasePriceCard() {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const profile = useAppSelector((s) => s.userProfile.profile);
 
@@ -61,22 +63,18 @@ export default function BasePriceCard() {
     return (
         <div className="w-full bg-background min-h-screen flex flex-col px-5 py-6">
             {/* Header */}
-            <Header title="Pricing" />
+            <Header title={t("menu.pricing")} />
 
             <div className="mb-4">
-                <h1 className="text-[18px] font-semibold text-foreground mb-2">
-                    Base Price Per Exam
-                </h1>
+                <h1 className="text-[18px] font-semibold text-foreground mb-2">{t("pricing.basePriceTitle")}</h1>
                 <p className="text-[14px] text-muted-foreground leading-[1.5]">
-                    This is the amount that the tutor will pay. The platform will apply a fixed fee of R$ {platformFee.toFixed(2)} on this amount.
+                    {t("pricing.basePriceDesc", { fee: platformFee.toFixed(2) })}
                 </p>
             </div>
 
             {/* Amount Card */}
             <div className="bg-[hsl(220,20%,97%)] rounded-xl p-4 mb-3">
-                <p className="text-[13px] text-muted-foreground mb-1">
-                    Amount to the tutor (R$)
-                </p>
+                <p className="text-[13px] text-muted-foreground mb-1">{t("pricing.amountToTutorLabel")}</p>
                 <div className="flex items-center gap-2">
                     {isEditing ? (
                         <div className="flex items-center">
@@ -108,9 +106,9 @@ export default function BasePriceCard() {
             </div>
 
             {/* Suggested Range */}
-            <p className="text-[13px] text-muted-foreground mb-4">
-                Suggested range by the platform: R$ {minSuggested.toFixed(2)} – R$ {maxSuggested.toFixed(2)}
-            </p>
+                <p className="text-[13px] text-muted-foreground mb-4">
+                    {t("pricing.suggestedRange", { min: minSuggested.toFixed(2), max: maxSuggested.toFixed(2) })}
+                </p>
 
             {/* Net Payout Card */}
             <div
@@ -119,9 +117,7 @@ export default function BasePriceCard() {
                     background: "linear-gradient(135deg, hsl(140, 50%, 96%) 0%, hsl(140, 40%, 92%) 100%)"
                 }}
             >
-                <p className="text-[13px] text-muted-foreground mb-1">
-                    Your net payout per exam will be:
-                </p>
+                <p className="text-[13px] text-muted-foreground mb-1">{t("pricing.netPayoutLabel")}</p>
                 <span className="text-[28px] font-semibold text-[hsl(145,63%,35%)]">
                     R$ {netPayout.toFixed(2)}
                 </span>
@@ -137,13 +133,13 @@ export default function BasePriceCard() {
                     disabled={saving}
                     className="w-full h-[52px] bg-[hsl(224,65%,56%)] hover:bg-[hsl(224,65%,50%)] text-white text-[16px] font-medium rounded-full transition-colors"
                 >
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? t("common.saving") : t("common.saveChanges")}
                 </button>
                 <button
                     onClick={handleReset}
                     className="w-full h-[44px] text-muted-foreground text-[15px] font-medium hover:text-foreground transition-colors"
                 >
-                    Reset To Suggestion
+                    {t("pricing.resetToSuggestion")}
                 </button>
             </div>
         </div>

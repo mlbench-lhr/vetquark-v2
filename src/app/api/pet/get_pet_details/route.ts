@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     await connectMongo();
 
-    const guardian = await User.findById(guardianId).select("_id role").lean();
+    const guardian = await User.findById(guardianId).select("_id role profileImageUrl taxId fullName").lean();
     if (!guardian || guardian.role !== "Guardian") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -62,12 +62,13 @@ export async function GET(req: NextRequest) {
       isAlive: typeof doc.isAlive === "boolean" ? doc.isAlive : true,
       veterinarian: doc.veterinarian
         ? {
-            id: String((doc.veterinarian as any)._id),
-            fullName: (doc.veterinarian as any).fullName ?? "",
-            tradeName: (doc.veterinarian as any).tradeName ?? "",
-            email: (doc.veterinarian as any).email ?? "",
-          }
+          id: String((doc.veterinarian as any)._id),
+          fullName: (doc.veterinarian as any).fullName ?? "",
+          tradeName: (doc.veterinarian as any).tradeName ?? "",
+          email: (doc.veterinarian as any).email ?? "",
+        }
         : null,
+      guardian: guardian,
       createdAt: doc.createdAt ?? null,
       updatedAt: doc.updatedAt ?? null,
     };

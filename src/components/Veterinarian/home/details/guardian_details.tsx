@@ -35,6 +35,7 @@ const GuardianProfilePage: React.FC = () => {
   const [guardian, setGuardian] = useState<GuardianDetails | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastExamLabel, setLastExamLabel] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -52,13 +53,17 @@ const GuardianProfilePage: React.FC = () => {
       try {
         setLoading(true);
 
-        const [guardianRes, petsRes] = await Promise.all([
+        const [guardianRes, petsRes, readingsRes] = await Promise.all([
           fetch(`/api/guardians/get-guardians?guardianId=${encodeURIComponent(guardianId)}`),
           fetch(`/api/patient/get_patients?guardianId=${encodeURIComponent(guardianId)}&page=1&pageSize=50`),
+          fetch(`/api/reading/get_readings?guardianId=${encodeURIComponent(guardianId)}&status=signed&page=1&pageSize=1`, {
+            credentials: "include",
+          }),
         ]);
 
         const guardianJson = await guardianRes.json();
         const petsJson = await petsRes.json();
+        const readingsJson = await readingsRes.json();
 
         if (!mounted) return;
 
@@ -74,6 +79,37 @@ const GuardianProfilePage: React.FC = () => {
               }))
             : [],
         );
+        if (readingsRes.ok && readingsJson && Array.isArray(readingsJson.items) && readingsJson.items.length > 0) {
+          const iso = String(readingsJson.items[0].date || "");
+          const d = new Date(iso);
+          if (Number.isFinite(d.getTime())) {
+            const now = new Date();
+            const diffMs = now.getTime() - d.getTime();
+            const minute = 60 * 1000;
+            const hour = 60 * minute;
+            const day = 24 * hour;
+            const week = 7 * day;
+            let label = "";
+            if (diffMs < hour) {
+              const mins = Math.max(1, Math.floor(diffMs / minute));
+              label = `Last Exam: ${mins} minute${mins > 1 ? "s" : ""} ago`;
+            } else if (diffMs < day) {
+              const hrs = Math.floor(diffMs / hour);
+              label = `Last Exam: ${hrs} hour${hrs > 1 ? "s" : ""} ago`;
+            } else if (diffMs < week) {
+              const days = Math.floor(diffMs / day);
+              label = `Last Exam: ${days} day${days > 1 ? "s" : ""} ago`;
+            } else {
+              const weeks = Math.floor(diffMs / week);
+              label = `Last Exam: ${weeks} week${weeks > 1 ? "s" : ""} ago`;
+            }
+            setLastExamLabel(label);
+          } else {
+            setLastExamLabel(null);
+          }
+        } else {
+          setLastExamLabel(null);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -100,8 +136,9 @@ const GuardianProfilePage: React.FC = () => {
       guardianEmail: guardian?.email ?? "",
       guardianMobile: guardian?.phone ?? "",
       guardianAddress: guardian?.address ?? "",
+      lastExamLabel: lastExamLabel ?? undefined,
     };
-  }, [guardian, guardianId]);
+  }, [guardian, guardianId, lastExamLabel]);
 
   const GuardianDetailsSkeleton = () => (
     <div className="px-4 animate-pulse space-y-4">

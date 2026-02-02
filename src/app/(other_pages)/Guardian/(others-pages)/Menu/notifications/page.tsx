@@ -5,6 +5,7 @@ import Header from "@/components/common/header";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
+import { useTranslation } from "react-i18next";
 
 type ToggleItem = {
   id: string;
@@ -81,6 +82,7 @@ function SettingCard({
 export default function NotificationsSettingsPage() {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.userProfile.profile);
+  const { t } = useTranslation();
 
   const pushItems: ToggleItem[] = useMemo(
     () => [
@@ -180,11 +182,11 @@ export default function NotificationsSettingsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header title="Notifications" />
+      <Header title={t("menu.notifications")} />
 
       <div className="px-4 pb-10 pt-2">
         <div className="text-[18px] leading-[26px] font-normal text-[#111827] mb-3">
-          Push Notifications (Mobile)
+          {t("notifications.settings.pushTitle")}
         </div>
 
         <div className="space-y-4">
@@ -202,7 +204,7 @@ export default function NotificationsSettingsPage() {
         <div className="h-8" />
 
         <div className="text-[18px] leading-[26px] font-normal text-[#111827] mb-3">
-          Email Notifications
+          {t("notifications.settings.emailTitle")}
         </div>
 
         <div className="space-y-4">
@@ -224,7 +226,7 @@ export default function NotificationsSettingsPage() {
             disabled={saving}
             className="h-[56px] w-full rounded-full bg-[#4A7BF7] text-[15px] font-medium text-white"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? t("common.saving") : t("common.saveChanges")}
           </button>
         </div>
       </div>

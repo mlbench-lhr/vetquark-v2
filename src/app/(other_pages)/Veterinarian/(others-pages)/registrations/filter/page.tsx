@@ -7,12 +7,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 type Species =
   | "Dog"
   | "Cat"
-  | "Small Mammal"
-  | "Bird"
-  | "Reptile"
-  | "Fish"
-  | "Farm Animal"
-  | "Other";
+  // | "Small Mammal"
+  // | "Bird"
+  // | "Reptile"
+  // | "Fish"
+  // | "Farm Animal"
+  // | "Other";
 
 type Gender = "Male" | "Female";
 type AgeRange = "1+" | "2+" | "5+" | "10+";
@@ -61,12 +61,12 @@ function FilterContent() {
     const values: Species[] = [
       "Dog",
       "Cat",
-      "Small Mammal",
-      "Bird",
-      "Reptile",
-      "Fish",
-      "Farm Animal",
-      "Other",
+      // "Small Mammal",
+      // "Bird",
+      // "Reptile",
+      // "Fish",
+      // "Farm Animal",
+      // "Other",
     ];
     return values.includes(initialSpecies as Species)
       ? (initialSpecies as Species)
@@ -128,7 +128,7 @@ function FilterContent() {
         <div className="mt-3 flex flex-wrap gap-3">
           <Chip label="Dog" active={species === "Dog"} onClick={() => setSpecies("Dog")} />
           <Chip label="Cat" active={species === "Cat"} onClick={() => setSpecies("Cat")} />
-          <Chip
+          {/* <Chip
             label="Small Mammal"
             active={species === "Small Mammal"}
             onClick={() => setSpecies("Small Mammal")}
@@ -149,7 +149,7 @@ function FilterContent() {
             label="Other"
             active={species === "Other"}
             onClick={() => setSpecies("Other")}
-          />
+          /> */}
         </div>
 
         <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">
