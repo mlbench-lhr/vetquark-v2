@@ -179,8 +179,7 @@ export default function GuardianRegistration() {
     const guardianId = (searchParams.get('guardianId') || '').trim() || null;
     const isEditing = !!guardianId;
     const dobRef = useRef<HTMLInputElement | null>(null);
-    const { isOpen: otpModalOpen, openModal: openOtpModal, closeModal: closeOtpModal } = useModal();
-    const prevEmailRef = useRef<string>('');
+    const { isOpen: successOpen, openModal: openSuccess, closeModal: closeSuccess } = useModal();
     const [formData, setFormData] = useState<FormData>({
         fullName: '',
         taxId: '',
@@ -197,11 +196,6 @@ export default function GuardianRegistration() {
         postalCode: '',
         acceptTerms: false,
     });
-    const [sendingOtp, setSendingOtp] = useState(false);
-    const [verifyingOtp, setVerifyingOtp] = useState(false);
-    const [otp, setOtp] = useState('');
-    const [emailVerified, setEmailVerified] = useState(false);
-    const [emailVerificationId, setEmailVerificationId] = useState<string | null>(null);
     const [loadingGuardian, setLoadingGuardian] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
@@ -264,15 +258,7 @@ export default function GuardianRegistration() {
     };
 
     useEffect(() => {
-        if (isEditing) return;
-        const currentEmail = String(formData.email || '');
-        if (prevEmailRef.current === currentEmail) return;
-        prevEmailRef.current = currentEmail;
-        setEmailVerified(false);
-        setEmailVerificationId(null);
-        setOtp('');
-        closeOtpModal();
-    }, [closeOtpModal, formData.email, isEditing]);
+    }, []);
 
     useEffect(() => {
         if (!guardianId) return;
@@ -303,11 +289,7 @@ export default function GuardianRegistration() {
                     postalCode: String(item.postalCode || ''),
                     acceptTerms: true,
                 }));
-                prevEmailRef.current = String(item.email || '');
-                setEmailVerified(true);
-                setEmailVerificationId(null);
-                setOtp('');
-                closeOtpModal();
+                ;
             } finally {
                 if (mounted) setLoadingGuardian(false);
             }
@@ -316,7 +298,7 @@ export default function GuardianRegistration() {
         return () => {
             mounted = false;
         };
-    }, [guardianId, closeOtpModal]);
+    }, [guardianId]);
 
     useEffect(() => {
         const country = String(formData.country || '').trim();
@@ -397,75 +379,7 @@ export default function GuardianRegistration() {
         };
     }, [formData.country, formData.state, stateOptions]);
 
-    const handleSendOtp = async () => {
-        if (isEditing) return;
-        const email = String(formData.email || '').trim().toLowerCase();
-        if (!email) {
-            toast.error(t('auth.emailRequired'));
-            return;
-        }
-        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        if (!emailOk) {
-            toast.error(t('auth.invalidEmail'));
-            return;
-        }
-
-        try {
-            setSendingOtp(true);
-            const res = await fetch('/api/auth/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mode: 'vet_guardian_send_otp', email }),
-            });
-            const result = await res.json();
-            if (!res.ok) {
-                toast.error(typeof result?.error === "string" ? result.error : t('auth.failedToSendOtp'));
-                return;
-            }
-            toast.success(typeof result?.message === "string" ? result.message : t('auth.otpSentToEmail'));
-            openOtpModal();
-        } catch {
-            toast.error(t('auth.networkErrorSendingOtp'));
-        } finally {
-            setSendingOtp(false);
-        }
-    };
-
-    const handleVerifyOtp = async () => {
-        if (isEditing) return;
-        const email = String(formData.email || '').trim().toLowerCase();
-        const code = otp.replace(/\D/g, '').slice(0, 5);
-        if (code.length !== 5) {
-            toast.error(t('auth.enterOtpCode'));
-            return;
-        }
-        try {
-            setVerifyingOtp(true);
-            const res = await fetch('/api/auth/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mode: 'vet_guardian_verify_otp', email, otp: code }),
-            });
-            const result = await res.json();
-            if (!res.ok) {
-                toast.error(typeof result?.error === "string" ? result.error : t('auth.verificationFailed'));
-                return;
-            }
-            const verificationId = typeof result?.verificationId === "string" ? result.verificationId : null;
-            if (!verificationId) {
-                toast.error(t('auth.verificationFailed'));
-                return;
-            }
-            setEmailVerified(true);
-            setEmailVerificationId(verificationId);
-            closeOtpModal();
-            toast.success(t('auth.emailVerified'));
-        } catch {
-            toast.error(t('auth.networkErrorVerifyingOtp'));
-        } finally {
-            setVerifyingOtp(false);
-        }
-    };
+    
 
     const handleSubmit = async () => {
         try {
@@ -608,11 +522,6 @@ export default function GuardianRegistration() {
                 return;
             }
 
-            if (!emailVerified || !emailVerificationId) {
-                toast.error(t('auth.verifyEmailFirst'));
-                return;
-            }
-
             const res = await fetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -630,7 +539,6 @@ export default function GuardianRegistration() {
                     postalCode,
                     profileType: 'Guardian',
                     acceptTerms: true,
-                    verificationId: emailVerificationId,
                 }),
             });
             const result = await res.json();
@@ -638,7 +546,8 @@ export default function GuardianRegistration() {
                 toast.error(typeof result?.error === "string" ? result.error : t('newPatient.guardian.failedToCreateGuardian'));
                 return;
             }
-            router.push(`/Veterinarian/patient/new_patient?guardianId=${result.id}&guardianName=${encodeURIComponent(formData.fullName)}`);
+            toast.success(t('auth.emailVerification'));
+            openSuccess();
         } catch (e) {
             toast.error(isEditing ? t('newPatient.guardian.networkErrorUpdatingGuardian') : t('newPatient.guardian.networkErrorCreatingGuardian'));
             console.error(isEditing ? 'Error updating guardian:' : 'Error creating guardian:', e);
@@ -805,16 +714,7 @@ export default function GuardianRegistration() {
                                     disabled={isEditing}
                                     className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                                 />
-                                {!isEditing ? (
-                                    <button
-                                        type="button"
-                                        onClick={handleSendOtp}
-                                        disabled={sendingOtp || emailVerified}
-                                        className="shrink-0 px-4 py-3 rounded-lg bg-primary text-white font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                    >
-                                        {emailVerified ? t('auth.verified') : sendingOtp ? t('auth.sending') : t('auth.verify')}
-                                    </button>
-                                ) : null}
+                                
                             </div>
                         </div>
                     </div>
@@ -934,7 +834,7 @@ export default function GuardianRegistration() {
                 <div className="">
                     <button
                         onClick={handleSubmit}
-                        disabled={(isEditing ? false : !emailVerified) || submitting || loadingGuardian}
+                        disabled={submitting || loadingGuardian}
                         className="w-full bg-primary hover:bg-primary/70 text-white font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         <Plus className="w-5 h-5" />
@@ -943,32 +843,25 @@ export default function GuardianRegistration() {
                 </div>
             </div>
 
-            <Modal isOpen={otpModalOpen && !isEditing} onClose={closeOtpModal} className="max-w-[420px] mx-4 p-6">
+            <Modal isOpen={successOpen && !isEditing} onClose={() => { closeSuccess(); router.back(); }} className="max-w-[420px] mx-4 p-6">
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900">{t('auth.emailVerification')}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{t('auth.enterVerificationCode')} {String(formData.email || '').trim()}</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                            A verification link has been sent to the guardian. You can select them once they verify their account.
+                        </p>
                     </div>
-                    <button type="button" onClick={closeOtpModal} className="p-2 rounded-lg hover:bg-gray-100">
+                    <button type="button" onClick={() => { closeSuccess(); router.back(); }} className="p-2 rounded-lg hover:bg-gray-100">
                         <X className="w-5 h-5 text-gray-700" />
                     </button>
                 </div>
-
-                <div className="mt-5 space-y-4">
-                    <input
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                        inputMode="numeric"
-                        placeholder="12345"
-                        className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary text-center tracking-widest text-lg"
-                    />
+                <div className="mt-5">
                     <button
                         type="button"
-                        onClick={handleVerifyOtp}
-                        disabled={verifyingOtp}
-                        className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        onClick={() => { closeSuccess(); router.back(); }}
+                        className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg"
                     >
-                        {verifyingOtp ? t('auth.verifying') : t('auth.verifyOtp')}
+                        {t('common.back')}
                     </button>
                 </div>
             </Modal>

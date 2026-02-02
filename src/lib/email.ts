@@ -108,6 +108,54 @@ export async function sendWelcomeEmail(to: string, email: string, tempPassword: 
   return info;
 }
 
+export async function sendGuardianInviteEmail(
+  to: string,
+  email: string,
+  tempPassword: string,
+  verificationLink: string
+) {
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || "587", 10);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || "no-reply@yourdomain.com";
+
+  if (!host || !user || !pass) {
+    console.warn("SMTP not configured; logging guardian invite to console for dev.");
+    console.log(`[DEV] Guardian invite for ${to}: email=${email}, password=${tempPassword}, link=${verificationLink}`);
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+
+  const subject = "Verify your VetQuark account and log in";
+  const html = `
+    <p>Hello,</p>
+    <p>Your Guardian account has been created by your veterinarian.</p>
+    <p><strong>Login Email:</strong> ${email}<br/>
+       <strong>Temporary Password:</strong> ${tempPassword}</p>
+    <p>To verify your email and access your account, please click the link below:</p>
+    <p><a href="${verificationLink}" target="_blank" rel="noopener">Verify and Log In</a></p>
+    <p>If the button doesn't work, copy and paste this URL into your browser:</p>
+    <p>${verificationLink}</p>
+  `;
+
+  const info = await transporter.sendMail({
+    from,
+    to,
+    subject,
+    html,
+    text: `Your Guardian account has been created.\nEmail: ${email}\nTemporary password: ${tempPassword}\nVerify and log in: ${verificationLink}`,
+  });
+
+  return info;
+}
+
 export async function sendTwoFactorEmail(to: string, otp: string) {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);

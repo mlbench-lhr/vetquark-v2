@@ -194,9 +194,9 @@
 
 
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Eye } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useAppDispatch } from '@/store/hooks';
 import { setProfile as setUserProfile } from '@/store/userProfileSlice';
@@ -214,6 +214,7 @@ export default function SignInForm() {
   const [profile, setProfileType] = useState<ProfileType>('veterinarian');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState<AppLanguage>(() => (isAppLanguage(i18n.language) ? i18n.language : "en"));
   const [twoFARequired, setTwoFARequired] = useState(false);
@@ -255,6 +256,36 @@ export default function SignInForm() {
       console.error('Login network error:', err);
     }
   };
+
+  useEffect(() => {
+    const token = (searchParams.get("verifyGuardian") || "").trim();
+    const emailParam = (searchParams.get("email") || "").trim().toLowerCase();
+    if (!token || !emailParam) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "guardian_verify_link", email: emailParam, verificationId: token }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!mounted) return;
+        if (!res.ok) {
+          toast.error(typeof data?.error === "string" ? data.error : t("auth.verificationFailed"));
+          return;
+        }
+        toast.success(t("auth.emailVerified"));
+        router.replace("/signin");
+      } catch {
+        if (!mounted) return;
+        toast.error(t("auth.networkErrorVerifyingOtp"));
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [router, searchParams, t]);
 
   const verify2FA = async (code: string) => {
     if (code.length !== 5) {
