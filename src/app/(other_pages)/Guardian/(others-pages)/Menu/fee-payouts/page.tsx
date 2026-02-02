@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Header from "@/components/common/header";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 interface FAQItem {
     question: string;
@@ -11,6 +12,7 @@ interface FAQItem {
 
 export default function FeesAndPayoutsPage() {
     const router = useRouter();
+  const { t } = useTranslation();
     const [openFAQ, setOpenFAQ] = useState<number | null>(0);
     const platformFee = 33.0;
     const minWithdrawal = 20.0;
@@ -40,7 +42,7 @@ export default function FeesAndPayoutsPage() {
 
     return (
         <div className="w-full bg-background min-h-screen px-5 py-6 space-y-6">
-            <Header title="Fees and Payouts" />
+      <Header title={t("menu.feePayouts")} />
             {/* How the charging works */}
             <section>
                 <h2 className="text-[16px] font-semibold text-foreground mb-3">

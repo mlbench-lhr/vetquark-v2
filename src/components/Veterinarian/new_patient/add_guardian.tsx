@@ -12,7 +12,7 @@ import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
 import { useTranslation } from 'react-i18next';
-import { STATES_BY_COUNTRY } from '@/lib/locationData';
+import { STATES_BY_COUNTRY, CITIES_BY_COUNTRY_STATE } from '@/lib/locationData';
 
 function digitsOnly(value: string) {
     return value.replace(/\D/g, "");
@@ -95,7 +95,17 @@ async function fetchCountryStates(country: string, signal?: AbortSignal): Promis
 }
 
 async function fetchCountryStateCities(country: string, stateName: string, stateCode?: string, signal?: AbortSignal): Promise<string[]> {
-    return [];
+    const normalizedCountry = String(country || "").trim();
+    const byCountry = CITIES_BY_COUNTRY_STATE[normalizedCountry] || {};
+    const listByCode = stateCode ? (byCountry[stateCode] || []) : [];
+    const listByName = stateName ? (byCountry[stateName] || []) : [];
+    const seen = new Set<string>();
+    const merged = [...listByCode, ...listByName].filter((c) => {
+        if (seen.has(c)) return false;
+        seen.add(c);
+        return true;
+    });
+    return merged;
 }
 
 interface FormData {
@@ -196,6 +206,8 @@ export default function GuardianRegistration() {
 
     const [stateOptions, setStateOptions] = useState<StateOption[]>([]);
     const [loadingStates, setLoadingStates] = useState(false);
+    const [cityOptions, setCityOptions] = useState<string[]>([]);
+    const [loadingCities, setLoadingCities] = useState(false);
 
     const handleChange = (field: keyof FormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -275,6 +287,24 @@ export default function GuardianRegistration() {
             setFormData((prev) => (prev.city ? { ...prev, city: "" } : prev));
         }
     }, [formData.state]);
+
+    useEffect(() => {
+        const country = String(formData.country || '').trim();
+        const selectedState = String(formData.state || '').trim();
+        (async () => {
+            setLoadingCities(true);
+            const stateMeta = stateOptions.find((o) => o.value === selectedState) || null;
+            const options = country && selectedState ? await fetchCountryStateCities(country, stateMeta?.stateName || selectedState, selectedState) : [];
+            setCityOptions(options);
+            setLoadingCities(false);
+            setFormData((prev) => {
+                const cityOk = !!prev.city && options.some((c) => c === prev.city);
+                if (cityOk) return prev;
+                if (!prev.city) return prev;
+                return { ...prev, city: "" };
+            });
+        })();
+    }, [formData.country, formData.state, stateOptions]);
 
     
 
@@ -676,14 +706,32 @@ export default function GuardianRegistration() {
                             <label className="block text-sm text-gray-900 mb-2">
                                 {t('auth.city')}<span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="text"
-                                placeholder={t('auth.enterCity')}
-                                value={formData.city}
-                                onChange={(e) => handleChange('city', e.target.value)}
-                                disabled={!formData.state}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
+                            {cityOptions.length > 0 ? (
+                                <select
+                                    value={formData.city}
+                                    onChange={(e) => handleChange('city', e.target.value)}
+                                    disabled={!formData.state || loadingCities || cityOptions.length === 0}
+                                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                                >
+                                    <option value="" disabled>
+                                        {!formData.state ? t('auth.selectStateFirst') : loadingCities ? t('auth.loadingCities') : t('auth.selectCity')}
+                                    </option>
+                                    {cityOptions.map((c) => (
+                                        <option key={c} value={c}>
+                                            {c}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <input
+                                    type="text"
+                                    placeholder={t('auth.enterCity')}
+                                    value={formData.city}
+                                    onChange={(e) => handleChange('city', e.target.value)}
+                                    disabled={!formData.state}
+                                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            )}
                         </div>
 
                         <div>

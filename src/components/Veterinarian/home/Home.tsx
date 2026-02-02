@@ -148,20 +148,23 @@ export default function Home() {
                 />
             </div>
             <div className="mt-2">
-                <div className="flex items-center justify-between mb-3">
-                    <div>
-                        <h2 className="text-base font-bold text-gray-800">{t('dashboard.recentPatients')}</h2>
-                        <p className="text-xs text-gray-500">{t('dashboard.recentPatientsDesc')}</p>
+                {
+                    patients.length > 0 &&
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <h2 className="text-base font-bold text-gray-800">{t('dashboard.recentPatients')}</h2>
+                            <p className="text-xs text-gray-500">{t('dashboard.recentPatientsDesc')}</p>
+                        </div>
+                        <button
+                            type="button"
+                            className="px-3 py-2 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100"
+                            onClick={() => router.push('/Veterinarian/home/patients')}
+                        >
+                            {t('dashboard.viewAll')}
+                            <ChevronRight size={14} color='#3F78D8' />
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        className="px-3 py-2 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100"
-                        onClick={() => router.push('/Veterinarian/home/patients')}
-                    >
-                        {t('dashboard.viewAll')}
-                        <ChevronRight size={14} color='#3F78D8' />
-                    </button>
-                </div>
+                }
                 <div className="space-y-3">
                     {patients.slice(0, 3).map((patient, index) => (
                         <PatientCard key={patient.id} patient={patient} featured={index === 0} />

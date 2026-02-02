@@ -5,6 +5,7 @@ import Header from "@/components/common/header";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 type PixData = {
     type: "pix";
@@ -28,6 +29,7 @@ type PayoutMethod = PixData | BankData;
 export default function Page() {
     const dispatch = useAppDispatch();
     const profile = useAppSelector((s) => s.userProfile.profile);
+    const { t } = useTranslation();
 
     const payoutMethod = useMemo(() => {
         const pm = profile?.payoutMethod as any;
@@ -111,12 +113,12 @@ export default function Page() {
 
         if (data.type === "pix") {
             if (!data.pixKey.trim() || !data.holderCpfCnpj.trim()) {
-                toast.error("Please fill PIX key and CPF/CNPJ");
+                toast.error(t("wallet.errors.fillPixKeyAndCpfCnpj"));
                 return;
             }
         } else {
             if (!data.bankName.trim() || !data.agency.trim() || !data.account.trim() || !data.holderCpfCnpj.trim()) {
-                toast.error("Please fill all bank fields");
+                toast.error(t("wallet.errors.fillAllBankFields"));
                 return;
             }
         }
@@ -131,11 +133,11 @@ export default function Page() {
             });
             const json = await res.json().catch(() => ({}));
             if (!res.ok) {
-                toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+                toast.error(typeof json?.error === "string" ? json.error : t("common.failedToSaveChanges"));
                 return;
             }
             if (json?.profile) dispatch(setProfile(json.profile));
-            toast.success("Saved changes");
+            toast.success(t("common.savedChanges"));
         } finally {
             setSaving(false);
         }
@@ -144,7 +146,7 @@ export default function Page() {
     return (
         <div className="w-full mx-auto bg-white min-h-screen flex flex-col px-5 pt-6 pb-6">
             {/* Tab Selector */}
-            <Header title="Bank Details" />
+            <Header title={t("wallet.bankDetails")} />
             <div className="flex gap-2 mb-6">
                 <button
                     onClick={() => setActiveTab("pix")}
@@ -153,7 +155,7 @@ export default function Page() {
                         : "bg-[#F0F1F3] text-foreground"
                         }`}
                 >
-                    Pix (Recommended)
+                    {t("wallet.pixRecommended")}
                 </button>
                 <button
                     onClick={() => setActiveTab("bank")}
@@ -162,7 +164,7 @@ export default function Page() {
                         : "bg-[#F0F1F3] text-foreground"
                         }`}
                 >
-                    Bank Account
+                    {t("wallet.bankAccountLabel")}
                 </button>
             </div>
 
@@ -173,18 +175,18 @@ export default function Page() {
                         <div className="flex items-center gap-2 mb-1">
                             <Zap className="w-4 h-4 text-[#4A7BF7]" fill="#4A7BF7" />
                             <span className="text-[#1F2937] text-sm font-medium">
-                                Faster and with fewer errors.
+                                {t("wallet.pixFewerErrors")}
                             </span>
                         </div>
                         <p className="text-[#6B7280] text-xs pl-6">
-                            PIX is the fastest and safest method to receive your payments.
+                            {t("wallet.pixFastSafeDesc")}
                         </p>
                     </div>
 
                     {/* Key Type */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-3">
-                            Key Type
+                            {t("wallet.keyType")}
                         </label>
                         <div className="flex gap-2">
                             <button
@@ -194,7 +196,7 @@ export default function Page() {
                                     : "bg-[#F0F1F3] text-[#6B7280]"
                                     }`}
                             >
-                                CPF
+                                {t("wallet.cpf")}
                             </button>
                             <button
                                 onClick={() => setKeyType("cnpj")}
@@ -203,7 +205,7 @@ export default function Page() {
                                     : "bg-[#F0F1F3] text-[#6B7280]"
                                     }`}
                             >
-                                CNPJ
+                                {t("wallet.cnpj")}
                             </button>
                         </div>
                     </div>
@@ -211,13 +213,13 @@ export default function Page() {
                     {/* PIX Key */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            PIX Key
+                            {t("wallet.pixKey")}
                         </label>
                         <input
                             type="text"
                             value={pixKey}
                             onChange={(e) => setPixKey(e.target.value)}
-                            placeholder="e.g. 111.222.333-44"
+                            placeholder={t("wallet.egCpfCnpj")}
                             className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
@@ -225,13 +227,13 @@ export default function Page() {
                     {/* Account Holder Name */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Account Holder Name
+                            {t("wallet.holderName")}
                         </label>
                         <input
                             type="text"
                             value={pixHolderName}
                             onChange={(e) => setPixHolderName(e.target.value)}
-                            placeholder="e.g. Dr Vet"
+                            placeholder={t("wallet.egHolderName")}
                             className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
@@ -239,13 +241,13 @@ export default function Page() {
                     {/* Account Holder's CPF/CNPJ */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Account Holder&apos;s CPF/CNPJ
+                            {t("wallet.holderCpfCnpj")}
                         </label>
                         <input
                             type="text"
                             value={pixHolderCpfCnpj}
                             onChange={(e) => setPixHolderCpfCnpj(e.target.value)}
-                            placeholder="e.g. 111.222.333-44"
+                            placeholder={t("wallet.egCpfCnpj")}
                             className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
@@ -255,7 +257,7 @@ export default function Page() {
                     {/* Type Of Person */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-3">
-                            Type Of Person
+                            {t("wallet.typeOfPerson")}
                         </label>
                         <div className="flex gap-2">
                             <button
@@ -265,7 +267,7 @@ export default function Page() {
                                     : "bg-[#F0F1F3] text-[#6B7280]"
                                     }`}
                             >
-                                Individual
+                                {t("wallet.individual")}
                             </button>
                             <button
                                 onClick={() => setPersonType("legal")}
@@ -274,7 +276,7 @@ export default function Page() {
                                     : "bg-[#F0F1F3] text-[#6B7280]"
                                     }`}
                             >
-                                Legal Identity
+                                {t("wallet.legalEntity")}
                             </button>
                         </div>
                     </div>
@@ -282,13 +284,13 @@ export default function Page() {
                     {/* Bank Name */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Bank Name
+                            {t("wallet.bankName")}
                         </label>
                         <input
                             type="text"
                             value={bankName}
                             onChange={(e) => setBankName(e.target.value)}
-                            placeholder="Write the bank"
+                            placeholder={t("wallet.egBankName")}
                             className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
@@ -296,13 +298,13 @@ export default function Page() {
                     {/* Agency */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Agency (with digit)
+                            {t("wallet.agencyWithDigit")}
                         </label>
                         <input
                             type="text"
                             value={agency}
                             onChange={(e) => setAgency(e.target.value)}
-                            placeholder="e.g. 0001"
+                            placeholder={t("wallet.egAgency")}
                             className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
@@ -310,13 +312,13 @@ export default function Page() {
                     {/* Account */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Account (with digit)
+                            {t("wallet.accountWithDigit")}
                         </label>
                         <input
                             type="text"
                             value={account}
                             onChange={(e) => setAccount(e.target.value)}
-                            placeholder="e.g. 123456-7"
+                            placeholder={t("wallet.egAccount")}
                             className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
@@ -324,13 +326,13 @@ export default function Page() {
                     {/* Holder's CPF/CNPJ */}
                     <div className="mb-5">
                         <label className="block text-[#1F2937] text-sm font-medium mb-2">
-                            Holder&apos;s CPF/CNPJ
+                            {t("wallet.holderCpfCnpj")}
                         </label>
                         <input
                             type="text"
                             value={bankHolderCpfCnpj}
                             onChange={(e) => setBankHolderCpfCnpj(e.target.value)}
-                            placeholder="e.g. 111.222.333-44"
+                            placeholder={t("wallet.egCpfCnpj")}
                             className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
@@ -343,7 +345,7 @@ export default function Page() {
                     disabled={saving}
                     className="w-full bg-[#4A7BF7] text-white py-4 rounded-full text-base font-semibold hover:bg-[#3A6BE7] transition-colors disabled:opacity-60"
                 >
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? t("common.saving") : t("common.saveChanges")}
                 </button>
             </div>
         </div>

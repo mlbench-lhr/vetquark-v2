@@ -11,7 +11,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useAppDispatch } from "@/store/hooks";
 import { setProfile as setUserProfile } from "@/store/userProfileSlice";
 import { useTranslation } from "react-i18next";
-import { STATES_BY_COUNTRY } from "@/lib/locationData";
+import { STATES_BY_COUNTRY, CITIES_BY_COUNTRY_STATE } from "@/lib/locationData";
 
 type ProfileType = "veterinarian" | "tutor";
 
@@ -197,7 +197,17 @@ export default function SignUpForm() {
   }
 
   async function fetchCountryStateCities(country: string, stateName: string, stateCode?: string, signal?: AbortSignal): Promise<string[]> {
-    return [];
+    const normalizedCountry = String(country || "").trim();
+    const byCountry = CITIES_BY_COUNTRY_STATE[normalizedCountry] || {};
+    const listByCode = stateCode ? (byCountry[stateCode] || []) : [];
+    const listByName = stateName ? (byCountry[stateName] || []) : [];
+    const seen = new Set<string>();
+    const merged = [...listByCode, ...listByName].filter((c) => {
+      if (seen.has(c)) return false;
+      seen.add(c);
+      return true;
+    });
+    return merged;
   }
 
   const [formData, setFormData] = useState<SignUpFormData>(() => getEmptyFormData());
@@ -231,6 +241,8 @@ export default function SignUpForm() {
 
   const [stateOptions, setStateOptions] = useState<StateOption[]>([]);
   const [loadingStates, setLoadingStates] = useState(false);
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
 
   React.useEffect(() => {
     const country = String(formData.country || "").trim();
@@ -254,6 +266,24 @@ export default function SignUpForm() {
       setFormData((prev) => (prev.city ? { ...prev, city: "" } : prev));
     }
   }, [formData.state]);
+
+  React.useEffect(() => {
+    const country = String(formData.country || "").trim();
+    const selectedState = String(formData.state || "").trim();
+    (async () => {
+      setLoadingCities(true);
+      const stateMeta = stateOptions.find((o) => o.value === selectedState) || null;
+      const options = country && selectedState ? await fetchCountryStateCities(country, stateMeta?.stateName || selectedState, selectedState) : [];
+      setCityOptions(options);
+      setLoadingCities(false);
+      setFormData((prev) => {
+        const cityOk = !!prev.city && options.some((c) => c === prev.city);
+        if (cityOk) return prev;
+        if (!prev.city) return prev;
+        return { ...prev, city: "" };
+      });
+    })();
+  }, [formData.country, formData.state, stateOptions]);
 
   const handleClinicLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -852,7 +882,7 @@ export default function SignUpForm() {
                   {profileType === "tutor" ? t("auth.enterNationalId") : t("auth.taxId")}
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   name="taxId"
                   placeholder="i.e AB374892928"
                   value={formData.taxId}
@@ -948,16 +978,36 @@ export default function SignUpForm() {
                 <label className="block text-gray-900 text-sm mb-2">
                   {t("auth.city")}
                 </label>
-                <input
-                  type="text"
-                  name="city"
-                  placeholder={t("auth.enterCity")}
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  required
-                  disabled={!formData.country || !formData.state}
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
-                />
+                {cityOptions.length > 0 ? (
+                  <select
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    required
+                    disabled={!formData.country || !formData.state || loadingCities || cityOptions.length === 0}
+                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                  >
+                    <option value="" disabled>
+                      {!formData.state ? t("auth.selectStateFirst") : loadingCities ? t("auth.loadingCities") : t("auth.selectCity")}
+                    </option>
+                    {cityOptions.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    name="city"
+                    placeholder={t("auth.enterCity")}
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    required
+                    disabled={!formData.country || !formData.state}
+                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                  />
+                )}
               </div>
 
               <div>
@@ -975,7 +1025,7 @@ export default function SignUpForm() {
                 />
               </div>
 
-              <div className="flex items-start gap-3 pt-4">
+              <div className="flex items-end gap-3 pt-4">
                 <input
                   type="checkbox"
                   name="acceptTerms"
@@ -1042,7 +1092,7 @@ export default function SignUpForm() {
                   placeholder={t("auth.enterMapa")}
                   value={formData.mapaRegistration}
                   onChange={handleInputChange}
-                  required
+                  // required
                   className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
                 />
               </div>

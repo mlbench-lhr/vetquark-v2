@@ -10,8 +10,10 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
+import { useTranslation } from "react-i18next";
 
 export default function EditProfileCard() {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const profile = useAppSelector((s) => s.userProfile.profile);
 
@@ -150,7 +152,7 @@ export default function EditProfileCard() {
 
     return (
         <div className="min-h-screen bg-white flex flex-col px-4">
-            <Header title="Edit Profile" />
+            <Header title={t("menu.edit")} />
             {/* Avatar Section */}
             <div className="flex justify-center pt-8 pb-8">
                 <div className="relative">

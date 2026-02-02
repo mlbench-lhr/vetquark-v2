@@ -60,6 +60,10 @@ export async function GET(req: NextRequest) {
     if (patientId && !mongoose.Types.ObjectId.isValid(patientId)) {
       return NextResponse.json({ error: "Invalid patientId" }, { status: 400 });
     }
+    const guardianId = (url.searchParams.get("guardianId") || "").trim();
+    if (guardianId && !mongoose.Types.ObjectId.isValid(guardianId)) {
+      return NextResponse.json({ error: "Invalid guardianId" }, { status: 400 });
+    }
     const q = (url.searchParams.get("q") || "").trim();
     const from = parseDateParam(url.searchParams.get("from"));
     const to = parseDateParam(url.searchParams.get("to"));
@@ -90,6 +94,7 @@ export async function GET(req: NextRequest) {
 
     const baseFilter: any = user.role === "Veterinarian" ? { veterinarian: userId } : { guardian: userId };
     if (patientId) baseFilter.patient = patientId;
+    if (user.role === "Veterinarian" && guardianId) baseFilter.guardian = guardianId;
 
     const andClauses: any[] = [baseFilter];
 

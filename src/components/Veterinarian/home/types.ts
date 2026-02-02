@@ -53,6 +53,7 @@ export interface PatientInfoCardProps {
   guardianEmail?: string;
   guardianMobile?: string;
   guardianAddress?: string;
+  lastExamLabel?: string;
 }
 
 export interface Report {

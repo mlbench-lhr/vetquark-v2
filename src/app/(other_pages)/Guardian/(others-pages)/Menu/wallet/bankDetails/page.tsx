@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 type View = "list" | "add_pix";
 
@@ -35,6 +36,7 @@ export default function Page() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const profile = useAppSelector((s) => s.userProfile.profile);
+  const { t } = useTranslation();
     const [view, setView] = useState<View>("list");
     const [isAddCardOpen, setIsAddCardOpen] = useState(false);
 
@@ -75,7 +77,7 @@ export default function Page() {
 
     const handleSavePix = async () => {
         if (!pixKey.trim() || !pixHolderCpfCnpj.trim()) {
-            toast.error("Please fill PIX key and CPF/CNPJ");
+            toast.error(t("common.failedToSaveChanges"));
             return;
         }
         try {
@@ -96,11 +98,11 @@ export default function Page() {
             });
             const json = await res.json().catch(() => ({}));
             if (!res.ok) {
-                toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+                toast.error(typeof json?.error === "string" ? json.error : t("common.failedToSaveChanges"));
                 return;
             }
             if (json?.profile) dispatch(setProfile(json.profile));
-            toast.success("Saved changes");
+            toast.success(t("common.savedChanges"));
             setView("list");
         } finally {
             setSaving(false);
@@ -121,7 +123,7 @@ export default function Page() {
 
     return (
         <div className="min-h-screen bg-white">
-            <PaymentHeader title={view === "add_pix" ? "Add Pix Account" : "Bank Details"} onBack={onBack} />
+            <PaymentHeader title={view === "add_pix" ? t("wallet.addPixAccountTitle") : t("wallet.bankDetails")} onBack={onBack} />
 
             {view === "list" ? (
                 <div className="px-4 pt-4">
@@ -131,17 +133,13 @@ export default function Page() {
                                 <Image src="/images/pixLogo.svg" alt="" width={28} height={28} />
                             </div>
                             <div className="min-w-0">
-                                <div className="text-[15px] font-medium leading-[18px] text-[#111827]">
-                                    PIX (CPF/CNPJ)
-                                </div>
+                                <div className="text-[15px] font-medium leading-[18px] text-[#111827]">{t("wallet.pixCpfCnpj")}</div>
                                 <div className="mt-1 text-[14px] leading-[18px] text-[#9AA4AF]">{maskedPix}</div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-6 text-[16px] font-semibold leading-[20px] text-[#111827]">
-                        Add New Payment Method
-                    </div>
+                    <div className="mt-6 text-[16px] font-semibold leading-[20px] text-[#111827]">{t("wallet.addNewPaymentMethod")}</div>
 
                     <div className="mt-4 space-y-3">
                         <button
@@ -167,7 +165,7 @@ export default function Page() {
                                 <div className="h-10 w-10 flex items-center justify-center">
                                     <CreditCard className="h-6 w-6 text-[#3F78D8]" />
                                 </div>
-                                <div className="text-[15px] font-medium leading-[20px] text-[#111827]">Card</div>
+                                <div className="text-[15px] font-medium leading-[20px] text-[#111827]">{t("wallet.cardLabel")}</div>
                             </div>
                             <ChevronRight className="h-5 w-5 text-[#3F78D8]" />
                         </button>

@@ -7,9 +7,11 @@ import Pagination from '@/components/tables/Pagination';
 import { ChevronLeft, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/common/header';
+import { useTranslation } from 'react-i18next';
 
 export default function Page() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [pets, setPets] = useState<Patient[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,12 +58,12 @@ export default function Page() {
 
   return (
     <div className="min-h-scree px-3 py-5 relative">
-      <Header title='View Pets'/>
+      <Header title={t('home.viewPetsTitle')}/>
       <div className="relative mt-2">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
         <input
           type="text"
-          placeholder="Search by pet or veterinarian name..."
+          placeholder={t('dashboard.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
@@ -85,7 +87,7 @@ export default function Page() {
             </div>
           ))
         ) : filteredPets.length === 0 ? (
-          <div className="text-tertiary text-sm">No pets found.</div>
+          <div className="text-tertiary text-sm">{t('dashboard.noPatientsFound')}</div>
         ) : (
           filteredPets.map((pet, index) => (
             <PatientCard

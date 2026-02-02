@@ -129,6 +129,7 @@ function PetSelector({ pets, activePetId, onSelect, loading }: PetSelectorProps)
                                     alt={pet.name}
                                     width={40}
                                     height={40}
+                                    className='object-cover object-center w-10 h-10'
                                 />
                             </div>
                             <div className="font-medium w-[100px]! truncate">{pet.name}</div>

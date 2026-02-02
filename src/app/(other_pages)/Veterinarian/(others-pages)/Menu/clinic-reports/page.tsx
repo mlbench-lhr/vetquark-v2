@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type ClinicReportsFormData = {
   clinicLogoUrl: string;
@@ -16,6 +17,7 @@ type ClinicReportsFormData = {
 };
 
 export default function ClinicReportsPage() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.userProfile.profile);
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -47,14 +49,14 @@ export default function ClinicReportsPage() {
     const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
     if (!CLOUD_NAME || !API_KEY) {
-      toast.error("Cloudinary is not configured");
+      toast.error(t("common.cloudinaryNotConfigured"));
       return;
     }
 
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File too large (max 10MB)");
+      toast.error(t("common.fileTooLarge"));
       return;
     }
 
@@ -64,7 +66,7 @@ export default function ClinicReportsPage() {
       const signJson = await signRes.json();
 
       if (!signRes.ok) {
-        toast.error("Failed to prepare upload");
+        toast.error(t("common.failedToPrepareUpload"));
         console.error("Cloudinary signature error:", signJson);
         return;
       }
@@ -83,7 +85,7 @@ export default function ClinicReportsPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error("Upload failed");
+        toast.error(t("common.uploadFailed"));
         console.error("Cloudinary upload failed:", json);
         return;
       }
@@ -92,7 +94,7 @@ export default function ClinicReportsPage() {
         setFormData((prev) => ({ ...prev, clinicLogoUrl: String(url) }));
       }
     } catch (err) {
-      toast.error("Upload failed");
+      toast.error(t("common.uploadFailed"));
       console.error("Cloudinary upload error:", err);
     } finally {
       setUploadingClinicLogo(false);
@@ -119,11 +121,11 @@ export default function ClinicReportsPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+        toast.error(typeof json?.error === "string" ? json.error : t("common.failedToSaveChanges"));
         return;
       }
       if (json?.profile) dispatch(setProfile(json.profile));
-      toast.success("Saved changes");
+      toast.success(t("common.savedChanges"));
     } finally {
       setSaving(false);
     }
@@ -131,14 +133,14 @@ export default function ClinicReportsPage() {
 
   return (
     <div className="w-full bg-background min-h-scree flex flex-col">
-      <Header title="Clinic & Reports" />
+      <Header title={t("menu.clinicReports")} />
 
       <div className="flex-1 overflow-y-auto px-5 pb-28">
         <form ref={formRef} onSubmit={handleSubmit} className="pt-2">
           <div className="space-y-4">
             <div>
               <label className="block text-gray-900 font-medium mb-2">
-                Clinic Logo <span className="text-gray-500 font-normal">(optional)</span>
+                {t("menu.uploadClinicLogo")} <span className="text-gray-500 font-normal">{t("menu.optionalSuffix")}</span>
               </label>
               <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p- text-center">
                 {formData.clinicLogoUrl ? (
@@ -153,7 +155,7 @@ export default function ClinicReportsPage() {
                       {
                         uploadingClinicLogo ?
                           <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
-                            {uploadingClinicLogo ? "Uploading..." : "Change Logo"}
+                            {uploadingClinicLogo ? t("menu.uploading") : t("menu.changeLogo")}
                           </span>
                           : <div className="p-2 bg-primary rounded-full">
                             <Pencil color="white" size={16} />
@@ -163,11 +165,11 @@ export default function ClinicReportsPage() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 h-[200px]">
-                    <div className="text-gray-600 text-sm">Upload your clinic logo (optional)</div>
+                    <div className="text-gray-600 text-sm">{t("menu.uploadClinicLogo")}</div>
                     <label className="inline-block">
                       <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
                       <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
-                        {uploadingClinicLogo ? "Uploading..." : "Select File"}
+                        {uploadingClinicLogo ? t("menu.uploading") : t("menu.selectFile")}
                       </span>
                     </label>
                   </div>
@@ -176,11 +178,11 @@ export default function ClinicReportsPage() {
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">Trade Name</label>
+              <label className="block text-gray-900 font-medium mb-2">{t("menu.tradeNameLabel")}</label>
               <input
                 type="text"
                 name="tradeName"
-                placeholder="Enter your trade name"
+                placeholder={t("menu.enterTradeName")}
                 value={formData.tradeName}
                 onChange={handleInputChange}
                 required
@@ -190,12 +192,12 @@ export default function ClinicReportsPage() {
 
             <div>
               <label className="block text-gray-900 font-medium mb-2">
-                CNPJ/IE <span className="text-gray-500 font-normal">(optional)</span>
+                {t("menu.cnpjIeLabel")} <span className="text-gray-500 font-normal">{t("menu.optionalSuffix")}</span>
               </label>
               <input
                 type="text"
                 name="cnpjIe"
-                placeholder="Enter your CNPJ/IE"
+                placeholder={t("menu.enterCnpjIe")}
                 value={formData.cnpjIe}
                 onChange={(e) => setFormData((prev) => ({ ...prev, cnpjIe: e.target.value.replace(/\D/g, "") }))}
                 inputMode="numeric"
@@ -205,11 +207,11 @@ export default function ClinicReportsPage() {
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">Address (for header)</label>
+              <label className="block text-gray-900 font-medium mb-2">{t("menu.addressHeaderLabel")}</label>
               <input
                 type="text"
                 name="reportHeaderAddress"
-                placeholder="Enter your address for the report header"
+                placeholder={t("menu.enterReportHeaderAddress")}
                 value={formData.reportHeaderAddress}
                 onChange={handleInputChange}
                 required
@@ -218,10 +220,10 @@ export default function ClinicReportsPage() {
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">Footer of the Report</label>
+              <label className="block text-gray-900 font-medium mb-2">{t("menu.reportFooterLabel")}</label>
               <textarea
                 name="reportFooter"
-                placeholder="Enter the footer text for reports"
+                placeholder={t("menu.enterReportFooter")}
                 value={formData.reportFooter}
                 onChange={handleInputChange}
                 rows={4}
@@ -240,7 +242,7 @@ export default function ClinicReportsPage() {
           disabled={uploadingClinicLogo || saving}
           className="w-full h-[52px] bg-[hsl(224,65%,56%)] hover:bg-[hsl(224,65%,50%)] text-white text-[16px] font-medium rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? t("common.saving") : t("common.saveChanges")}
         </button>
       </div>
     </div>

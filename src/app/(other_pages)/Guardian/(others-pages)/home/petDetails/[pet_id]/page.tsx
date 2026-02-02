@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { Check } from 'lucide-react';
 import ProgressView from '@/components/Veterinarian/home/details/Progress';
+import { useTranslation } from 'react-i18next';
 
 interface TabsProps {
   activeTab: string;
@@ -15,6 +16,7 @@ interface TabsProps {
 }
 
 const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex gap-3 px-4 mb-4">
       <button
@@ -28,7 +30,7 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange }) => {
             fill={activeTab !== 'progress' ? '#3F78D8' : 'black'}
           />
         </svg>
-        Information
+        {t('home.informationTab')}
       </button>
       <button
         onClick={() => onTabChange('progress')}
@@ -41,13 +43,14 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange }) => {
             fill={activeTab === 'progress' ? '#3F78D8' : 'black'}
           />
         </svg>
-        Progress
+        {t('home.progressTab')}
       </button>
     </div>
   );
 };
 
 export default function Page() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('information');
   const params = useParams<{ pet_id: string }>();
   const petId = params?.pet_id;
@@ -197,7 +200,7 @@ export default function Page() {
   };
 
   const StatusPill = ({ status }: { status: "signed" | "pending" }) => {
-    const label = status === "signed" ? "Signed" : "Pending";
+    const label = status === "signed" ? t('history.signed') : t('history.pending');
     return (
       <span className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-3 py-1.5 text-[13px] font-medium text-[#3F78D8]">
         <Check className="h-4 w-4" />
@@ -210,19 +213,19 @@ export default function Page() {
     return (
       <div className="px-4 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">Exams</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t('dashboard.examsLabel')}</div>
           <Link
             href={`/Guardian/history?petId=${encodeURIComponent(String(petId || ""))}`}
             className="text-[13px] font-medium leading-[18px] text-[#3F78D8]"
           >
-            View History
+            {t('home.viewHistory')}
           </Link>
         </div>
 
         {loadingReports ? (
-          <div className="text-[14px] leading-[18px] text-[#9CA3AF]">Loading exams...</div>
+          <div className="text-[14px] leading-[18px] text-[#9CA3AF]">{t('history.loading')}</div>
         ) : reports.length === 0 ? (
-          <div className="text-[14px] leading-[18px] text-[#9CA3AF]">No exams found.</div>
+          <div className="text-[14px] leading-[18px] text-[#9CA3AF]">{t('history.noExamsFound')}</div>
         ) : (
           <div className="space-y-3">
             {reports.map((r) => (
@@ -234,7 +237,7 @@ export default function Page() {
                     </div>
                     <div className="min-w-0">
                       <div className="truncate text-[14px] font-medium leading-[18px] text-[#111827]">
-                        Urinalysis Report
+                        {t('history.urinalysisReport')}
                       </div>
                       <div className="mt-1 text-[12px] leading-[16px] text-[#9CA3AF]">{formatDateLabel(r.date)}</div>
                     </div>
@@ -248,14 +251,14 @@ export default function Page() {
                     className="inline-flex h-[34px] items-center gap-2 rounded-full bg-[#3F78D8] px-4 text-[13px] font-medium text-white"
                     onClick={() => handleDownload(r.id)}
                   >
-                    Download
+                    {t('history.download')}
                   </button>
                   <button
                     type="button"
                     className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-[#3F78D8]"
                     onClick={() => router.push(`/Guardian/history/detail/${encodeURIComponent(r.id)}`)}
                   >
-                    Details
+                    {t('history.details')}
                   </button>
                 </div>
               </div>
@@ -295,7 +298,7 @@ export default function Page() {
 
   return (
     <div className="pb-5">
-      <Header title="Pet Profile" />
+      <Header title={t('home.petProfileTitle')} />
       <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {loading ? (

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { pdf, Document, Page as PDFPage, Text, View, StyleSheet } from "@react-pdf/renderer";
 import Header from "@/components/common/header";
+import { useTranslation } from "react-i18next";
 
 function Step({
   index,
@@ -38,6 +39,7 @@ function Step({
 
 export default function Page() {
   const router = useRouter();
+  const { t } = useTranslation();
   const guideStyles = StyleSheet.create({
     page: { padding: 24, fontSize: 12, color: "#111827" },
     title: { fontSize: 18, fontWeight: 700 },
@@ -68,52 +70,47 @@ export default function Page() {
   const steps = [
     {
       index: 1,
-      title: "Prepare the Materials",
-      body:
-        "Use a clean, wide-mouthed container (saucer or scoop) and a sterile collection bottle from a pharmacy or clinic.",
+      title: t("helpCentre.urineGuide.steps.prepareMaterials.title"),
+      body: t("helpCentre.urineGuide.steps.prepareMaterials.body"),
     },
     {
       index: 2,
-      title: "Wait for the Right Moment",
-      body:
-        "Collect the first urine of the morning, as it is more concentrated and ideal for testing.",
+      title: t("helpCentre.urineGuide.steps.waitRightMoment.title"),
+      body: t("helpCentre.urineGuide.steps.waitRightMoment.body"),
     },
     {
       index: 3,
-      title: "Position Your Pet",
-      body:
-        "Take your pet to the place where they usually urinate to reduce stress.",
+      title: t("helpCentre.urineGuide.steps.positionPet.title"),
+      body: t("helpCentre.urineGuide.steps.positionPet.body"),
     },
     {
       index: 4,
-      title: "Collect the Sample",
-      body:
-        "Place the container under your pet and collect the midstream urine & discard the beginning and end of urination to avoid contamination.",
+      title: t("helpCentre.urineGuide.steps.collectSample.title"),
+      body: t("helpCentre.urineGuide.steps.collectSample.body"),
     },
     {
       index: 5,
-      title: "Transfer & Label",
-      body:
-        "Transfer the urine into the collection bottle and seal it tightly & label with pet’s name and date/ time of collection.",
+      title: t("helpCentre.urineGuide.steps.transferLabel.title"),
+      body: t("helpCentre.urineGuide.steps.transferLabel.body"),
     },
   ];
 
   const tips = [
-    "Have everything ready before starting",
-    "Avoid contamination with water, feces, soil, or cleaning products",
-    "For cats: use hydrophobic litter or an empty clean litter box",
-    "Confine cats in a bathroom if needed",
-    "If collection fails, contact your veterinarian for alternatives",
+    t("helpCentre.urineGuide.tips.readyBeforeStarting"),
+    t("helpCentre.urineGuide.tips.avoidContamination"),
+    t("helpCentre.urineGuide.tips.catsHydrophobicLitter"),
+    t("helpCentre.urineGuide.tips.confineCatsIfNeeded"),
+    t("helpCentre.urineGuide.tips.contactVeterinarianIfFails"),
   ];
 
   const buildGuideDocument = () => (
     <Document>
       <PDFPage size="A4" style={guideStyles.page}>
-        <Text style={guideStyles.title}>Urine Collection Guide</Text>
-        <Text style={guideStyles.subtitle}>How to Collect Urine at Home</Text>
+        <Text style={guideStyles.title}>{t("helpCentre.urineGuideTitle")}</Text>
+        <Text style={guideStyles.subtitle}>{t("helpCentre.urineGuideHowToTitle")}</Text>
         <View style={guideStyles.divider} />
 
-        <Text style={guideStyles.sectionTitle}>Step-by-Step</Text>
+        <Text style={guideStyles.sectionTitle}>{t("helpCentre.stepByStepTitle")}</Text>
         {steps.map((s) => (
           <View key={s.index} style={guideStyles.stepBox}>
             <View style={guideStyles.stepHeader}>
@@ -127,15 +124,12 @@ export default function Page() {
         ))}
 
         <View style={guideStyles.cardBlue}>
-          <Text style={guideStyles.sectionTitle}>Storage Instructions</Text>
-          <Text style={guideStyles.stepBody}>
-            The sample should be taken to the clinic within <Text style={guideStyles.bold}>2 hours</Text>. If this is not
-            possible, refrigerate it in the fridge for a maximum of 12 hours.
-          </Text>
+          <Text style={guideStyles.sectionTitle}>{t("helpCentre.storageInstructionsTitle")}</Text>
+          <Text style={guideStyles.stepBody}>{t("helpCentre.storageInstructionsBody")}</Text>
         </View>
 
         <View style={guideStyles.cardBlue}>
-          <Text style={guideStyles.sectionTitle}>Useful Tips</Text>
+          <Text style={guideStyles.sectionTitle}>{t("helpCentre.usefulTipsTitle")}</Text>
           {tips.map((t, i) => (
             <View key={`${i}-${t}`} style={guideStyles.listItem}>
               <Text>•</Text>
@@ -145,11 +139,9 @@ export default function Page() {
         </View>
 
         <View style={guideStyles.cardYellow}>
-          <Text style={guideStyles.sectionTitle}>Important</Text>
-          <Text style={{ marginTop: 4, fontSize: 11 }}>
-            This guide is for informational purposes only. Always follow your veterinarian’s instructions.
-          </Text>
-          <Text style={{ marginTop: 2, fontSize: 11, color: "#9AA4AF" }}>If unsure, contact your clinic.</Text>
+          <Text style={guideStyles.sectionTitle}>{t("helpCentre.importantTitle")}</Text>
+          <Text style={{ marginTop: 4, fontSize: 11 }}>{t("helpCentre.importantBody")}</Text>
+          <Text style={{ marginTop: 2, fontSize: 11, color: "#9AA4AF" }}>{t("helpCentre.importantContact")}</Text>
         </View>
       </PDFPage>
     </Document>
@@ -169,47 +161,47 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header title="Urine Collection Guide" />
+      <Header title={t("helpCentre.urineGuideTitle")} />
 
       <div className="mx-auto w-full px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div>
           <div className="text-[22px] font-semibold leading-[26px] text-[#111827]">
-            How to Collect Urine at Home
+            {t("helpCentre.urineGuideHowToTitle")}
           </div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
-            Simple step-by-step guide for pet owners
+            {t("helpCentre.urineGuideLead")}
           </div>
         </div>
 
         <div className="mt-4 h-[1px] w-full bg-[#E5E7EB]" />
 
         <div className="pt-5">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">Step-by-Step</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t("helpCentre.stepByStepTitle")}</div>
           <div className="mt-3 space-y-3">
             <Step
               index={1}
-              title="Prepare the Materials"
-              body="Use a clean, wide-mouthed container (saucer or scoop) and a sterile collection bottle from a pharmacy or clinic."
+              title={t("helpCentre.urineGuide.steps.prepareMaterials.title")}
+              body={t("helpCentre.urineGuide.steps.prepareMaterials.body")}
             />
             <Step
               index={2}
-              title="Wait for the Right Moment"
-              body="Collect the first urine of the morning, as it is more concentrated and ideal for testing."
+              title={t("helpCentre.urineGuide.steps.waitRightMoment.title")}
+              body={t("helpCentre.urineGuide.steps.waitRightMoment.body")}
             />
             <Step
               index={3}
-              title="Position Your Pet"
-              body="Take your pet to the place where they usually urinate to reduce stress."
+              title={t("helpCentre.urineGuide.steps.positionPet.title")}
+              body={t("helpCentre.urineGuide.steps.positionPet.body")}
             />
             <Step
               index={4}
-              title="Collect the Sample"
-              body="Place the container under your pet and collect the midstream urine & discard the beginning and end of urination to avoid contamination."
+              title={t("helpCentre.urineGuide.steps.collectSample.title")}
+              body={t("helpCentre.urineGuide.steps.collectSample.body")}
             />
             <Step
               index={5}
-              title="Transfer & Label"
-              body="Transfer the urine into the collection bottle and seal it tightly & label with pet’s name and date/ time of collection."
+              title={t("helpCentre.urineGuide.steps.transferLabel.title")}
+              body={t("helpCentre.urineGuide.steps.transferLabel.body")}
             />
           </div>
         </div>
