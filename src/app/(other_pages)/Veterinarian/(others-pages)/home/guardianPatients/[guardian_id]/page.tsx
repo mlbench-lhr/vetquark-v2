@@ -1,3 +1,4 @@
+'use client'
 import Header from '@/components/common/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChevronRight } from 'lucide-react';
