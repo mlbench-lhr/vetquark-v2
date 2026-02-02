@@ -131,6 +131,7 @@ export default function Page() {
         : null;
 
     return {
+      patientId: petId,
       name: pet?.animalName ?? '',
       type: pet?.species ?? '',
       breed: pet?.breed ?? '',
@@ -151,8 +152,11 @@ export default function Page() {
       chronicDiseases: pet?.chronicDiseases ?? '',
       otherInformation: pet?.otherInformation ?? '',
       internalNotes: pet?.internalNotes ?? '',
+      guardianName: pet?.guardian?.fullName || "",
+      guardianTaxId: pet?.guardian?.taxId || "",
+      guardianAvatarUrl: pet?.guardian?.profileImageUrl || "",
     };
-  }, [pet]);
+  }, [pet, petId]);
   console.log("patientData----", pet);
 
   const details = useMemo(

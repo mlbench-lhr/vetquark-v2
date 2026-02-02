@@ -4,6 +4,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { t } from "i18next";
+import Link from "next/link";
 
 export const PatientInfoCard: React.FC<PatientInfoCardProps> = ({
   name,
@@ -52,12 +53,13 @@ export const PatientInfoCard: React.FC<PatientInfoCardProps> = ({
             <h2 className="text-base font-medium text-gray-800">{name}</h2>
             {
               pathname.includes("Guardian") ?
-                <button className="px-4 py-1 h-full bg-primary col-span-2 text-white font-medium text-sm flex items-center justify-center  gap-2 rounded-full" onClick={() => { if (!patientId) return; router.push(`/Guardian/history?petId=${encodeURIComponent(String(patientId))}`) }}>
+                <Link href={`/Guardian/history?petId=${encodeURIComponent(String(patientId || ""))}`}
+                  className="px-4 py-1 h-full bg-primary col-span-2 text-white font-medium text-sm flex items-center justify-center  gap-2 rounded-full" onClick={() => { if (!patientId) return; router.push(`/Guardian/history?petId=${encodeURIComponent(String(patientId))}`) }}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none">
                     <path d="M5.25 10.5C4.025 10.5 2.94097 10.1282 1.99792 9.38467C1.05486 8.64111 0.442361 7.69067 0.160417 6.53333C0.121528 6.3875 0.150694 6.25392 0.247917 6.13258C0.345139 6.01125 0.476389 5.94067 0.641667 5.92083C0.797222 5.90139 0.938194 5.93056 1.06458 6.00833C1.19097 6.08611 1.27847 6.20278 1.32708 6.35833C1.56042 7.23333 2.04167 7.94792 2.77083 8.50208C3.5 9.05625 4.32639 9.33333 5.25 9.33333C6.3875 9.33333 7.35253 8.93725 8.14508 8.14508C8.93764 7.35292 9.33372 6.38789 9.33333 5.25C9.33294 4.11211 8.93686 3.14728 8.14508 2.3555C7.3533 1.56372 6.38828 1.16744 5.25 1.16667C4.57917 1.16667 3.95208 1.32222 3.36875 1.63333C2.78542 1.94444 2.29444 2.37222 1.89583 2.91667H2.91667C3.08194 2.91667 3.22058 2.97267 3.33258 3.08467C3.44458 3.19667 3.50039 3.33511 3.5 3.5C3.49961 3.66489 3.44361 3.80353 3.332 3.91592C3.22039 4.02831 3.08194 4.08411 2.91667 4.08333H0.583333C0.418056 4.08333 0.279611 4.02733 0.168 3.91533C0.0563889 3.80333 0.000388889 3.66489 0 3.5V1.16667C0 1.00139 0.0560001 0.862945 0.168 0.751333C0.28 0.639722 0.418444 0.583722 0.583333 0.583333C0.748222 0.582945 0.886861 0.638945 0.99925 0.751333C1.11164 0.863722 1.16744 1.00217 1.16667 1.16667V1.95417C1.6625 1.33194 2.26781 0.850694 2.98258 0.510417C3.69736 0.170139 4.45317 0 5.25 0C5.97917 0 6.66225 0.138639 7.29925 0.415917C7.93625 0.693195 8.49042 1.06731 8.96175 1.53825C9.43308 2.00919 9.80739 2.56336 10.0847 3.20075C10.3619 3.83814 10.5004 4.52122 10.5 5.25C10.4996 5.97878 10.3612 6.66186 10.0847 7.29925C9.80817 7.93664 9.43386 8.49081 8.96175 8.96175C8.48964 9.4327 7.93547 9.807 7.29925 10.0847C6.66303 10.3623 5.97994 10.5008 5.25 10.5ZM5.83333 5.01667L7.29167 6.475C7.39861 6.58194 7.45208 6.71806 7.45208 6.88333C7.45208 7.04861 7.39861 7.18472 7.29167 7.29167C7.18472 7.39861 7.04861 7.45208 6.88333 7.45208C6.71806 7.45208 6.58194 7.39861 6.475 7.29167L4.84167 5.65833C4.78333 5.6 4.73958 5.53447 4.71042 5.46175C4.68125 5.38903 4.66667 5.31358 4.66667 5.23542V2.91667C4.66667 2.75139 4.72267 2.61294 4.83467 2.50133C4.94667 2.38972 5.08511 2.33372 5.25 2.33333C5.41489 2.33294 5.55353 2.38894 5.66592 2.50133C5.77831 2.61372 5.83411 2.75217 5.83333 2.91667V5.01667Z" fill="white" />
                   </svg>
                   {t("home.viewHistory")}
-                </button>
+                </Link>
                 : <span className="px-3 py-1 bg-gray-10 rounded-full text-xs text-gray-400">
                   {type} - {breed}
                 </span>
@@ -252,7 +254,7 @@ export const GuardianInfoCard: React.FC<PatientInfoCardProps> = ({
   guardianAddress,
   lastExamLabel,
 }) => {
-  
+
   const router = useRouter()
   const displayName = guardianName ?? name
   const displayImage = guardianAvatarUrl ?? image
@@ -272,7 +274,7 @@ export const GuardianInfoCard: React.FC<PatientInfoCardProps> = ({
           <div className="flex items-center gap-3 justify-between w-full">
             <h2 className="text-base font-medium text-gray-800">{displayName}</h2>
             <div className="flex justify-start px-3 py-1 bg-gray-10 rounded-full text-xs gap-2 text-gray-400">
-              <a href={`tel:${guardianMobile}`}  className="flex justify-center items-center h-7 w-7 rounded-full bg-[#F5F6F6]">
+              <a href={`tel:${guardianMobile}`} className="flex justify-center items-center h-7 w-7 rounded-full bg-[#F5F6F6]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path d="M16.675 12.8167C15.65 12.8167 14.6583 12.65 13.7333 12.35C13.5884 12.3012 13.4326 12.294 13.2838 12.3294C13.135 12.3648 12.9992 12.4412 12.8917 12.55L11.5833 14.1917C9.225 13.0667 7.01667 10.9417 5.84167 8.5L7.46667 7.11667C7.69167 6.88333 7.75833 6.55833 7.66667 6.26667C7.35833 5.34167 7.2 4.35 7.2 3.325C7.2 2.875 6.825 2.5 6.375 2.5H3.49167C3.04167 2.5 2.5 2.7 2.5 3.325C2.5 11.0667 8.94167 17.5 16.675 17.5C17.2667 17.5 17.5 16.975 17.5 16.5167V13.6417C17.5 13.1917 17.125 12.8167 16.675 12.8167Z" fill="#3F78D8" />
                 </svg>

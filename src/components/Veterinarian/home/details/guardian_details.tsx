@@ -139,7 +139,6 @@ const GuardianProfilePage: React.FC = () => {
       lastExamLabel: lastExamLabel ?? undefined,
     };
   }, [guardian, guardianId, lastExamLabel]);
-console.log("guardian-----", guardian);
 
   const GuardianDetailsSkeleton = () => (
     <div className="px-4 animate-pulse space-y-4">
