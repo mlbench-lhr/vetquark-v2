@@ -12,6 +12,7 @@ import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
 import { useTranslation } from 'react-i18next';
+import { STATES_BY_COUNTRY } from '@/lib/locationData';
 
 function digitsOnly(value: string) {
     return value.replace(/\D/g, "");
@@ -85,71 +86,16 @@ type StateOption = { value: string; text: string; stateName: string };
 async function fetchCountryStates(country: string, signal?: AbortSignal): Promise<StateOption[]> {
     const normalized = country.trim();
     if (!normalized) return [];
-
-    try {
-        const res = await fetch("https://countriesnow.space/api/v0.1/countries/states", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ country: normalized }),
-            signal,
-        });
-        const json = await res.json().catch(() => null);
-        const statesRaw = (json as any)?.data?.states;
-        if (!res.ok || !Array.isArray(statesRaw)) throw new Error("Failed to load states");
-
-        const parsed = statesRaw
-            .map((s: any) => {
-                const name = typeof s?.name === "string" ? s.name.trim() : "";
-                const code = typeof s?.state_code === "string" ? s.state_code.trim() : "";
-                const value = code || name;
-                if (!name || !value) return null;
-                return { value, text: name, stateName: name } satisfies StateOption;
-            })
-            .filter(Boolean) as StateOption[];
-
-        if (parsed.length) return parsed;
-        throw new Error("No states returned");
-    } catch {
-        if (normalized.toLowerCase() === "brazil") {
-            return brazilianStateOptions.map((opt) => ({ value: opt.value, text: opt.text, stateName: opt.text }));
-        }
-        return [];
-    }
+    const items = STATES_BY_COUNTRY[normalized] || [];
+    return items.map((i) => ({
+        value: i.value || i.text,
+        text: i.text,
+        stateName: i.text,
+    }));
 }
 
 async function fetchCountryStateCities(country: string, stateName: string, stateCode?: string, signal?: AbortSignal): Promise<string[]> {
-    const c = country.trim();
-    const s = stateName.trim();
-    if (!c || !s) return [];
-
-    try {
-        const res = await fetch("https://countriesnow.space/api/v0.1/countries/state/cities", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ country: c, state: s }),
-            signal,
-        });
-        const json = await res.json().catch(() => null);
-        const citiesRaw = (json as any)?.data;
-        if (!res.ok || !Array.isArray(citiesRaw)) throw new Error("Failed to load cities");
-        return citiesRaw
-            .map((x: any) => (typeof x === "string" ? x.trim() : ""))
-            .filter((x: string) => !!x);
-    } catch {
-        if (c.toLowerCase() === "brazil" && stateCode) {
-            try {
-                const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${encodeURIComponent(stateCode)}/municipios`, { signal });
-                const json = await res.json().catch(() => null);
-                if (!res.ok || !Array.isArray(json)) return [];
-                return (json as any[])
-                    .map((m) => (typeof m?.nome === "string" ? m.nome.trim() : ""))
-                    .filter((x) => !!x);
-            } catch {
-                return [];
-            }
-        }
-        return [];
-    }
+    return [];
 }
 
 interface FormData {
@@ -249,9 +195,7 @@ export default function GuardianRegistration() {
     }, [refreshUnread]);
 
     const [stateOptions, setStateOptions] = useState<StateOption[]>([]);
-    const [cityOptions, setCityOptions] = useState<string[]>([]);
     const [loadingStates, setLoadingStates] = useState(false);
-    const [loadingCities, setLoadingCities] = useState(false);
 
     const handleChange = (field: keyof FormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -307,31 +251,17 @@ export default function GuardianRegistration() {
 
         (async () => {
             setLoadingStates(true);
-            setStateOptions([]);
-            setCityOptions([]);
-            setLoadingCities(false);
-
-            if (!country) {
-                setLoadingStates(false);
-                return;
-            }
-
-            const options = await fetchCountryStates(country, controller.signal);
+            const options = country ? await fetchCountryStates(country, controller.signal) : [];
             if (!mounted || controller.signal.aborted) return;
             setStateOptions(options);
             setLoadingStates(false);
-
             setFormData((prev) => {
                 const stateOk = !!prev.state && options.some((o) => o.value === prev.state);
                 if (stateOk) return prev;
                 if (!prev.state && !prev.city) return prev;
                 return { ...prev, state: "", city: "" };
             });
-        })().catch(() => {
-            if (!mounted || controller.signal.aborted) return;
-            setStateOptions([]);
-            setLoadingStates(false);
-        });
+        })();
 
         return () => {
             mounted = false;
@@ -340,44 +270,11 @@ export default function GuardianRegistration() {
     }, [formData.country]);
 
     useEffect(() => {
-        const country = String(formData.country || '').trim();
         const selectedState = String(formData.state || '').trim();
-        const stateMeta = stateOptions.find((o) => o.value === selectedState) || null;
-
-        const controller = new AbortController();
-        let mounted = true;
-
-        (async () => {
-            setCityOptions([]);
-            if (!country || !selectedState || !stateMeta) {
-                setLoadingCities(false);
-                setFormData((prev) => (prev.city ? { ...prev, city: "" } : prev));
-                return;
-            }
-
-            setLoadingCities(true);
-            const cities = await fetchCountryStateCities(country, stateMeta.stateName, stateMeta.value, controller.signal);
-            if (!mounted || controller.signal.aborted) return;
-            setCityOptions(cities);
-            setLoadingCities(false);
-
-            setFormData((prev) => {
-                const city = String(prev.city || '').trim();
-                if (!city) return prev;
-                if (cities.includes(city)) return prev;
-                return { ...prev, city: "" };
-            });
-        })().catch(() => {
-            if (!mounted || controller.signal.aborted) return;
-            setCityOptions([]);
-            setLoadingCities(false);
-        });
-
-        return () => {
-            mounted = false;
-            controller.abort();
-        };
-    }, [formData.country, formData.state, stateOptions]);
+        if (!selectedState) {
+            setFormData((prev) => (prev.city ? { ...prev, city: "" } : prev));
+        }
+    }, [formData.state]);
 
     
 
@@ -482,10 +379,6 @@ export default function GuardianRegistration() {
             const city = String(formData.city || '').trim();
             if (!city) {
                 toast.error(t('auth.cityRequired'));
-                return;
-            }
-            if (!cityOptions.includes(city)) {
-                toast.error(t('auth.invalidCity'));
                 return;
             }
 
@@ -616,7 +509,7 @@ export default function GuardianRegistration() {
                                 {t('newPatient.guardian.idCardLabel')}<span className="text-red-500">*</span>
                             </label>
                             <input
-                                type="text"
+                                type="number"
                                 placeholder={t('newPatient.guardian.idCardPlaceholder')}
                                 value={formData.idCard}
                                 onChange={(e) => handleChange('idCard', e.target.value)}
@@ -783,21 +676,14 @@ export default function GuardianRegistration() {
                             <label className="block text-sm text-gray-900 mb-2">
                                 {t('auth.city')}<span className="text-red-500">*</span>
                             </label>
-                            <select
+                            <input
+                                type="text"
+                                placeholder={t('auth.enterCity')}
                                 value={formData.city}
                                 onChange={(e) => handleChange('city', e.target.value)}
-                                disabled={!formData.state || loadingCities || cityOptions.length === 0}
+                                disabled={!formData.state}
                                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            >
-                                <option value="" disabled>
-                                    {!formData.state ? t('auth.selectStateFirst') : loadingCities ? t('auth.loadingCities') : t('auth.selectCity')}
-                                </option>
-                                {cityOptions.map((city) => (
-                                    <option key={city} value={city}>
-                                        {city}
-                                    </option>
-                                ))}
-                            </select>
+                            />
                         </div>
 
                         <div>
@@ -805,7 +691,7 @@ export default function GuardianRegistration() {
                                 {t('auth.postalCode')}<span className="text-red-500">*</span>
                             </label>
                             <input
-                                type="text"
+                                type="number"
                                 placeholder={t('auth.enterPostalCode')}
                                 value={formData.postalCode}
                                 onChange={(e) => handleChange('postalCode', e.target.value)}

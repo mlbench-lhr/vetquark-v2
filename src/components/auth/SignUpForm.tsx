@@ -11,6 +11,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useAppDispatch } from "@/store/hooks";
 import { setProfile as setUserProfile } from "@/store/userProfileSlice";
 import { useTranslation } from "react-i18next";
+import { STATES_BY_COUNTRY } from "@/lib/locationData";
 
 type ProfileType = "veterinarian" | "tutor";
 
@@ -187,67 +188,16 @@ export default function SignUpForm() {
   async function fetchCountryStates(country: string, signal?: AbortSignal): Promise<StateOption[]> {
     const normalized = country.trim();
     if (!normalized) return [];
-
-    try {
-      const res = await fetch("https://countriesnow.space/api/v0.1/countries/states", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ country: normalized }),
-        signal,
-      });
-      const json = await res.json().catch(() => null);
-      const statesRaw = (json as any)?.data?.states;
-      if (!res.ok || !Array.isArray(statesRaw)) throw new Error("Failed to load states");
-
-      const parsed = statesRaw
-        .map((s: any) => {
-          const name = typeof s?.name === "string" ? s.name.trim() : "";
-          const code = typeof s?.state_code === "string" ? s.state_code.trim() : "";
-          const value = code || name;
-          if (!name || !value) return null;
-          return { value, text: name, stateName: name } as StateOption;
-        })
-        .filter(Boolean) as StateOption[];
-
-      if (parsed.length) return parsed;
-      throw new Error("No states returned");
-    } catch {
-      if (normalized.toLowerCase() === "brazil") {
-        return brazilianStateOptions.map((opt) => ({ value: opt.value, text: opt.text, stateName: opt.text }));
-      }
-      return [];
-    }
+    const items = STATES_BY_COUNTRY[normalized] || [];
+    return items.map((i) => ({
+      value: i.value || i.text,
+      text: i.text,
+      stateName: i.text,
+    }));
   }
 
   async function fetchCountryStateCities(country: string, stateName: string, stateCode?: string, signal?: AbortSignal): Promise<string[]> {
-    const c = country.trim();
-    const s = stateName.trim();
-    if (!c || !s) return [];
-
-    try {
-      const res = await fetch("https://countriesnow.space/api/v0.1/countries/state/cities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ country: c, state: s }),
-        signal,
-      });
-      const json = await res.json().catch(() => null);
-      const citiesRaw = (json as any)?.data;
-      if (!res.ok || !Array.isArray(citiesRaw)) throw new Error("Failed to load cities");
-      return citiesRaw.map((x: any) => (typeof x === "string" ? x.trim() : "")).filter((x: string) => !!x);
-    } catch {
-      if (c.toLowerCase() === "brazil" && stateCode) {
-        try {
-          const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${encodeURIComponent(stateCode)}/municipios`, { signal });
-          const json = await res.json().catch(() => null);
-          if (!res.ok || !Array.isArray(json)) return [];
-          return (json as any[]).map((m) => (typeof m?.nome === "string" ? m.nome.trim() : "")).filter((x) => !!x);
-        } catch {
-          return [];
-        }
-      }
-      return [];
-    }
+    return [];
   }
 
   const [formData, setFormData] = useState<SignUpFormData>(() => getEmptyFormData());
@@ -280,25 +230,13 @@ export default function SignUpForm() {
   };
 
   const [stateOptions, setStateOptions] = useState<StateOption[]>([]);
-  const [cityOptions, setCityOptions] = useState<string[]>([]);
   const [loadingStates, setLoadingStates] = useState(false);
-  const [loadingCities, setLoadingCities] = useState(false);
 
   React.useEffect(() => {
     const country = String(formData.country || "").trim();
-    const controller = new AbortController();
-    let mounted = true;
     (async () => {
       setLoadingStates(true);
-      setStateOptions([]);
-      setCityOptions([]);
-      setLoadingCities(false);
-      if (!country) {
-        setLoadingStates(false);
-        return;
-      }
-      const options = await fetchCountryStates(country, controller.signal);
-      if (!mounted || controller.signal.aborted) return;
+      const options = country ? await fetchCountryStates(country) : [];
       setStateOptions(options);
       setLoadingStates(false);
       setFormData((prev) => {
@@ -307,51 +245,15 @@ export default function SignUpForm() {
         if (!prev.state && !prev.city) return prev;
         return { ...prev, state: "", city: "" };
       });
-    })().catch(() => {
-      if (!mounted || controller.signal.aborted) return;
-      setStateOptions([]);
-      setLoadingStates(false);
-    });
-    return () => {
-      mounted = false;
-      controller.abort();
-    };
+    })();
   }, [formData.country]);
 
   React.useEffect(() => {
-    const country = String(formData.country || "").trim();
     const selectedState = String(formData.state || "").trim();
-    const stateMeta = stateOptions.find((o) => o.value === selectedState) || null;
-    const controller = new AbortController();
-    let mounted = true;
-    (async () => {
-      setCityOptions([]);
-      if (!country || !selectedState || !stateMeta) {
-        setLoadingCities(false);
-        setFormData((prev) => (prev.city ? { ...prev, city: "" } : prev));
-        return;
-      }
-      setLoadingCities(true);
-      const cities = await fetchCountryStateCities(country, stateMeta.stateName, stateMeta.value, controller.signal);
-      if (!mounted || controller.signal.aborted) return;
-      setCityOptions(cities);
-      setLoadingCities(false);
-      setFormData((prev) => {
-        const city = String(prev.city || "").trim();
-        if (!city) return prev;
-        if (cities.includes(city)) return prev;
-        return { ...prev, city: "" };
-      });
-    })().catch(() => {
-      if (!mounted || controller.signal.aborted) return;
-      setCityOptions([]);
-      setLoadingCities(false);
-    });
-    return () => {
-      mounted = false;
-      controller.abort();
-    };
-  }, [formData.country, formData.state, stateOptions]);
+    if (!selectedState) {
+      setFormData((prev) => (prev.city ? { ...prev, city: "" } : prev));
+    }
+  }, [formData.state]);
 
   const handleClinicLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -1046,23 +948,16 @@ export default function SignUpForm() {
                 <label className="block text-gray-900 text-sm mb-2">
                   {t("auth.city")}
                 </label>
-                <select
+                <input
+                  type="text"
                   name="city"
+                  placeholder={t("auth.enterCity")}
                   value={formData.city}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
+                  onChange={handleInputChange}
                   required
-                  disabled={!formData.country || !formData.state || loadingCities || cityOptions.length === 0}
+                  disabled={!formData.country || !formData.state}
                   className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
-                >
-                  <option value="" disabled>
-                    {!formData.state ? t("auth.selectStateFirst") : loadingCities ? t("auth.loadingCities") : t("auth.selectCity")}
-                  </option>
-                  {cityOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>
