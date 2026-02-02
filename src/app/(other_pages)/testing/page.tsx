@@ -1,4 +1,3 @@
-'use client'
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -12,6 +11,8 @@ interface ValidationResult {
     chartDetected: boolean;
     chartSize: number;
     hasColorBlocks: boolean;
+    chartConfidence: number;
+    coverage: number;
   };
 }
 
@@ -127,20 +128,86 @@ export default function DipstickValidator() {
     return highVarianceBlocks > 10; // At least 10 colorful blocks
   };
 
-  const detectChartSize = (imageData: ImageData): number => {
+  const detectChartSize = (imageData: ImageData): { size: number; coverage: number } => {
     const { data, width, height } = imageData;
-    let edgePixels = 0;
+    let coloredPixels = 0;
     
-    // Simple edge detection - count high contrast areas
-    for (let i = 0; i < data.length - 4; i += 4) {
-      const diff = Math.abs(data[i] - data[i + 4]) + 
-                   Math.abs(data[i + 1] - data[i + 5]) + 
-                   Math.abs(data[i + 2] - data[i + 6]);
-      if (diff > 100) edgePixels++;
+    // Detect colored areas (chart has vibrant colors)
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Check if pixel is colorful (not grayscale)
+      const avg = (r + g + b) / 3;
+      const variance = Math.abs(r - avg) + Math.abs(g - avg) + Math.abs(b - avg);
+      
+      // Also check if pixel is not too dark or too bright
+      if (variance > 20 && avg > 30 && avg < 230) {
+        coloredPixels++;
+      }
     }
     
-    // Return percentage of image with edges
-    return (edgePixels / (width * height)) * 100;
+    const coverage = (coloredPixels / (width * height)) * 100;
+    
+    // Estimate size based on colored area coverage
+    return {
+      size: coverage,
+      coverage
+    };
+  };
+
+  const isDipstickChart = (imageData: ImageData): { isChart: boolean; confidence: number } => {
+    const { data, width, height } = imageData;
+    
+    // Dipstick charts have specific characteristics:
+    // 1. Multiple distinct color blocks (purple, orange, green, blue, yellow, pink)
+    // 2. Grid-like structure
+    // 3. High color diversity
+    
+    const colorBuckets = {
+      purple: 0,
+      orange: 0,
+      green: 0,
+      blue: 0,
+      yellow: 0,
+      pink: 0,
+      brown: 0,
+      white: 0
+    };
+    
+    // Sample every 10th pixel for performance
+    for (let i = 0; i < data.length; i += 40) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Skip very dark or very bright pixels
+      const brightness = (r + g + b) / 3;
+      if (brightness < 30 || brightness > 240) {
+        if (brightness > 240) colorBuckets.white++;
+        continue;
+      }
+      
+      // Classify colors
+      if (r > 150 && g < 100 && b > 150) colorBuckets.purple++;
+      else if (r > 180 && g > 100 && g < 160 && b < 100) colorBuckets.orange++;
+      else if (r < 100 && g > 120 && b < 100) colorBuckets.green++;
+      else if (r < 100 && g < 150 && b > 150) colorBuckets.blue++;
+      else if (r > 180 && g > 180 && b < 100) colorBuckets.yellow++;
+      else if (r > 180 && g > 100 && g < 180 && b > 100 && b < 180) colorBuckets.pink++;
+      else if (r > 80 && r < 150 && g > 60 && g < 120 && b < 80) colorBuckets.brown++;
+    }
+    
+    // Count how many distinct colors are present
+    const colorThreshold = 10; // Minimum pixels to consider a color present
+    const distinctColors = Object.values(colorBuckets).filter(count => count > colorThreshold).length;
+    
+    // Dipstick charts should have at least 5-6 distinct colors
+    const isChart = distinctColors >= 5;
+    const confidence = Math.min((distinctColors / 7) * 100, 100);
+    
+    return { isChart, confidence };
   };
 
   const analyzeFrame = () => {
@@ -162,10 +229,17 @@ export default function DipstickValidator() {
     const brightness = calculateBrightness(imageData);
     const blurScore = calculateBlur(imageData);
     const hasColorBlocks = detectColorBlocks(imageData);
-    const chartSize = detectChartSize(imageData);
+    const { size: chartSize, coverage } = detectChartSize(imageData);
+    const { isChart, confidence: chartConfidence } = isDipstickChart(imageData);
     
     const instructions: string[] = [];
     let isValid = true;
+    
+    // Chart type check (most important)
+    if (!isChart || chartConfidence < 50) {
+      instructions.push('⚠️ Dipstick chart not detected - point camera at the color chart');
+      isValid = false;
+    }
     
     // Brightness check
     if (brightness < 80) {
@@ -176,37 +250,30 @@ export default function DipstickValidator() {
       isValid = false;
     }
     
-    // Blur check
-    if (blurScore < 100) {
+    // Blur check (more lenient threshold)
+    if (blurScore < 50) {
       instructions.push('⚠️ Image is blurry - hold camera steady');
       isValid = false;
     }
     
-    // Chart detection
-    if (!hasColorBlocks) {
-      instructions.push('⚠️ Chart not detected - point camera at the color chart');
-      isValid = false;
-    }
-    
-    // Size check
-    if (chartSize < 5) {
+    // Size check based on colored area coverage
+    if (coverage < 15) {
       instructions.push('⚠️ Move closer to the chart');
       isValid = false;
-    } else if (chartSize > 25) {
+    } else if (coverage > 60) {
       instructions.push('⚠️ Too close - move back slightly');
       isValid = false;
     }
     
-    // Chart centering (simple check)
-    const centerBrightness = calculateBrightness(
-      ctx.getImageData(canvas.width / 3, canvas.height / 3, canvas.width / 3, canvas.height / 3)
-    );
-    if (Math.abs(centerBrightness - brightness) > 30) {
-      instructions.push('ℹ️ Try to center the chart in frame');
-    }
-    
+    // Provide helpful guidance even if valid
     if (isValid) {
-      instructions.push('✅ Perfect! Hold steady and capture');
+      if (coverage < 25) {
+        instructions.push('✅ Good! You can move slightly closer for better detail');
+      } else if (coverage > 45) {
+        instructions.push('✅ Good! Consider moving slightly back for full chart view');
+      } else {
+        instructions.push('✅ Perfect! Hold steady and capture');
+      }
     }
     
     setValidation({
@@ -215,9 +282,11 @@ export default function DipstickValidator() {
       metrics: {
         brightness,
         blurScore,
-        chartDetected: hasColorBlocks,
+        chartDetected: isChart,
         chartSize,
-        hasColorBlocks
+        hasColorBlocks,
+        chartConfidence,
+        coverage
       }
     });
   };
@@ -283,8 +352,9 @@ export default function DipstickValidator() {
             <div className="mt-2 space-y-1">
               <div>Brightness: {validation.metrics.brightness.toFixed(1)}</div>
               <div>Blur Score: {validation.metrics.blurScore.toFixed(1)}</div>
-              <div>Chart Size: {validation.metrics.chartSize.toFixed(1)}%</div>
-              <div>Color Blocks: {validation.metrics.hasColorBlocks ? 'Yes' : 'No'}</div>
+              <div>Coverage: {validation.metrics.coverage.toFixed(1)}%</div>
+              <div>Chart Confidence: {validation.metrics.chartConfidence.toFixed(1)}%</div>
+              <div>Is Dipstick Chart: {validation.metrics.chartDetected ? 'Yes' : 'No'}</div>
             </div>
           </details>
         </div>
