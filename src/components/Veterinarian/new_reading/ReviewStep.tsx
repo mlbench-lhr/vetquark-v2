@@ -14,6 +14,78 @@ type Props = {
 
 type ResultStatus = 'Normal' | 'Abnormal'
 
+type NormalRule =
+  | { type: 'range'; low: number; high: number }
+  | { type: 'exact'; value: number }
+  | { type: 'negative' }
+  | { type: 'lt'; value: number }
+  | { type: 'gt'; value: number }
+
+const NORMALS: Record<string, { label: string; rule: NormalRule }> = {
+  'specific-gravity': { label: '1.015-1.030', rule: { type: 'range', low: 1.015, high: 1.03 } },
+  'ph': { label: '5.5-7.0', rule: { type: 'range', low: 5.5, high: 7.0 } },
+  'protein': { label: '0-15', rule: { type: 'range', low: 0, high: 15 } },
+  'glucose': { label: 'Negative', rule: { type: 'negative' } },
+  'ketone-bodies': { label: 'Negative', rule: { type: 'negative' } },
+  'bilirubin': { label: 'Negative', rule: { type: 'negative' } },
+  'urobilinogen': { label: '0-1', rule: { type: 'range', low: 0, high: 1 } },
+  'nitrite': { label: 'Negative', rule: { type: 'negative' } },
+  'ascorbic-acid': { label: '0', rule: { type: 'exact', value: 0 } },
+  'leukocytes': { label: 'Negative', rule: { type: 'negative' } },
+  'blood': { label: 'Negative', rule: { type: 'negative' } },
+  'microalbumin': { label: '< 0.03', rule: { type: 'lt', value: 0.03 } },
+  'creatine': { label: '0.9-26.5', rule: { type: 'range', low: 0.9, high: 26.5 } },
+  'calcium': { label: '0-2.5', rule: { type: 'range', low: 0, high: 2.5 } },
+  'magnesium': { label: '0-1.5', rule: { type: 'range', low: 0, high: 1.5 } },
+  'ammonium-chloride': { label: '0', rule: { type: 'exact', value: 0 } },
+}
+
+function parseNumericLoose(valueLabel: string): number | undefined {
+  const cleaned = String(valueLabel || '').replace(/[^\d.\-]/g, '')
+  if (!cleaned) return undefined
+  const n = Number(cleaned)
+  return Number.isFinite(n) ? n : undefined
+}
+
+function numericValueFromLabel(key: string, label: string): number | undefined {
+  if (key === 'protein' && /trace/i.test(label)) return 0
+  return parseNumericLoose(label)
+}
+
+function isNormalByRule(key: string, valueLabel: string, numeric?: number): boolean {
+  const info = NORMALS[key]
+  if (!info) return false
+  const rule = info.rule
+  if (rule.type === 'negative') {
+    const v = String(valueLabel || '').toLowerCase()
+    return v === 'neg' || v === 'negative'
+  }
+  if (rule.type === 'exact') {
+    if (numeric == null) {
+      const n = parseNumericLoose(valueLabel)
+      return n != null && Math.abs(n - rule.value) < 1e-6
+    }
+    return Math.abs(numeric - rule.value) < 1e-6
+  }
+  if (rule.type === 'lt') {
+    const n = numeric ?? parseNumericLoose(valueLabel)
+    return n != null && n < rule.value
+  }
+  if (rule.type === 'gt') {
+    const n = numeric ?? parseNumericLoose(valueLabel)
+    return n != null && n > rule.value
+  }
+  if (rule.type === 'range') {
+    const n = numeric ?? parseNumericLoose(valueLabel)
+    if (n == null) {
+      if (/trace/i.test(valueLabel)) return true
+      return false
+    }
+    return n >= rule.low && n <= rule.high
+  }
+  return false
+}
+
 type DotOption = {
   topLabel: string
   topSubLabel?: string
@@ -304,6 +376,12 @@ function ResultRow({
     setPrevIndex(null)
   }
   const cols = row.unit ? row.options.length + 1 : row.options.length
+  const computedStatus: ResultStatus = useMemo(() => {
+    const opt = row.options[selectedIndex]
+    const label = opt ? opt.topLabel : ''
+    const num = numericValueFromLabel(row.key, label)
+    return isNormalByRule(row.key, label, num) ? 'Normal' : 'Abnormal'
+  }, [row.key, row.options, selectedIndex])
   return (
     <div className={`py-4 px-3 ${editing ? 'bg-[#F5F6F6] rounded-xl' : ''}`}>
       <div className="flex items-center opa justify-between">
@@ -340,7 +418,7 @@ function ResultRow({
               <Pencil size={14} />
             </button>
           )}
-          <StatusPill status={row.status} />
+          <StatusPill status={computedStatus} />
         </div>
       </div>
 
@@ -358,7 +436,7 @@ function ResultRow({
                 <div className={`text-[8px] leading-[8px] ${opt.topSubLabel === "0" ? "text-transparent" : "text-[#839297]"}`}>({opt.topSubLabel})</div>
               }
               <div
-                className={`mt-2 h-7 ${opt.topLabel === "Positive" ? " w-[200px] " : " w-7 "} relative rounded-full ${opt.topLabel === "Neg" ? "border" : ""} ${active ? 'border-2 border-primary ring-2 ring-primary ring-offset-2 ring-offset-white shadow-theme-xs scale-[1.03] transition-transform' : ''} ${editing ? 'cursor-pointer' : ''}`}
+                className={`mt-2 h-7 ${opt.topLabel === "Positive" ? " w-[200px] " : " w-7 "} relative rounded-full ${opt.topLabel === "Neg" ? "border" : ""} ${active ? 'border-3 border-primary ring- ring-primary ring-offset-2 ring-offset-white shadow-theme-xs scale-[1.03] transition-transform' : ''} ${editing ? 'cursor-pointer' : ''}`}
                 style={{ background: opt.topLabel === "Positive" ? "linear-gradient(180deg, #F7E9EE 0%, #E780AF 100%)" : opt.color }}
                 onClick={() => {
                   if (!editing) return
@@ -377,7 +455,7 @@ function ResultRow({
                       <Check className="h-3 w-3" />
                     </div>
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-white flex items-center justify-center shadow-md">
                       <Check className={`h-3 w-3 ${opt.topLabel === 'Neg' ? 'text-primary' : 'text-white'}`} />
                     </div>
                   )
@@ -447,12 +525,13 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
               const selectedIndex = selectedByKey[row.key] ?? row.defaultIndex
               const opt = row.options[selectedIndex]
               const valueLabel = opt ? opt.topLabel : row.options[row.defaultIndex]?.topLabel ?? ""
-              const numericValue = parseNumericValueLabel(valueLabel)
+              const numericValue = numericValueFromLabel(row.key, valueLabel)
+              const status: ResultStatus = isNormalByRule(row.key, valueLabel, numericValue) ? 'Normal' : 'Abnormal'
               return {
                 key: row.key,
                 label: row.label,
                 unit: row.unit,
-                status: row.status,
+                status,
                 selectedIndex,
                 valueLabel,
                 ...(numericValue === undefined ? {} : { numericValue }),
