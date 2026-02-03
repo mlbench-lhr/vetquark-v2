@@ -71,8 +71,8 @@ export default function Page() {
   }, [patients, query])
 
   return (
-    <div className="min-h-[100dvh] bg-white">
-      <div className="px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-6">
+    <div className="min-h-[100dvh bg-white">
+      <div className="px- pt-[calc(env(safe-area-inset-top)+14px)] pb-6">
         <div className="relative flex items-center justify-center">
           <button
             type="button"

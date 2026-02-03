@@ -332,7 +332,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
     return (
         <div className="min-h-[100dvh w-full bg-white">
-            <div className="mx-auto w-full bg relative pb- h-[calc(100vh-80px)] pt-[calc(env(safe-area-inset-top)+20px)]">
+            <div className="mx-auto w-full bg relative pb- h-[calc(100vh-96px)]">
 
                 <div className=" flex items-center justify-between">
                     <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={handleBack}>
@@ -672,7 +672,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                     </div>
                                 )}
                             </div>
-                            <div className="space-y-4 border-t-4xl p-4 bg-white absolute w-full left-0 bottom-0 z-300">
+                            <div className="space-y-4 border-t-4xl py-4 bg-white absolute w-full left-0 bottom-0 z-300">
                                 {
                                     step === "store" ? (
                                         <>

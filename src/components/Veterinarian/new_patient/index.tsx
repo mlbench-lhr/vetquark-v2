@@ -200,7 +200,7 @@ export default function AddPatientGuardian() {
     );
 
     return (
-        <div className="min-h-[calc(100vh-80px)] p- space-y-4">
+        <div className="min-h-[calc(100vh-96px)] p- space-y-4">
             {/* Header */}
             <div className="bg-white flex items-center justify-between">
                 <h1 className="text-base font-medium text-gray-900">{t('newPatient.addNewPatientTitle')}</h1>

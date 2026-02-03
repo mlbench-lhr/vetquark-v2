@@ -83,17 +83,17 @@ export default function Page() {
   const skeletonItems = useMemo(() => Array.from({ length: 4 }, (_, i) => i), []);
 
   return (
-    <div className="min-h-screen px-3 py-5 relative bg-white">
-      <div className="flex items-center justify-between">
+    <div className="min-h-scree relative bg-white">
+      <div className="flex items-center justify-between ">
         <button
           aria-label="Back"
-          className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+          className="px-1 hover:bg-gray-100 rounded-lg transition-colors"
           onClick={() => router.back()}
         >
           <ChevronLeft className="w-6 h-6 text-gray-700" />
         </button>
-        <h1 className="text-base font-medium text-gray-900">My Orders</h1>
-        <button className="w-12 h-12 bg-gray-10 rounded-full flex items-center justify-center" />
+        <h1 className="text-base font-medium text-gray-900 leading-none">My Orders</h1>
+        <button className="w-12 h-1 bg-gray-10 rounded-full flex items-center justify-center" />
       </div>
 
       <div className="mt-4 space-y-3 pb-10">
