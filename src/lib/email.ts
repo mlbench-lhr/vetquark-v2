@@ -1,32 +1,32 @@
 import nodemailer from "nodemailer";
 
-export async function sendVerificationEmail(to: string, otp: string) {
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT || "587", 10);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM || "no-reply@yourdomain.com";
+function escape(v: string) {
+  return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
-  if (!host || !user || !pass) {
-    console.warn("SMTP not configured; logging OTP to console for dev.");
-    console.log(`[DEV] Verification OTP for ${to}: ${otp}`);
-    return;
-  }
-
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  });
-
-  const subject = "Your verification code";
-  const html = `<!DOCTYPE html>
+function renderEmailHTML(opts: {
+  title: string;
+  description?: string;
+  contentHtml: string;
+  footer?: string;
+  action?: { label: string; url: string };
+}) {
+  const title = escape(opts.title);
+  const description = opts.description ? escape(opts.description) : "";
+  const footer =
+    opts.footer ||
+    "If you didn't request this, please ignore this email.";
+  const action =
+    opts.action &&
+    `<a href="${escape(opts.action.url)}" target="_blank" rel="noopener" style="display:inline-block;background-color:#3F78D8;color:#ffffff;text-decoration:none;font-weight:600;border-radius:8px;padding:12px 16px;margin:8px 0;">${escape(
+      opts.action.label
+    )}</a>`;
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>VetQuark Verification Code</title>
+<title>VetQuark</title>
 </head>
 <body style="margin:0;padding:0;background-color:white;">
 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#white;">
@@ -55,17 +55,15 @@ export async function sendVerificationEmail(to: string, otp: string) {
         </tr>
         <tr>
           <td align="center" style="padding:40px 24px;">
-            <div style="font-size:20px;line-height:28px;font-weight:600;color:#101828;margin-bottom:8px;">Verification Code</div>
-            <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:32px;">Enter this code to verify your email</div>
-            <div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
-              <div style="font-family:SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:28px;line-height:36px;font-weight:700;color:#3F78D8;letter-spacing:0.3em;">${otp}</div>
-            </div>
-            <div style="font-size:12px;line-height:18px;color:#667085;">This code expires in 10 minutes</div>
+            <div style="font-size:20px;line-height:28px;font-weight:600;color:#101828;margin-bottom:8px;">${title}</div>
+            ${description ? `<div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:32px;">${description}</div>` : ""}
+            ${opts.contentHtml}
+            ${action || ""}
           </td>
         </tr>
         <tr>
           <td align="center" style="padding:16px 24px;background-color:#f8fafc;border-top:1px solid #e4e7ec;">
-            <div style="font-size:12px;line-height:18px;color:#667085;">If you didn't request this code, please ignore this email.</div>
+            <div style="font-size:12px;line-height:18px;color:#667085;">${escape(footer)}</div>
           </td>
         </tr>
       </table>
@@ -74,6 +72,40 @@ export async function sendVerificationEmail(to: string, otp: string) {
 </table>
 </body>
 </html>`;
+}
+
+export async function sendVerificationEmail(to: string, otp: string) {
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || "587", 10);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || "no-reply@yourdomain.com";
+
+  if (!host || !user || !pass) {
+    console.warn("SMTP not configured; logging OTP to console for dev.");
+    console.log(`[DEV] Verification OTP for ${to}: ${otp}`);
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+
+  const subject = "Your verification code";
+  const html = renderEmailHTML({
+    title: "Verification Code",
+    description: "Enter this code to verify your email",
+    contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
+      <div style="font-family:SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:28px;line-height:36px;font-weight:700;color:#3F78D8;letter-spacing:0.3em;">${escape(
+        otp
+      )}</div>
+    </div>
+    <div style="font-size:12px;line-height:18px;color:#667085;">This code expires in 10 minutes</div>`,
+    footer: "If you didn't request this code, please ignore this email.",
+  });
 
   const info = await transporter.sendMail({
     from,
@@ -107,7 +139,16 @@ export async function sendResetEmail(to: string, otp: string) {
   });
 
   const subject = "Reset your password";
-  const html = `<p>Your VetQuark password reset code is <strong>${otp}</strong>.</p><p>This code expires in 10 minutes.</p>`;
+  const html = renderEmailHTML({
+    title: "Password Reset",
+    description: "Enter this code to reset your password",
+    contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
+      <div style="font-family:SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:28px;line-height:36px;font-weight:700;color:#3F78D8;letter-spacing:0.3em;">${escape(
+        otp
+      )}</div>
+    </div>
+    <div style="font-size:12px;line-height:18px;color:#667085;">This code expires in 10 minutes</div>`,
+  });
 
   const info = await transporter.sendMail({
     from,
@@ -141,13 +182,21 @@ export async function sendWelcomeEmail(to: string, email: string, tempPassword: 
   });
 
   const subject = "Welcome to VetQuark";
-  const html = `
-    <p>Hello,</p>
-    <p>Your Guardian account has been created by your veterinarian.</p>
-    <p><strong>Login Email:</strong> ${email}<br/>
-       <strong>Temporary Password:</strong> ${tempPassword}</p>
-    <p>Please log in and change your password from your profile settings.</p>
-  `;
+  const html = renderEmailHTML({
+    title: "Welcome",
+    description: "Your Guardian account has been created",
+    contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Login Email</div>
+      <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
+        email
+      )}</div>
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Temporary Password</div>
+      <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;">${escape(
+        tempPassword
+      )}</div>
+    </div>
+    <div style="font-size:12px;line-height:18px;color:#667085;">Please log in and change your password from your profile settings</div>`,
+  });
 
   const info = await transporter.sendMail({
     from,
@@ -186,16 +235,25 @@ export async function sendGuardianInviteEmail(
   });
 
   const subject = "Verify your VetQuark account and log in";
-  const html = `
-    <p>Hello,</p>
-    <p>Your Guardian account has been created by your veterinarian.</p>
-    <p><strong>Login Email:</strong> ${email}<br/>
-       <strong>Temporary Password:</strong> ${tempPassword}</p>
-    <p>To verify your email and access your account, please click the link below:</p>
-    <p><a href="${verificationLink}" target="_blank" rel="noopener">Verify and Log In</a></p>
-    <p>If the button doesn't work, copy and paste this URL into your browser:</p>
-    <p>${verificationLink}</p>
-  `;
+  const html = renderEmailHTML({
+    title: "Verify Your Account",
+    description: "Your Guardian account has been created",
+    contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Login Email</div>
+      <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
+        email
+      )}</div>
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Temporary Password</div>
+      <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;">${escape(
+        tempPassword
+      )}</div>
+    </div>
+    <div style="font-size:12px;line-height:18px;color:#667085;margin-bottom:16px;">To verify your email and access your account, use the button below</div>
+    <div style="font-size:12px;line-height:18px;color:#667085;">If the button doesn't work, copy this URL: ${escape(
+      verificationLink
+    )}</div>`,
+    action: { label: "Verify and Log In", url: verificationLink },
+  });
 
   const info = await transporter.sendMail({
     from,
@@ -229,7 +287,16 @@ export async function sendTwoFactorEmail(to: string, otp: string) {
   });
 
   const subject = "Your 2FA login code";
-  const html = `<p>Your VetQuark two-factor login code is <strong>${otp}</strong>.</p><p>This code expires in 10 minutes.</p>`;
+  const html = renderEmailHTML({
+    title: "Two-Factor Code",
+    description: "Enter this code to complete login",
+    contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
+      <div style="font-family:SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:28px;line-height:36px;font-weight:700;color:#3F78D8;letter-spacing:0.3em;">${escape(
+        otp
+      )}</div>
+    </div>
+    <div style="font-size:12px;line-height:18px;color:#667085;">This code expires in 10 minutes</div>`,
+  });
 
   const info = await transporter.sendMail({
     from,
@@ -268,17 +335,37 @@ export async function sendFeedbackEmail(
     auth: { user, pass },
   });
 
-  const escape = (v: string) =>
-    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
   const subject = "New App Feedback";
-  const html = `
-    <p><strong>From:</strong> ${escape(meta?.fromName || "Anonymous")} (${escape(meta?.fromEmail || "unknown")})</p>
-    ${meta?.userId ? `<p><strong>User ID:</strong> ${escape(meta.userId)}</p>` : ""}
-    ${meta?.appVersion ? `<p><strong>App Version:</strong> ${escape(meta.appVersion)}</p>` : ""}
-    <p><strong>Message:</strong></p>
-    <pre style="white-space:pre-wrap;font-family:inherit">${escape(message)}</pre>
-  `;
+  const html = renderEmailHTML({
+    title: "New App Feedback",
+    description: "A new feedback has been submitted",
+    contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">From</div>
+      <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
+        meta?.fromName || "Anonymous"
+      )} (${escape(meta?.fromEmail || "unknown")})</div>
+      ${
+        meta?.userId
+          ? `<div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">User ID</div>
+             <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
+               meta.userId
+             )}</div>`
+          : ""
+      }
+      ${
+        meta?.appVersion
+          ? `<div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">App Version</div>
+             <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
+               meta.appVersion
+             )}</div>`
+          : ""
+      }
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Message</div>
+      <pre style="white-space:pre-wrap;font-family:inherit;margin:0;color:#101828;">${escape(
+        message
+      )}</pre>
+    </div>`,
+  });
 
   const info = await transporter.sendMail({
     from,
