@@ -747,7 +747,7 @@ export default function GuardianRegistration() {
                             />
                         </div>
 
-                        <div className="flex items-start gap-3 pt-2">
+                        <div className="flex items-end gap-3 pt-2">
                             <input
                                 type="checkbox"
                                 checked={formData.acceptTerms}
