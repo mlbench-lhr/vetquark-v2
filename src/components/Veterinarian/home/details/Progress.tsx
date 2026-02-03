@@ -19,6 +19,7 @@ interface ParameterData {
     barColor: string;
     barWidth: number;
     sparkColor?: string;
+    sparkValues?: number[];
 }
 
 type TrendType = "increasing" | "decreasing" | "normal";
@@ -149,6 +150,49 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
         return null;
     };
 
+    const w = 60;
+    const h = 24;
+    const pathD = useMemo(() => {
+        const sv = Array.isArray(param.sparkValues) ? param.sparkValues : [];
+        if (sv.length < 2) {
+            const mid = h / 2;
+            return `M0 ${mid} L${w} ${mid}`;
+        }
+        const min = Math.min(...sv);
+        const max = Math.max(...sv);
+        const range = max - min || 1;
+        const stepX = w / (sv.length - 1);
+        let d = "";
+        for (let i = 0; i < sv.length; i++) {
+            const v = sv[i];
+            const x = i * stepX;
+            const y = h - ((v - min) / range) * h;
+            d += (i === 0 ? "M" : "L") + x + " " + y;
+        }
+        return d;
+    }, [param.sparkValues]);
+    const spikeMarkers = useMemo(() => {
+        const sv = Array.isArray(param.sparkValues) ? param.sparkValues : [];
+        if (sv.length < 2) return [];
+        const min = Math.min(...sv);
+        const max = Math.max(...sv);
+        const range = max - min || 1;
+        const stepX = w / (sv.length - 1);
+        const out: Array<{ x: number; y: number; color: string }> = [];
+        for (let i = 1; i < sv.length; i++) {
+            const prev = sv[i - 1];
+            const curr = sv[i];
+            const denom = Math.max(Math.abs(prev), 1e-9);
+            const rel = (curr - prev) / denom;
+            if (Math.abs(rel) >= 0.1) {
+                const x = i * stepX;
+                const y = h - ((curr - min) / range) * h;
+                out.push({ x, y, color: rel > 0 ? INCREASING_COLOR : DECREASING_COLOR });
+            }
+        }
+        return out;
+    }, [param.sparkValues]);
+
     return (
         <div className="flex items-center py-3 border-b border-border/50 last:border-b-0">
             <div className="flex-1 min-w-0">
@@ -157,15 +201,11 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
             </div>
             <div className="flex items-center gap-3">
 
-                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="24" viewBox="0 0 60 24" fill="none">
-                    <g clipPath="url(#clip0_761_5785)">
-                        <path d="M0.967529 23.0647L15.4775 15.6841L29.9874 12.7318L44.4974 8.30345L59.0073 0.922852" stroke={param.sparkColor || INCREASING_COLOR} strokeWidth="1.88978" strokeLinecap="round" strokeLinejoin="round" />
-                    </g>
-                    <defs>
-                        <clipPath id="clip0_761_5785">
-                            <rect width="59.9872" height="23.9921" fill="white" />
-                        </clipPath>
-                    </defs>
+                <svg xmlns="http://www.w3.org/2000/svg" width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none">
+                    <path d={pathD} stroke={param.sparkColor || INCREASING_COLOR} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                    {spikeMarkers.map((m, idx) => (
+                        <circle key={idx} cx={m.x} cy={m.y} r="1.5" fill={m.color} />
+                    ))}
                 </svg>
 
                 <div className="w-12 text-right">
@@ -184,6 +224,10 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<ReadingItem[]>([]);
     const [seriesByKey, setSeriesByKey] = useState<Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>>({});
+    const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+        from: undefined,
+        to: undefined,
+    });
 
     useEffect(() => {
         let mounted = true;
@@ -191,7 +235,18 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             if (!patientId) return;
             try {
                 setLoading(true);
-                const res = await fetch(`/api/reading/get_readings?patientId=${encodeURIComponent(patientId)}&page=1&pageSize=200`);
+                const params = new URLSearchParams({
+                    patientId: String(patientId),
+                    page: "1",
+                    pageSize: "200",
+                });
+                if (dateRange.from && dateRange.to) {
+                    const fromTime = dateRange.from.getTime();
+                    const end = new Date(dateRange.to.getTime() + 24 * 60 * 60 * 1000);
+                    params.set("from", new Date(fromTime).toISOString());
+                    params.set("to", end.toISOString());
+                }
+                const res = await fetch(`/api/reading/get_readings?${params.toString()}`);
                 const data = await res.json().catch(() => null);
                 if (!mounted) return;
                 if (!res.ok) {
@@ -207,7 +262,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             }
         })();
         return () => { mounted = false; };
-    }, [patientId]);
+    }, [patientId, dateRange.from, dateRange.to]);
 
     useEffect(() => {
         let mounted = true;
@@ -268,7 +323,14 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
     const physicalParams: ParameterData[] = useMemo(() => {
         const rows: ParameterData[] = [];
         for (const key of Array.from(PHYSICAL_KEYS)) {
-            const series = seriesByKey[key] || [];
+            const series = (seriesByKey[key] || []).filter((s) => {
+                const t = s.date.getTime();
+                const apply = !!dateRange.from && !!dateRange.to;
+                const okFrom = !apply || t >= (dateRange.from as Date).getTime();
+                const toBound = apply ? (dateRange.to as Date).getTime() + 24 * 60 * 60 * 1000 : null;
+                const okTo = !apply || !toBound || t < toBound;
+                return okFrom && okTo;
+            });
             const values = series.map((s) => s.value);
             const last = series[series.length - 1];
             const prev = series.length > 1 ? series[series.length - 2] : undefined;
@@ -284,16 +346,24 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                 barColor: INCREASING_COLOR,
                 barWidth: 70,
                 sparkColor: trendColor(trend),
+                sparkValues: values,
             });
         }
         return rows;
-    }, [seriesByKey]);
+    }, [seriesByKey, dateRange.from, dateRange.to]);
 
     const chemicalParams: ParameterData[] = useMemo(() => {
         const rows: ParameterData[] = [];
         for (const key of Object.keys(seriesByKey)) {
             if (PHYSICAL_KEYS.has(key) || MICROSCOPIC_KEYS.has(key)) continue;
-            const series = seriesByKey[key] || [];
+            const series = (seriesByKey[key] || []).filter((s) => {
+                const t = s.date.getTime();
+                const apply = !!dateRange.from && !!dateRange.to;
+                const okFrom = !apply || t >= (dateRange.from as Date).getTime();
+                const toBound = apply ? (dateRange.to as Date).getTime() + 24 * 60 * 60 * 1000 : null;
+                const okTo = !apply || !toBound || t < toBound;
+                return okFrom && okTo;
+            });
             const values = series.map((s) => s.value);
             const last = series[series.length - 1];
             const prev = series.length > 1 ? series[series.length - 2] : undefined;
@@ -309,15 +379,23 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                 barColor: INCREASING_COLOR,
                 barWidth: 65,
                 sparkColor: trendColor(trend),
+                sparkValues: values,
             });
         }
         return rows;
-    }, [seriesByKey]);
+    }, [seriesByKey, dateRange.from, dateRange.to]);
 
     const microscopicParams: ParameterData[] = useMemo(() => {
         const rows: ParameterData[] = [];
         for (const key of Array.from(MICROSCOPIC_KEYS)) {
-            const series = seriesByKey[key] || [];
+            const series = (seriesByKey[key] || []).filter((s) => {
+                const t = s.date.getTime();
+                const apply = !!dateRange.from && !!dateRange.to;
+                const okFrom = !apply || t >= (dateRange.from as Date).getTime();
+                const toBound = apply ? (dateRange.to as Date).getTime() + 24 * 60 * 60 * 1000 : null;
+                const okTo = !apply || !toBound || t < toBound;
+                return okFrom && okTo;
+            });
             const values = series.map((s) => s.value);
             const last = series[series.length - 1];
             const prev = series.length > 1 ? series[series.length - 2] : undefined;
@@ -333,10 +411,11 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                 barColor: INCREASING_COLOR,
                 barWidth: 60,
                 sparkColor: trendColor(trend),
+                sparkValues: values,
             });
         }
         return rows;
-    }, [seriesByKey]);
+    }, [seriesByKey, dateRange.from, dateRange.to]);
 
     if (items.length<1){
         return(
@@ -451,6 +530,8 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             <ParameterProgress
                 dataByParameter={seriesByKey}
                 patientId={patientId}
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
             />
         </div>
     );
@@ -503,16 +584,11 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-export function ParameterProgress({ dataByParameter = {}, patientId }: { dataByParameter?: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>; patientId?: string }) {
+export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, onDateRangeChange }: { dataByParameter?: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>; patientId?: string; dateRange: { from: Date | undefined; to: Date | undefined }; onDateRangeChange: (range: { from: Date | undefined; to: Date | undefined }) => void }) {
     const [viewMode, setViewMode] = useState<ViewMode>("graph");
     const [selectedParameter, setSelectedParameter] = useState<string>("");
-    const [dateRange, setDateRange] = useState<{
-        from: Date | undefined;
-        to: Date | undefined;
-    }>({
-        from: undefined,
-        to: undefined,
-    });
+    const [tempRange, setTempRange] = useState<{ from: Date | undefined; to: Date | undefined }>(dateRange);
+    const [pickerOpen, setPickerOpen] = useState(false);
 
     const parameterOptions = useMemo(() => {
         const keys = Object.keys(dataByParameter || {});
@@ -530,8 +606,10 @@ export function ParameterProgress({ dataByParameter = {}, patientId }: { dataByP
         const raw = (dataByParameter || {})[selectedParameter] || [];
         const filtered = raw.filter((r) => {
             const t = r.date.getTime();
-            const okFrom = !dateRange.from || t >= dateRange.from.getTime();
-            const okTo = !dateRange.to || t <= dateRange.to.getTime();
+            const apply = !!dateRange.from && !!dateRange.to;
+            const okFrom = !apply || t >= (dateRange.from as Date).getTime();
+            const toBound = apply ? (dateRange.to as Date).getTime() + 24 * 60 * 60 * 1000 : null;
+            const okTo = !apply || !toBound || t < toBound;
             return okFrom && okTo;
         });
         const series = filtered.map((r) => ({
@@ -622,7 +700,7 @@ export function ParameterProgress({ dataByParameter = {}, patientId }: { dataByP
                     </SelectContent>
                 </Select>
 
-                <Popover>
+                <Popover open={pickerOpen} onOpenChange={(o) => { setPickerOpen(o); if (o) setTempRange(dateRange); }}>
                     <PopoverTrigger className="col-span-3 text-[12px]! shadow-none" asChild>
                         <Button
                             variant="secondary"
@@ -644,12 +722,28 @@ export function ParameterProgress({ dataByParameter = {}, patientId }: { dataByP
                     <PopoverContent className=" w-auto p-0 bg-popover border border-border shadow-l z-50 me-2" align="start">
                         <CalendarComponent
                             mode="range"
-                            selected={{ from: dateRange.from, to: dateRange.to }}
+                            selected={{ from: tempRange.from, to: tempRange.to }}
                             onSelect={(range) =>
-                                setDateRange({ from: range?.from, to: range?.to })
+                                setTempRange({ from: range?.from, to: range?.to })
                             }
                             numberOfMonths={2}
                         />
+                        <div className="flex items-center justify-end gap-2 p-2">
+                            <Button
+                                variant="secondary"
+                                className="bg-secondary border-0 rounded-md shadow-none"
+                                onClick={() => { setPickerOpen(false); }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                className="rounded-md"
+                                disabled={!tempRange.from || !tempRange.to}
+                                onClick={() => { if (tempRange.from && tempRange.to) { onDateRangeChange(tempRange); setPickerOpen(false); } }}
+                            >
+                                Apply
+                            </Button>
+                        </div>
                     </PopoverContent>
                 </Popover>
             </div>

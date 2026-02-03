@@ -99,10 +99,23 @@ export async function GET(req: NextRequest) {
     const andClauses: any[] = [baseFilter];
 
     if (from || to) {
-      const createdAt: any = {};
-      if (from) createdAt.$gte = from;
-      if (to) createdAt.$lt = to;
-      andClauses.push({ createdAt });
+      const rangeSigned: any = {};
+      const rangeCreated: any = {};
+      if (from) {
+        rangeSigned.$gte = from;
+        rangeCreated.$gte = from;
+      }
+      if (to) {
+        rangeSigned.$lt = to;
+        rangeCreated.$lt = to;
+      }
+      if (status === "signed") {
+        andClauses.push({ signedAt: rangeSigned });
+      } else if (status === "pending") {
+        andClauses.push({ createdAt: rangeCreated });
+      } else {
+        andClauses.push({ $or: [{ signedAt: rangeSigned }, { createdAt: rangeCreated }] });
+      }
     }
 
     if (status === "signed") {
