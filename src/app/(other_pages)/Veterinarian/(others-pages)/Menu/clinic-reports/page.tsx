@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
 
 type ClinicReportsFormData = {
   clinicLogoUrl: string;
@@ -135,7 +136,7 @@ export default function ClinicReportsPage() {
     <div className="w-full bg-background min-h-scree flex flex-col">
       <Header title={t("menu.clinicReports")} />
 
-      <div className="flex-1 overflow-y-auto px-5 pb-28">
+      <div className="flex-1 overflow-y-auto px- pb-28">
         <form ref={formRef} onSubmit={handleSubmit} className="pt-2">
           <div className="space-y-4">
             <div>
@@ -145,7 +146,9 @@ export default function ClinicReportsPage() {
               <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p- text-center">
                 {formData.clinicLogoUrl ? (
                   <div className="flex w-full h-[200px] flex-col relative items-center gap-3">
-                    <img
+                    <Image
+                      width={100}
+                      height={100}
                       src={formData.clinicLogoUrl}
                       alt="Clinic logo"
                       className="w-full h-full object-contain rounded-lg bg-white"

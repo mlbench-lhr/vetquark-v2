@@ -1,6 +1,7 @@
 "use client";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import Image from "next/image";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -92,8 +93,7 @@ const DoughnutLoginChart = () => {
             className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
           >
             <div className="flex-shrink-0">
-              <img
-                src={user.avatar}
+              <Image width={200} height={200}                src={user.avatar}
                 alt={`${user.name}'s avatar`}
                 className="w-12 h-12 rounded-full object-cover border-2 border-gray-100"
               />

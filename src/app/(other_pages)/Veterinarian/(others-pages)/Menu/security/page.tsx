@@ -77,7 +77,7 @@ export default function SecurityPage() {
     <div className="min-h-screen bg-[#F5F6F6]">
       <Header title={t("menu.security")} />
 
-      <div className="px-4 pt-4 pb-10">
+      <div className="pt-4 pb-10">
         <div className="space-y-3">
           <div className="rounded-2xl bg-white px-4 py-4 flex items-center justify-between">
             <div className="text-[15px] text-[#111827] font-medium">{t("security.twoFactorAuth")}</div>

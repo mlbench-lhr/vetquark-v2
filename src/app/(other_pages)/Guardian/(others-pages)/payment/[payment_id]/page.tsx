@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { PaymentCardSkeleton } from "@/components/ui/skeleton";
 
 type PaymentDetails = {
   id: string;
@@ -96,12 +97,12 @@ export default function Page() {
 
       <div className="px-4 pt-5">
         {loading ? (
-          <div className="text-[14px] leading-[18px] text-[#9AA4AF]">Loading...</div>
+          <PaymentCardSkeleton />
         ) : null}
         <div className="rounded-[16px] bg-[#F5F6F6] px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="h-[44px] w-[44px] rounded-full bg-[#3F78D8] p-[2px]">
-              <img
+              <Image width={200} height={200}
                 src={safePayment.petAvatarUrl}
                 alt={safePayment.petName}
                 className="h-full w-full rounded-full object-cover"

@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import { useAppSelector } from "@/store/hooks";
 import { UserContext } from "@/context/authContext";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
 
 type MenuItem = {
   id: string;
@@ -103,7 +104,7 @@ export default function MenuPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-14 w-14 overflow-hidden rounded-full bg-[#F5F6F6]">
-              <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+              <Image width={100} height={100} src={avatarUrl} alt={name} className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0">
               <div className="truncate text-[20px] font-semibold leading-[24px] text-[#111827]">

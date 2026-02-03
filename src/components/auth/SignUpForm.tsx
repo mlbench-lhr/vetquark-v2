@@ -12,6 +12,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { setProfile as setUserProfile } from "@/store/userProfileSlice";
 import { useTranslation } from "react-i18next";
 import { STATES_BY_COUNTRY, CITIES_BY_COUNTRY_STATE } from "@/lib/locationData";
+import Image from "next/image";
 
 type ProfileType = "veterinarian" | "tutor";
 
@@ -1150,7 +1151,7 @@ export default function SignUpForm() {
                 <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
                   {formData.clinicLogoUrl ? (
                     <div className="flex flex-col items-center gap-3">
-                      <img src={formData.clinicLogoUrl} alt="Clinic logo" className="w-32 h-32 object-contain rounded-lg bg-white" />
+                      <Image width={200} height={200} src={formData.clinicLogoUrl} alt="Clinic logo" className="w-32 h-32 object-contain rounded-lg bg-white" />
                       <label className="inline-block">
                         <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
                         <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? t("auth.uploading") : t("auth.changeLogo")}</span>

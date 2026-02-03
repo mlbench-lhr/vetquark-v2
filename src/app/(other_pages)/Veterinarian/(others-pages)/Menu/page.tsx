@@ -21,6 +21,7 @@ import { UserContext } from "@/context/authContext";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { toast } from "react-toastify";
+import { BalanceCardSkeleton } from "@/components/ui/skeleton";
 
 export default function MenuPage() {
   const router = useRouter()
@@ -35,11 +36,13 @@ export default function MenuPage() {
     "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png";
   const [balance, setBalance] = useState("0.00");
   const [currency, setCurrency] = useState("R$");
+  const [walletLoading, setWalletLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
+        setWalletLoading(true);
         const res = await fetch("/api/wallet");
         const data = await res.json().catch(() => null);
         if (!mounted) return;
@@ -53,6 +56,8 @@ export default function MenuPage() {
         setBalance(balanceNumber.toFixed(2));
       } catch {
         toast.error("Network error");
+      } finally {
+        if (mounted) setWalletLoading(false);
       }
     })();
     return () => {
@@ -109,10 +114,10 @@ export default function MenuPage() {
   );
 
   return (
-    <div className="bg-background min-h-screen flex flex-col">
+    <div className="flex flex-col">
       {/* Header Section */}
       <Header title={t("menu.menu")} />
-      <div className="px-4 pt-6 pb-4">
+      <div className="px- pt-6 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-amber-400">
@@ -140,34 +145,38 @@ export default function MenuPage() {
       </div>
 
       {/* Balance Card */}
-      <div className="px-4 pb-4">
-        <button
-          onClick={() => {
-            router.push("/Veterinarian/Menu/wallet")
-          }}
-          className="w-full bg-primary rounded-2xl p-4 text-left hover:bg-primary/90 transition-colors"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-5 h-5 rounded bg-white/20 flex items-center justify-center">
-                  <Wallet className="h-3 w-3 text-primary-foreground" />
+      <div className=" pb-4">
+        {walletLoading ? (
+          <BalanceCardSkeleton />
+        ) : (
+          <button
+            onClick={() => {
+              router.push("/Veterinarian/Menu/wallet")
+            }}
+            className="w-full bg-primary rounded-2xl p-4 text-left hover:bg-primary/90 transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-5 h-5 rounded bg-white/20 flex items-center justify-center">
+                    <Wallet className="h-3 w-3 text-primary-foreground" />
+                  </div>
+                  <span className="text-sm text-primary-foreground/80">
+                    {t("wallet.availableBalance")}
+                  </span>
                 </div>
-                <span className="text-sm text-primary-foreground/80">
-                  {t("wallet.availableBalance")}
-                </span>
+                <p className="text-2xl font-bold text-primary-foreground">
+                  {currency} {balance}
+                </p>
               </div>
-              <p className="text-2xl font-bold text-primary-foreground">
-                {currency} {balance}
-              </p>
+              <ChevronRight className="h-5 w-5 text-primary-foreground" />
             </div>
-            <ChevronRight className="h-5 w-5 text-primary-foreground" />
-          </div>
-        </button>
+          </button>
+        )}
       </div>
 
       {/* Menu Items */}
-      <div className="flex-1 px-4">
+      <div className="flex-1">
         <div className="space-y-1">
           {menuItems.map((item) => (
             <Link

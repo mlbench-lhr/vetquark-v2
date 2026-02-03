@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useAppSelector } from "@/store/hooks";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { BalanceCardSkeleton, ListItemSkeleton } from "@/components/ui/skeleton";
 
 interface Transaction {
     id: string;
@@ -70,11 +71,13 @@ export default function WalletCard({
     const [currency, setCurrency] = useState(currencyProp);
     const [balance, setBalance] = useState(balanceProp);
     const [transactions, setTransactions] = useState<Transaction[]>(transactionsProp);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
+                setLoading(true);
                 const res = await fetch("/api/wallet");
                 const data = await res.json().catch(() => null);
                 if (!mounted) return;
@@ -100,6 +103,8 @@ export default function WalletCard({
                 setTransactions(mapped);
             } catch {
                 toast.error("Network error");
+            } finally {
+                if (mounted) setLoading(false);
             }
         })();
         return () => {
@@ -127,12 +132,16 @@ export default function WalletCard({
         <div className="bg-background min-h-screen">
             <Header title={t("wallet.wallet")} />
             {/* Balance Card */}
-            <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5 text-white">
-                <p className="text-sm opacity-90 mb-1 text-black">{t("wallet.availableBalance")}</p>
-                <p className="text-3xl font-bold text-primary">
-                    {currency} {balance}
-                </p>
-            </div>
+            {loading ? (
+                <BalanceCardSkeleton />
+            ) : (
+                <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5 text-white">
+                    <p className="text-sm opacity-90 mb-1 text-black">{t("wallet.availableBalance")}</p>
+                    <p className="text-3xl font-bold text-primary">
+                        {currency} {balance}
+                    </p>
+                </div>
+            )}
             <div className="flex gap-3 mx-4 mt-4">
                 <Button
                     onClick={onWithdraw}
@@ -207,19 +216,28 @@ export default function WalletCard({
 
                 {/* Transaction List */}
                 <div className="space-y-2">
-                    {filteredTransactions.map((transaction) => (
-                        <div
-                            key={transaction.id}
-                            className="flex items-center gap-3 p-3 bg-muted/30 rounded-2xl"
-                        >
+                    {loading ? (
+                        <>
+                            <ListItemSkeleton />
+                            <ListItemSkeleton />
+                            <ListItemSkeleton />
+                        </>
+                    ) : filteredTransactions.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No transactions yet.</div>
+                    ) : (
+                        filteredTransactions.map((transaction) => (
+                            <div
+                                key={transaction.id}
+                                className="flex items-center gap-3 p-3 bg-muted/30 rounded-2xl"
+                            >
                             {transaction.isPix ? (
                                 <div className="w-10 h-10 rounded-full bg-[#00D4AA]/10 flex items-center justify-center flex-shrink-0">
                                     <Image src={"/images/pixLogo.svg"} alt="" width={20} height={20} />
                                 </div>
                             ) : (
                                 <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                                    <img
-                                        src={transaction.avatarUrl}
+                                    <Image width={200} height={200}
+                                        src={transaction.avatarUrl||"https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
                                         alt={transaction.title}
                                         className="w-full h-full object-cover"
                                     />
@@ -260,7 +278,8 @@ export default function WalletCard({
                                 </p>
                             )}
                         </div>
-                    ))}
+                        ))
+                    )}
                 </div>
             </div>
         </div>

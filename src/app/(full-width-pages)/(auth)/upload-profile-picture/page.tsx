@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { ChevronLeft, Camera, User } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
+import Image from "next/image";
 
 export default function UploadProfilePicturePage() {
   const router = useRouter();
@@ -128,7 +129,7 @@ export default function UploadProfilePicturePage() {
           <div className="relative">
             {profileImageUrl ? (
               <div className="w-50 h-50 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                <img src={profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
+                <Image width={200} height={200} src={profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
               </div>
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">

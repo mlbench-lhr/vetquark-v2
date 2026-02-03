@@ -5,6 +5,7 @@ import Header from "@/components/common/header";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
+import Image from "next/image";
 
 type ClinicReportsFormData = {
   clinicLogoUrl: string;
@@ -142,7 +143,8 @@ export default function ClinicReportsPage() {
               <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
                 {formData.clinicLogoUrl ? (
                   <div className="flex flex-col items-center gap-3">
-                    <img
+                    <Image
+                      width={200} height={200}
                       src={formData.clinicLogoUrl}
                       alt="Clinic logo"
                       className="w-32 h-32 object-contain rounded-lg bg-white"

@@ -96,7 +96,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="bg-white min-h-scree">
-      <div className="px-5 pt-[calc(env(safe-area-inset-top)+14px)] pb-4">
+      <div className="">
         <div className="relative flex items-center justify-center">
           <button type="button" onClick={() => router.back()} className="absolute left-0 top-1/2 -translate-y-1/2 p-1">
             <ChevronLeft className="h-6 w-6 text-[#111827]" />
@@ -105,7 +105,7 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="px-5 pb-8">
+      <div className="pb-8">
         {loading ? (
           <div className="text-[14px] text-[#9CA3AF]">{t("notifications.loading")}</div>
         ) : displayItems.length === 0 ? (

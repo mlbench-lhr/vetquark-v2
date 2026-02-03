@@ -41,7 +41,7 @@ export default function FeesAndPayoutsPage() {
     };
 
     return (
-        <div className="w-full bg-background min-h-screen px-5 py-6 space-y-6">
+        <div className="w-full bg-background min-h-screen space-y-6">
             <Header title={t("menu.feePayouts")} />
             {/* How the charging works */}
             <section>

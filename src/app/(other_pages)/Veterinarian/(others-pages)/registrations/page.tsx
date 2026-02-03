@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Pagination from "@/components/tables/Pagination";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import { FallbackText } from "@/components/ui/fallback-text";
 
 type TabType = "patients" | "guardians";
 
@@ -281,10 +282,10 @@ function RegistrationsListContent({
 
   return (
     <div className="h-[100vh pb-[80px w-full bg-white">
-      <div className="mx-auto w-full h-ful pb-12! pt-[calc(env(safe-area-inset-top)+20px)] ">
+      <div className="mx-auto w-full h-ful pb-12! ">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 px-4">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">{t("registrations.title")}</h2>
           {activeTab === "patients" ? (
             <div className="flex items-center gap-2">
@@ -313,7 +314,7 @@ function RegistrationsListContent({
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-4 grid grid-cols-2 px-4">
+        <div className="flex gap-2 mb-4 grid grid-cols-2 px-">
           <button
             onClick={() => setActiveTab("patients")}
             className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "patients"
@@ -359,7 +360,7 @@ function RegistrationsListContent({
                 </div>
               ))
             ) : patients.length === 0 ? (
-              <div className="text-[14px] text-gray-500">No patients found.</div>
+              <FallbackText>{t("registrations.noPatientsFound")}</FallbackText>
             ) : (
               patients.map((patient) => (
                 <div
@@ -432,7 +433,7 @@ function RegistrationsListContent({
                 </div>
               ))
             ) : guardians.length === 0 ? (
-              <div className="text-[14px] text-gray-500">No guardians found.</div>
+              <FallbackText>{t("registrations.noGuardiansFound")}</FallbackText>
             ) : (
               guardians.map((guardian) => (
                 <div
@@ -497,7 +498,7 @@ function RegistrationsListContent({
             onClick={() => {
               if (activeTab === "patients") {
                 if (onAddPatient) onAddPatient();
-                else router.push("/Veterinarian/patient/new_patient");
+                else router.push("/Veterinarian/patient");
                 return;
               }
               if (onAddGuardian) onAddGuardian();

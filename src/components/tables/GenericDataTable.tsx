@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -175,7 +176,7 @@ function GenericDataTable<T extends { id: string; tab?: string }>({
       ) : !loading && isEmpty ? (
         <div className="flex flex-col items-center justify-center py-20">
           {emptyImage && (
-            <img src={emptyImage} alt="No data" className="w-52 h-52 mb-4 object-contain" />
+            <Image width={200} height={200} src={emptyImage} alt="No data" className="w-52 h-52 mb-4 object-contain" />
           )}
           <p className="text-lg text-gray-600 font-medium">
             {entityLabel?.toLowerCase()} added yet!!

@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Image from "next/image";
+import { PaymentCardSkeleton } from "@/components/ui/skeleton";
+import { FallbackText } from "@/components/ui/fallback-text";
 
 type PaymentStatus = "completed" | "pending";
 
@@ -149,9 +151,13 @@ export default function Page() {
 
         <div className="mt-4 space-y-3">
           {loading ? (
-            <div className="text-[14px] leading-[18px] text-[#9AA4AF]">Loading...</div>
+            <>
+              <PaymentCardSkeleton />
+              <PaymentCardSkeleton />
+              <PaymentCardSkeleton />
+            </>
           ) : filtered.length === 0 ? (
-            <div className="text-[14px] leading-[18px] text-[#9AA4AF]">No payments found.</div>
+            <FallbackText>No payments found.</FallbackText>
           ) : (
             filtered.map((item) =>{console.log("petAvatarUrl====", item.petAvatarUrl);
              return(
@@ -192,7 +198,7 @@ export default function Page() {
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="h-[40px] w-[40px] rounded-full bg-white p-[2px]">
-                      <img
+                      <Image width={200} height={200}
                         src={item.vetAvatarUrl}
                         alt={item.vetName}
                         className="h-full w-full rounded-full object-cover"
