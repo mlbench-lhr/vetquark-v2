@@ -19,6 +19,7 @@ interface ParameterData {
     barColor: string;
     barWidth: number;
     sparkColor?: string;
+    sparkValues?: number[];
 }
 
 type TrendType = "increasing" | "decreasing" | "normal";
@@ -149,6 +150,49 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
         return null;
     };
 
+    const w = 60;
+    const h = 24;
+    const pathD = useMemo(() => {
+        const sv = Array.isArray(param.sparkValues) ? param.sparkValues : [];
+        if (sv.length < 2) {
+            const mid = h / 2;
+            return `M0 ${mid} L${w} ${mid}`;
+        }
+        const min = Math.min(...sv);
+        const max = Math.max(...sv);
+        const range = max - min || 1;
+        const stepX = w / (sv.length - 1);
+        let d = "";
+        for (let i = 0; i < sv.length; i++) {
+            const v = sv[i];
+            const x = i * stepX;
+            const y = h - ((v - min) / range) * h;
+            d += (i === 0 ? "M" : "L") + x + " " + y;
+        }
+        return d;
+    }, [param.sparkValues]);
+    const spikeMarkers = useMemo(() => {
+        const sv = Array.isArray(param.sparkValues) ? param.sparkValues : [];
+        if (sv.length < 2) return [];
+        const min = Math.min(...sv);
+        const max = Math.max(...sv);
+        const range = max - min || 1;
+        const stepX = w / (sv.length - 1);
+        const out: Array<{ x: number; y: number; color: string }> = [];
+        for (let i = 1; i < sv.length; i++) {
+            const prev = sv[i - 1];
+            const curr = sv[i];
+            const denom = Math.max(Math.abs(prev), 1e-9);
+            const rel = (curr - prev) / denom;
+            if (Math.abs(rel) >= 0.1) {
+                const x = i * stepX;
+                const y = h - ((curr - min) / range) * h;
+                out.push({ x, y, color: rel > 0 ? INCREASING_COLOR : DECREASING_COLOR });
+            }
+        }
+        return out;
+    }, [param.sparkValues]);
+
     return (
         <div className="flex items-center py-3 border-b border-border/50 last:border-b-0">
             <div className="flex-1 min-w-0">
@@ -157,15 +201,11 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
             </div>
             <div className="flex items-center gap-3">
 
-                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="24" viewBox="0 0 60 24" fill="none">
-                    <g clipPath="url(#clip0_761_5785)">
-                        <path d="M0.967529 23.0647L15.4775 15.6841L29.9874 12.7318L44.4974 8.30345L59.0073 0.922852" stroke={param.sparkColor || INCREASING_COLOR} strokeWidth="1.88978" strokeLinecap="round" strokeLinejoin="round" />
-                    </g>
-                    <defs>
-                        <clipPath id="clip0_761_5785">
-                            <rect width="59.9872" height="23.9921" fill="white" />
-                        </clipPath>
-                    </defs>
+                <svg xmlns="http://www.w3.org/2000/svg" width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none">
+                    <path d={pathD} stroke={param.sparkColor || INCREASING_COLOR} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                    {spikeMarkers.map((m, idx) => (
+                        <circle key={idx} cx={m.x} cy={m.y} r="1.5" fill={m.color} />
+                    ))}
                 </svg>
 
                 <div className="w-12 text-right">
@@ -306,6 +346,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                 barColor: INCREASING_COLOR,
                 barWidth: 70,
                 sparkColor: trendColor(trend),
+                sparkValues: values,
             });
         }
         return rows;
@@ -338,6 +379,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                 barColor: INCREASING_COLOR,
                 barWidth: 65,
                 sparkColor: trendColor(trend),
+                sparkValues: values,
             });
         }
         return rows;
@@ -369,6 +411,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                 barColor: INCREASING_COLOR,
                 barWidth: 60,
                 sparkColor: trendColor(trend),
+                sparkValues: values,
             });
         }
         return rows;
