@@ -15,10 +15,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useAppSelector } from "@/store/hooks";
 import { UserContext } from "@/context/authContext";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
+import { toast } from "react-toastify";
 
 export default function MenuPage() {
   const router = useRouter()
@@ -31,8 +33,32 @@ export default function MenuPage() {
   const avatarUrl =
     profile?.profileImageUrl ??
     "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png";
-  const balance = "925.00";
-  const currency = "R$";
+  const [balance, setBalance] = useState("0.00");
+  const [currency, setCurrency] = useState("R$");
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/wallet");
+        const data = await res.json().catch(() => null);
+        if (!mounted) return;
+        if (!res.ok) {
+          toast.error(typeof data?.error === "string" ? data.error : "Failed to load wallet");
+          return;
+        }
+        const currency = String(data?.currency || "BRL");
+        const balanceNumber = typeof data?.balance === "number" ? data.balance : 0;
+        setCurrency(currency === "BRL" ? "R$" : currency);
+        setBalance(balanceNumber.toFixed(2));
+      } catch {
+        toast.error("Network error");
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const menuItems = useMemo(
     () => [
@@ -90,7 +116,9 @@ export default function MenuPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-amber-400">
-              <img
+              <Image
+                width={58}
+                height={58}
                 src={avatarUrl}
                 alt={name}
                 className="w-full h-full object-cover"

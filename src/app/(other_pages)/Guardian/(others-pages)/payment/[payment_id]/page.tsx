@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
@@ -50,7 +51,7 @@ export default function Page() {
               : "",
           invoiceDate: typeof item.createdAt === "string" ? new Date(item.createdAt).toLocaleDateString() : "",
           petAvatarUrl: String(item.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
-          vetAvatarUrl: "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
+          vetAvatarUrl: item?.veterinarian?.profileImageUrl || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
         });
       } finally {
         if (mounted) setLoading(false);
@@ -137,7 +138,9 @@ export default function Page() {
         </div>
         <div className="mt-3 flex items-center gap-3">
           <div className="h-[44px] w-[44px] rounded-full bg-[#F5F6F6] p-[2px]">
-            <img
+            <Image
+              width={100}
+              height={100}
               src={safePayment.vetAvatarUrl}
               alt={safePayment.vetName}
               className="h-full w-full rounded-full object-cover"

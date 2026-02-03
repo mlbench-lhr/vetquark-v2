@@ -588,7 +588,7 @@ export default function AddPatientMultiStep() {
                         <option value="">{t('auth.selectOption')}</option>
                         <option value="dog">{t('newPatient.speciesDog')}</option>
                         <option value="cat">{t('newPatient.speciesCat')}</option>
-                        <option value="bird">{t('newPatient.speciesBird')}</option>
+                        {/* <option value="bird">{t('newPatient.speciesBird')}</option> */}
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                     </div>

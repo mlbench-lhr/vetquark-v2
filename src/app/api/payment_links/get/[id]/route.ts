@@ -8,6 +8,7 @@ import Patient from "@/lib/models/Patient";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { isPushEnabledForUser } from "@/lib/utils";
+import WalletTransaction from "@/lib/models/WalletTransaction";
 
 function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2).replace(".", ",")}`;
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     const filter = user.role === "Guardian" ? { _id: id, guardian: userId } : { _id: id, veterinarian: userId };
     const link: any = await PaymentLink.findOne(filter)
       .populate("patient", "animalName photo")
-      .populate("veterinarian", "fullName tradeName crmv crmvState")
+      .populate("veterinarian", "fullName tradeName crmv crmvState profileImageUrl")
       .lean();
 
     if (!link) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -79,6 +80,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
             name: String((link as any).veterinarian?.tradeName || (link as any).veterinarian?.fullName || ""),
             crmv: (link as any).veterinarian?.crmv ?? null,
             crmvState: (link as any).veterinarian?.crmvState ?? null,
+            profileImageUrl: link?.veterinarian?.profileImageUrl
           },
         },
       },
@@ -142,13 +144,13 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         const canNotifyGuardian = isPushEnabledForUser(guardianUser, "payment_received");
         const guardianNotification = canNotifyGuardian
           ? await Notification.create({
-              user: userId,
-              type: "payment_received",
-              title: guardianTitle,
-              message: guardianMessage,
-              url: guardianUrl,
-              readAt: null,
-            })
+            user: userId,
+            type: "payment_received",
+            title: guardianTitle,
+            message: guardianMessage,
+            url: guardianUrl,
+            readAt: null,
+          })
           : null;
 
         if (guardianNotification) {
@@ -171,13 +173,13 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         const canNotifyVet = isPushEnabledForUser(vetUser, "payment_received");
         const notification = canNotifyVet
           ? await Notification.create({
-              user: veterinarianId,
-              type: "payment_received",
-              title,
-              message,
-              url,
-              readAt: null,
-            })
+            user: veterinarianId,
+            type: "payment_received",
+            title,
+            message,
+            url,
+            readAt: null,
+          })
           : null;
 
         if (notification) {
@@ -189,6 +191,42 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
             message: notification.message,
             url: notification.url,
             createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+          });
+        }
+
+        const PLATFORM_FEE = 33.0;
+        const gross = typeof (link as any).amount === "number" && Number.isFinite((link as any).amount) ? Number((link as any).amount) : 0;
+        const net = Math.max(0, gross - PLATFORM_FEE);
+        const releaseAt = (() => {
+          const addBusinessDays = (start: Date, days: number) => {
+            const d = new Date(start);
+            let added = 0;
+            while (added < days) {
+              d.setDate(d.getDate() + 1);
+              const day = d.getDay();
+              if (day !== 0 && day !== 6) added++;
+            }
+            return d;
+          };
+          return addBusinessDays(new Date(), 2);
+        })();
+
+        const existingTx = await WalletTransaction.findOne({ paymentLink: link._id, type: "credit" })
+          .select("_id")
+          .lean();
+        if (!existingTx) {
+          await WalletTransaction.create({
+            user: veterinarianId,
+            type: "credit",
+            amountGross: gross,
+            platformFee: PLATFORM_FEE,
+            amountNet: net,
+            currency: (link as any).currency || "BRL",
+            status: "scheduled",
+            paymentLink: link._id,
+            patient: link.patient,
+            guardian: link.guardian,
+            releaseAt,
           });
         }
       }
