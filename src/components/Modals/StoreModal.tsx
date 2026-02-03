@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { toast } from "react-toastify";
+import Image from "next/image";
 
 const brazilianStateOptions = [
     { value: "AC", text: "Acre" },
@@ -43,13 +44,14 @@ type Product = {
     name: string;
     description: string;
     price: number;
+    image: string;
 };
 
 const PRODUCTS: Product[] = [
-    { id: "vetquark-box", name: "VetQuark Box", description: "Box with 100 units of reagent strips", price: 135 },
-    { id: "svovmi", name: "SVOFMI", description: "Reagent strips pack", price: 75 },
-    { id: "amoxylife-la", name: "Amoxylife-LA", description: "Long-acting antibiotic", price: 110 },
-    { id: "vetquark-kits", name: "VetQuark Kits", description: "Starter kits for clinic use", price: 250 },
+    { id: "vetquark-box", name: "VetQuark Box", description: "Box with 100 units of reagent strips", price: 135, image:"/store image 1.png" },
+    { id: "svovmi", name: "SVOFMI", description: "Reagent strips pack", price: 75, image:"/store image 2.png" },
+    { id: "amoxylife-la", name: "Amoxylife-LA", description: "Long-acting antibiotic", price: 110, image:"/store image 3.png" },
+    { id: "vetquark-kits", name: "VetQuark Kits", description: "Starter kits for clinic use", price: 250, image:"/store image 4.png" },
 ];
 
 type Props = {
@@ -504,8 +506,8 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                     const qtyInCart = cart[product.id] ?? 0;
                                                     return (
                                                         <div key={product.id} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
-                                                            <div className="w-[80px] h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                                VetQuark
+                                                            <div className="w-[80px] h-full rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                                <Image src={product.image} height={100} width={84} className="w-[80px] h-[84px]" alt=""/>
                                                             </div>
 
                                                             <div className="flex-1 text-xs">
@@ -543,9 +545,9 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                             ) : (
                                                 cartItems.map((item) => (
                                                     <div key={item.product.id} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
-                                                        <div className="w-[80px] h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                            VetQuark
-                                                        </div>
+                                                            <div className="w-[80px] h-full rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                                <Image src={item.product.image} height={100} width={84} className="w-[80px] h-[84px]" alt=""/>
+                                                            </div>
 
                                                         <div className="flex-1 text-xs">
                                                             <h3 className="font-semibold text-gray-800">{item.product.name}</h3>
