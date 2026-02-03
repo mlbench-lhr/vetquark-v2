@@ -417,8 +417,8 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
         return rows;
     }, [seriesByKey, dateRange.from, dateRange.to]);
 
-    if (items.length<1){
-        return(
+    if (items.length < 1) {
+        return (
             <div className="text-[14px] text-gray-500 px-4">No progress yet.</div>
         )
     }
@@ -584,10 +584,10 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, onDateRangeChange }: { dataByParameter?: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>; patientId?: string; dateRange: { from: Date | undefined; to: Date | undefined }; onDateRangeChange: (range: { from: Date | undefined; to: Date | undefined }) => void }) {
+export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, onDateRangeChange }: { dataByParameter?: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>; patientId?: string; dateRange?: { from: Date | undefined; to: Date | undefined }; onDateRangeChange?: (range: { from: Date | undefined; to: Date | undefined }) => void }) {
     const [viewMode, setViewMode] = useState<ViewMode>("graph");
     const [selectedParameter, setSelectedParameter] = useState<string>("");
-    const [tempRange, setTempRange] = useState<{ from: Date | undefined; to: Date | undefined }>(dateRange);
+    const [tempRange, setTempRange] = useState<{ from: Date | undefined; to: Date | undefined }>(dateRange || { from: undefined, to: undefined });
     const [pickerOpen, setPickerOpen] = useState(false);
 
     const parameterOptions = useMemo(() => {
@@ -606,7 +606,7 @@ export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, 
         const raw = (dataByParameter || {})[selectedParameter] || [];
         const filtered = raw.filter((r) => {
             const t = r.date.getTime();
-            const apply = !!dateRange.from && !!dateRange.to;
+            const apply = !!dateRange?.from && !!dateRange.to;
             const okFrom = !apply || t >= (dateRange.from as Date).getTime();
             const toBound = apply ? (dateRange.to as Date).getTime() + 24 * 60 * 60 * 1000 : null;
             const okTo = !apply || !toBound || t < toBound;
@@ -622,7 +622,7 @@ export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, 
             normalValue: NORMALS[selectedParameter]?.label || "",
             data: series,
         };
-    }, [selectedParameter, dataByParameter, dateRange.from, dateRange.to]);
+    }, [selectedParameter, dataByParameter, dateRange?.from, dateRange?.to]);
 
     const currentTrendColor = useMemo(() => {
         if (!selectedParameter) return INCREASING_COLOR;
@@ -700,14 +700,14 @@ export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, 
                     </SelectContent>
                 </Select>
 
-                <Popover open={pickerOpen} onOpenChange={(o) => { setPickerOpen(o); if (o) setTempRange(dateRange); }}>
+                <Popover open={pickerOpen} onOpenChange={(o) => { setPickerOpen(o); if (o) setTempRange(dateRange || { to: undefined, from: undefined }); }}>
                     <PopoverTrigger className="col-span-3 text-[12px]! shadow-none" asChild>
                         <Button
                             variant="secondary"
                             className="bg-secondary border-0 rounded-lg font-normal flex justify-start items-center"
                         >
                             <span>
-                                {dateRange.from && dateRange.to
+                                {dateRange?.from && dateRange.to
                                     ? `${format(dateRange.from, "d MMM yyyy")} - ${format(
                                         dateRange.to,
                                         "d MMM yyyy"
@@ -739,7 +739,7 @@ export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, 
                             <Button
                                 className="rounded-md"
                                 disabled={!tempRange.from || !tempRange.to}
-                                onClick={() => { if (tempRange.from && tempRange.to) { onDateRangeChange(tempRange); setPickerOpen(false); } }}
+                                onClick={() => { if (tempRange?.from && tempRange?.to && tempRange && onDateRangeChange) { onDateRangeChange(tempRange); setPickerOpen(false); } }}
                             >
                                 Apply
                             </Button>
