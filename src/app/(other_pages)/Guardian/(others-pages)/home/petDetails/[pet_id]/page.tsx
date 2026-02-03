@@ -313,7 +313,7 @@ export default function Page() {
         </div>
       ) : (
         // <ExamsTab />
-        <ProgressView />
+        <ProgressView patientId={petId} />
       )}
     </div>
   );
