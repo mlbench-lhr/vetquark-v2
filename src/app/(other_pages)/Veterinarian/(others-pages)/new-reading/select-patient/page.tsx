@@ -5,6 +5,9 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
 import { useTranslation } from 'react-i18next'
+import { ListItemSkeleton } from '@/components/ui/skeleton'
+import { FallbackText } from '@/components/ui/fallback-text'
+import Image from 'next/image'
 
 type PatientRow = {
   id: string
@@ -97,23 +100,9 @@ export default function Page() {
 
         <div className="mt-4 space-y-3 pb-28">
           {loading ? (
-            skeletonRows.map((k) => (
-              <div key={k} className="animate-pulse w-full rounded-2xl bg-[#F3F4F6] px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-200" />
-                    <div className="min-w-0 space-y-2">
-                      <div className="h-4 w-40 rounded bg-gray-200" />
-                      <div className="h-3 w-28 rounded bg-gray-200" />
-                      <div className="h-3 w-24 rounded bg-gray-200" />
-                    </div>
-                  </div>
-                  <div className="h-5 w-5 rounded bg-gray-200" />
-                </div>
-              </div>
-            ))
+            skeletonRows.map((k) => <ListItemSkeleton key={k} />)
           ) : filtered.length === 0 ? (
-            <div className="text-[14px] leading-[18px] text-[#6B7280]">{t('dashboard.noPatientsFound')}</div>
+            <FallbackText>{t('dashboard.noPatientsFound')}</FallbackText>
           ) : (
             filtered.map((p) => {
               const active = !!selectedId && p.id === selectedId
@@ -127,7 +116,7 @@ export default function Page() {
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="h-10 w-10 overflow-hidden rounded-full bg-white/60">
-                        <img src={p.image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"} alt={p.name} className="h-10 w-10 object-cover" />
+                        <Image width={200} height={200} src={p.image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"} alt={p.name} className="h-10 w-10 object-cover" />
                       </div>
                       <div className="min-w-0">
                         <div className="truncate text-[14px] leading-[18px] font-medium text-[#111827]">{p.name}</div>

@@ -16,12 +16,12 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
         router.back();
     };
     return (
-        <div className="flex items-center justify-between p-4 ">
+        <div className="flex items-center justify-between p- ">
             <div className="flex items-center gap-3 w-full justify-center">
                 <button
                     onClick={onBack}
                     aria-label={t("common.back")}
-                    className="w-fit h-fit rounded-full bg-gray-10 flex absolute left-4 items-center justify-center hover:bg-gray-200"
+                    className="w-fit h-fit rounded-full bg-gray-10 flex absolute left-1 items-center justify-center hover:bg-gray-200"
                 >
                     <ChevronLeft size={20} className="text-gray-700" />
                 </button>

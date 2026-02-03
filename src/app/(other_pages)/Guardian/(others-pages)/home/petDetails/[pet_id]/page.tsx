@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { Check } from 'lucide-react';
 import ProgressView from '@/components/Veterinarian/home/details/Progress';
 import { useTranslation } from 'react-i18next';
+import Image from 'next/image';
 
 interface TabsProps {
   activeTab: string;
@@ -237,7 +238,7 @@ export default function Page() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white">
-                      <img src={r.avatarSrc} alt="" className="h-full w-full object-cover" />
+                      <Image width={200} height={200} src={r.avatarSrc} alt="" className="h-full w-full object-cover" />
                     </div>
                     <div className="min-w-0">
                       <div className="truncate text-[14px] font-medium leading-[18px] text-[#111827]">

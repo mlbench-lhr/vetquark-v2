@@ -76,7 +76,7 @@ export default function Layout({
     <MobileOnly>
       <div className="min-h-screen flex flex-col bg-white">
         {/* Main Content Area - with padding for bottom nav */}
-        <main className={`flex-1 overflow-auto ${hasBackButton ? "" : "pb-20"}`}>
+        <main className={`flex-1 p-4 overflow-auto relative ${hasBackButton ? "" : "pb-20"}`}>
           {children}
         </main>
 

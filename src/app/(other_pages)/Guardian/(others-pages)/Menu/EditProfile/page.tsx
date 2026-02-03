@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
 
 export default function EditProfileCard() {
     const { t } = useTranslation();
@@ -157,7 +158,9 @@ export default function EditProfileCard() {
             <div className="flex justify-center pt-8 pb-8">
                 <div className="relative">
                     <div className="w-28 h-28 rounded-full overflow-hidden ring-2 ring-muted">
-                        <img
+                        <Image
+                            width={200} 
+                            height={200}
                             src={avatarUrl}
                             alt="Profile"
                             className="w-full h-full object-cover"

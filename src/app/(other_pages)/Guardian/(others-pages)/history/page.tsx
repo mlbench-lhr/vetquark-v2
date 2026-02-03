@@ -5,6 +5,9 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
+import { FallbackText } from "@/components/ui/fallback-text";
+import { Skeleton, ListItemSkeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
 
 type ReportStatus = "signed" | "pending";
 
@@ -214,7 +217,7 @@ function ReportCard({
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#F3F4F6]">
-            <img src={item.avatarSrc} alt="" className="h-full w-full object-cover" />
+            <Image width={200} height={200} src={item.avatarSrc} alt="" className="h-full w-full object-cover" />
           </div>
           <div className="min-w-0">
             <div className="truncate text-[14px] font-medium leading-[18px] text-[#111827]">
@@ -410,7 +413,7 @@ function PageContent() {
   }, []);
 
   return (
-    <div className="h-[100dvh w-full bg-white">
+    <div className="h-[100dvh] w-full bg-white">
       <div className="mx-auto w-full h-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
         <div className="px-4">
           <h1 className="text-[22px] font-semibold leading-[28px] text-[#111827]">
@@ -423,9 +426,19 @@ function PageContent() {
 
         <div className="px-4 mt-5 flex gap-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
           {loadingPets ? (
-            <div className="text-[14px] leading-[18px] text-[#9CA3AF]">Loading pets...</div>
+            <>
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#F5F6F6] px-3 py-2"
+                >
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-3 w-24 rounded" />
+                </div>
+              ))}
+            </>
           ) : pets.length === 0 ? (
-            <div className="text-[14px] leading-[18px] text-[#9CA3AF]">No pets found.</div>
+            <FallbackText>No pets found.</FallbackText>
           ) : pets.map((pet) => {
             const active = pet.id === activePetId;
             return (
@@ -439,7 +452,7 @@ function PageContent() {
                 ].join(" ")}
               >
                 <span className="h-8 w-8 overflow-hidden rounded-full bg-white">
-                  <img src={pet.avatarSrc} alt="" className="h-full w-full object-cover" />
+                  <Image width={200} height={200} src={pet.avatarSrc} alt="" className="h-full w-full object-cover" />
                 </span>
                 <span className={`text-[14px] font-medium ${active ? "text-[#3F78D8]" : "text-[#111827]"}`}>
                   {pet.name}
@@ -451,9 +464,12 @@ function PageContent() {
 
         <div className="mt-6 space-y-4 p-4 h-full rounded-[16px] bg-[#F5F6F6]">
           {loadingReports ? (
-            <div className="text-[14px] leading-[18px] text-[#9CA3AF]">Loading reports...</div>
+            <>
+              <ListItemSkeleton />
+              <ListItemSkeleton />
+            </>
           ) : reports.length === 0 ? (
-            <div className="text-[14px] leading-[18px] text-[#9CA3AF]">No reports found.</div>
+            <FallbackText>No reports found.</FallbackText>
           ) : (
             reports.map((item) => (
               <ReportCard

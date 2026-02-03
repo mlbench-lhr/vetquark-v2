@@ -13,6 +13,7 @@ import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
 import { useTranslation } from 'react-i18next';
 import { STATES_BY_COUNTRY, CITIES_BY_COUNTRY_STATE } from '@/lib/locationData';
+import Header from '@/components/common/header';
 
 function digitsOnly(value: string) {
     return value.replace(/\D/g, "");
@@ -480,26 +481,9 @@ export default function GuardianRegistration() {
     };
 
     return (
-        <div className="min-h-screen p-4">
+        <div className="min-h-screen">
             {/* Header */}
-            <div className=" flex items-center justify-between">
-                <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={() => router.back()}>
-                    <ChevronLeft className="w-6 h-6 text-gray-700" />
-                </button>
-                    <h1 className="text-base font-medium text-gray-900">{isEditing ? t('newPatient.guardian.editGuardianTitle') : t('newPatient.guardian.registrationTitle')}</h1>
-                <button className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                    {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
-                    <span className="text-white text-sm">
-                        <Image
-                            src={"/images/home/bell.svg"}
-                            alt="Bell icon"
-                            width={24}
-                            height={24}
-                        />
-                    </span>
-                </button>
-            </div>
-
+            <Header title={isEditing ? t('newPatient.guardian.editGuardianTitle') : t('newPatient.guardian.registrationTitle')} />
             {/* Form Content */}
             <div className="">
 

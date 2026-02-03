@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
 interface ValidationResult {
@@ -329,7 +330,7 @@ export default function DipstickValidator() {
             </div>
           </>
         ) : (
-          <img src={capturedImage} alt="Captured" className="w-full rounded-lg" />
+          <Image width={200} height={200} src={capturedImage} alt="Captured" className="w-full rounded-lg" />
         )}
       </div>
       

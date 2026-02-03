@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Patient } from './types';
 import { useTranslation } from 'react-i18next';
+import Image from 'next/image';
 
 type ExamSuggestion = {
   id: string;
@@ -190,7 +191,7 @@ const SearchBar: React.FC = () => {
                     className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
                   >
                     <div className="h-9 w-9 overflow-hidden rounded-full bg-gray-200">
-                      {p.image ? <img src={p.image} alt={p.name} className="h-full w-full object-cover" /> : null}
+                      {p.image ? <Image width={200} height={200} src={p.image} alt={p.name} className="h-full w-full object-cover" /> : null}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-gray-900">{p.name}</div>

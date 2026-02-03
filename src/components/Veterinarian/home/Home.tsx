@@ -123,7 +123,7 @@ export default function Home() {
         })();
     }, []);
     return (
-        <div className="px-3 py-5">
+        <div className="">
             <Header userName={profile?.fullName} balance="$ 925,00" />
             <SearchBar />
 

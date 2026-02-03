@@ -9,6 +9,8 @@ import { ChevronLeft, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import { ListItemSkeleton } from '@/components/ui/skeleton';
+import { FallbackText } from '@/components/ui/fallback-text';
 
 export default function Page() {
     const router = useRouter();
@@ -97,19 +99,9 @@ export default function Page() {
 
             <div className="mt-4 space-y-3 pb-36">
                 {loading ? (
-                    skeletonCards.map((k) => (
-                        <div key={k} className="animate-pulse rounded-2xl bg-[#F5F6F6] px-4 py-3">
-                            <div className="flex items-center gap-3">
-                                <div className="h-12 w-12 rounded-full bg-gray-200" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-4 w-1/2 rounded bg-gray-200" />
-                                    <div className="h-3 w-1/3 rounded bg-gray-200" />
-                                </div>
-                            </div>
-                        </div>
-                    ))
+                    skeletonCards.map((k) => <ListItemSkeleton key={k} />)
                 ) : filteredPatients.length === 0 ? (
-                    <div className="text-tertiary text-sm">{t('dashboard.noPatientsFound')}</div>
+                    <FallbackText>{t('dashboard.noPatientsFound')}</FallbackText>
                 ) : (
                     filteredPatients.map((patient, index) => (
                         <PatientCard key={patient.id} patient={patient} featured={index === 0} />

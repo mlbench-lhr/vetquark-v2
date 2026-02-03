@@ -128,6 +128,7 @@ export default Page;
 
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface ReportCardProps {
   title: string;
@@ -184,7 +185,7 @@ export function ReportCard({
         {/* Avatar */}
         <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
           {avatarUrl ? (
-            <img
+            <Image width={200} height={200}
               src={avatarUrl}
               alt=""
               className="w-full h-full object-cover"

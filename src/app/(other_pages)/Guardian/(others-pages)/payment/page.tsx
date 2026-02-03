@@ -2,6 +2,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { PaymentCardSkeleton } from "@/components/ui/skeleton";
+import { FallbackText } from "@/components/ui/fallback-text";
+import Image from "next/image";
 
 type PaymentItem = {
   id: string;
@@ -80,9 +83,12 @@ export default function Page() {
 
         <div className="mt-3 space-y-3">
           {loading ? (
-            <div className="text-[14px] leading-[18px] text-[#9AA4AF]">Loading...</div>
+            <>
+              <PaymentCardSkeleton />
+              <PaymentCardSkeleton />
+            </>
           ) : items.length === 0 ? (
-            <div className="text-[14px] leading-[18px] text-[#9AA4AF]">No payments to show.</div>
+            <FallbackText>No payments to show.</FallbackText>
           ) : (
             items.map((item) => (
             <Link
@@ -116,7 +122,7 @@ export default function Page() {
 
                   <div className="shrink-0">
                     <div className="h-[44px] w-[44px] rounded-full bg-[#3F78D8] p-[2px]">
-                      <img
+                      <Image width={200} height={200}
                         src={item.petAvatarUrl}
                         alt={item.petName}
                         className="h-full w-full rounded-full object-cover"

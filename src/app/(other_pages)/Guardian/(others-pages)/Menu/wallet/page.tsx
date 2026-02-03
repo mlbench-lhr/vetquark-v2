@@ -32,7 +32,7 @@ const defaultTransactions: Transaction[] = [
         id: "1",
         type: "credit",
         title: "Wolfy",
-    subtitle: "Urinalysis Report",
+        subtitle: "Urinalysis Report",
         amount: "5,00",
         avatarUrl: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&h=100&fit=crop&crop=face",
     },
@@ -178,8 +178,10 @@ export default function WalletCard({
                                 </div>
                             ) : (
                                 <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                                    <img
-                                        src={transaction.avatarUrl}
+                                    <Image
+                                        width={200}
+                                        height={200}
+                                        src={transaction.avatarUrl || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
                                         alt={transaction.title}
                                         className="w-full h-full object-cover"
                                     />

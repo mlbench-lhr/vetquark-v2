@@ -265,15 +265,10 @@ export default function NewReadingWizard() {
   }
 
   return (
-    <div className="min-h-scree p-4 space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="text-base font-medium">{t("reading.wizard.newUrineTest")}</div>
-        <Link href={"/Veterinarian/notifications"} className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-          {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
-          <Image src={"/images/home/bell.svg"} alt="Bell icon" width={24} height={24} />
-        </Link>
       </div>
-
       <Stepper active={step} />
 
       {step === 'identification' && (

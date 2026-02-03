@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import Pusher from "pusher-js";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import { ListItemSkeleton } from "@/components/ui/skeleton";
+import { FallbackText } from "@/components/ui/fallback-text";
 
 type NotificationItem = {
   id: string;
@@ -107,9 +109,14 @@ export default function GuardianNotificationsPage() {
 
       <div className="px-5 pb-8">
         {loading ? (
-          <div className="text-[14px] text-[#9CA3AF]">{t("notifications.loading")}</div>
+          <>
+            <ListItemSkeleton />
+            <ListItemSkeleton />
+            <ListItemSkeleton />
+            <ListItemSkeleton />
+          </>
         ) : displayItems.length === 0 ? (
-          <div className="text-[14px] text-[#9CA3AF]">{t("notifications.noNotificationsYet")}</div>
+          <FallbackText>{t("notifications.noNotificationsYet")}</FallbackText>
         ) : (
           <div>
             {displayItems.map((n) => (

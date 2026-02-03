@@ -260,7 +260,7 @@ export const GuardianInfoCard: React.FC<PatientInfoCardProps> = ({
   const displayImage = guardianAvatarUrl ?? image
   return (
     <div className="flex flex-col justify-start items-start gap-3 w-full overflow-hidden">
-      <div className="px-4 object-center relative h-64 rounded-[16px] overflow-hidden w-full">
+      <div className="px- object-center relative h-64 rounded-[16px] overflow-hidden w-full">
         <Image
           width={100}
           height={100}
@@ -269,7 +269,7 @@ export const GuardianInfoCard: React.FC<PatientInfoCardProps> = ({
           className="w-full h-full object-cover rounded-[16px]"
         />
       </div>
-      <div className="px-4 w-full ">
+      <div className="px- w-full ">
         <div className="flex-col flex items-start justify-between w-full ">
           <div className="flex items-center gap-3 justify-between w-full">
             <h2 className="text-base font-medium text-gray-800">{displayName}</h2>
@@ -298,7 +298,7 @@ export const GuardianInfoCard: React.FC<PatientInfoCardProps> = ({
           ) : null}
         </div>
       </div>
-      <div className="px-4 w-full grid grid-cols-3 gap-2 h-10">
+      <div className="px- w-full grid grid-cols-3 gap-2 h-10">
         <button className="px-4 py-1 h-full bg-primary col-span-2 text-white font-medium text-sm flex items-center justify-center  gap-2 rounded-full">
           <Plus size={18} />
           Add New Patient
@@ -318,7 +318,7 @@ export const GuardianInfoCard: React.FC<PatientInfoCardProps> = ({
         </button>
       </div>
       <div className="h-2 w-full bg-[#F5F6F6]"></div>
-      <div className="px-4 grid grid-cols-1 gap-2 w-full">
+      <div className="px- grid grid-cols-1 gap-2 w-full">
         <h1 className="col-span-1 text-base font-normal">{t("home.info")}</h1>
         <DetailBox icon={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M4.41333 7.19333C5.37333 9.08 6.92 10.62 8.80667 11.5867L10.2733 10.12C10.4533 9.94 10.72 9.88 10.9533 9.96C11.7 10.2067 12.5067 10.34 13.3333 10.34C13.7 10.34 14 10.64 14 11.0067V13.3333C14 13.7 13.7 14 13.3333 14C7.07333 14 2 8.92667 2 2.66667C2 2.3 2.3 2 2.66667 2H5C5.36667 2 5.66667 2.3 5.66667 2.66667C5.66667 3.5 5.8 4.3 6.04667 5.04667C6.12 5.28 6.06667 5.54 5.88 5.72667L4.41333 7.19333Z" fill="#839297" />

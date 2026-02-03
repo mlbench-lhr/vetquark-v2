@@ -184,7 +184,7 @@ export default function NotificationsSettingsPage() {
     <div className="min-h-screen bg-white">
       <Header title={t("menu.notifications")} />
 
-      <div className="px-4 pb-10 pt-2">
+      <div className=" pb-10 pt-2">
         <div className="text-[18px] leading-[26px] font-normal text-[#111827] mb-3">
           {t("notifications.settings.pushTitle")}
         </div>

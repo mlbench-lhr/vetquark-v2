@@ -8,6 +8,7 @@ import MultiSelect from "@/components/form/MultiSelect";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 type TaxProfileFormData = {
   taxId: string;
@@ -58,12 +59,7 @@ const expertiseOptions = [
   { value: "intensive-care", text: "Intensive Care", selected: false },
 ];
 
-const operateOptions = [
-  { value: "Clinic/pet Shop Service", text: "Clinic/pet Shop Service" },
-  { value: "Home Care", text: "Home Care" },
-  { value: "Clinic/pet Shop Management", text: "Clinic/pet Shop Management" },
-  { value: "Other", text: "Other" },
-];
+type Option = { value: string; text: string };
 
 const brazilianStateOptions = [
   { value: "AC", text: "Acre" },
@@ -101,6 +97,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
   const dobRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const [saving, setSaving] = useState(false);
+  const { t } = useTranslation();
 
   const initialFormData = useMemo<TaxProfileFormData>(() => {
     return {
@@ -120,6 +117,16 @@ export default function TaxInfoAndProfessionalProfilePage() {
   const expertiseKey = useMemo(() => {
     return `${profile?.id ?? "anon"}:${initialFormData.expertise.join(",")}`;
   }, [initialFormData.expertise, profile?.id]);
+
+  const operateOptions: Option[] = useMemo(
+    () => [
+      { value: "Clinic/pet Shop Service", text: t("menu.clinicPetShopService") },
+      { value: "Home Care", text: t("menu.homeCare") },
+      { value: "Clinic/pet Shop Management", text: t("menu.clinicPetShopManagement") },
+      { value: "Other", text: t("menu.other") },
+    ],
+    [t]
+  );
 
   useEffect(() => {
     setFormData(initialFormData);
@@ -164,13 +171,13 @@ export default function TaxInfoAndProfessionalProfilePage() {
 
   return (
     <div className="w-full bg-background min-h-screen flex flex-col">
-      <Header title="Tax Info & Professional Profile" />
+      <Header title={t("menu.taxProfile")} />
 
-      <div className="flex-1 overflow-y-auto px-5 pb-28">
+      <div className="flex-1 overflow-y-auto px- pb-28">
         <form ref={formRef} onSubmit={handleSubmit} className="pt-2">
           <div className="space-y-4">
             <div>
-              <label className="block text-gray-900 font-medium mb-2">National ID</label>
+              <label className="block text-gray-900 font-medium mb-2">{t("profile.nationalId")}</label>
               <input
                 type="text"
                 name="taxId"
@@ -184,7 +191,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
 
             <div>
               <label className="block text-gray-900 font-medium mb-2">
-                Tax ID <span className="text-gray-500 font-normal">(optional)</span>
+                {t("menu.cnpjIeLabel")} <span className="text-gray-500 font-normal">{t("menu.optionalSuffix")}</span>
               </label>
               <input
                 type="text"
@@ -197,7 +204,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">Date Of Birth</label>
+              <label className="block text-gray-900 font-medium mb-2">{t("profile.dateOfBirth")}</label>
               <div className="relative">
                 <input
                   ref={dobRef}
@@ -224,7 +231,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">Address</label>
+              <label className="block text-gray-900 font-medium mb-2">{t("profile.address")}</label>
               <input
                 type="text"
                 name="address"

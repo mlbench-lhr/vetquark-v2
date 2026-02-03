@@ -186,7 +186,7 @@ const GuardianProfilePage: React.FC = () => {
       ) : (
         <>
           <GuardianInfoCard {...guardianCardData} />
-          <div className="px-4 mt-4 flex flex-col grid grid-cols-1 gap-2">
+          <div className="px- mt-4 flex flex-col grid grid-cols-1 gap-2">
             <div className="flex mb-2 justify-between items-center">
               <h1 className="col-span-1 text-base font-normal">{t("tabs.pets")}</h1>
               {guardianId ? (

@@ -54,10 +54,10 @@ export default function Page() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className=" bg-white">
       <Header title={t("settings.languageTitle")} />
 
-      <div className="flex min-h-[calc(100dvh-72px)] flex-col px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
+      <div className="flex min-h-[calc(100dvh-72px)] flex-col  pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div className="space-y-3">
           {items.map((item) => {
             const selected = item.id === lang;

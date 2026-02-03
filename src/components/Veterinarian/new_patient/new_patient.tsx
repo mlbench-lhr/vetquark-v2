@@ -10,6 +10,7 @@ import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslation } from 'react-i18next';
+import Header from '@/components/common/header';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -420,25 +421,10 @@ export default function AddPatientMultiStep() {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4">
       {/* Header */}
-      <div className=" flex items-center justify-between">
-        <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={() => router.back()}>
-          <ChevronLeft className="w-6 h-6 text-gray-700" />
-        </button>
-        <h1 className="text-base font-medium text-gray-900">{patientId ? t('newPatient.editPatientTitle') : t('newPatient.addNewPatientTitle')}</h1>
-        <button className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-          {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
-          <span className="text-white text-sm">
-            <Image
-              src={"/images/home/bell.svg"}
-              alt="Bell icon"
-              width={24}
-              height={24}
-            />
-          </span>
-        </button>
-      </div>
+      <Header title={patientId ? t('newPatient.editPatientTitle') : t('newPatient.addNewPatientTitle')} />
+      
       {/* Progress Tabs */}
       <div className="bg-white ">
         <div className="flex items-center justify-between relative">
@@ -528,7 +514,7 @@ export default function AddPatientMultiStep() {
                   <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p- text-center">
                     {formData.photo ? (
                   <div className="flex w-full h-[200px] flex-col relative items-center gap-3">
-                        <img src={formData.photo} alt="Patient" className="w-full h-full object-contain rounded-lg bg-white" />
+                    <Image width={200} height={200} src={formData.photo} alt="Patient" className="w-full h-full object-contain rounded-lg bg-white" />
                     <label className="inline-block absolute -top-2 -right-2">
                           <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                             {uploadingPhoto ?<span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer"> {t('auth.uploading')} 
@@ -539,7 +525,7 @@ export default function AddPatientMultiStep() {
                         </label>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center gap-2">
+                      <div className="flex flex-col items-center gap-2 py-2">
                         <Upload className="w-8 h-8 text-primary mx-auto" />
                         <p className="text-sm text-gray-700">{t('newPatient.patientForm.dragDropPhoto')}</p>
                         <label className="inline-block">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import Image from "next/image";
 import { Modal } from "../ui/modal";
+import { useTranslation } from "react-i18next";
 
 interface User {
   id: string;
@@ -34,6 +35,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [profileImage, setProfileImage] = useState<string>("/images/default_image.svg");
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (user) {
@@ -113,7 +115,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-[500px] p-6 lg:p-10">
       <form onSubmit={handleSubmit} className="w-full">
         <div className="text-center mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Edit Profile</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">{t("profile.editProfileTitle")}</h2>
 
           <div className="relative inline-block mb-6">
             <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
@@ -154,7 +156,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-3">
-              First Name
+              {t("profile.firstName")}
             </label>
             <input
               type="text"
@@ -169,7 +171,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-3">
-              Last Name
+              {t("profile.lastName")}
             </label>
             <input
               type="text"
@@ -184,7 +186,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-3">
-              Email
+              {t("profile.email")}
             </label>
             <input
               type="email"
@@ -202,7 +204,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             disabled={loading}
             className="w-full bg-blue-600 text-white py-4 rounded-full font-medium hover:bg-blue-700 transition-colors mt-8 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {loading ? "Updating..." : "Update"}
+            {loading ? t("profile.updating") : t("profile.update")}
           </button>
         </div>
       </form>

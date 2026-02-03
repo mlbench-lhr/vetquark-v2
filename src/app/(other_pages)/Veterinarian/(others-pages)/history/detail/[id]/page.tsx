@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
+import Image from "next/image";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -43,13 +45,14 @@ type ReadingDetail = {
 };
 
 function StatusPill({ status }: { status: ReadingResultStatus }) {
+  const { t } = useTranslation();
   const isNormal = status === "Normal";
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium ${isNormal ? "bg-[#ECFDF5] text-[#059669]" : "bg-[#FFF7ED] text-[#F97316]"
         }`}
     >
-      {status}
+      {isNormal ? t("exam.review.statusNormal") : t("exam.review.statusAbnormal")}
     </span>
   );
 }
@@ -110,6 +113,7 @@ async function shareReadingReport(readingId: string) {
 export default function ReportDetailsPage() {
   const router = useRouter();
   const params = useParams();
+  const { t } = useTranslation();
   const readingId = useMemo(() => String((params as any)?.id || "").trim(), [params]);
   const [loading, setLoading] = useState(false);
   const [reading, setReading] = useState<ReadingDetail | null>(null);
@@ -338,8 +342,8 @@ export default function ReportDetailsPage() {
 
   return (
     <div className="min-h-[100dvh] w-full bg-white">
-      <div className="mx-auto w-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
-        <div className="flex items-center justify-between px-2">
+      <div className="mx-auto w-full pb-6">
+        <div className="flex items-center justify-between px-">
           <button
             aria-label="Back"
             className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
@@ -347,7 +351,7 @@ export default function ReportDetailsPage() {
           >
             <ChevronLeft className="w-6 h-6 text-gray-700" />
           </button>
-          <h1 className="text-base font-medium text-gray-900">Report Details</h1>
+          <h1 className="text-base font-medium text-gray-900">{t("history.details")}</h1>
           <div className="flex items-center gap-2">
             <div className="relative">
               <button
@@ -393,15 +397,15 @@ export default function ReportDetailsPage() {
         </div>
 
         {loading ? (
-          <div className="mt-6 px-4 text-[14px] text-gray-500">Loading...</div>
+          <div className="mt-6 px-4 text-[14px] text-gray-500">{t("history.loading")}</div>
         ) : !reading ? (
-          <div className="mt-6 px-4 text-[14px] text-gray-500">Report not found.</div>
+          <div className="mt-6 px-4 text-[14px] text-gray-500">{t("history.noExamsFound")}</div>
         ) : (
           <>
             <div className="mt-5 px-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#F5F6F6]">
-                  <img
+                  <Image width={200} height={200}
                     src={reading.patient.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
                     alt={reading.patient.name}
                     className="h-full w-full object-cover"
@@ -416,7 +420,7 @@ export default function ReportDetailsPage() {
 
             {physicalResults.length > 0 ? (
               <div className="mt-5 rounded-[16px] bg-[#F5F6F6]">
-                <h1 className="px-4 pt-4 text-base font-medium text-gray-900 mb-2">Physical Parameters</h1>
+                <h1 className="px-4 pt-4 text-base font-medium text-gray-900 mb-2">{t("history.physicalParameters")}</h1>
                 {physicalResults.map((r) => (
                   <ResultRow key={r.key} item={r} />
                 ))}
@@ -425,7 +429,7 @@ export default function ReportDetailsPage() {
 
             {chemicalResults.length > 0 ? (
               <div className="mt-2 rounded-[16px] bg-[#F5F6F6]">
-                <h1 className="px-4 pt-4 text-base font-medium text-gray-900 mb-2">Chemical Parameters</h1>
+                <h1 className="px-4 pt-4 text-base font-medium text-gray-900 mb-2">{t("history.chemicalParameters")}</h1>
                 {chemicalResults.map((r) => (
                   <ResultRow key={r.key} item={r} />
                 ))}
@@ -434,7 +438,7 @@ export default function ReportDetailsPage() {
 
             {microscopicResults.length > 0 ? (
               <div className="mt-2 rounded-[16px] bg-[#F5F6F6]">
-                <h1 className="px-4 pt-4 text-base font-medium text-gray-900 mb-2">Microscopic Parameters</h1>
+                <h1 className="px-4 pt-4 text-base font-medium text-gray-900 mb-2">{t("history.microscopicParameters")}</h1>
                 {microscopicResults.map((r) => (
                   <ResultRow key={r.key} item={r} />
                 ))}
@@ -442,28 +446,28 @@ export default function ReportDetailsPage() {
             ) : null}
 
             <div className="w-full flex justify-start items-start flex-col gap-0 px-4 mt-5">
-              <h1 className="text-[18px] font-medium">Veterinary Report</h1>
-              <h2 className="text-[14px] font-normal">Summary and Interpretation</h2>
+              <h1 className="text-[18px] font-medium">{t("history.veterinaryReport")}</h1>
+              <h2 className="text-[14px] font-normal">{t("exam.report.summaryInterpretation")}</h2>
               <p className="text-[14px] font-normal text-black/60">
                 {reading.report?.summaryAndInterpretation || reading.timer?.analysis?.summary || "N/A"}
               </p>
               <p className="text-[14px] font-normal">
-                The interpretation of the report is a support tool and does not replace the clinical assessment of the responsible veterinarian.
+                {t("exam.report.disclaimerNote")}
               </p>
-              <span className="text-[14px] font-normal mt-3">Other Information</span>
+              <span className="text-[14px] font-normal mt-3">{t("exam.report.otherInformation")}</span>
               <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">
                 {reading.report?.otherInformation || "N/A"}
               </div>
-              <span className="text-[14px] font-normal mt-3">Veterinarian&apos;s Notes</span>
+              <span className="text-[14px] font-normal mt-3">{t("exam.report.veterinarianNotes")}</span>
               <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">
                 {reading.report?.veterinarianNotes || "N/A"}
               </div>
               {reading.signatureImageUrl ? (
                 <div className="w-full mt-4">
-                  <div className="text-[14px] font-normal mb-1">Signature</div>
+                  <div className="text-[14px] font-normal mb-1">{t("exam.report.signature")}</div>
                   <div className="rounded-[12px] bg-[#F5F6F6] p-4">
                     <div className="w-full h-24 bg-white rounded-md flex items-center justify-center overflow-hidden">
-                      <img
+                      <Image width={200} height={200}
                         src={reading.signatureImageUrl}
                         alt="Veterinarian signature"
                         className="max-h-24 w-auto object-contain"
@@ -483,7 +487,7 @@ export default function ReportDetailsPage() {
                   : "CRMV"}
               </h2>
               <p className="text-[14px] font-normal text-black/60">
-                {generatedAtLabel ? `Report generated on ${generatedAtLabel}` : ""}
+                {generatedAtLabel ? `${t("exam.report.generatedOnPrefix")} ${generatedAtLabel}` : ""}
               </p>
             </div>
           </>
