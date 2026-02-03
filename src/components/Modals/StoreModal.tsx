@@ -1,7 +1,7 @@
 'use client'
 import { Check, ChevronLeft, MapPin, Minus, Plus, Ticket } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { toast } from "react-toastify";
@@ -47,12 +47,13 @@ type Product = {
     image: string;
 };
 
-const PRODUCTS: Product[] = [
-    { id: "vetquark-box", name: "VetQuark Box", description: "Box with 100 units of reagent strips", price: 135, image:"/store image 1.png" },
-    { id: "svovmi", name: "SVOFMI", description: "Reagent strips pack", price: 75, image:"/store image 2.png" },
-    { id: "amoxylife-la", name: "Amoxylife-LA", description: "Long-acting antibiotic", price: 110, image:"/store image 3.png" },
-    { id: "vetquark-kits", name: "VetQuark Kits", description: "Starter kits for clinic use", price: 250, image:"/store image 4.png" },
-];
+type ApiProduct = {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    image: string;
+};
 
 type Props = {
     isOpen: boolean;
@@ -66,13 +67,9 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [cart, setCart] = useState<Record<string, number>>({});
     const [placingOrder, setPlacingOrder] = useState(false);
-    const [selectedAddressId, setSelectedAddressId] = useState<string>("taltal");
-    const [addresses, setAddresses] = useState<Address[]>([
-        { id: "taltal", name: "Taltal Clinic", phone: "(205) 555-024", location: "Arcoverde, Pernambuco" },
-        { id: "nova-vida", name: "Nova Vida Hospital", phone: "(205) 555-030", location: "Recife, Pernambuco" },
-        { id: "saude-total", name: "Saúde Total Center", phone: "(205) 555-045", location: "Olinda, Pernambuco" },
-        { id: "cuidado-familiar", name: "Cuidado Familiar Clinic", phone: "(205) 555-052", location: "Jaboatão dos Guararapes, Pernambuco" },
-    ]);
+    const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+    const [addresses, setAddresses] = useState<Address[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [newAddressForm, setNewAddressForm] = useState({
         label: "",
         phone: "",
@@ -88,9 +85,9 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         address: Address;
     } | null>(null);
 
-    const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0];
+    const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0] ?? null;
 
-    const filteredProducts = PRODUCTS.filter((p) => {
+    const filteredProducts = products.filter((p) => {
         const q = searchQuery.trim().toLowerCase();
         if (!q) return true;
         return `${p.name} ${p.description}`.toLowerCase().includes(q);
@@ -98,7 +95,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
     const cartItems = Object.entries(cart)
         .map(([productId, quantity]) => {
-            const product = PRODUCTS.find((p) => p.id === productId);
+            const product = products.find((p) => p.id === productId);
             if (!product) return null;
             const qty = Number(quantity);
             if (!Number.isFinite(qty) || qty <= 0) return null;
@@ -247,36 +244,91 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
             return;
         }
 
-        const id =
-            typeof globalThis.crypto !== "undefined" && "randomUUID" in globalThis.crypto
-                ? (globalThis.crypto as Crypto).randomUUID()
-                : `addr_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-
-        const location = `${city}, ${state}`;
-        const next: Address = {
-            id,
-            name: label,
-            phone: phone.formatInternational(),
-            location,
-            addressLine,
-            city,
-            state,
-            postalCode,
-        };
-
-        setAddresses((prev) => [...prev, next]);
-        setSelectedAddressId(next.id);
-        setNewAddressForm({
-            label: "",
-            phone: "",
-            address: "",
-            city: "",
-            state: "",
-            postalCode: "",
-        });
-        setStep("checkout");
-        toast.success("Address added");
+        (async () => {
+            try {
+                const res = await fetch("/api/store/addresses", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: label,
+                        phone: phone.formatInternational(),
+                        addressLine,
+                        city,
+                        state,
+                        postalCode,
+                    }),
+                });
+                const data = await res.json().catch(() => null);
+                if (!res.ok) {
+                    toast.error(data?.error || "Failed to add address");
+                    return;
+                }
+                const created = data?.address as Address | undefined;
+                if (created) {
+                    setAddresses((prev) => [created, ...prev]);
+                    setSelectedAddressId(created.id);
+                }
+                setNewAddressForm({
+                    label: "",
+                    phone: "",
+                    address: "",
+                    city: "",
+                    state: "",
+                    postalCode: "",
+                });
+                setStep("checkout");
+                toast.success("Address added");
+            } catch {
+                toast.error("Failed to add address");
+            }
+        })();
     };
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const [prodRes, addrRes] = await Promise.all([
+                    fetch("/api/store/products", { method: "GET" }),
+                    fetch("/api/store/addresses", { method: "GET" }),
+                ]);
+                const prodData = await prodRes.json().catch(() => null);
+                const addrData = await addrRes.json().catch(() => null);
+                if (!mounted) return;
+                if (prodRes.ok && Array.isArray(prodData?.products)) {
+                    const mapped = (prodData.products as ApiProduct[]).map((p) => ({
+                        id: String(p.id || ""),
+                        name: String(p.name || ""),
+                        description: String(p.description || ""),
+                        price: Number(p.price || 0),
+                        image: String(p.image || ""),
+                    }));
+                    setProducts(mapped);
+                } else {
+                    toast.error(prodData?.error || "Failed to load products");
+                    setProducts([]);
+                }
+                if (addrRes.ok && Array.isArray(addrData?.addresses)) {
+                    const mapped = addrData.addresses as Address[];
+                    setAddresses(mapped);
+                    if (!selectedAddressId && mapped.length) {
+                        setSelectedAddressId(mapped[0].id);
+                    }
+                } else {
+                    toast.error(addrData?.error || "Failed to load addresses");
+                    setAddresses([]);
+                }
+            } catch {
+                if (!mounted) return;
+                toast.error("Failed to load store data");
+                setProducts([]);
+                setAddresses([]);
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, [selectedAddressId]);
 
     return (
         <div className="min-h-[100dvh w-full bg-white">
@@ -578,13 +630,28 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                     </div>
                                 ) : step === "checkout" ? (
                                     <div className='h-[70vh]'>
-                                        <DeliveryAddress
-                                            address={selectedAddress}
-                                            onChangeAddress={() => setStep("change-address")}
-                                            onAddNewAddress={() => setStep("add-address")}
-                                        />
-                                        <div className="h-2 bg-secondary" />
-                                        <OrderSummary items={cartItems.map((i) => ({ name: i.product.name, quantity: i.quantity }))} />
+                                        {selectedAddress ? (
+                                            <>
+                                                <DeliveryAddress
+                                                    address={selectedAddress}
+                                                    onChangeAddress={() => setStep("change-address")}
+                                                    onAddNewAddress={() => setStep("add-address")}
+                                                />
+                                                <div className="h-2 bg-secondary" />
+                                                <OrderSummary items={cartItems.map((i) => ({ name: i.product.name, quantity: i.quantity }))} />
+                                            </>
+                                        ) : (
+                                            <div className="px-4">
+                                                <div className="text-sm text-gray-500 mb-3">Add a delivery address to continue.</div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setStep("add-address")}
+                                                    className="h-10 px-4 rounded-full bg-primary text-white text-sm font-semibold hover:bg-blue-700 transition"
+                                                >
+                                                    Add Address
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className='h-[70vh] px-4 py-6 overflow-y-auto'>
@@ -657,10 +724,10 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                             </div>
                                             <button
                                                 onClick={handleProceedToPurchase}
-                                                disabled={placingOrder || cartQuantity <= 0}
+                                                disabled={placingOrder || cartQuantity <= 0 || !selectedAddress}
                                                 className={[
                                                     "w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition",
-                                                    placingOrder || cartQuantity <= 0 ? "opacity-50 pointer-events-none" : "",
+                                                    placingOrder || cartQuantity <= 0 || !selectedAddress ? "opacity-50 pointer-events-none" : "",
                                                 ].join(" ")}
                                             >
                                                 {placingOrder ? "Placing order..." : "Place order"}

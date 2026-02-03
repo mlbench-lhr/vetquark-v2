@@ -1,11 +1,12 @@
 'use client'
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/common/header";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAppSelector } from "@/store/hooks";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 
 interface Transaction {
     id: string;
@@ -54,10 +55,10 @@ const defaultTransactions: Transaction[] = [
 ];
 
 export default function WalletCard({
-    balance = "925.00",
-    currency = "R$",
+    balance: balanceProp = "925.00",
+    currency: currencyProp = "R$",
     pixNumber = "***222.***-00",
-    transactions = defaultTransactions,
+    transactions: transactionsProp = defaultTransactions,
     onWithdraw,
     onBankDetails,
 }: WalletCardProps) {
@@ -66,6 +67,45 @@ export default function WalletCard({
     const [filter, setFilter] = useState<"all" | "credits" | "withdrawals">("all");
     const router = useRouter()
     const profile = useAppSelector((s) => s.userProfile.profile);
+    const [currency, setCurrency] = useState(currencyProp);
+    const [balance, setBalance] = useState(balanceProp);
+    const [transactions, setTransactions] = useState<Transaction[]>(transactionsProp);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await fetch("/api/wallet");
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                if (!res.ok) {
+                    toast.error(typeof data?.error === "string" ? data.error : "Failed to load wallet");
+                    return;
+                }
+                const currency = String(data?.currency || "BRL");
+                const balanceNumber = typeof data?.balance === "number" ? data.balance : 0;
+                setCurrency(currency === "BRL" ? "R$" : currency);
+                setBalance(balanceNumber.toFixed(2));
+                const list: any[] = Array.isArray(data?.transactions) ? data.transactions : [];
+                const mapped: Transaction[] = list.map((it: any) => ({
+                    id: String(it.id),
+                    type: it.type === "withdrawal" ? "withdrawal" : "credit",
+                    title: String(it.title || "Urinalysis"),
+                    subtitle: String(it.subtitle || "Urinalysis Report"),
+                    date: typeof it.date === "string" ? new Date(it.date).toLocaleDateString() : "",
+                    amount: String(it.amount || ""),
+                    avatarUrl: String(it.avatarUrl || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
+                    isPix: false,
+                }));
+                setTransactions(mapped);
+            } catch {
+                toast.error("Network error");
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
     const resolvedPixNumber = useMemo(() => {
         const pm = profile?.payoutMethod as any;
