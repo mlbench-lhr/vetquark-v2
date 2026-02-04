@@ -28,7 +28,7 @@ export default function Page() {
   const [paying, setPaying] = useState(false);
   const pixCode = "000201010212268900";
 
-  const title = useMemo(() => "Pay with Pix", []);
+  const title = useMemo(() => "Pay with Boleto", []);
 
   useEffect(() => {
     let mounted = true;
@@ -71,8 +71,7 @@ export default function Page() {
           Link Generated
         </div>
         <div className="mt-2 max-w-[320px] text-[14px] leading-[18px] text-[#9AA4AF]">
-          Scan the QR code or copy the Pix code in your banking app to complete the
-          payment.
+          Generate your boleto and open it to complete the payment.
         </div>
 
         <div className="mt-4 rounded-[16px] bg-[#EEF4FF] px-5 py-4">
@@ -86,35 +85,17 @@ export default function Page() {
 
         <div className="mt-6 flex items-center justify-center">
           <div className="w-full max-w-[328px] rounded-[20px] bg-gradient-to-b from-[#3F78D8] to-[#1F4D9A] px-5 py-5">
-            <div className="mx-auto aspect-square w-full max-w-[250px] rounded-[18px] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
-              <div className="h-full w-full">{QR_SVG}</div>
-            </div>
-            <div className="mt-4 text-center text-[14px] font-medium leading-[18px] text-white">
-              Scan this QR code to pay
+            <div className="mx-auto w-full rounded-[18px] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+              <div className="text-center text-[14px] font-medium leading-[18px] text-[#111827]">
+                Tap Pay below to generate your boleto.
+              </div>
             </div>
           </div>
         </div>
 
         <div className="mt-5 rounded-[18px] bg-[#EEF4FF] px-4 py-4">
           <div className="text-[13px] leading-[16px] text-[#9AA4AF]">
-            Copy the Pix code complete the payment.
-          </div>
-          <div className="mt-2 flex items-center justify-between gap-3">
-            <div className="truncate text-[16px] font-medium leading-[20px] text-[#111827]">
-              {pixCode}
-            </div>
-            <button
-              type="button"
-              aria-label="Copy Pix code"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(pixCode);
-                } catch {}
-              }}
-              className="flex h-9 w-9 items-center justify-center rounded-[10px]"
-            >
-              <Copy className="h-5 w-5 text-[#3F78D8]" />
-            </button>
+            After generating, the boleto will open in a new tab.
           </div>
         </div>
 
@@ -126,13 +107,23 @@ export default function Page() {
               if (!paymentId || paying) return;
               try {
                 setPaying(true);
-                const res = await fetch(`/api/payment_links/get/${encodeURIComponent(paymentId)}`, { method: "PATCH" });
+                const res = await fetch(`/api/payment/create`, {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ paymentLinkId: paymentId, method: "boleto" }),
+                });
                 const data = await res.json().catch(() => null);
                 if (!res.ok) {
-                  toast.error(typeof data?.error === "string" ? data.error : "Failed to mark as paid");
+                  toast.error(typeof data?.error === "string" ? data.error : "Failed to initiate payment");
                   return;
                 }
-                toast.success("Payment marked as paid");
+                const boletoUrl = typeof data?.boletoUrl === "string" ? data.boletoUrl : "";
+                if (boletoUrl) {
+                  try {
+                    window.open(boletoUrl, "_blank", "noopener,noreferrer");
+                  } catch {}
+                }
+                toast.success("Boleto generated");
                 router.push(`/Guardian/payment/${encodeURIComponent(paymentId)}`);
               } catch {
                 toast.error("Network error");

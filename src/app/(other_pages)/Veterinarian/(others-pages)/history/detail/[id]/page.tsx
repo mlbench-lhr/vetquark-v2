@@ -5,7 +5,6 @@ import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import Image from "next/image";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -405,7 +404,7 @@ export default function ReportDetailsPage() {
             <div className="mt-5 px-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#F5F6F6]">
-                  <Image width={200} height={200}
+                  <img
                     src={reading.patient.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
                     alt={reading.patient.name}
                     className="h-full w-full object-cover"
@@ -467,7 +466,7 @@ export default function ReportDetailsPage() {
                   <div className="text-[14px] font-normal mb-1">{t("exam.report.signature")}</div>
                   <div className="rounded-[12px] bg-[#F5F6F6] p-4">
                     <div className="w-full h-24 bg-white rounded-md flex items-center justify-center overflow-hidden">
-                      <Image width={200} height={200}
+                      <img
                         src={reading.signatureImageUrl}
                         alt="Veterinarian signature"
                         className="max-h-24 w-auto object-contain"
