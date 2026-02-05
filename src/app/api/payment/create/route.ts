@@ -94,7 +94,15 @@ export async function POST(req: NextRequest) {
         ],
         metadata: { paymentLinkId: String(link._id) },
       };
-      const basic = Buffer.from(`${accountId}:${apiKey}`).toString("base64");
+      const basic = Buffer.from(`${accountId}:${apiKey}`, "utf8").toString("base64");
+      const decoded = Buffer.from(basic, "base64").toString("utf8");
+      const split = decoded.split(":");
+      if (split[0] !== accountId || split[1] !== apiKey) {
+        return NextResponse.json(
+          { error: "configError", message: "Authorization header mismatch", diagnostics: { accountIdPrefix: accountId.slice(0, 4) } },
+          { status: 500 }
+        );
+      }
       const r = await fetch(v5Url, {
         method: "POST",
         headers: {
