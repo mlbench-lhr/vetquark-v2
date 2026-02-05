@@ -67,6 +67,20 @@ export async function POST(req: NextRequest) {
       if (!accountId) return NextResponse.json({ error: "Missing PAGARME_ACCOUNT_ID" }, { status: 500 });
       const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
       const v5Url = `${base}/core/v5/orders`;
+      if (!apiKey || apiKey.startsWith("pk_")) {
+        console.error("PagarmeCreateV5 preflight invalid secret", JSON.stringify({ hasKey: !!apiKey, keyPrefix: apiKey ? apiKey.slice(0, 3) : null }));
+        return NextResponse.json(
+          { error: "configError", message: "Invalid secret key. Use sk_*, not pk_*", diagnostics: { accountIdPrefix: accountId.slice(0, 4) } },
+          { status: 500 }
+        );
+      }
+      if (!accountId.startsWith("acc_")) {
+        console.error("PagarmeCreateV5 preflight invalid accountId", JSON.stringify({ accountIdPrefix: accountId.slice(0, 4) }));
+        return NextResponse.json(
+          { error: "configError", message: "Invalid account id. Use acc_* from Pagar.me", diagnostics: { accountIdPrefix: accountId.slice(0, 4) } },
+          { status: 500 }
+        );
+      }
       console.log("PagarmeCreateV5 start", JSON.stringify({ v5Url, accountIdPresent: !!accountId, amountCents }));
       const orderPayload: any = {
         items: [{ amount: amountCents, quantity: 1, code: `payment:${String(link._id)}` }],
