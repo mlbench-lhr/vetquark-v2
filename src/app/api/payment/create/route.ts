@@ -162,8 +162,14 @@ export async function POST(req: NextRequest) {
         const hasQrLegacy = !!(createdLegacy?.pix_qr_code || createdLegacy?.pix_qr_code_url || createdLegacy?.qr_code || createdLegacy?.qr_code_base64);
         if (statusCodeLegacy >= 400 || !txIdLegacy) {
           console.error("PagarmeCreate legacy error", JSON.stringify({ statusCodeLegacy, body: createdLegacy }));
+          const msgLegacy =
+            typeof createdLegacy?.message === "string"
+              ? createdLegacy.message
+              : Array.isArray(createdLegacy?.errors) && typeof createdLegacy.errors?.[0]?.message === "string"
+              ? createdLegacy.errors[0].message
+              : undefined;
           return NextResponse.json(
-            { error: "providerError", details: createdLegacy, statusCode: statusCodeLegacy },
+            { error: "providerError", message: msgLegacy || "Provider error", details: createdLegacy, statusCode: statusCodeLegacy },
             { status: 502 }
           );
         }

@@ -102,7 +102,12 @@ export default function Page() {
                 const data = await res.json().catch(() => null);
                 if (!res.ok) {
                   console.error("PixPage create failed", { status: res.status, data });
-                  toast.error(typeof data?.error === "string" ? data.error : "Failed to initiate payment");
+                  const providerMsg =
+                    (typeof data?.message === "string" && data.message) ||
+                    (Array.isArray(data?.details?.errors) && typeof data.details.errors?.[0]?.message === "string" && data.details.errors[0].message) ||
+                    (typeof data?.error === "string" && data.error) ||
+                    "Failed to initiate payment";
+                  toast.error(providerMsg);
                   return;
                 }
                 const nextQr = typeof data?.pixQrCodeUrl === "string" ? data.pixQrCodeUrl : "";
