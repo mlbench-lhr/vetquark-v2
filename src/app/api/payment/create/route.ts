@@ -207,16 +207,72 @@ export async function POST(req: NextRequest) {
       const statusOrder = String(createdV5?.status || "").toLowerCase();
       const statusCharge = String(charge?.status || "").toLowerCase();
       if (statusOrder === "failed" || statusCharge === "failed") {
-        const reason =
-          String(charge?.last_transaction?.gateway_response?.errors?.[0]?.message || "") ||
-          String(charge?.last_transaction?.failure_reason || "") ||
-          String(charge?.status_reason || "") ||
-          "Provider failed to create Pix charge";
-        console.error("PagarmeCreateV5 failed", JSON.stringify({ orderId, statusOrder, statusCharge, reason, createdV5 }));
-        return NextResponse.json(
-          { error: "providerError", message: reason, details: createdV5 },
-          { status: 502 }
+        const v1Url = `${base}/1/transactions`;
+        const fallbackPayload: any = {
+          api_key: apiKey,
+          amount: amountCents,
+          payment_method: "pix",
+          metadata: { paymentLinkId: String(link._id) },
+          customer: { name: String((user as any).fullName || ""), email: String((user as any).email || "") },
+        };
+        const r2 = await fetch(v1Url, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            accept: "application/json",
+            "user-agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+            origin,
+            referer: origin,
+          },
+          body: JSON.stringify(fallbackPayload),
+        });
+        const ct2 = String(r2.headers.get("content-type") || "");
+        const statusCode2 = r2.status;
+        if (!ct2.includes("application/json")) {
+          const text2 = await r2.text().catch(() => "");
+          const snippet2 = typeof text2 === "string" ? text2.slice(0, 300) : "";
+          console.error("PagarmeCreateV1 blocked", JSON.stringify({ statusCode: statusCode2, contentType: ct2, url: v1Url, bodySnippet: snippet2 }));
+          return NextResponse.json(
+            { error: "providerBlocked", reason: "Non-JSON response from provider", diagnostics: { statusCode: statusCode2, contentType: ct2 } },
+            { status: 502 }
+          );
+        }
+        if (statusCode2 >= 400) {
+          const errJson2 = await r2.json().catch(() => ({}));
+          const msg2 =
+            typeof errJson2?.message === "string"
+              ? errJson2.message
+              : Array.isArray(errJson2?.errors) && typeof errJson2.errors?.[0]?.message === "string"
+              ? errJson2.errors[0].message
+              : "Provider error";
+          console.error("PagarmeCreateV1 error", JSON.stringify({ statusCode: statusCode2, contentType: ct2, url: v1Url, error: errJson2 }));
+          return NextResponse.json(
+            { error: "providerError", message: msg2, details: errJson2, statusCode: statusCode2 },
+            { status: 502 }
+          );
+        }
+        const tx = await r2.json();
+        const tranId = String((tx as any)?.id || (tx as any)?.tid || "");
+        const qrText2 = String((tx as any)?.pix_qr_code || (tx as any)?.qr_code || (tx as any)?.last_transaction?.qr_code || "");
+        const qrBase642 = String((tx as any)?.pix_qr_code_base64 || (tx as any)?.qr_code_base64 || (tx as any)?.last_transaction?.qr_code_base64 || "");
+        await PaymentLink.updateOne(
+          { _id: link._id },
+          {
+            $set: {
+              paymentMethod: "pix",
+              provider: "pagarme",
+              providerTransactionId: tranId || orderId || null,
+            },
+          },
         );
+        const responseV1: any = {
+          transactionId: tranId || orderId,
+          status: String((tx as any)?.status || ""),
+          pixQrCode: qrText2 || null,
+          pixQrCodeUrl: qrBase642 ? `data:image/png;base64,${qrBase642}` : null,
+        };
+        return NextResponse.json(responseV1, { status: 200 });
       }
       console.log("PagarmeCreateV5 ok", JSON.stringify({ orderId, orderStatus: createdV5?.status, chargeStatus: charge?.status, hasQr: !!qrCodeBase64 || !!qrCodeText }));
       await PaymentLink.updateOne(
