@@ -74,7 +74,14 @@ export async function POST(req: NextRequest) {
       }
       console.log("PagarmeCreateV5 start", JSON.stringify({ v5Url, amountCents }));
       const orderPayload: any = {
-        items: [{ amount: amountCents, quantity: 1, code: `payment:${String(link._id)}` }],
+        items: [
+          {
+            amount: amountCents,
+            quantity: 1,
+            code: `payment:${String(link._id)}`,
+            description: "VetQuark reading payment",
+          },
+        ],
         customer: { name: String((user as any).fullName || ""), email: String((user as any).email || "") },
         payments: [
           {
