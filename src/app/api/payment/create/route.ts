@@ -94,15 +94,45 @@ export async function POST(req: NextRequest) {
         ],
         metadata: { paymentLinkId: String(link._id) },
       };
+      
+      // DEBUG: Log the credentials and payload
+      console.log("DEBUG: Pagar.me Credentials", JSON.stringify({
+        accountId: accountId,
+        apiKey: apiKey ? `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}` : "missing",
+        accountIdValid: accountId.startsWith("acc_"),
+        apiKeyValid: apiKey.startsWith("sk_"),
+        amountCents: amountCents
+      }));
+      
+      console.log("DEBUG: Pagar.me Request Payload", JSON.stringify(orderPayload, null, 2));
+      
       const basic = Buffer.from(`${accountId}:${apiKey}`, "utf8").toString("base64");
       const decoded = Buffer.from(basic, "base64").toString("utf8");
       const split = decoded.split(":");
+      
+      console.log("DEBUG: Authorization Header", JSON.stringify({
+        basicAuth: basic,
+        decoded: decoded,
+        splitParts: split,
+        accountIdMatch: split[0] === accountId,
+        apiKeyMatch: split[1] === apiKey
+      }));
+      
       if (split[0] !== accountId || split[1] !== apiKey) {
         return NextResponse.json(
           { error: "configError", message: "Authorization header mismatch", diagnostics: { accountIdPrefix: accountId.slice(0, 4) } },
           { status: 500 }
         );
       }
+      console.log("DEBUG: Making API request to", v5Url);
+      console.log("DEBUG: Request Headers", JSON.stringify({
+        authorization: `Basic ${basic.slice(0, 20)}...`,
+        "content-type": "application/json",
+        accept: "application/json",
+        origin: origin,
+        referer: origin
+      }, null, 2));
+      
       const r = await fetch(v5Url, {
         method: "POST",
         headers: {
@@ -116,7 +146,15 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify(orderPayload),
       });
-      console.log("r---------", r);      
+      
+      console.log("DEBUG: API Response Status", r.status);
+      console.log("DEBUG: API Response Headers", JSON.stringify({
+        "content-type": r.headers.get("content-type"),
+        "cf-ray": r.headers.get("cf-ray"),
+        "server": r.headers.get("server"),
+        "date": r.headers.get("date")
+      }, null, 2));
+      
       const ct = String(r.headers.get("content-type") || "");
       const cfRay = r.headers.get("cf-ray") || r.headers.get("CF-Ray") || "";
       const server = r.headers.get("server") || "";
