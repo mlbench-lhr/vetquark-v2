@@ -112,7 +112,6 @@ export async function POST(req: NextRequest) {
           payment_method: "pix",
           pix: {
             expires_in: expiresInSeconds,
-            expires_at: expiresAtIso,
             additional_information: [
               { name: "customer_name", value: String((user as any).fullName || "") },
               { name: "customer_email", value: String((user as any).email || "") },
