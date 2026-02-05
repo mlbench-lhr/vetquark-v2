@@ -17,18 +17,42 @@ export async function POST(req: NextRequest) {
     if (!apiKey) return NextResponse.json({ error: "Missing PAGARME_SECRET_KEY" }, { status: 500 });
 
     const rawBody = await req.text();
+    console.log("WebhookPagarme init", JSON.stringify({ rawLen: rawBody?.length || 0 }));
     const signature = String(req.headers.get("x-hub-signature") || "").trim();
     const valid = signature ? pagarme.postback.verifySignature(apiKey, rawBody, signature) : false;
-    if (!valid) return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    if (!valid) {
+      console.error("WebhookPagarme invalid signature", JSON.stringify({ signaturePresent: !!signature }));
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    }
 
     const payload = JSON.parse(rawBody);
+    console.log("WebhookPagarme payload parsed");
 
     await connectMongo();
 
-    const txObj = payload?.transaction || payload;
-    const txId = String(txObj?.id || payload?.id || "").trim();
-    const statusRaw = String(txObj?.status || payload?.current_status || "").trim().toLowerCase();
-    const linkIdRaw = String(txObj?.metadata?.paymentLinkId || "").trim();
+    const txObj = payload?.transaction || payload?.order || payload;
+    const orderObj = payload?.order || (Array.isArray(payload?.charges) ? payload : null);
+    const firstCharge = Array.isArray(orderObj?.charges) ? orderObj.charges[0] : null;
+    const txId = String(
+      txObj?.id ||
+      payload?.id ||
+      orderObj?.id ||
+      payload?.data?.id ||
+      ""
+    ).trim();
+    const statusRaw = String(
+      txObj?.status ||
+      payload?.current_status ||
+      payload?.data?.status ||
+      orderObj?.status ||
+      firstCharge?.status ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+    const metaObj = txObj?.metadata || payload?.metadata || payload?.data?.metadata || firstCharge?.metadata || {};
+    const linkIdRaw = String(metaObj?.paymentLinkId || "").trim();
+    console.log("WebhookPagarme tx", JSON.stringify({ txId, statusRaw, hasLinkId: !!linkIdRaw }));
 
     let link: any = null;
     if (linkIdRaw && mongoose.Types.ObjectId.isValid(linkIdRaw)) {
@@ -39,7 +63,10 @@ export async function POST(req: NextRequest) {
         .select("_id status veterinarian patient guardian amount currency reading")
         .lean();
     }
-    if (!link) return NextResponse.json({ ok: true }, { status: 200 });
+    if (!link) {
+      console.log("WebhookPagarme no link matched", JSON.stringify({ txId, linkIdRaw }));
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
 
     const wasPaid = String(link.status) === "paid";
     const shouldMarkPaid = statusRaw === "paid" || statusRaw === "authorized" || statusRaw === "captured";
@@ -57,6 +84,7 @@ export async function POST(req: NextRequest) {
         { _id: readingId },
         { $set: { paymentStatus: shouldMarkExpired ? "expired" : shouldMarkPaid ? "paid" : String(link.status), paymentLink: link._id } },
       );
+      console.log("WebhookPagarme reading updated", JSON.stringify({ readingId, status: shouldMarkExpired ? "expired" : shouldMarkPaid ? "paid" : String(link.status) }));
     }
 
     if (!wasPaid && shouldMarkPaid) {
@@ -165,7 +193,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    console.error("WebhookPagarme fatal", e);
+    return NextResponse.json({ error: "Internal server error", reason: e instanceof Error ? e.message : "unknown" }, { status: 500 });
   }
 }

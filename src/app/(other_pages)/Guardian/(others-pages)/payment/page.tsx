@@ -58,7 +58,7 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="min-h-scree bg-white px-5 pt-8">
+    <div className="min-h-scree bg-white px">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-[20px] font-semibold leading-[24px] text-[#111827]">

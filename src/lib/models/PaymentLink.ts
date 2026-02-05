@@ -11,6 +11,9 @@ export interface IPaymentLink {
   amount: number;
   currency: string;
   status: PaymentLinkStatus;
+  paymentMethod?: "credit_card" | "boleto" | "pix";
+  provider?: string;
+  providerTransactionId?: string | null;
   notifiedAt?: Date | null;
   expiresAt?: Date | null;
   createdAt?: Date;
@@ -26,6 +29,9 @@ const PaymentLinkSchema = new Schema<IPaymentLink>(
     amount: { type: Number, required: true, min: 0 },
     currency: { type: String, default: "BRL", trim: true },
     status: { type: String, enum: ["pending", "paid", "expired"], default: "pending", index: true },
+    paymentMethod: { type: String, enum: ["credit_card", "boleto", "pix"], default: null, index: true },
+    provider: { type: String, default: "", trim: true, index: true },
+    providerTransactionId: { type: String, default: null, index: true },
     notifiedAt: { type: Date, default: null, index: true },
     expiresAt: { type: Date, default: null, index: true },
   },
