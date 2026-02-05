@@ -108,6 +108,10 @@ export default function Page() {
                 const nextQr = typeof data?.pixQrCodeUrl === "string" ? data.pixQrCodeUrl : "";
                 const nextText = typeof data?.pixQrCode === "string" ? data.pixQrCode : "";
                 console.log("PixPage create ok", { hasQr: !!nextQr, hasText: !!nextText });
+                if (!nextQr && !nextText) {
+                  toast.error("Failed to generate PIX QR. Please try again.");
+                  return;
+                }
                 if (nextQr) setQrUrl(nextQr);
                 if (nextText) setPixCode(nextText);
                 toast.success("PIX generated");
