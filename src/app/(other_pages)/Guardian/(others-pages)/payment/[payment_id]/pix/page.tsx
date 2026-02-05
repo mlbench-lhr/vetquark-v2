@@ -51,11 +51,11 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="flex items-center justify-between px-4 pt-6">
+      <div className="flex items-center justify-between">
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center rounded-full"
+          className="flex h-0 w-fit items-center justify-center rounded-full"
           aria-label="Back"
         >
           <ChevronLeft className="h-6 w-6 text-[#111827]" />
@@ -63,10 +63,10 @@ export default function Page() {
         <h1 className="text-[16px] font-medium leading-[20px] text-[#111827]">
           {title}
         </h1>
-        <div className="h-10 w-10" />
+        <div className="h-0 w-10" />
       </div>
 
-      <div className="px-4 pt-5">
+      <div className="pt-5">
         <div className="text-[20px] font-semibold leading-[24px] text-[#111827]">
           Link Generated
         </div>
