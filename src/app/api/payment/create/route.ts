@@ -159,7 +159,15 @@ export async function POST(req: NextRequest) {
         const createdLegacy = await rLegacy.json();
         const txIdLegacy = String(createdLegacy?.id || "");
         const statusLegacy = String(createdLegacy?.status || "");
-        console.log("PagarmeCreate legacy ok", JSON.stringify({ txIdLegacy, statusLegacy }));
+        const hasQrLegacy = !!(createdLegacy?.pix_qr_code || createdLegacy?.pix_qr_code_url || createdLegacy?.qr_code || createdLegacy?.qr_code_base64);
+        if (statusCodeLegacy >= 400 || !txIdLegacy) {
+          console.error("PagarmeCreate legacy error", JSON.stringify({ statusCodeLegacy, body: createdLegacy }));
+          return NextResponse.json(
+            { error: "providerError", details: createdLegacy, statusCode: statusCodeLegacy },
+            { status: 502 }
+          );
+        }
+        console.log("PagarmeCreate legacy ok", JSON.stringify({ txIdLegacy, statusLegacy, hasQrLegacy }));
         await PaymentLink.updateOne(
           { _id: link._id },
           {
@@ -173,8 +181,8 @@ export async function POST(req: NextRequest) {
         const responseLegacy: any = {
           transactionId: txIdLegacy,
           status: statusLegacy,
-          pixQrCode: createdLegacy?.pix_qr_code || null,
-          pixQrCodeUrl: createdLegacy?.pix_qr_code_url || null,
+          pixQrCode: createdLegacy?.pix_qr_code || createdLegacy?.qr_code || null,
+          pixQrCodeUrl: createdLegacy?.pix_qr_code_url || (createdLegacy?.qr_code_base64 ? `data:image/png;base64,${createdLegacy?.qr_code_base64}` : null) || null,
         };
         return NextResponse.json(responseLegacy, { status: 200 });
       }
