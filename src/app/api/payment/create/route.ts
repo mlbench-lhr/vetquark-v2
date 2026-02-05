@@ -112,85 +112,20 @@ export async function POST(req: NextRequest) {
       }
       if (statusCode >= 400) {
         const errJson = await r.json().catch(() => ({}));
+        const msg =
+          typeof errJson?.message === "string"
+            ? errJson.message
+            : Array.isArray(errJson?.errors) && typeof errJson.errors?.[0]?.message === "string"
+            ? errJson.errors[0].message
+            : "Provider error";
         console.error(
           "PagarmeCreateV5 error",
           JSON.stringify({ statusCode, contentType: ct, cfRay, server, url: v5Url, error: errJson }),
         );
-        console.log("PagarmeCreate fallback to v1");
-        const legacyUrl = `${base}/1/transactions`;
-        const legacyPayload: any = {
-          api_key: apiKey,
-          amount: amountCents,
-          payment_method: "pix",
-          metadata: { paymentLinkId: String(link._id) },
-        };
-        if (webhookUrl) legacyPayload.postback_url = webhookUrl;
-        const rLegacy = await fetch(legacyUrl, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            accept: "application/json",
-            "user-agent":
-              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
-            origin,
-            referer: origin,
-          },
-          body: JSON.stringify(legacyPayload),
-        });
-        const ctLegacy = String(rLegacy.headers.get("content-type") || "");
-        const statusCodeLegacy = rLegacy.status;
-        if (!ctLegacy.includes("application/json")) {
-          const textLegacy = await rLegacy.text().catch(() => "");
-          const snippetLegacy = typeof textLegacy === "string" ? textLegacy.slice(0, 300) : "";
-          console.error(
-            "PagarmeCreate legacy blocked",
-            JSON.stringify({
-              statusCode: statusCodeLegacy,
-              contentType: ctLegacy,
-              url: legacyUrl,
-              bodySnippet: snippetLegacy,
-            }),
-          );
-          return NextResponse.json(
-            { error: "providerBlocked", reason: "Non-JSON response from provider (legacy)", diagnostics: { statusCode: statusCodeLegacy, contentType: ctLegacy } },
-            { status: 502 }
-          );
-        }
-        const createdLegacy = await rLegacy.json();
-        const txIdLegacy = String(createdLegacy?.id || "");
-        const statusLegacy = String(createdLegacy?.status || "");
-        const hasQrLegacy = !!(createdLegacy?.pix_qr_code || createdLegacy?.pix_qr_code_url || createdLegacy?.qr_code || createdLegacy?.qr_code_base64);
-        if (statusCodeLegacy >= 400 || !txIdLegacy) {
-          console.error("PagarmeCreate legacy error", JSON.stringify({ statusCodeLegacy, body: createdLegacy }));
-          const msgLegacy =
-            typeof createdLegacy?.message === "string"
-              ? createdLegacy.message
-              : Array.isArray(createdLegacy?.errors) && typeof createdLegacy.errors?.[0]?.message === "string"
-              ? createdLegacy.errors[0].message
-              : undefined;
-          return NextResponse.json(
-            { error: "providerError", message: msgLegacy || "Provider error", details: createdLegacy, statusCode: statusCodeLegacy },
-            { status: 502 }
-          );
-        }
-        console.log("PagarmeCreate legacy ok", JSON.stringify({ txIdLegacy, statusLegacy, hasQrLegacy }));
-        await PaymentLink.updateOne(
-          { _id: link._id },
-          {
-            $set: {
-              paymentMethod: "pix",
-              provider: "pagarme",
-              providerTransactionId: txIdLegacy || null,
-            },
-          },
+        return NextResponse.json(
+          { error: "providerError", message: msg, details: errJson, statusCode },
+          { status: 502 }
         );
-        const responseLegacy: any = {
-          transactionId: txIdLegacy,
-          status: statusLegacy,
-          pixQrCode: createdLegacy?.pix_qr_code || createdLegacy?.qr_code || null,
-          pixQrCodeUrl: createdLegacy?.pix_qr_code_url || (createdLegacy?.qr_code_base64 ? `data:image/png;base64,${createdLegacy?.qr_code_base64}` : null) || null,
-        };
-        return NextResponse.json(responseLegacy, { status: 200 });
       }
       const createdV5: PagarmeOrder = await r.json();
       const orderId = String(createdV5?.id || "");
