@@ -204,6 +204,20 @@ export async function POST(req: NextRequest) {
       const paymentPix = charge?.payment?.pix || {};
       const qrCodeText = String(paymentPix?.qr_code || createdV5?.last_transaction?.qr_code || "");
       const qrCodeBase64 = String(paymentPix?.qr_code_base64 || createdV5?.last_transaction?.qr_code_base64 || "");
+      const statusOrder = String(createdV5?.status || "").toLowerCase();
+      const statusCharge = String(charge?.status || "").toLowerCase();
+      if (statusOrder === "failed" || statusCharge === "failed") {
+        const reason =
+          String(charge?.last_transaction?.gateway_response?.errors?.[0]?.message || "") ||
+          String(charge?.last_transaction?.failure_reason || "") ||
+          String(charge?.status_reason || "") ||
+          "Provider failed to create Pix charge";
+        console.error("PagarmeCreateV5 failed", JSON.stringify({ orderId, statusOrder, statusCharge, reason, createdV5 }));
+        return NextResponse.json(
+          { error: "providerError", message: reason, details: createdV5 },
+          { status: 502 }
+        );
+      }
       console.log("PagarmeCreateV5 ok", JSON.stringify({ orderId, orderStatus: createdV5?.status, chargeStatus: charge?.status, hasQr: !!qrCodeBase64 || !!qrCodeText }));
       await PaymentLink.updateOne(
         { _id: link._id },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import pagarme from "pagarme";
+import crypto from "crypto";
 import connectMongo from "@/lib/mongodb";
 import PaymentLink from "@/lib/models/PaymentLink";
 import Reading from "@/lib/models/Reading";
@@ -18,11 +19,35 @@ export async function POST(req: NextRequest) {
 
     const rawBody = await req.text();
     console.log("WebhookPagarme init", JSON.stringify({ rawLen: rawBody?.length || 0 }));
-    const signature = String(req.headers.get("x-hub-signature") || "").trim();
-    const valid = signature ? pagarme.postback.verifySignature(apiKey, rawBody, signature) : false;
+    const candidates = [
+      req.headers.get("x-hub-signature"),
+      req.headers.get("x-hook-signature"),
+      req.headers.get("x-pagarme-signature"),
+      req.headers.get("x-pagarme-signature-1"),
+      req.headers.get("x-postback-signature"),
+      req.headers.get("x-signature"),
+    ].filter(Boolean) as string[];
+    const signature = String(candidates[0] || "").trim();
+    let valid = false;
+    if (signature) {
+      try {
+        valid = pagarme.postback.verifySignature(apiKey, rawBody, signature);
+      } catch {
+        valid = false;
+      }
+      if (!valid) {
+        const lower = signature.toLowerCase();
+        const algo = lower.startsWith("sha256=") ? "sha256" : "sha1";
+        const hex = lower.includes("=") ? lower.split("=")[1] : lower;
+        const expected = crypto.createHmac(algo, apiKey).update(rawBody, "utf8").digest("hex");
+        const a = Buffer.from(expected, "hex");
+        const b = Buffer.from(hex, "hex");
+        valid = a.length === b.length && crypto.timingSafeEqual(a, b);
+      }
+    }
     if (!valid) {
       console.error("WebhookPagarme invalid signature", JSON.stringify({ signaturePresent: !!signature }));
-      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     const payload = JSON.parse(rawBody);
