@@ -13,6 +13,9 @@ export default function Page() {
   const [paying, setPaying] = useState(false);
   const [pixCode, setPixCode] = useState<string>("");
   const [qrUrl, setQrUrl] = useState<string>("");
+  const [boletoUrl, setBoletoUrl] = useState<string>("");
+  const [boletoBarcode, setBoletoBarcode] = useState<string>("");
+  const [payingBoleto, setPayingBoleto] = useState(false);
 
   const title = useMemo(() => "Pay with PIX", []);
 
@@ -147,6 +150,79 @@ export default function Page() {
             <Copy className="h-5 w-5 text-[#3F78D8]" />
             Copy PIX code
           </button>
+          <div className="mt-8 border-t border-[#E5E7EB] pt-6">
+            <div className="text-[16px] font-medium text-[#111827]">Prefer boleto?</div>
+            <div className="mt-2 text-[13px] leading-[16px] text-[#9AA4AF]">
+              Generate a boleto and pay via banking app or lotérica.
+            </div>
+            <button
+              type="button"
+              disabled={payingBoleto || !paymentId}
+              onClick={async () => {
+                if (!paymentId || payingBoleto) return;
+                try {
+                  setPayingBoleto(true);
+                  const res = await fetch(`/api/payment/create`, {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({ paymentLinkId: paymentId, method: "boleto" }),
+                  });
+                  const data = await res.json().catch(() => null);
+                  if (!res.ok) {
+                    const providerMsg =
+                      (typeof data?.message === "string" && data.message) ||
+                      (Array.isArray(data?.details?.errors) && typeof data.details.errors?.[0]?.message === "string" && data.details.errors[0].message) ||
+                      (typeof data?.error === "string" && data.error) ||
+                      "Failed to initiate boleto";
+                    toast.error(providerMsg);
+                    return;
+                  }
+                  const bUrl = typeof data?.boletoUrl === "string" ? data.boletoUrl : "";
+                  const bCode = typeof data?.boletoBarcode === "string" ? data.boletoBarcode : "";
+                  if (!bUrl && !bCode) {
+                    toast.error("Failed to generate boleto. Please try again.");
+                    return;
+                  }
+                  setBoletoUrl(bUrl);
+                  setBoletoBarcode(bCode);
+                  toast.success("Boleto generated");
+                } catch {
+                  toast.error("Network error");
+                } finally {
+                  setPayingBoleto(false);
+                }
+              }}
+              className="mt-4 h-[52px] w-full rounded-full bg-[#111827] text-[15px] font-medium text-white disabled:opacity-60"
+            >
+              {payingBoleto ? "Generating..." : "Generate Boleto"}
+            </button>
+            {boletoUrl ? (
+              <a
+                href={boletoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 block rounded-[16px] bg-[#EEF4FF] px-4 py-3 text-center text-[15px] font-medium text-[#3F78D8]"
+              >
+                Open Boleto
+              </a>
+            ) : null}
+            <button
+              type="button"
+              disabled={!boletoBarcode}
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(boletoBarcode);
+                  toast.success("Boleto barcode copied");
+                } catch {
+                  toast.error("Failed to copy boleto barcode");
+                }
+              }}
+              className="mt-3 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#F5F6F6] text-[15px] font-medium text-[#111827] disabled:opacity-60"
+            >
+              <Copy className="h-5 w-5 text-[#3F78D8]" />
+              Copy boleto barcode
+            </button>
+          </div>
         </div>
       </div>
     </div>
