@@ -74,42 +74,42 @@ export async function POST(req: NextRequest) {
       }
       console.log("PagarmeCreateV5 start", JSON.stringify({ v5Url, amountCents }));
       const orderPayload: any = {
-        items: [
-          {
-            amount: amountCents,
-            quantity: 1,
-            code: `payment:${String(link._id)}`,
-            description: "VetQuark reading payment",
-          },
-        ],
-        customer: {
-          name: String((user as any).fullName || ""),
-          email: String((user as any).email || ""),
-          type: "individual",
-          document_type: "CPF",
-          document: "01234567890",
-          phones: {
-            mobile_phone: { country_code: "55", area_code: "11", number: "999999999" },
-          },
-          address: {
-            country: "BR",
-            state: "SP",
-            city: "São Paulo",
-            zip_code: "01000000",
-            line_1: "VetQuark",
-            line_2: "Test",
-          },
+      items: [
+        {
+          amount: amountCents,
+          quantity: 1,
+          code: `payment:${String(link._id)}`,
+          description: "VetQuark reading payment",
         },
-        payments: [
-          {
-            payment_method: "pix",
-            pix: { expires_in: 3600 },
-            amount: amountCents,
-          },
-        ],
-        closed: false,
-        metadata: { paymentLinkId: String(link._id) },
-      };
+      ],
+      customer: {
+        name: String((user as any).fullName || ""),
+        email: String((user as any).email || ""),
+        type: "individual",
+        document_type: "CPF",
+        document: "00000000000",
+        phones: {
+          mobile_phone: { country_code: "55", area_code: "11", number: "999999999" },
+        },
+        address: {
+          country: "BR",
+          state: "SP",
+          city: "São Paulo",
+          zip_code: "01000000",
+          line_1: "VetQuark Payment",
+          line_2: "Test transaction",
+        },
+      },
+      payments: [
+        {
+          payment_method: "pix",
+          pix: { expires_in: 3600 },
+          amount: amountCents,
+        },
+      ],
+      closed: false,
+      metadata: { paymentLinkId: String(link._id) },
+    };
       console.log("DEBUG: Pagar.me Credentials", JSON.stringify({
         apiKey: apiKey ? `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}` : "missing",
         apiKeyValid: apiKey.startsWith("sk_"),
