@@ -108,6 +108,7 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify(orderPayload),
       });
+      console.log("r---------", r);      
       const ct = String(r.headers.get("content-type") || "");
       const cfRay = r.headers.get("cf-ray") || r.headers.get("CF-Ray") || "";
       const server = r.headers.get("server") || "";
@@ -198,6 +199,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify(payload),
     });
+    console.log("r---------", r);      
     const ct = String(r.headers.get("content-type") || "");
     const cfRay = r.headers.get("cf-ray") || r.headers.get("CF-Ray") || "";
     const server = r.headers.get("server") || "";
