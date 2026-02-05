@@ -1,23 +1,8 @@
 "use client";
-
 import { ChevronLeft, Copy } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-
-const QR_SVG = (
-  <svg
-    viewBox="0 0 29 29"
-    className="h-full w-full"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <rect width="29" height="29" fill="#fff" />
-    <path
-      d="M0 0h9v9H0V0zm2 2v5h5V2H2zM20 0h9v9h-9V0zm2 2v5h5V2h-5zM0 20h9v9H0v-9zm2 2v5h5v-5H2zM10 2h1v1h-1V2zm2 0h1v2h-1V2zm2 0h1v1h-1V2zm2 0h1v2h-1V2zm2 0h1v1h-1V2zm-10 2h2v1h-2V4zm3 0h1v1h-1V4zm2 0h2v1h-2V4zm3 0h1v1h-1V4zm2 0h2v1h-2V4zM10 6h1v1h-1V6zm2 0h2v1h-2V6zm3 0h1v1h-1V6zm2 0h2v1h-2V6zm3 0h1v1h-1V6zM10 8h2v1h-2V8zm3 0h1v1h-1V8zm2 0h2v1h-2V8zm3 0h1v1h-1V8zm2 0h2v1h-2V8zM10 10h1v2h-1v-2zm2 0h2v1h-2v-1zm3 0h1v2h-1v-2zm2 0h1v1h-1v-1zm2 0h2v1h-2v-1zm3 0h1v2h-1v-2zM10 13h2v1h-2v-1zm3 0h1v1h-1v-1zm2 0h2v1h-2v-1zm3 0h1v1h-1v-1zm2 0h1v1h-1v-1zm2 0h2v1h-2v-1zM10 15h1v1h-1v-1zm2 0h2v1h-2v-1zm3 0h1v1h-1v-1zm2 0h2v2h-2v-2zm3 0h1v1h-1v-1zm2 0h2v1h-2v-1zM10 17h2v1h-2v-1zm3 0h1v1h-1v-1zm2 0h1v1h-1v-1zm2 1h1v1h-1v-1zm2-1h2v1h-2v-1zm3 0h1v1h-1v-1zM10 19h1v1h-1v-1zm2 0h2v1h-2v-1zm3 0h1v1h-1v-1zm2 0h1v1h-1v-1zm2 0h2v1h-2v-1zm3 0h1v1h-1v-1zM10 21h2v1h-2v-1zm3 0h1v2h-1v-2zm2 0h2v1h-2v-1zm3 0h1v1h-1v-1zm2 0h1v1h-1v-1zm2 0h2v1h-2v-1zM12 24h1v1h-1v-1zm2 0h1v1h-1v-1zm2 0h1v1h-1v-1zm2 0h2v1h-2v-1zm3 0h1v1h-1v-1zm2 0h2v1h-2v-1z"
-      fill="#000"
-    />
-  </svg>
-);
 
 export default function Page() {
   const router = useRouter();
@@ -26,15 +11,17 @@ export default function Page() {
   const paymentId = String(params?.payment_id || "").trim();
   const [amountLabel, setAmountLabel] = useState("R$ 0,00");
   const [paying, setPaying] = useState(false);
-  const pixCode = "000201010212268900";
+  const [pixCode, setPixCode] = useState<string>("");
+  const [qrUrl, setQrUrl] = useState<string>("");
 
-  const title = useMemo(() => "Pay with Boleto", []);
+  const title = useMemo(() => "Pay with PIX", []);
 
   useEffect(() => {
     let mounted = true;
     if (!paymentId) return;
     (async () => {
       try {
+        console.log("PixPage fetch link", { paymentId });
         const res = await fetch(`/api/payment_links/get/${encodeURIComponent(paymentId)}`);
         const data = await res.json().catch(() => null);
         if (!mounted) return;
@@ -42,6 +29,7 @@ export default function Page() {
         const nextAmountLabel = typeof data?.item?.amountLabel === "string" ? data.item.amountLabel : "";
         if (nextAmountLabel) setAmountLabel(nextAmountLabel);
       } catch {
+        console.error("PixPage fetch link error");
       }
     })();
     return () => {
@@ -50,7 +38,7 @@ export default function Page() {
   }, [paymentId]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-scree bg-white">
       <div className="flex items-center justify-between">
         <button
           type="button"
@@ -60,9 +48,7 @@ export default function Page() {
         >
           <ChevronLeft className="h-6 w-6 text-[#111827]" />
         </button>
-        <h1 className="text-[16px] font-medium leading-[20px] text-[#111827]">
-          {title}
-        </h1>
+        <h1 className="text-[16px] font-medium leading-[20px] text-[#111827]">{title}</h1>
         <div className="h-0 w-10" />
       </div>
 
@@ -71,7 +57,7 @@ export default function Page() {
           Link Generated
         </div>
         <div className="mt-2 max-w-[320px] text-[14px] leading-[18px] text-[#9AA4AF]">
-          Generate your boleto and open it to complete the payment.
+          Generate your PIX and scan the QR code to complete the payment.
         </div>
 
         <div className="mt-4 rounded-[16px] bg-[#EEF4FF] px-5 py-4">
@@ -83,19 +69,19 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-center">
-          <div className="w-full max-w-[328px] rounded-[20px] bg-gradient-to-b from-[#3F78D8] to-[#1F4D9A] px-5 py-5">
-            <div className="mx-auto w-full rounded-[18px] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
-              <div className="text-center text-[14px] font-medium leading-[18px] text-[#111827]">
-                Tap Pay below to generate your boleto.
+        {qrUrl ? (
+          <div className="mt-6 flex items-center justify-center">
+            <div className="w-full max-w-[328px] rounded-[20px] bg-gradient-to-b from-[#3F78D8] to-[#1F4D9A] px-5 py-5">
+              <div className="mx-auto w-full rounded-[18px] bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+                <img src={qrUrl} alt="PIX QR Code" className="mx-auto h-[220px] w-[220px]" />
               </div>
             </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="mt-5 rounded-[18px] bg-[#EEF4FF] px-4 py-4">
           <div className="text-[13px] leading-[16px] text-[#9AA4AF]">
-            After generating, the boleto will open in a new tab.
+            After generating, scan the QR or copy the PIX code to pay.
           </div>
         </div>
 
@@ -107,25 +93,26 @@ export default function Page() {
               if (!paymentId || paying) return;
               try {
                 setPaying(true);
+                console.log("PixPage create start", { paymentId });
                 const res = await fetch(`/api/payment/create`, {
                   method: "POST",
                   headers: { "content-type": "application/json" },
-                  body: JSON.stringify({ paymentLinkId: paymentId, method: "boleto" }),
+                  body: JSON.stringify({ paymentLinkId: paymentId, method: "pix" }),
                 });
                 const data = await res.json().catch(() => null);
                 if (!res.ok) {
+                  console.error("PixPage create failed", { status: res.status, data });
                   toast.error(typeof data?.error === "string" ? data.error : "Failed to initiate payment");
                   return;
                 }
-                const boletoUrl = typeof data?.boletoUrl === "string" ? data.boletoUrl : "";
-                if (boletoUrl) {
-                  try {
-                    window.open(boletoUrl, "_blank", "noopener,noreferrer");
-                  } catch {}
-                }
-                toast.success("Boleto generated");
-                router.push(`/Guardian/payment/${encodeURIComponent(paymentId)}`);
+                const nextQr = typeof data?.pixQrCodeUrl === "string" ? data.pixQrCodeUrl : "";
+                const nextText = typeof data?.pixQrCode === "string" ? data.pixQrCode : "";
+                console.log("PixPage create ok", { hasQr: !!nextQr, hasText: !!nextText });
+                if (nextQr) setQrUrl(nextQr);
+                if (nextText) setPixCode(nextText);
+                toast.success("PIX generated");
               } catch {
+                console.error("PixPage create exception");
                 toast.error("Network error");
               } finally {
                 setPaying(false);
@@ -133,7 +120,23 @@ export default function Page() {
             }}
             className="h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:opacity-60"
           >
-            {paying ? "Paying..." : "Pay"}
+            {paying ? "Generating..." : "Generate PIX"}
+          </button>
+          <button
+            type="button"
+            disabled={!pixCode}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(pixCode);
+                toast.success("PIX code copied");
+              } catch {
+                toast.error("Failed to copy PIX code");
+              }
+            }}
+            className="mt-4 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#F5F6F6] text-[15px] font-medium text-[#111827] disabled:opacity-60"
+          >
+            <Copy className="h-5 w-5 text-[#3F78D8]" />
+            Copy PIX code
           </button>
         </div>
       </div>
