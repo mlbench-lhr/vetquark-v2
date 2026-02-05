@@ -82,7 +82,24 @@ export async function POST(req: NextRequest) {
             description: "VetQuark reading payment",
           },
         ],
-        customer: { name: String((user as any).fullName || ""), email: String((user as any).email || "") },
+        customer: {
+          name: String((user as any).fullName || ""),
+          email: String((user as any).email || ""),
+          type: "individual",
+          document_type: "CPF",
+          document: "01234567890",
+          phones: {
+            mobile_phone: { country_code: "55", area_code: "11", number: "999999999" },
+          },
+          address: {
+            country: "BR",
+            state: "SP",
+            city: "São Paulo",
+            zip_code: "01000000",
+            line_1: "VetQuark",
+            line_2: "Test",
+          },
+        },
         payments: [
           {
             payment_method: "pix",
@@ -90,6 +107,7 @@ export async function POST(req: NextRequest) {
             amount: amountCents,
           },
         ],
+        closed: false,
         metadata: { paymentLinkId: String(link._id) },
       };
       console.log("DEBUG: Pagar.me Credentials", JSON.stringify({
