@@ -49,18 +49,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
        console.log("PaymentStatus v1 ok", JSON.stringify({ id: txId, status }));
       return NextResponse.json({ id: txId, status }, { status: 200 });
     } else {
-      const accountId = String(process.env.PAGARME_ACCOUNT_ID || "").trim();
-      if (!accountId) return NextResponse.json({ error: "Missing PAGARME_ACCOUNT_ID" }, { status: 500 });
       const url = `${base}/core/v5/orders/${encodeURIComponent(txId)}`;
-      const basic = Buffer.from(`${accountId}:${apiKey}`, "utf8").toString("base64");
-      const decoded = Buffer.from(basic, "base64").toString("utf8");
-      const split = decoded.split(":");
-      if (split[0] !== accountId || split[1] !== apiKey) {
-        return NextResponse.json(
-          { error: "configError", message: "Authorization header mismatch", diagnostics: { accountIdPrefix: accountId.slice(0, 4) } },
-          { status: 500 }
-        );
-      }
+      const basic = Buffer.from(`${apiKey}:`, "utf8").toString("base64");
       console.log("PaymentStatus v5 GET", JSON.stringify({ url }));
       const r = await fetch(url, {
         method: "GET",

@@ -63,67 +63,37 @@ export async function POST(req: NextRequest) {
     const amountCents = Math.round(Number(link.amount) * 100);
     const origin = new URL(req.url).origin;
     if (method === "pix") {
-      const accountId = String(process.env.PAGARME_ACCOUNT_ID || "").trim();
-      if (!accountId) return NextResponse.json({ error: "Missing PAGARME_ACCOUNT_ID" }, { status: 500 });
       const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
       const v5Url = `${base}/core/v5/orders`;
       if (!apiKey || apiKey.startsWith("pk_")) {
         console.error("PagarmeCreateV5 preflight invalid secret", JSON.stringify({ hasKey: !!apiKey, keyPrefix: apiKey ? apiKey.slice(0, 3) : null }));
         return NextResponse.json(
-          { error: "configError", message: "Invalid secret key. Use sk_*, not pk_*", diagnostics: { accountIdPrefix: accountId.slice(0, 4) } },
+          { error: "configError", message: "Invalid secret key. Use sk_*, not pk_*" },
           { status: 500 }
         );
       }
-      if (!accountId.startsWith("acc_")) {
-        console.error("PagarmeCreateV5 preflight invalid accountId", JSON.stringify({ accountIdPrefix: accountId.slice(0, 4) }));
-        return NextResponse.json(
-          { error: "configError", message: "Invalid account id. Use acc_* from Pagar.me", diagnostics: { accountIdPrefix: accountId.slice(0, 4) } },
-          { status: 500 }
-        );
-      }
-      console.log("PagarmeCreateV5 start", JSON.stringify({ v5Url, accountIdPresent: !!accountId, amountCents }));
+      console.log("PagarmeCreateV5 start", JSON.stringify({ v5Url, amountCents }));
       const orderPayload: any = {
         items: [{ amount: amountCents, quantity: 1, code: `payment:${String(link._id)}` }],
         customer: { name: String((user as any).fullName || ""), email: String((user as any).email || "") },
-        charges: [
+        payments: [
           {
-            amount: amountCents,
             payment_method: "pix",
-            payment: { pix: { expires_in: 3600 } },
+            pix: { expires_in: 3600 },
+            amount: amountCents,
           },
         ],
         metadata: { paymentLinkId: String(link._id) },
       };
-      
-      // DEBUG: Log the credentials and payload
       console.log("DEBUG: Pagar.me Credentials", JSON.stringify({
-        accountId: accountId,
         apiKey: apiKey ? `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}` : "missing",
-        accountIdValid: accountId.startsWith("acc_"),
         apiKeyValid: apiKey.startsWith("sk_"),
         amountCents: amountCents
       }));
       
       console.log("DEBUG: Pagar.me Request Payload", JSON.stringify(orderPayload, null, 2));
-      
-      const basic = Buffer.from(`${accountId}:${apiKey}`, "utf8").toString("base64");
-      const decoded = Buffer.from(basic, "base64").toString("utf8");
-      const split = decoded.split(":");
-      
-      console.log("DEBUG: Authorization Header", JSON.stringify({
-        basicAuth: basic,
-        decoded: decoded,
-        splitParts: split,
-        accountIdMatch: split[0] === accountId,
-        apiKeyMatch: split[1] === apiKey
-      }));
-      
-      if (split[0] !== accountId || split[1] !== apiKey) {
-        return NextResponse.json(
-          { error: "configError", message: "Authorization header mismatch", diagnostics: { accountIdPrefix: accountId.slice(0, 4) } },
-          { status: 500 }
-        );
-      }
+      const basic = Buffer.from(`${apiKey}:`, "utf8").toString("base64");
+      console.log("DEBUG: Authorization Header", JSON.stringify({ basicAuthPreview: `${basic.slice(0, 20)}...` }));
       console.log("DEBUG: Making API request to", v5Url);
       console.log("DEBUG: Request Headers", JSON.stringify({
         authorization: `Basic ${basic.slice(0, 20)}...`,
@@ -188,12 +158,12 @@ export async function POST(req: NextRequest) {
           { status: 502 }
         );
       }
-      const createdV5: PagarmeOrder = await r.json();
+      const createdV5: any = await r.json();
       const orderId = String(createdV5?.id || "");
-      const charge: PagarmePixCharge | null = Array.isArray(createdV5?.charges) ? createdV5.charges[0] : null;
+      const charge: any = Array.isArray(createdV5?.charges) ? createdV5.charges[0] : null;
       const paymentPix = charge?.payment?.pix || {};
-      const qrCodeText = String(paymentPix?.qr_code || "");
-      const qrCodeBase64 = String(paymentPix?.qr_code_base64 || "");
+      const qrCodeText = String(paymentPix?.qr_code || createdV5?.last_transaction?.qr_code || "");
+      const qrCodeBase64 = String(paymentPix?.qr_code_base64 || createdV5?.last_transaction?.qr_code_base64 || "");
       console.log("PagarmeCreateV5 ok", JSON.stringify({ orderId, orderStatus: createdV5?.status, chargeStatus: charge?.status, hasQr: !!qrCodeBase64 || !!qrCodeText }));
       await PaymentLink.updateOne(
         { _id: link._id },
