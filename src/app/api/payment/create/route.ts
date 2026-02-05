@@ -63,6 +63,12 @@ export async function POST(req: NextRequest) {
     const amountCents = Math.round(Number(link.amount) * 100);
     const origin = new URL(req.url).origin;
     if (method === "pix") {
+      const forwardedFor = String(req.headers.get("x-forwarded-for") || "");
+      const clientIp =
+        (forwardedFor.split(",")[0] || "").trim() ||
+        String(req.headers.get("x-real-ip") || "");
+      const expiresInSeconds = 3600;
+      const expiresAtIso = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
       const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
       const v5Url = `${base}/core/v5/orders`;
       if (!apiKey || apiKey.startsWith("pk_")) {
@@ -74,6 +80,7 @@ export async function POST(req: NextRequest) {
       }
       console.log("PagarmeCreateV5 start", JSON.stringify({ v5Url, amountCents }));
       const orderPayload: any = {
+      code: `payment:${String(link._id)}`,
       items: [
         {
           amount: amountCents,
@@ -87,7 +94,7 @@ export async function POST(req: NextRequest) {
         email: String((user as any).email || ""),
         type: "individual",
         document_type: "CPF",
-        document: "00000000000",
+        document: "12345678909",
         phones: {
           mobile_phone: { country_code: "55", area_code: "11", number: "999999999" },
         },
@@ -103,11 +110,20 @@ export async function POST(req: NextRequest) {
       payments: [
         {
           payment_method: "pix",
-          pix: { expires_in: 3600 },
+          pix: {
+            expires_in: expiresInSeconds,
+            expires_at: expiresAtIso,
+            additional_information: [
+              { name: "customer_name", value: String((user as any).fullName || "") },
+              { name: "customer_email", value: String((user as any).email || "") },
+              { name: "order_code", value: `payment:${String(link._id)}` },
+            ],
+          },
           amount: amountCents,
         },
       ],
-      closed: false,
+      closed: true,
+      ip: clientIp || undefined,
       metadata: { paymentLinkId: String(link._id) },
     };
       console.log("DEBUG: Pagar.me Credentials", JSON.stringify({
