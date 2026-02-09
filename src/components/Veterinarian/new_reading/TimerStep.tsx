@@ -64,10 +64,12 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const analyzeCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const capturedAtSetRef = useRef<Set<number>>(new Set())
   const alertedAtSetRef = useRef<Set<number>>(new Set())
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const prevGrayRef = useRef<Uint8Array | null>(null)
 
   const [cameraError, setCameraError] = useState('')
   const [needsTap, setNeedsTap] = useState(false)
@@ -77,6 +79,9 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [running, setRunning] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [started, setStarted] = useState(false)
+  const [qualityOk, setQualityOk] = useState(false)
+  const [qualityChecking, setQualityChecking] = useState(false)
+  const [qualityIssue, setQualityIssue] = useState<'' | 'dark' | 'bright' | 'focus' | 'motion'>('')
 
   useEffect(() => {
     if (selectedSeconds < requiredTotalSeconds) {
@@ -156,6 +161,110 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       if (stream) stream.getTracks().forEach((t) => t.stop())
     }
   }, [t])
+
+  useEffect(() => {
+    if (!cameraReady) return
+    if (started) return
+    let cancelled = false
+    let ticking = false
+    setQualityChecking(true)
+    const tick = () => {
+      if (ticking) return
+      ticking = true
+      try {
+        const video = videoRef.current
+        if (!video || !video.videoWidth || !video.videoHeight) {
+          setQualityOk(false)
+          setQualityIssue('')
+          return
+        }
+        let canvas = analyzeCanvasRef.current
+        if (!canvas) {
+          canvas = document.createElement('canvas')
+          analyzeCanvasRef.current = canvas
+        }
+        const targetW = 160
+        const targetH = Math.max(1, Math.round((video.videoHeight / video.videoWidth) * targetW))
+        canvas.width = targetW
+        canvas.height = targetH
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          setQualityOk(false)
+          setQualityIssue('')
+          return
+        }
+        ctx.drawImage(video, 0, 0, targetW, targetH)
+        const img = ctx.getImageData(0, 0, targetW, targetH)
+        const data = img.data
+        const gray = new Uint8Array(targetW * targetH)
+        let sumLum = 0
+        for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+          const r = data[i]
+          const g = data[i + 1]
+          const b = data[i + 2]
+          const y = Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b)
+          gray[p] = y
+          sumLum += y
+        }
+        const n = gray.length
+        const meanLum = sumLum / n
+        const tooDark = meanLum < 40
+        const tooBright = meanLum > 220
+        let edgeCount = 0
+        for (let y = 1; y < targetH - 1; y++) {
+          const row = y * targetW
+          for (let x = 1; x < targetW - 1; x++) {
+            const i = row + x
+            const gx =
+              -gray[i - targetW - 1] + 0 + gray[i - targetW + 1] +
+              -2 * gray[i - 1] + 0 + 2 * gray[i + 1] +
+              -gray[i + targetW - 1] + 0 + gray[i + targetW + 1]
+            const gy =
+              -gray[i - targetW - 1] + -2 * gray[i - targetW] + -gray[i - targetW + 1] +
+              0 + 0 + 0 +
+              gray[i + targetW - 1] + 2 * gray[i + targetW] + gray[i + targetW + 1]
+            const mag = Math.abs(gx) + Math.abs(gy)
+            if (mag > 25) edgeCount++
+          }
+        }
+        const edgeRatio = edgeCount / n
+        const focusBad = edgeRatio < 0.015
+        let motionBad = false
+        const prev = prevGrayRef.current
+        if (prev && prev.length === gray.length) {
+          let diffCount = 0
+          for (let i = 0; i < n; i++) {
+            if (Math.abs(gray[i] - prev[i]) > 12) diffCount++
+          }
+          const diffRatio = diffCount / n
+          motionBad = diffRatio > 0.08
+        }
+        prevGrayRef.current = gray
+        const ok = !tooDark && !tooBright && !focusBad && !motionBad
+        setQualityOk(ok)
+        if (ok) {
+          setQualityIssue('')
+        } else {
+          if (tooDark) setQualityIssue('dark')
+          else if (tooBright) setQualityIssue('bright')
+          else if (focusBad) setQualityIssue('focus')
+          else if (motionBad) setQualityIssue('motion')
+          else setQualityIssue('')
+        }
+      } finally {
+        setQualityChecking(false)
+        ticking = false
+      }
+    }
+    const id = setInterval(() => {
+      if (cancelled) return
+      tick()
+    }, 500)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [cameraReady, started])
 
   const captureImage = useCallback(
     (atSeconds: number) => {
@@ -268,6 +377,16 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   }, [started, captureProgress.allDone, captureProgress.completed, captureProgress.total, running, t])
 
   const displayTimerLabel = captureProgress.allDone ? '00:00' : nextCaptureLabel
+  const qualityMessage = useMemo(() => {
+    if (!cameraReady) return t('reading.timer.cameraUnavailable')
+    if (qualityChecking) return t('reading.timer.checkingCameraQuality')
+    if (qualityOk) return t('reading.timer.cameraQualityOk')
+    if (qualityIssue === 'dark') return t('reading.timer.cameraTooDark')
+    if (qualityIssue === 'bright') return t('reading.timer.cameraTooBright')
+    if (qualityIssue === 'focus') return t('reading.timer.cameraOutOfFocus')
+    if (qualityIssue === 'motion') return t('reading.timer.cameraMovingTooMuch')
+    return t('reading.timer.cameraUnavailable')
+  }, [cameraReady, qualityChecking, qualityIssue, qualityOk, t])
   const handlePrimaryClick = useCallback(() => {
     if (!started) {
       setStarted(true)
@@ -341,6 +460,11 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
               {cameraError ? cameraError : t('reading.timer.startingCamera')}
             </div>
           ) : null}
+          {cameraReady ? (
+            <div className="absolute left-2 bottom-2 text-xs px-2 py-1 rounded bg-black/50 text-white">
+              {qualityMessage}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -360,14 +484,17 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
             {t('reading.timer.tapToStartCamera')}
           </button>
         ) : (
-          <div className="text-sm text-tertiary">{t('reading.timer.positionStripStartTimer')}</div>
+          <div className="text-sm text-tertiary">
+            {qualityOk ? t('reading.timer.positionStripStartTimer') : qualityMessage}
+          </div>
         )}
       </div>
 
       <div className="mt-4 flex items-center justify-between bg-[#F5F6F6] rounded-full pe-4">
         <button
           onClick={handlePrimaryClick}
-          className="px-6 py-3 rounded-full bg-primary text-white font-medium"
+          disabled={!started && (!qualityOk || !cameraReady)}
+          className={`px-6 py-3 rounded-full font-medium ${!started && (!qualityOk || !cameraReady) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-primary text-white'}`}
         >
           {primaryButtonLabel}
         </button>

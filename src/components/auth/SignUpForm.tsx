@@ -1038,11 +1038,19 @@ export default function SignUpForm() {
                 />
                 <label htmlFor="terms" className="text-sm text-gray-700">
                   {t("auth.agreeToTermsPrefix")}
-                  <button className="text-primary hover:text-blue-700 bg-transparent border-0 cursor-pointer">
+                  <button
+                    type="button"
+                    onClick={() => router.push("/legal/terms")}
+                    className="text-primary hover:text-blue-700 bg-transparent border-0 cursor-pointer"
+                  >
                     {t("auth.termsOfUse")}
                   </button>
                   {" & "}
-                  <button className="text-primary hover:text-blue-700 bg-transparent border-0 cursor-pointer">
+                  <button
+                    type="button"
+                    onClick={() => router.push("/legal/privacy")}
+                    className="text-primary hover:text-blue-700 bg-transparent border-0 cursor-pointer"
+                  >
                     {t("auth.privacyPolicy")}
                   </button>
                 </label>
