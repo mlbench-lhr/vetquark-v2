@@ -163,7 +163,7 @@ export default function Page() {
 
   return (
     <div className=" bg-[#F4F6FB]">
-      <div className="mx-auto w-full max-w-[520px] px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
+      <div className="mx-auto w-full max-w-[520px] px-4 py-[calc(env(safe-area-inset-top)+20px)]">
         <div>
           <h1 className="text-[22px] font-semibold text-gray-900">Glossary of Parameters</h1>
           <p className="mt-1 text-[15px] text-gray-400">Understand what each urine test result means.</p>

@@ -97,8 +97,8 @@ export default function GuardianNotificationsPage() {
   const displayItems = useMemo(() => items, [items]);
 
   return (
-    <div className="bg-white min-h-screen">
-      <div className="px-5 pt-[calc(env(safe-area-inset-top)+14px)] pb-4">
+    <div className="bg-white min-h-scree">
+      <div className="px- pt-[calc(env(safe-area-inset-top)+14px) pb-4">
         <div className="relative flex items-center justify-center">
           <button type="button" onClick={() => router.back()} className="absolute left-0 top-1/2 -translate-y-1/2 p-1">
             <ChevronLeft className="h-6 w-6 text-[#111827]" />
@@ -107,7 +107,7 @@ export default function GuardianNotificationsPage() {
         </div>
       </div>
 
-      <div className="px-5 pb-8">
+      <div className="px- pb-8">
         {loading ? (
           <>
             <ListItemSkeleton />

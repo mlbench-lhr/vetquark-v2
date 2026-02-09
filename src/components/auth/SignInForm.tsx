@@ -204,6 +204,7 @@ import { useTranslation } from "react-i18next";
 import i18n, { isAppLanguage, type AppLanguage } from "@/i18n/i18n";
 import { Modal } from "@/components/ui/modal";
 import EmailVerification from "@/components/auth/EmailVerification";
+import Link from 'next/link';
 
 type ProfileType = 'veterinarian' | 'guardian';
 
@@ -507,13 +508,13 @@ export default function SignInForm() {
           </button>
         </p>
         <div className="mt-2 text-sm text-gray-500">
-          <button
+          <Link
+          href={"/legal/terms"}
             type="button"
-            onClick={() => router.push("/legal/terms")}
             className="hover:text-gray-700 bg-transparent border-0 cursor-pointer"
           >
             Termos de Serviço
-          </button>
+          </Link>
           <span className="mx-2">•</span>
           <button
             type="button"

@@ -100,7 +100,7 @@ export default function MenuPage() {
   return (
     <div className="bg-white min-h-screen flex flex-col">
       <Header title={t("menu.menu")} />
-      <div className="px-4 pt-3">
+      <div className="px- pt-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-14 w-14 overflow-hidden rounded-full bg-[#F5F6F6]">
@@ -125,7 +125,7 @@ export default function MenuPage() {
         </div>
       </div>
 
-      <div className="flex-1 px-4 pt-5">
+      <div className="flex-1 px- pt-5">
         <div className="space-y-2">
           {menuItems.map((item) => {
             const iconNode =
@@ -138,7 +138,7 @@ export default function MenuPage() {
               );
 
             const row = (
-              <div className="flex w-full items-center gap-4 rounded-2xl px-2 py-3 transition-colors hover:bg-[#F5F6F6]">
+              <div className="flex w-full items-center gap-4 rounded-2xl px- py-3 transition-colors hover:bg-[#F5F6F6]">
                 <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#EAF1FF]">
                   {iconNode}
                 </div>
@@ -180,7 +180,7 @@ export default function MenuPage() {
         <button
           type="button"
           onClick={logout}
-          className="flex items-center gap-4 rounded-2xl px-2 py-3 text-[#9AA4AF] transition-colors hover:bg-[#F5F6F6]"
+          className="flex items-center gap-4 rounded-2xl px- py-3 text-[#9AA4AF] transition-colors hover:bg-[#F5F6F6]"
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F5F6F6]">
             <LogOut className="h-5 w-5 text-[#9AA4AF]" />

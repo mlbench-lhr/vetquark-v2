@@ -454,7 +454,7 @@ export default function Home() {
     }, [latestReadingId, router]);
 
     return (
-        <main className="min-h-scree bg-gray-5 p-6">
+        <main className="min-h-scree bg-gray-5 p-">
             <div className=" mx-auto">
                 <Header name={profile?.fullName || 'User'} />
                 <PetSelector pets={pets} activePetId={activePetId} onSelect={setActivePetId} loading={loadingPets} />

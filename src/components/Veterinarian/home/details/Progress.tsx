@@ -423,7 +423,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
         )
     }
     return (
-        <div className="space-y-4 px-4">
+        <div className="space-y-4 px-">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
