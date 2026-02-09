@@ -506,6 +506,23 @@ export default function SignInForm() {
             {t("auth.signUp")}
           </button>
         </p>
+        <div className="mt-2 text-sm text-gray-500">
+          <button
+            type="button"
+            onClick={() => router.push("/legal/terms")}
+            className="hover:text-gray-700 bg-transparent border-0 cursor-pointer"
+          >
+            Termos de Serviço
+          </button>
+          <span className="mx-2">•</span>
+          <button
+            type="button"
+            onClick={() => router.push("/legal/privacy")}
+            className="hover:text-gray-700 bg-transparent border-0 cursor-pointer"
+          >
+            Política de Privacidade
+          </button>
+        </div>
       </div>
     </div>
   );
