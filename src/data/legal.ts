@@ -13,6 +13,8 @@ export type LegalContent = {
   sections: LegalSection[];
 };
 
+export type LegalLanguage = "pt" | "en";
+
 export const privacyAndTermsContent: LegalContent = {
   title: "Política de Privacidade – VetQuark",
   lastUpdated: "[preencher]",
@@ -179,3 +181,174 @@ export const privacyAndTermsContent: LegalContent = {
     },
   ],
 };
+
+export const privacyAndTermsContent_en: LegalContent = {
+  title: "Privacy Policy – VetQuark",
+  lastUpdated: "[fill in]",
+  controllerOperator: 'Controller/Processor: VetQuark Lab Animal Health Technology Ltd. (“VetQuark”, “we”)',
+  dpoEmail: "Data Protection Officer (DPO): contato@vetquark.com",
+  address: "Address: [insert full address]",
+  intro:
+    "This Policy explains how we process personal data of Veterinarians, Guardians, and other users of the VetQuark application (“App”). By using the App, you declare that you have read and agreed to this Policy and the Terms of Service.",
+  sections: [
+    {
+      title: "1. Roles under the LGPD",
+      paragraphs: [
+        "For account, billing, and support data (e.g., guardian's email, veterinarian’s billing details): VetQuark acts as the Controller.",
+        "For clinical data of patients (pets) and reports entered by the veterinarian: VetQuark acts as the Processor, handling such data on behalf of the veterinarian, who is the Controller of this information.",
+        "For security, logs, and auditing items, there may be joint controllership when necessary to meet legal obligations or prevent fraud.",
+      ],
+    },
+    {
+      title: "2. Data we process",
+      paragraphs: [],
+    },
+    {
+      title: "2.1. Veterinarians’ data (account and operations)",
+      paragraphs: [
+        "Identification: name, email, mobile, CPF, CRMV/State, clinic (if applicable), digital/electronic signature, profile photo.",
+        "Financial: exam price defined by the user, billing data, bank details for payouts, transaction history, chargebacks, invoices (where applicable).",
+        "Use of the App: searches, actions on screens, usage metrics, preferences, access logs (IP, device, date/time).",
+      ],
+    },
+    {
+      title: "2.2. Guardians’ data",
+      paragraphs: [
+        "Identification and contact: name, email, mobile, CPF (if collected by the veterinarian), address (when provided by the veterinarian).",
+        "Links: associated pets and responsible clinic/veterinarian.",
+        "Use of the App: preferences, navigation metrics, logs.",
+      ],
+    },
+    {
+      title: "2.3. Patients (pets) and Exams",
+      paragraphs: [
+        "Pet identification data (name, species, breed, sex, age, microchip number, etc.).",
+        "Exam data (parameters, photos captured of the reagent strip, reading times, notes and reports).",
+        "Technical metadata: date/time of collection, collection method, strip lot/expiry, device used.",
+        "Note: clinical data refers to animals; however, they may be associated with people (guardians). For care and confidentiality, we treat such data with a high level of security.",
+      ],
+    },
+    {
+      title: "2.4. Device Images/Permissions",
+      paragraphs: [
+        "Access to the camera to capture strips during the exam.",
+        "Access to files when the user attaches documents.",
+        "Push notifications (opt-in).",
+      ],
+    },
+    {
+      title: "2.5. Cookies and Similar Technologies (web)",
+      paragraphs: [
+        "Strictly necessary cookies (login, session, security).",
+        "Performance/metrics cookies (analytics).",
+        "You can manage preferences in your browser/device.",
+      ],
+    },
+    {
+      title: "3. Purposes and Legal Bases (LGPD)",
+      paragraphs: [
+        "Create and maintain accounts: registration, authentication, anti-fraud. Legal basis: Performance of a contract (art. 7, V) and legitimate interest (art. 7, IX).",
+        "Operate the exam and generate reports: image capture, timing, recording and signature. Legal basis: Performance of a contract (art. 7, V) — for the veterinarian; Processing on behalf of the Controller (art. 39).",
+        "Billing and payouts: issuance of payment link, split, payouts, chargebacks. Legal basis: Performance of a contract; legal/regulatory compliance (art. 7, II).",
+        "Support and assistance: technical and clinical-administrative support to the veterinarian. Legal basis: Performance of a contract; legitimate interest.",
+        "Security and fraud prevention: logs, auditing, abuse detection. Legal basis: Legitimate interest; legal compliance.",
+        "Communications: transactional emails, push (e.g., report available). Legal basis: Performance of a contract; consent for promotional push.",
+        "App improvement: metrics, A/B tests, statistics. Legal basis: Legitimate interest (minimization and anonymization where possible).",
+        "Legal obligations: retention of logs, tax matters. Legal basis: Compliance with legal obligation (art. 7, II).",
+      ],
+    },
+    {
+      title: "4. Data sharing",
+      paragraphs: [
+        "Payment partners (e.g., gateway/acquirer) to process charges, prevent fraud, and handle chargebacks.",
+        "Cloud infrastructure, hosting, and email to provide the App and communications.",
+        "Metrics/error (observability) tools with minimized data.",
+        "Public authorities when required by law/court order.",
+        "Auditors/legal advisors in specific cases (compliance, disputes).",
+        "We do not sell personal data. In the event of a merger/acquisition, data may be transferred, maintaining this Policy or an equivalent.",
+      ],
+    },
+    {
+      title: "5. International transfers",
+      paragraphs: [
+        "Data may be processed/stored outside Brazil by cloud providers. We adopt mechanisms provided for in the LGPD (art. 33 et seq.), such as contractual clauses and evaluation of protection guarantees.",
+      ],
+    },
+    {
+      title: "6. Retention and disposal",
+      paragraphs: [
+        "Accounts: while active and for as long as necessary to fulfill legal/contractual obligations.",
+        "Access logs: at least 6 months (according to Marco Civil/best practices) or for longer legal periods where applicable.",
+        "Financial: tax/accounting periods (usually 5 years or according to legislation).",
+        "Exams/reports: while linked to the veterinarian’s account (Controller) or according to the Controller’s instructions and legal requirements.",
+        "At the end of the periods, we will delete, anonymize, or securely archive, as applicable.",
+      ],
+    },
+    {
+      title: "7. Security",
+      paragraphs: [
+        "We adopt technical and administrative security measures proportional to risk, including encryption in transit, access control, logs/auditing, environment segmentation, backups, and an incident response program. No system is 100% secure; in the event of a relevant incident, we will follow the notification protocols provided in the LGPD.",
+      ],
+    },
+    {
+      title: "8. Data Subject Rights (LGPD)",
+      paragraphs: [
+        "You (guardian, veterinarian, or other data subject) may, at any time:",
+        "Confirm processing and access your data;",
+        "Correct incomplete/inaccurate data;",
+        "Anonymize, block, or delete unnecessary/excessive data;",
+        "Port data to another provider;",
+        "Revoke consent (where applicable) and be informed of the consequences;",
+        "Object to processing based on legitimate interest;",
+        "Review automated decisions (if any);",
+        "Lodge a complaint against the Controller before the ANPD.",
+        "How to exercise: send a request to the DPO (contato@vetquark.com). For your security, we may request identity proof/additional information. Response time: up to 15 days (or another applicable legal period).",
+        "Important: for clinical data entered by the veterinarian (Controller), VetQuark may forward the request to the responsible veterinarian, assisting as Processor.",
+      ],
+    },
+    {
+      title: "9. Minors",
+      paragraphs: [
+        "The App is intended for people aged 18 and over. We do not knowingly collect data from minors. If you believe we have collected information from a minor, contact the DPO for appropriate removal.",
+      ],
+    },
+    {
+      title: "10. Clinical content and educational material",
+      paragraphs: [
+        "The App may display glossaries and general guidelines (e.g., at-home collection). Such content is informational and does not replace professional evaluation. We do not offer personalized medical recommendations to guardians.",
+      ],
+    },
+    {
+      title: "11. Automated decisions",
+      paragraphs: [
+        "Assistive features (e.g., timers, normalizers, suggested pre-filling of results) do not, by themselves, produce legal effects. Validation and the report depend on review and signature by the veterinarian.",
+      ],
+    },
+    {
+      title: "12. Updates to this Policy",
+      paragraphs: [
+        "We may update this Policy to reflect legal or product changes. We will publish the new version with an effective date; continued use of the App indicates awareness of the current version.",
+      ],
+    },
+    {
+      title: "13. DPO contact",
+      paragraphs: [
+        "Email: contato@vetquark.com",
+        "Subject: “LGPD Rights – VetQuark”",
+        "Minimum content: data subject identification, registered email, request and, where applicable, proof of link (guardian ↔ pet ↔ veterinarian).",
+      ],
+    },
+    {
+      title: "14. Practical examples of processing",
+      paragraphs: [
+        "Guardian receives notification “report available”: we use your email/push for transactional sending (performance of a contract with the veterinarian Controller).",
+        "Veterinarian requests withdrawal: we process bank data and transaction history with the payment processor (performance of a contract/legal obligation).",
+        "Public verification of report by QR (if enabled by the clinic): we display report metadata strictly necessary for authenticity/validation, without exposing excessive guardian data.",
+      ],
+    },
+  ],
+};
+
+export function getLegalContent(lang: LegalLanguage): LegalContent {
+  return lang === "en" ? privacyAndTermsContent_en : privacyAndTermsContent;
+}
