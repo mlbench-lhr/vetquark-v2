@@ -26,17 +26,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     const paymentLinkId = String(body?.paymentLinkId || "").trim();
     const methodRaw = String(body?.method || "").trim().toLowerCase();
-    const method: Method = methodRaw === "credit_card" || methodRaw === "boleto" || methodRaw === "pix" ? (methodRaw as Method) : null as any;
+    const method: Method = methodRaw === "pix" || methodRaw === "boleto" ? (methodRaw as Method) : null as any;
     const cardHash = String(body?.cardHash || "").trim();
     console.log("PaymentCreate init", JSON.stringify({ userId, paymentLinkId, method }));
 
     if (!paymentLinkId || !mongoose.Types.ObjectId.isValid(paymentLinkId)) {
       return NextResponse.json({ error: "Invalid paymentLinkId" }, { status: 400 });
     }
-    if (!method) return NextResponse.json({ error: "Invalid method" }, { status: 400 });
-    if (method === "credit_card" && !cardHash) {
-      return NextResponse.json({ error: "Missing cardHash" }, { status: 400 });
-    }
+    if (!method) return NextResponse.json({ error: "Method not supported in v5-only mode" }, { status: 501 });
 
     await connectMongo();
     console.log("PaymentCreate db connected");
@@ -67,9 +64,7 @@ export async function POST(req: NextRequest) {
       const clientIp =
         (forwardedFor.split(",")[0] || "").trim() ||
         String(req.headers.get("x-real-ip") || "");
-      const allowFallbackV1 = String(process.env.PAGARME_PIX_FALLBACK_V1 || "").trim() === "1";
       const expiresInSeconds = 3600;
-      const expiresAtIso = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
       const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
       const v5Url = `${base}/core/v5/orders`;
       if (!apiKey || apiKey.startsWith("pk_")) {
@@ -208,85 +203,16 @@ export async function POST(req: NextRequest) {
       const statusOrder = String(createdV5?.status || "").toLowerCase();
       const statusCharge = String(charge?.status || "").toLowerCase();
       if (statusOrder === "failed" || statusCharge === "failed") {
-        if (!allowFallbackV1) {
-          const reason =
-            String(charge?.last_transaction?.gateway_response?.errors?.[0]?.message || "") ||
-            String(charge?.last_transaction?.failure_reason || "") ||
-            String(charge?.status_reason || "") ||
-            "Provider failed to create Pix charge";
-          console.error("PagarmeCreateV5 failed", JSON.stringify({ orderId, statusOrder, statusCharge, reason }));
-          return NextResponse.json(
-            { error: "providerError", message: reason, details: createdV5 },
-            { status: 502 }
-          );
-        }
-        const v1Url = `${base}/1/transactions`;
-        const fallbackPayload: any = {
-          api_key: apiKey,
-          amount: amountCents,
-          payment_method: "pix",
-          metadata: { paymentLinkId: String(link._id) },
-          customer: { name: String((user as any).fullName || ""), email: String((user as any).email || "") },
-          ip: clientIp || undefined,
-        };
-        const r2 = await fetch(v1Url, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            accept: "application/json",
-            "user-agent":
-              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
-            origin,
-            referer: origin,
-          },
-          body: JSON.stringify(fallbackPayload),
-        });
-        const ct2 = String(r2.headers.get("content-type") || "");
-        const statusCode2 = r2.status;
-        if (!ct2.includes("application/json")) {
-          const text2 = await r2.text().catch(() => "");
-          const snippet2 = typeof text2 === "string" ? text2.slice(0, 300) : "";
-          console.error("PagarmeCreateV1 blocked", JSON.stringify({ statusCode: statusCode2, contentType: ct2, url: v1Url, bodySnippet: snippet2 }));
-          return NextResponse.json(
-            { error: "providerBlocked", reason: "Non-JSON response from provider", diagnostics: { statusCode: statusCode2, contentType: ct2 } },
-            { status: 502 }
-          );
-        }
-        if (statusCode2 >= 400) {
-          const errJson2 = await r2.json().catch(() => ({}));
-          const msg2 =
-            typeof errJson2?.message === "string"
-              ? errJson2.message
-              : Array.isArray(errJson2?.errors) && typeof errJson2.errors?.[0]?.message === "string"
-              ? errJson2.errors[0].message
-              : "Provider error";
-          console.error("PagarmeCreateV1 error", JSON.stringify({ statusCode: statusCode2, contentType: ct2, url: v1Url, error: errJson2 }));
-          return NextResponse.json(
-            { error: "providerError", message: msg2, details: errJson2, statusCode: statusCode2 },
-            { status: 502 }
-          );
-        }
-        const tx = await r2.json();
-        const tranId = String((tx as any)?.id || (tx as any)?.tid || "");
-        const qrText2 = String((tx as any)?.pix_qr_code || (tx as any)?.qr_code || (tx as any)?.last_transaction?.qr_code || "");
-        const qrBase642 = String((tx as any)?.pix_qr_code_base64 || (tx as any)?.qr_code_base64 || (tx as any)?.last_transaction?.qr_code_base64 || "");
-        await PaymentLink.updateOne(
-          { _id: link._id },
-          {
-            $set: {
-              paymentMethod: "pix",
-              provider: "pagarme",
-              providerTransactionId: tranId || orderId || null,
-            },
-          },
+        const reason =
+          String(charge?.last_transaction?.gateway_response?.errors?.[0]?.message || "") ||
+          String(charge?.last_transaction?.failure_reason || "") ||
+          String(charge?.status_reason || "") ||
+          "Provider failed to create Pix charge";
+        console.error("PagarmeCreateV5 failed", JSON.stringify({ orderId, statusOrder, statusCharge, reason }));
+        return NextResponse.json(
+          { error: "providerError", message: reason, details: createdV5 },
+          { status: 502 }
         );
-        const responseV1: any = {
-          transactionId: tranId || orderId,
-          status: String((tx as any)?.status || ""),
-          pixQrCode: qrText2 || null,
-          pixQrCodeUrl: qrBase642 ? `data:image/png;base64,${qrBase642}` : null,
-        };
-        return NextResponse.json(responseV1, { status: 200 });
       }
       console.log("PagarmeCreateV5 ok", JSON.stringify({ orderId, orderStatus: createdV5?.status, chargeStatus: charge?.status, hasQr: !!qrCodeBase64 || !!qrCodeText }));
       await PaymentLink.updateOne(
@@ -307,82 +233,153 @@ export async function POST(req: NextRequest) {
       };
       return NextResponse.json(responseV5, { status: 200 });
     }
-    const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
-    const url = `${base}/1/transactions`;
-    const payload: any =
-      method === "credit_card"
-        ? {
-            api_key: apiKey,
-            amount: amountCents,
-            payment_method: "credit_card",
-            card_hash: cardHash,
-            metadata: { paymentLinkId: String(link._id) },
-            customer: { name: String((user as any).fullName || ""), email: String((user as any).email || "") },
-          }
-        : {
-            api_key: apiKey,
-            amount: amountCents,
-            payment_method: method,
-            metadata: { paymentLinkId: String(link._id) },
-          };
-    if (webhookUrl) (payload as any).postback_url = webhookUrl;
-    console.log("PagarmeCreateV1 start", JSON.stringify({ url, method, amountCents, hasCardHash: method === "credit_card" ? !!cardHash : undefined, hasWebhookUrl: !!webhookUrl }));
-    const r = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        accept: "application/json",
-        "user-agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
-        origin,
-        referer: origin,
-      },
-      body: JSON.stringify(payload),
-    });
-    console.log("r---------", r);      
-    const ct = String(r.headers.get("content-type") || "");
-    const cfRay = r.headers.get("cf-ray") || r.headers.get("CF-Ray") || "";
-    const server = r.headers.get("server") || "";
-    const statusCode = r.status;
-    if (!ct.includes("application/json")) {
-      const text = await r.text().catch(() => "");
-      const snippet = typeof text === "string" ? text.slice(0, 300) : "";
-      console.error(
-        "PagarmeCreate blocked",
-        JSON.stringify({
-          statusCode,
-          contentType: ct,
-          cfRay,
-          server,
-          url,
-          bodySnippet: snippet,
-        }),
-      );
-      return NextResponse.json(
-        { error: "providerBlocked", reason: "Non-JSON response from provider", diagnostics: { statusCode, contentType: ct, cfRay, server } },
-        { status: 502 }
-      );
-    }
-    const created = await r.json();
-    console.log("PagarmeCreate v1 ok", JSON.stringify({ id: created?.id, status: created?.status, method }));
-    const txId = String(created?.id || "");
-    const status = String(created?.status || "");
-    await PaymentLink.updateOne(
-      { _id: link._id },
-      {
-        $set: {
-          paymentMethod: method,
-          provider: "pagarme",
-          providerTransactionId: txId || null,
-        },
-      },
-    );
-    const response: any = { transactionId: txId, status };
     if (method === "boleto") {
-      response.boletoUrl = created?.boleto_url || null;
-      response.boletoBarcode = created?.boleto_barcode || null;
+      const forwardedFor = String(req.headers.get("x-forwarded-for") || "");
+      const clientIp =
+        (forwardedFor.split(",")[0] || "").trim() ||
+        String(req.headers.get("x-real-ip") || "");
+      const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
+      const v5Url = `${base}/core/v5/orders`;
+      if (!apiKey || apiKey.startsWith("pk_")) {
+        console.error("PagarmeCreateV5 preflight invalid secret", JSON.stringify({ hasKey: !!apiKey, keyPrefix: apiKey ? apiKey.slice(0, 3) : null }));
+        return NextResponse.json(
+          { error: "configError", message: "Invalid secret key. Use sk_*, not pk_*" },
+          { status: 500 }
+        );
+      }
+      const dueAtIso = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+      const orderPayload: any = {
+        code: `payment:${String(link._id)}`,
+        items: [
+          {
+            amount: amountCents,
+            quantity: 1,
+            code: `payment:${String(link._id)}`,
+            description: "VetQuark reading payment",
+          },
+        ],
+        customer: {
+          name: String((user as any).fullName || ""),
+          email: String((user as any).email || ""),
+          type: "individual",
+          document_type: "CPF",
+          document: "12345678909",
+          phones: {
+            mobile_phone: { country_code: "55", area_code: "11", number: "999999999" },
+          },
+          address: {
+            country: "BR",
+            state: "SP",
+            city: "São Paulo",
+            zip_code: "01000000",
+            line_1: "VetQuark Payment",
+            line_2: "Test transaction",
+          },
+        },
+        payments: [
+          {
+            payment_method: "boleto",
+            boleto: {
+              due_at: dueAtIso,
+              instructions: ["VetQuark payment", "Pay by due date"],
+            },
+            amount: amountCents,
+          },
+        ],
+        closed: true,
+        ip: clientIp || undefined,
+        metadata: { paymentLinkId: String(link._id) },
+      };
+      const basic = Buffer.from(`${apiKey}:`, "utf8").toString("base64");
+      const r = await fetch(v5Url, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+          authorization: `Basic ${basic}`,
+          "user-agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+          origin,
+          referer: origin,
+        },
+        body: JSON.stringify(orderPayload),
+      });
+      const ct = String(r.headers.get("content-type") || "");
+      const statusCode = r.status;
+      if (!ct.includes("application/json")) {
+        const text = await r.text().catch(() => "");
+        const snippet = typeof text === "string" ? text.slice(0, 300) : "";
+        console.error("PagarmeCreateV5 blocked", JSON.stringify({ statusCode, contentType: ct, url: v5Url, bodySnippet: snippet }));
+        return NextResponse.json(
+          { error: "providerBlocked", reason: "Non-JSON response from provider", diagnostics: { statusCode, contentType: ct } },
+          { status: 502 }
+        );
+      }
+      if (statusCode >= 400) {
+        const errJson = await r.json().catch(() => ({}));
+        const msg =
+          typeof errJson?.message === "string"
+            ? errJson.message
+            : Array.isArray(errJson?.errors) && typeof errJson.errors?.[0]?.message === "string"
+            ? errJson.errors[0].message
+            : "Provider error";
+        console.error("PagarmeCreateV5 error", JSON.stringify({ statusCode, contentType: ct, url: v5Url, error: errJson }));
+        return NextResponse.json(
+          { error: "providerError", message: msg, details: errJson, statusCode },
+          { status: 502 }
+        );
+      }
+      const createdV5: any = await r.json();
+      const orderId = String(createdV5?.id || "");
+      const charge: any = Array.isArray(createdV5?.charges) ? createdV5.charges[0] : null;
+      const statusOrder = String(createdV5?.status || "").toLowerCase();
+      const statusCharge = String(charge?.status || "").toLowerCase();
+      if (statusOrder === "failed" || statusCharge === "failed") {
+        const reason =
+          String(charge?.last_transaction?.gateway_response?.errors?.[0]?.message || "") ||
+          String(charge?.last_transaction?.failure_reason || "") ||
+          String(charge?.status_reason || "") ||
+          "Provider failed to create Boleto charge";
+        console.error("PagarmeCreateV5 failed", JSON.stringify({ orderId, statusOrder, statusCharge, reason }));
+        return NextResponse.json(
+          { error: "providerError", message: reason, details: createdV5 },
+          { status: 502 }
+        );
+      }
+      await PaymentLink.updateOne(
+        { _id: link._id },
+        {
+          $set: {
+            paymentMethod: "boleto",
+            provider: "pagarme",
+            providerTransactionId: orderId || null,
+          },
+        },
+      );
+      const lastTxn: any = charge?.last_transaction || {};
+      const pBoleto: any = charge?.payment?.boleto || {};
+      const boletoUrlRaw =
+        pBoleto?.url ||
+        pBoleto?.pdf ||
+        lastTxn?.boleto_url ||
+        lastTxn?.pdf_url ||
+        "";
+      const boletoBarcodeRaw =
+        pBoleto?.barcode ||
+        pBoleto?.line ||
+        lastTxn?.boleto_barcode ||
+        lastTxn?.barcode ||
+        lastTxn?.line ||
+        "";
+      const responseV5: any = {
+        transactionId: orderId,
+        status: String(createdV5?.status || charge?.status || ""),
+        boletoUrl: boletoUrlRaw ? String(boletoUrlRaw) : null,
+        boletoBarcode: boletoBarcodeRaw ? String(boletoBarcodeRaw) : null,
+      };
+      return NextResponse.json(responseV5, { status: 200 });
     }
-    return NextResponse.json(response, { status: 200 });
+    return NextResponse.json({ error: "Method not supported in v5-only mode" }, { status: 501 });
   } catch (e) {
     console.error("PaymentCreate fatal", e);
     return NextResponse.json({ error: "Internal server error", reason: e instanceof Error ? e.message : "unknown" }, { status: 500 });
