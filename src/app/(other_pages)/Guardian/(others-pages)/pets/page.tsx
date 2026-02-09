@@ -59,7 +59,7 @@ export default function Page() {
   }, [pets, searchQuery]);
 
   return (
-    <div className="min-h-scree px-3 py-5 relative">
+    <div className="min-h-scree px- pb- relative">
       <Header title={t('home.viewPetsTitle')}/>
       <div className="relative mt-2">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />

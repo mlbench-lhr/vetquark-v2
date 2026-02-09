@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -396,15 +397,17 @@ export default function ReportDetailsPage() {
         </div>
 
         {loading ? (
-          <div className="mt-6 px-4 text-[14px] text-gray-500">{t("history.loading")}</div>
+          <div className="mt-6 px- text-[14px] text-gray-500">{t("history.loading")}</div>
         ) : !reading ? (
-          <div className="mt-6 px-4 text-[14px] text-gray-500">{t("history.noExamsFound")}</div>
+          <div className="mt-6 px- text-[14px] text-gray-500">{t("history.noExamsFound")}</div>
         ) : (
           <>
-            <div className="mt-5 px-4">
+            <div className="mt-5 px-">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#F5F6F6]">
-                  <img
+                  <Image
+                  width={100}
+                  height={100}
                     src={reading.patient.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
                     alt={reading.patient.name}
                     className="h-full w-full object-cover"

@@ -77,6 +77,15 @@ export default async function middleware(req: NextRequest) {
   const secret = process.env.AUTH_SECRET;
   const isApi = pathname.startsWith("/api");
 
+  const publicAlwaysAccessible = new Set([
+    "/legal/privacy",
+    "/legal/terms",
+  ]);
+
+  if (publicAlwaysAccessible.has(pathname)) {
+    return NextResponse.next();
+  }
+
   const publicRoutes = new Set([
     "/signin",
     "/signup",

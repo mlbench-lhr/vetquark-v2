@@ -19,7 +19,7 @@ interface TabsProps {
 const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange }) => {
   const { t } = useTranslation();
   return (
-    <div className="flex gap-3 px-4 mb-4">
+    <div className="flex gap-3 px- mb-4 mt-2">
       <button
         onClick={() => onTabChange('information')}
         className={`flex-1 py-1 px-6 rounded-full flex justify-center items-center gap-2 font-medium transition-colors ${activeTab === 'information' ? 'bg-[#EBF2FF] text-primary' : 'text-gray-600 bg-[#F5F6F6]'
@@ -309,7 +309,7 @@ export default function Page() {
       {loading ? (
         <PetDetailsSkeleton />
       ) : activeTab === 'information' ? (
-        <div className="px-4 space-y-4">
+        <div className="px- space-y-4">
           <PatientInfoCard {...petData} />
         </div>
       ) : (

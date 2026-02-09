@@ -7,10 +7,11 @@ import { toast } from "react-toastify";
 import { useAppSelector } from "@/store/hooks";
 import { UserContext } from "@/context/authContext";
 import { useTranslation } from "react-i18next";
+import Header from "@/components/common/header";
 
 function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
-    <div className="relative flex items-center justify-center px-4 pt-6">
+    <div className="relative flex items-center justify-center px- pt-6">
       <button
         type="button"
         onClick={onBack}
@@ -51,10 +52,10 @@ export default function Page() {
   const [sending, setSending] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white">
-      <PageHeader title={t("helpCentre.title")} onBack={() => router.back()} />
+    <div className="min-h-scree bg-white">
+      <Header title={t("helpCentre.title")} />
 
-      <div className="px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
+      <div className="px- pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div>
           <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">
             {t("helpCentre.urineGuideTitle")}

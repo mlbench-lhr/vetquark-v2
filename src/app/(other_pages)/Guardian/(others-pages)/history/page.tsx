@@ -413,9 +413,9 @@ function PageContent() {
   }, []);
 
   return (
-    <div className="h-[100dvh] w-full bg-white">
+    <div className="h-[100dvh w-full bg-white">
       <div className="mx-auto w-full h-full pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
-        <div className="px-4">
+        <div className="px-">
           <h1 className="text-[22px] font-semibold leading-[28px] text-[#111827]">
             Examination History
           </h1>
@@ -424,7 +424,7 @@ function PageContent() {
           </p>
         </div>
 
-        <div className="px-4 mt-5 flex gap-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+        <div className="px- mt-5 flex gap-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
           {loadingPets ? (
             <>
               {[0, 1, 2, 3].map((i) => (
