@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
       const clientIp =
         (forwardedFor.split(",")[0] || "").trim() ||
         String(req.headers.get("x-real-ip") || "");
+      const allowFallbackV1 = String(process.env.PAGARME_PIX_FALLBACK_V1 || "").trim() === "1";
       const expiresInSeconds = 3600;
       const expiresAtIso = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
       const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
@@ -207,6 +208,18 @@ export async function POST(req: NextRequest) {
       const statusOrder = String(createdV5?.status || "").toLowerCase();
       const statusCharge = String(charge?.status || "").toLowerCase();
       if (statusOrder === "failed" || statusCharge === "failed") {
+        if (!allowFallbackV1) {
+          const reason =
+            String(charge?.last_transaction?.gateway_response?.errors?.[0]?.message || "") ||
+            String(charge?.last_transaction?.failure_reason || "") ||
+            String(charge?.status_reason || "") ||
+            "Provider failed to create Pix charge";
+          console.error("PagarmeCreateV5 failed", JSON.stringify({ orderId, statusOrder, statusCharge, reason }));
+          return NextResponse.json(
+            { error: "providerError", message: reason, details: createdV5 },
+            { status: 502 }
+          );
+        }
         const v1Url = `${base}/1/transactions`;
         const fallbackPayload: any = {
           api_key: apiKey,
@@ -214,6 +227,7 @@ export async function POST(req: NextRequest) {
           payment_method: "pix",
           metadata: { paymentLinkId: String(link._id) },
           customer: { name: String((user as any).fullName || ""), email: String((user as any).email || "") },
+          ip: clientIp || undefined,
         };
         const r2 = await fetch(v1Url, {
           method: "POST",
