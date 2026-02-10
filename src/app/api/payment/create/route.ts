@@ -55,6 +55,14 @@ export async function POST(req: NextRequest) {
 
     const apiKey = String(process.env.PAGARME_SECRET_KEY || "").trim();
     const webhookUrl = String(process.env.PAGARME_WEBHOOK_URL || "").trim();
+    
+    console.log("DEBUG: Environment Variables Check", JSON.stringify({
+      PAGARME_SECRET_KEY: apiKey ? `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}` : "MISSING",
+      PAGARME_SECRET_KEY_VALID: apiKey.startsWith("sk_"),
+      PAGARME_SECRET_KEY_LENGTH: apiKey.length,
+      PAGARME_WEBHOOK_URL: webhookUrl || "MISSING"
+    }));
+    
     if (!apiKey) return NextResponse.json({ error: "Missing PAGARME_SECRET_KEY" }, { status: 500 });
 
     const amountCents = Math.round(Number(link.amount) * 100);
@@ -67,6 +75,7 @@ export async function POST(req: NextRequest) {
       const expiresInSeconds = 3600;
       const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
       const v5Url = `${base}/core/v5/orders`;
+      console.log("DEBUG: Pagar.me API URL", JSON.stringify({ base, v5Url }));
       if (!apiKey || apiKey.startsWith("pk_")) {
         console.error("PagarmeCreateV5 preflight invalid secret", JSON.stringify({ hasKey: !!apiKey, keyPrefix: apiKey ? apiKey.slice(0, 3) : null }));
         return NextResponse.json(
@@ -178,17 +187,40 @@ export async function POST(req: NextRequest) {
         );
       }
       if (statusCode >= 400) {
-        const errJson = await r.json().catch(() => ({}));
+        const responseText = await r.text().catch(() => "");
+        let errJson = {};
+        try {
+          errJson = JSON.parse(responseText);
+        } catch (e) {
+          console.error("PagarmeCreateV5 error parsing JSON", { statusCode, responseText: responseText.slice(0, 500) });
+        }
+        
         const msg =
-          typeof errJson?.message === "string"
-            ? errJson.message
-            : Array.isArray(errJson?.errors) && typeof errJson.errors?.[0]?.message === "string"
-            ? errJson.errors[0].message
+          typeof (errJson as any)?.message === "string"
+            ? (errJson as any).message
+            : Array.isArray((errJson as any)?.errors) && typeof (errJson as any).errors?.[0]?.message === "string"
+            ? (errJson as any).errors[0].message
             : "Provider error";
+        
         console.error(
-          "PagarmeCreateV5 error",
-          JSON.stringify({ statusCode, contentType: ct, cfRay, server, url: v5Url, error: errJson }),
+          "PagarmeCreateV5 error - FULL RESPONSE",
+          JSON.stringify({ 
+            statusCode, 
+            contentType: ct, 
+            cfRay, 
+            server, 
+            url: v5Url, 
+            error: errJson,
+            rawResponse: responseText,
+            requestHeaders: {
+              authorization: `Basic ${basic.slice(0, 20)}...`,
+              "content-type": "application/json",
+              accept: "application/json"
+            },
+            requestPayload: orderPayload
+          }, null, 2),
         );
+        
         return NextResponse.json(
           { error: "providerError", message: msg, details: errJson, statusCode },
           { status: 502 }
