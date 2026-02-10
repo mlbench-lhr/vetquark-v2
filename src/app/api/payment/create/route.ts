@@ -74,7 +74,8 @@ export async function POST(req: NextRequest) {
         String(req.headers.get("x-real-ip") || "");
       const expiresInSeconds = 3600;
       const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
-      const v5Url = `${base}/core/v5/orders`;
+      // Check if base already includes /core/v5/orders to avoid double path
+      const v5Url = base.includes("/core/v5/orders") ? base : `${base}/core/v5/orders`;
       console.log("DEBUG: Pagar.me API URL", JSON.stringify({ base, v5Url }));
       if (!apiKey || apiKey.startsWith("pk_")) {
         console.error("PagarmeCreateV5 preflight invalid secret", JSON.stringify({ hasKey: !!apiKey, keyPrefix: apiKey ? apiKey.slice(0, 3) : null }));
