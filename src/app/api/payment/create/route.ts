@@ -67,15 +67,16 @@ export async function POST(req: NextRequest) {
 
     const amountCents = Math.round(Number(link.amount) * 100);
     const origin = new URL(req.url).origin;
+    const basic = Buffer.from(`${apiKey}:`, "utf8").toString("base64");
     if (method === "pix") {
       const forwardedFor = String(req.headers.get("x-forwarded-for") || "");
       const clientIp =
         (forwardedFor.split(",")[0] || "").trim() ||
         String(req.headers.get("x-real-ip") || "");
+      console.log("DEBUG: Client IP Detection", JSON.stringify({ forwardedFor, clientIp }));
       const expiresInSeconds = 3600;
-      const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
-      // Check if base already includes /core/v5/orders to avoid double path
-      const v5Url = base.includes("/core/v5/orders") ? base : `${base}/core/v5/orders`;
+      const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me/core/v5/orders").replace(/\/+$/, "");
+      const v5Url = base;
       console.log("DEBUG: Pagar.me API URL", JSON.stringify({ base, v5Url }));
       if (!apiKey || apiKey.startsWith("pk_")) {
         console.error("PagarmeCreateV5 preflight invalid secret", JSON.stringify({ hasKey: !!apiKey, keyPrefix: apiKey ? apiKey.slice(0, 3) : null }));
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
         email: String((user as any).email || ""),
         type: "individual",
         document_type: "CPF",
-        document: "12345678909",
+        document: "12345678909".replace(/\D/g, ""),
         phones: {
           mobile_phone: { country_code: "55", area_code: "11", number: "999999999" },
         },
@@ -131,14 +132,26 @@ export async function POST(req: NextRequest) {
       ip: clientIp || undefined,
       metadata: { paymentLinkId: String(link._id) },
     };
-      console.log("DEBUG: Pagar.me Credentials", JSON.stringify({
+       console.log("DEBUG: Pagar.me Credentials", JSON.stringify({
         apiKey: apiKey ? `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}` : "missing",
         apiKeyValid: apiKey.startsWith("sk_"),
-        amountCents: amountCents
+        amountCents: amountCents,
+        v5Url: v5Url
       }));
       
-      console.log("DEBUG: Pagar.me Request Payload", JSON.stringify(orderPayload, null, 2));
-      const basic = Buffer.from(`${apiKey}:`, "utf8").toString("base64");
+      console.log("DEBUG: Pagar.me Request Details", JSON.stringify({
+        url: v5Url,
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+          authorization: `Basic ${basic.slice(0, 20)}...`,
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+          origin: origin,
+          referer: origin
+        },
+        payload: orderPayload
+      }, null, 2));
       console.log("DEBUG: Authorization Header", JSON.stringify({ basicAuthPreview: `${basic.slice(0, 20)}...` }));
       console.log("DEBUG: Making API request to", v5Url);
       console.log("DEBUG: Request Headers", JSON.stringify({
