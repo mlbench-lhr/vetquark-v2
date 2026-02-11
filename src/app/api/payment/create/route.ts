@@ -306,6 +306,14 @@ export async function POST(req: NextRequest) {
       const cardExpMonth = String(body?.card?.exp_month || body?.expMonth || "").trim();
       const cardExpYear = String(body?.card?.exp_year || body?.expYear || "").trim();
       const cardCvv = String(body?.card?.cvv || body?.cvv || "").trim();
+      const billingAddress = {
+        country: "BR",
+        state: "SP",
+        city: "São Paulo",
+        zip_code: "01000000",
+        line_1: "VetQuark Payment",
+        line_2: "Test transaction",
+      };
       const orderPayload: any = {
         code: `payment:${String(link._id)}`,
         items: [
@@ -345,21 +353,16 @@ export async function POST(req: NextRequest) {
               card_id: cardId || undefined,
               card:
                 cardToken || cardId
-                  ? undefined
+                  ? {
+                      billing_address: billingAddress,
+                    }
                   : {
                       number: cardNumber,
                       holder_name: cardHolderName,
                       exp_month: Number(cardExpMonth || 1),
                       exp_year: Number(cardExpYear || 2030),
                       cvv: cardCvv,
-                      billing_address: {
-                        country: "BR",
-                        state: "SP",
-                        city: "São Paulo",
-                        zip_code: "01000000",
-                        line_1: "VetQuark Payment",
-                        line_2: "Test transaction",
-                      },
+                      billing_address: billingAddress,
                     },
             },
             amount: amountCents,
