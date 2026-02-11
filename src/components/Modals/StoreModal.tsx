@@ -84,6 +84,13 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         total: number;
         address: Address;
     } | null>(null);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardHolderName, setCardHolderName] = useState("");
+  const [cardHolderDocument, setCardHolderDocument] = useState("");
+  const [cardExpMonth, setCardExpMonth] = useState("");
+  const [cardExpYear, setCardExpYear] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [payingWithCard, setPayingWithCard] = useState(false);
 
     const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0] ?? null;
 
@@ -224,6 +231,80 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         setLastOrder(null);
         onClose && onClose();
     };
+  
+  async function tokenizeCard() {
+    const appId = String(process.env.NEXT_PUBLIC_PAGARME_PUBLIC_KEY || "").trim();
+    if (!appId) {
+      toast.error("Missing public key");
+      return null;
+    }
+    const url = `https://api.pagar.me/core/v5/tokens?appId=${encodeURIComponent(appId)}`;
+    const payload = {
+      card: {
+        number: cardNumber.replace(/\s+/g, ""),
+        holder_name: cardHolderName,
+        holder_document: cardHolderDocument.replace(/\D/g, "") || undefined,
+        exp_month: Number(cardExpMonth || 0),
+        exp_year: Number(cardExpYear || 0),
+        cvv: cardCvv,
+      },
+      type: "card",
+    };
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg =
+        (typeof data?.message === "string" && data.message) ||
+        (Array.isArray(data?.errors) && typeof data.errors?.[0]?.message === "string" && data.errors[0].message) ||
+        "Failed to tokenize card";
+      toast.error(msg);
+      return null;
+    }
+    const token = typeof data?.id === "string" ? data.id : "";
+    if (!token) {
+      toast.error("Tokenization failed");
+      return null;
+    }
+    return token;
+  }
+  
+  async function payStoreOrderWithCard() {
+    if (!lastOrder || payingWithCard) return;
+    if (!cardNumber || !cardHolderName || !cardExpMonth || !cardExpYear || !cardCvv) {
+      toast.error("Fill all card fields");
+      return;
+    }
+    try {
+      setPayingWithCard(true);
+      const token = await tokenizeCard();
+      if (!token) return;
+      const res = await fetch("/api/store/payments/create", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ orderId: lastOrder.id, cardToken: token }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg =
+          (typeof data?.message === "string" && data.message) ||
+          (Array.isArray(data?.details?.errors) && typeof data.details?.errors?.[0]?.message === "string" && data.details.errors[0].message) ||
+          (typeof data?.error === "string" && data.error) ||
+          "Payment failed";
+        toast.error(msg);
+        return;
+      }
+      toast.success("Payment completed");
+      router.push("/Veterinarian/store/orders");
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setPayingWithCard(false);
+    }
+  }
 
     const handleSaveNewAddress = () => {
         const label = newAddressForm.label.trim();
@@ -667,6 +748,68 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                     <div className="text-sm text-gray-500">{lastOrder.address.location}</div>
                                                 </div>
                                                 <OrderSummary items={lastOrder.items} />
+                        <div className="px-4 pt-3">
+                          <div className="text-sm font-semibold text-gray-900">Pay with card</div>
+                          <div className="mt-2 space-y-3">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="Card number"
+                              value={cardNumber}
+                              onChange={(e) => setCardNumber(e.target.value)}
+                              className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Card holder name"
+                              value={cardHolderName}
+                              onChange={(e) => setCardHolderName(e.target.value)}
+                              className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                            />
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="CPF/CNPJ (optional)"
+                              value={cardHolderDocument}
+                              onChange={(e) => setCardHolderDocument(e.target.value)}
+                              className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                            />
+                            <div className="flex gap-3">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="MM"
+                                value={cardExpMonth}
+                                onChange={(e) => setCardExpMonth(e.target.value)}
+                                className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                              />
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="YY or YYYY"
+                                value={cardExpYear}
+                                onChange={(e) => setCardExpYear(e.target.value)}
+                                className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                              />
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="CVV"
+                                value={cardCvv}
+                                onChange={(e) => setCardCvv(e.target.value)}
+                                className="h-12 w-24 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              disabled={payingWithCard || !lastOrder?.id}
+                              onClick={payStoreOrderWithCard}
+                              className="h-[48px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:opacity-60"
+                            >
+                              {payingWithCard ? "Processing..." : "Pay with Card"}
+                            </button>
+                          </div>
+                        </div>
                                             </div>
                                         ) : null}
                                     </div>

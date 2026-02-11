@@ -89,6 +89,30 @@ export async function POST(req: NextRequest) {
         .lean();
     }
     if (!link) {
+      const storeOrderId = String(metaObj?.storeOrderId || "").trim();
+      const coll = mongoose.connection.collection("store_orders");
+      let storeOrder: any = null;
+      if (storeOrderId && mongoose.Types.ObjectId.isValid(storeOrderId)) {
+        storeOrder = await coll.findOne({ _id: new mongoose.Types.ObjectId(storeOrderId) });
+      }
+      if (!storeOrder && txId) {
+        storeOrder = await coll.findOne({ providerTransactionId: txId });
+      }
+      if (storeOrder) {
+        const shouldMarkPaid = statusRaw === "paid" || statusRaw === "authorized" || statusRaw === "captured";
+        await coll.updateOne(
+          { _id: storeOrder._id },
+          {
+            $set: {
+              status: shouldMarkPaid ? "paid" : String(statusRaw || "created"),
+              provider: "pagarme",
+              providerTransactionId: txId || String(storeOrder?.providerTransactionId || ""),
+              updatedAt: new Date(),
+            },
+          },
+        );
+        return NextResponse.json({ ok: true }, { status: 200 });
+      }
       console.log("WebhookPagarme no link matched", JSON.stringify({ txId, linkIdRaw }));
       return NextResponse.json({ ok: true }, { status: 200 });
     }
