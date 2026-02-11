@@ -26,7 +26,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     const paymentLinkId = String(body?.paymentLinkId || "").trim();
     const methodRaw = String(body?.method || "").trim().toLowerCase();
-    const method: Method = methodRaw === "pix" || methodRaw === "boleto" ? (methodRaw as Method) : null as any;
+    const method: Method =
+      methodRaw === "pix" || methodRaw === "boleto"
+        ? (methodRaw as Method)
+        : methodRaw === "credit_card" || methodRaw === "card"
+        ? "credit_card"
+        : (null as any);
     const cardHash = String(body?.cardHash || "").trim();
     console.log("PaymentCreate init", JSON.stringify({ userId, paymentLinkId, method }));
 
@@ -276,6 +281,205 @@ export async function POST(req: NextRequest) {
         status: String(createdV5?.status || charge?.status || ""),
         pixQrCode: qrCodeText || null,
         pixQrCodeUrl: qrCodeBase64 ? `data:image/png;base64,${qrCodeBase64}` : null,
+      };
+      return NextResponse.json(responseV5, { status: 200 });
+    }
+    if (method === "credit_card") {
+      const forwardedFor = String(req.headers.get("x-forwarded-for") || "");
+      const clientIp =
+        (forwardedFor.split(",")[0] || "").trim() ||
+        String(req.headers.get("x-real-ip") || "");
+      const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me/core/v5/orders").replace(/\/+$/, "");
+      const v5Url = base;
+      console.log("DEBUG: Pagar.me API URL", JSON.stringify({ base, v5Url }));
+      if (!apiKey || apiKey.startsWith("pk_")) {
+        console.error("PagarmeCreateV5 preflight invalid secret", JSON.stringify({ hasKey: !!apiKey, keyPrefix: apiKey ? apiKey.slice(0, 3) : null }));
+        return NextResponse.json(
+          { error: "configError", message: "Invalid secret key. Use sk_*, not pk_*" },
+          { status: 500 }
+        );
+      }
+      const cardToken = String(body?.cardToken || body?.card_token || cardHash || "").trim();
+      const cardId = String(body?.cardId || body?.card_id || "").trim();
+      const cardNumber = String(body?.card?.number || body?.cardNumber || "").replace(/\s+/g, "");
+      const cardHolderName = String(body?.card?.holder_name || body?.holderName || body?.cardHolderName || (user as any).fullName || "").trim();
+      const cardExpMonth = String(body?.card?.exp_month || body?.expMonth || "").trim();
+      const cardExpYear = String(body?.card?.exp_year || body?.expYear || "").trim();
+      const cardCvv = String(body?.card?.cvv || body?.cvv || "").trim();
+      const orderPayload: any = {
+        code: `payment:${String(link._id)}`,
+        items: [
+          {
+            amount: amountCents,
+            quantity: 1,
+            code: `payment:${String(link._id)}`,
+            description: "VetQuark reading payment",
+          },
+        ],
+        customer: {
+          name: String((user as any).fullName || ""),
+          email: String((user as any).email || ""),
+          type: "individual",
+          document_type: "CPF",
+          document: "12345678909".replace(/\D/g, ""),
+          phones: {
+            mobile_phone: { country_code: "55", area_code: "11", number: "999999999" },
+          },
+          address: {
+            country: "BR",
+            state: "SP",
+            city: "São Paulo",
+            zip_code: "01000000",
+            line_1: "VetQuark Payment",
+            line_2: "Test transaction",
+          },
+        },
+        payments: [
+          {
+            payment_method: "credit_card",
+            credit_card: {
+              capture: true,
+              installments: Number(body?.installments || 1),
+              statement_descriptor: "VetQuark".slice(0, 13),
+              card_token: cardToken || undefined,
+              card_id: cardId || undefined,
+              card:
+                cardToken || cardId
+                  ? undefined
+                  : {
+                      number: cardNumber,
+                      holder_name: cardHolderName,
+                      exp_month: Number(cardExpMonth || 1),
+                      exp_year: Number(cardExpYear || 2030),
+                      cvv: cardCvv,
+                      billing_address: {
+                        country: "BR",
+                        state: "SP",
+                        city: "São Paulo",
+                        zip_code: "01000000",
+                        line_1: "VetQuark Payment",
+                        line_2: "Test transaction",
+                      },
+                    },
+            },
+            amount: amountCents,
+          },
+        ],
+        closed: true,
+        ip: clientIp || undefined,
+        metadata: { paymentLinkId: String(link._id) },
+      };
+      console.log("DEBUG: Pagar.me Credentials", JSON.stringify({
+        apiKey: apiKey ? `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}` : "missing",
+        apiKeyValid: apiKey.startsWith("sk_"),
+        amountCents: amountCents,
+        v5Url: v5Url
+      }));
+      console.log("DEBUG: Pagar.me Request Details", JSON.stringify({
+        url: v5Url,
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+          authorization: `Basic ${basic.slice(0, 20)}...`,
+          "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+          origin: origin,
+          referer: origin
+        },
+        payload: orderPayload
+      }, null, 2));
+      const r = await fetch(v5Url, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+          authorization: `Basic ${basic}`,
+          "user-agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+          origin,
+          referer: origin,
+        },
+        body: JSON.stringify(orderPayload),
+      });
+      const ct = String(r.headers.get("content-type") || "");
+      const statusCode = r.status;
+      if (!ct.includes("application/json")) {
+        const text = await r.text().catch(() => "");
+        const snippet = typeof text === "string" ? text.slice(0, 300) : "";
+        console.error("PagarmeCreateV5 blocked", JSON.stringify({ statusCode, contentType: ct, url: v5Url, bodySnippet: snippet }));
+        return NextResponse.json(
+          { error: "providerBlocked", reason: "Non-JSON response from provider", diagnostics: { statusCode, contentType: ct } },
+          { status: 502 }
+        );
+      }
+      if (statusCode >= 400) {
+        const responseText = await r.text().catch(() => "");
+        let errJson = {};
+        try {
+          errJson = JSON.parse(responseText);
+        } catch (e) {
+          console.error("PagarmeCreateV5 error parsing JSON", { statusCode, responseText: responseText.slice(0, 500) });
+        }
+        const msg =
+          typeof (errJson as any)?.message === "string"
+            ? (errJson as any).message
+            : Array.isArray((errJson as any)?.errors) && typeof (errJson as any).errors?.[0]?.message === "string"
+            ? (errJson as any).errors[0].message
+            : "Provider error";
+        console.error(
+          "PagarmeCreateV5 error - FULL RESPONSE",
+          JSON.stringify({ 
+            statusCode, 
+            contentType: ct, 
+            url: v5Url, 
+            error: errJson,
+            rawResponse: responseText,
+            requestHeaders: {
+              authorization: `Basic ${basic.slice(0, 20)}...`,
+              "content-type": "application/json",
+              accept: "application/json"
+            },
+            requestPayload: orderPayload
+          }, null, 2),
+        );
+        return NextResponse.json(
+          { error: "providerError", message: msg, details: errJson, statusCode },
+          { status: 502 }
+        );
+      }
+      const createdV5: any = await r.json();
+      const orderId = String(createdV5?.id || "");
+      const charge: any = Array.isArray(createdV5?.charges) ? createdV5.charges[0] : null;
+      const statusOrder = String(createdV5?.status || "").toLowerCase();
+      const statusCharge = String(charge?.status || "").toLowerCase();
+      if (statusOrder === "failed" || statusCharge === "failed") {
+        const reason =
+          String(charge?.last_transaction?.gateway_response?.errors?.[0]?.message || "") ||
+          String(charge?.last_transaction?.failure_reason || "") ||
+          String(charge?.status_reason || "") ||
+          "Provider failed to create Credit Card charge";
+        console.error("PagarmeCreateV5 failed", JSON.stringify({ orderId, statusOrder, statusCharge, reason }));
+        return NextResponse.json(
+          { error: "providerError", message: reason, details: createdV5 },
+          { status: 502 }
+        );
+      }
+      await PaymentLink.updateOne(
+        { _id: link._id },
+        {
+          $set: {
+            paymentMethod: "credit_card",
+            provider: "pagarme",
+            providerTransactionId: orderId || null,
+          },
+        },
+      );
+      const lastTxn: any = charge?.last_transaction || {};
+      const responseV5: any = {
+        transactionId: orderId,
+        status: String(createdV5?.status || charge?.status || ""),
+        cardBrand: String(lastTxn?.card?.brand || ""),
+        cardLast4: String(lastTxn?.card?.last_four_digits || lastTxn?.card?.last_4 || ""),
       };
       return NextResponse.json(responseV5, { status: 200 });
     }

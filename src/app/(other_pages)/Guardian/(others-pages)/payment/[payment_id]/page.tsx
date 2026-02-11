@@ -173,7 +173,14 @@ export default function Page() {
           onClick={() => router.push(`/Guardian/payment/${encodeURIComponent(String(paymentId || safePayment.id))}/pix`)}
           className="h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
         >
-          Proceed Payment
+          Pay with PIX or boleto
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push(`/Guardian/payment/${encodeURIComponent(String(paymentId || safePayment.id))}/card`)}
+          className="mt-4 h-[52px] w-full rounded-full bg-[#111827] text-[15px] font-medium text-white"
+        >
+          Pay with Card
         </button>
         <button
           type="button"
