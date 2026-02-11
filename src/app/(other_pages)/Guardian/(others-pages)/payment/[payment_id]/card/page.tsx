@@ -44,11 +44,11 @@
     console.log("process.env.PAGARME_PUBLIC_KEY------", process.env.PAGARME_PUBLIC_KEY);
     console.log("String(process.env.PAGARME_PUBLIC_KEY ||------", String(process.env.PAGARME_PUBLIC_KEY || ""));
      const appId = String(process.env.PAGARME_PUBLIC_KEY || "").trim();
-     if (!appId) {
-       toast.error("Missing public key");
-       return null;
-     }
-     const url = `https://api.pagar.me/core/v5/tokens?appId=${encodeURIComponent(appId)}`;
+    //  if (!appId) {
+    //    toast.error("Missing public key");
+    //    return null;
+    //  }
+     const url = `https://api.pagar.me/core/v5/tokens?appId=${encodeURIComponent("pk_test_Z9KybVbULjhmry87")}`;
      const payload = {
        card: {
          number: number.replace(/\s+/g, ""),
