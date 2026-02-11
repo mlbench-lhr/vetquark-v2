@@ -41,6 +41,8 @@
    }, [paymentId]);
  
    async function tokenize() {
+    console.log("process.env.PAGARME_PUBLIC_KEY------", process.env.PAGARME_PUBLIC_KEY);
+    console.log("String(process.env.PAGARME_PUBLIC_KEY ||------", String(process.env.PAGARME_PUBLIC_KEY || ""));
      const appId = String(process.env.PAGARME_PUBLIC_KEY || "").trim();
      if (!appId) {
        toast.error("Missing public key");
