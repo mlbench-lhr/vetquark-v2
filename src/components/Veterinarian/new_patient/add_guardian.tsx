@@ -481,7 +481,7 @@ export default function GuardianRegistration() {
     };
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-scree">
             {/* Header */}
             <Header title={isEditing ? t('newPatient.guardian.editGuardianTitle') : t('newPatient.guardian.registrationTitle')} />
             {/* Form Content */}

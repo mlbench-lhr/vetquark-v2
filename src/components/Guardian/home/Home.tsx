@@ -462,9 +462,9 @@ export default function Home() {
                     lastTestDate={currentHealth.lastTestDate}
                     parameters={currentHealth.parameters}
                 />
-                <div className="bg-[#F5F6F6] w-[calc(100%+48px)] -ms-6 h-2 my-4"></div>
+                <div className="bg-[#F5F6F6] w-[calc(100%+40px)] -ms-6 h-2 my-4"></div>
                 <Trends items={trendItems} loading={loadingLatestReading || loadingReadings} />
-                <div className="bg-[#F5F6F6] w-[calc(100%+48px)] -ms-6 h-2 my-4"></div>
+                <div className="bg-[#F5F6F6] w-[calc(100%+40px)] -ms-6 h-2 my-4"></div>
                 {readings?.[0]?.id ? (
                     <ReportCard
                         title="Urinalysis Report"

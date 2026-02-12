@@ -144,13 +144,13 @@ export default function Page() {
     };
 
     return (
-        <div className="w-full mx-auto bg-white min-h-screen flex flex-col px-5 pt-6 pb-6">
+        <div className="w-full mx-auto bg-white flex flex-col pb-6">
             {/* Tab Selector */}
             <Header title={t("wallet.bankDetails")} />
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 mb-6 mt-4">
                 <button
                     onClick={() => setActiveTab("pix")}
-                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "pix"
+                    className={`px-5 py-2.5  rounded-full text-sm font-medium transition-colors ${activeTab === "pix"
                         ? "bg-[#EBF2FF] text-primary"
                         : "bg-[#F0F1F3] text-foreground"
                         }`}

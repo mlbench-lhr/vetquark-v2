@@ -106,11 +106,11 @@ function FilterContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="flex items-center justify-between px-4 pt-6">
+      <div className="flex items-center justify-between px- pt-">
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center rounded-full"
+          className="flex h- w- items-center justify-center rounded-full"
           aria-label="Back"
         >
           <ChevronLeft className="h-6 w-6 text-[#111827]" />
@@ -121,7 +121,7 @@ function FilterContent() {
         <div className="h-10 w-10" />
       </div>
 
-      <div className="px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)]">
+      <div className="px- pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)]">
         <div className="text-[14px] font-medium leading-[18px] text-[#111827]">
           Select Species
         </div>

@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import Header from '@/components/common/header';
+import { useEffect, useMemo, useState } from 'react';
 import PatientCard from '@/components/Veterinarian/home/PatientCard';
 import { Patient } from '@/components/Veterinarian/home/types';
 import Pagination from '@/components/tables/Pagination';
 import { ChevronLeft, Search } from 'lucide-react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { ListItemSkeleton } from '@/components/ui/skeleton';
@@ -61,7 +59,7 @@ export default function Page() {
     }, [patients, searchQuery]);
 
     return (
-        <div className="min-h-screen px-3 py-5 relative">
+        <div className="min-h-[calc(100vh-40px)] px- py relative">
             <div className=" flex items-center justify-between">
                 <button
                     aria-label="Back"
