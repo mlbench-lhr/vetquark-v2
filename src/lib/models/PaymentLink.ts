@@ -9,6 +9,8 @@ export interface IPaymentLink {
   patient: Schema.Types.ObjectId;
   reading?: Schema.Types.ObjectId | null;
   amount: number;
+  platformFee?: number;
+  amountNet?: number;
   currency: string;
   status: PaymentLinkStatus;
   paymentMethod?: "credit_card" | "boleto" | "pix";
@@ -27,6 +29,8 @@ const PaymentLinkSchema = new Schema<IPaymentLink>(
     patient: { type: Schema.Types.ObjectId, ref: "Patient", required: true, index: true },
     reading: { type: Schema.Types.ObjectId, ref: "Reading", default: null, index: true },
     amount: { type: Number, required: true, min: 0 },
+    platformFee: { type: Number, default: 33.0, min: 0 },
+    amountNet: { type: Number, default: 0, min: 0 },
     currency: { type: String, default: "BRL", trim: true },
     status: { type: String, enum: ["pending", "paid", "expired"], default: "pending", index: true },
     paymentMethod: { type: String, enum: ["credit_card", "boleto", "pix"], default: null, index: true },

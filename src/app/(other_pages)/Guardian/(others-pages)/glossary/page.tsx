@@ -162,8 +162,8 @@ export default function Page() {
   const activeItem = useMemo(() => items.find((i) => i.id === activeId) ?? null, [activeId, items]);
 
   return (
-    <div className=" bg-[#F4F6FB]">
-      <div className="mx-auto w-full max-w-[520px] px-4 py-[calc(env(safe-area-inset-top)+20px)]">
+    <div className=" bg-[#F4F6FB">
+      <div className="mx-auto w-full px4 -[calc(env(safe-area-inset-top)+20px)]">
         <div>
           <h1 className="text-[22px] font-semibold text-gray-900">Glossary of Parameters</h1>
           <p className="mt-1 text-[15px] text-gray-400">Understand what each urine test result means.</p>
@@ -175,7 +175,7 @@ export default function Page() {
               key={item.id}
               type="button"
               onClick={() => setActiveId(item.id)}
-              className="w-full rounded-2xl bg-white px-4 py-3 shadow-[0_1px_0_0_rgba(0,0,0,0.03)]"
+              className="w-full rounded-2xl bg-white px- py-3 shadow-[0_1px_0_0_rgba(0,0,0,0.03)]"
             >
               <div className="flex items-center justify-between">
                 <div className="min-w-0 text-left">

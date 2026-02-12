@@ -11,6 +11,7 @@ import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { isPushEnabledForUser } from "@/lib/utils";
 import WalletTransaction from "@/lib/models/WalletTransaction";
+import PlatformSettings from "@/lib/models/PlatformSettings";
 
 export async function POST(req: NextRequest) {
   try {
@@ -203,7 +204,13 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        const PLATFORM_FEE = 33.0;
+        const settingsDoc = await PlatformSettings.findOne({}).lean();
+        const feeFromLink = Number.isFinite(Number((link as any).platformFee)) ? Number((link as any).platformFee) : null;
+        const PLATFORM_FEE =
+          feeFromLink ??
+          (settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
+            ? Number((settingsDoc as any).platformFeeBRL)
+            : 33.0);
         const gross = typeof (link as any).amount === "number" && Number.isFinite((link as any).amount) ? Number((link as any).amount) : 0;
         const net = Math.max(0, gross - PLATFORM_FEE);
         const releaseAt = (() => {

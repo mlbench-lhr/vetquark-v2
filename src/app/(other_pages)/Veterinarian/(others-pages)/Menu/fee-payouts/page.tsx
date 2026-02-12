@@ -1,5 +1,5 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Header from "@/components/common/header";
 import { useRouter } from "next/navigation";
@@ -14,8 +14,8 @@ export default function FeesAndPayoutsPage() {
     const router = useRouter();
     const { t } = useTranslation();
     const [openFAQ, setOpenFAQ] = useState<number | null>(0);
-    const platformFee = 33.0;
-    const minWithdrawal = 20.0;
+    const [platformFee, setPlatformFee] = useState(33.0);
+    const [minWithdrawal, setMinWithdrawal] = useState(20.0);
 
     const faqItems: FAQItem[] = [
         {
@@ -39,6 +39,27 @@ export default function FeesAndPayoutsPage() {
     const toggleFAQ = (index: number) => {
         setOpenFAQ(openFAQ === index ? null : index);
     };
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await fetch("/api/platform/settings", { credentials: "include" });
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                if (res.ok && data) {
+                    const fee = typeof data.platformFee === "number" ? data.platformFee : 33.0;
+                    const minW = typeof data.minWithdrawal === "number" ? data.minWithdrawal : 20.0;
+                    setPlatformFee(fee);
+                    setMinWithdrawal(minW);
+                }
+            } catch {
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
     return (
         <div className="w-full bg-background space-y-6">

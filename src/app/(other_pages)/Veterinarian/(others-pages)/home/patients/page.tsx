@@ -60,7 +60,7 @@ export default function Page() {
 
     return (
         <div className="min-h-[calc(100vh-40px)] px- py relative">
-            <div className=" flex items-center justify-between">
+            <div className=" flex items-center justify-between ">
                 <button
                     aria-label="Back"
                     className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
@@ -69,7 +69,7 @@ export default function Page() {
                     <ChevronLeft className="w-6 h-6 text-gray-700" />
                 </button>
                 <h1 className="text-base font-medium text-gray-900">{t('dashboard.allPatientsTitle')}</h1>
-                <button className="w-12 h-12 bg-gray-10 rounded-full flex items-center justify-center">
+                <button className="w-12 h-0 bg-gray-10 rounded-full flex items-center justify-center">
                     {/* <span className="text-white text-sm">
                         <Image
                             src={"/images/home/bell.svg"}

@@ -9,6 +9,7 @@ import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { isPushEnabledForUser } from "@/lib/utils";
 import WalletTransaction from "@/lib/models/WalletTransaction";
+import PlatformSettings from "@/lib/models/PlatformSettings";
 
 function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2).replace(".", ",")}`;
@@ -68,6 +69,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
           id: String(link._id),
           amount: link.amount,
           amountLabel: formatBRL(link.amount),
+          platformFee: Number.isFinite(Number((link as any).platformFee)) ? Number((link as any).platformFee) : null,
+          amountNet: Number.isFinite(Number((link as any).amountNet)) ? Number((link as any).amountNet) : Math.max(0, Number(link.amount || 0) - Number((link as any).platformFee || 33.0)),
           status: link.status,
           createdAt: link.createdAt ? new Date(link.createdAt as any).toISOString() : null,
           patient: {
@@ -194,7 +197,13 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
           });
         }
 
-        const PLATFORM_FEE = 33.0;
+        const settingsDoc = await PlatformSettings.findOne({}).lean();
+        const feeFromLink = Number.isFinite(Number((link as any).platformFee)) ? Number((link as any).platformFee) : null;
+        const PLATFORM_FEE =
+          feeFromLink ??
+          (settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
+            ? Number((settingsDoc as any).platformFeeBRL)
+            : 33.0);
         const gross = typeof (link as any).amount === "number" && Number.isFinite((link as any).amount) ? Number((link as any).amount) : 0;
         const net = Math.max(0, gross - PLATFORM_FEE);
         const releaseAt = (() => {

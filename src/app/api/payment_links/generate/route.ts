@@ -5,6 +5,7 @@ import User from "@/lib/models/User";
 import Patient from "@/lib/models/Patient";
 import PaymentLink from "@/lib/models/PaymentLink";
 import Reading from "@/lib/models/Reading";
+import PlatformSettings from "@/lib/models/PlatformSettings";
 
 function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2).replace(".", ",")}`;
@@ -90,6 +91,11 @@ export async function POST(req: NextRequest) {
     }
 
     const amount = typeof veterinarian.baseExamPrice === "number" && Number.isFinite(veterinarian.baseExamPrice) ? veterinarian.baseExamPrice : 89.9;
+    const settingsDoc = await PlatformSettings.findOne({}).lean();
+    const platformFee = settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
+      ? Number((settingsDoc as any).platformFeeBRL)
+      : 33.0;
+    const amountNet = Math.max(0, amount - platformFee);
     const expiresAt = new Date(now);
     expiresAt.setHours(expiresAt.getHours() + 24);
     const created = await PaymentLink.create({
@@ -97,6 +103,8 @@ export async function POST(req: NextRequest) {
       guardian: (patient as any).guardian?._id ?? (patient as any).guardian,
       patient: patientId,
       amount,
+      platformFee,
+      amountNet,
       currency: "BRL",
       status: "pending",
       expiresAt,
