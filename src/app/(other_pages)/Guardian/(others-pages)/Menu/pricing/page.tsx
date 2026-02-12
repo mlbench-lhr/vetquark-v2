@@ -12,9 +12,9 @@ export default function BasePriceCard() {
     const dispatch = useAppDispatch();
     const profile = useAppSelector((s) => s.userProfile.profile);
 
-    const platformFee = 33.0;
-    const minSuggested = 59.0;
-    const maxSuggested = 119.0;
+    const [platformFee, setPlatformFee] = useState(33.0);
+    const [minSuggested, setMinSuggested] = useState(59.0);
+    const [maxSuggested, setMaxSuggested] = useState(119.0);
 
     const initialAmount = useMemo(() => profile?.baseExamPrice ?? 89.9, [profile?.baseExamPrice]);
 
@@ -25,6 +25,29 @@ export default function BasePriceCard() {
     useEffect(() => {
         setAmount(initialAmount);
     }, [initialAmount]);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await fetch("/api/platform/settings", { credentials: "include" });
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                if (res.ok && data) {
+                    const fee = typeof data.platformFee === "number" ? data.platformFee : 33.0;
+                    const min = typeof data.minSuggested === "number" ? data.minSuggested : 59.0;
+                    const max = typeof data.maxSuggested === "number" ? data.maxSuggested : 119.0;
+                    setPlatformFee(fee);
+                    setMinSuggested(min);
+                    setMaxSuggested(max);
+                }
+            } catch {
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
     const netPayout = amount - platformFee;
 
