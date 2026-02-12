@@ -22,6 +22,7 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
   const resolvedName = profile?.fullName || userName || 'User';
   const userId = profile?.id || '';
   const [unreadCount, setUnreadCount] = useState(0);
+  const [walletBalance, setWalletBalance] = useState<string>(balance || "R$ 0,00");
 
   const refreshUnread = useCallback(async () => {
     try {
@@ -41,6 +42,24 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
   useEffect(() => {
     refreshUnread();
   }, [refreshUnread, userId]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/wallet", { credentials: "include" });
+        const data = await res.json().catch(() => null);
+        if (!mounted) return;
+        if (res.ok && data && typeof data.balanceLabel === "string") {
+          setWalletBalance(String(data.balanceLabel));
+        }
+      } catch {
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
@@ -96,13 +115,14 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
         </div>
       </div>
       <div className="flex items-center gap-3" >
-        <div className="bg-gray-100 flex flex-col text-sm py-0.5 pl-2 pr-4 rounded-lg cursor-pointer"
-          onClick={() => openModal()}>
+        <div className="bg-gray-100 flex flex-col text-sm py-0.5 pl-2 pr-4 rounded-lg cursor-pointe"
+          // onClick={() => openModal()}
+          >
           <span className="text-tertiary text-xs">
             Balance
           </span>
           <span className="py-1 text-primary font-bold text-center">
-            R{balance}
+            {walletBalance}
           </span>
         </div>
 
