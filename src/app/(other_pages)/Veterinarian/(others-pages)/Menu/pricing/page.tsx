@@ -59,7 +59,7 @@ export default function BasePriceCard() {
     };
 
     return (
-        <div className="w-full bg-background min-h-screen flex flex-col">
+        <div className="w-full bg-background flex flex-col">
             {/* Header */}
             <Header title="Pricing" />
 

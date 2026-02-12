@@ -21,7 +21,7 @@ interface TabsProps {
 const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange }) => {
   const { t } = useTranslation();
   return (
-    <div className="flex gap-3 px-4 mb-4">
+    <div className="flex gap-3 px- mb-4">
       <button
         onClick={() => onTabChange('information')}
         className={`flex-1 py-1 px-6 rounded-full flex justify-center items-center gap-2 font-medium transition-colors ${activeTab === 'information'

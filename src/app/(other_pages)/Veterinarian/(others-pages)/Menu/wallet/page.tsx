@@ -129,20 +129,20 @@ export default function WalletCard({
     });
 
     return (
-        <div className="bg-background min-h-screen">
+        <div className="bg-background">
             <Header title={t("wallet.wallet")} />
             {/* Balance Card */}
             {loading ? (
                 <BalanceCardSkeleton />
             ) : (
-                <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5 text-white">
+                <div className="mx- mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5 text-white">
                     <p className="text-sm opacity-90 mb-1 text-black">{t("wallet.availableBalance")}</p>
                     <p className="text-3xl font-bold text-primary">
                         {currency} {balance}
                     </p>
                 </div>
             )}
-            <div className="flex gap-3 mx-4 mt-4">
+            <div className="flex gap-3 mx- mt-4">
                 <Button
                     onClick={onWithdraw}
                     variant="secondary"
@@ -162,7 +162,7 @@ export default function WalletCard({
             </div>
 
             {/* PIX Info */}
-            <div className="mx-4 mt-4 flex items-center gap-3 p-4 bg-[#F5F6F6] rounded-2xl">
+            <div className="mx- mt-4 flex items-center gap-3 p-4 bg-[#F5F6F6] rounded-2xl">
                 <div className="w-10 h-10 rounded-full bg-[#00D4AA]/10 flex items-center justify-center">
                     <Image src={"/images/pixLogo.svg"} alt="" width={20} height={20} />
                 </div>
@@ -175,7 +175,7 @@ export default function WalletCard({
             <div className="h-2 w-full bg-[#F5F6F6] mt-6"></div>
 
             {/* Statement Section */}
-            <div className="mx-4 mt-6">
+            <div className="mx- mt-6">
                 <div className="flex items-center justify-between mb-1">
                     <h2 className="text-lg font-semibold text-foreground">{t("wallet.statement")}</h2>
                     <div className="flex gap-1">

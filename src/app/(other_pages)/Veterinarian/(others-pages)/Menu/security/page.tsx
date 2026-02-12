@@ -74,7 +74,7 @@ export default function SecurityPage() {
   }, [t]);
 
   return (
-    <div className="min-h-screen bg-[#F5F6F6]">
+    <div className="bg-[#F5F6F6]">
       <Header title={t("menu.security")} />
 
       <div className="pt-4 pb-10">

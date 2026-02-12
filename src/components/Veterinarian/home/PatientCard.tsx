@@ -3,8 +3,7 @@
 import React from 'react';
 import { Patient } from './types';
 import { useRouter } from 'next/navigation';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dog, User } from 'lucide-react';
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
 
 interface PatientCardProps {
   patient: Patient;

@@ -181,7 +181,7 @@ export default function NotificationsSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-white">
       <Header title={t("menu.notifications")} />
 
       <div className=" pb-10 pt-2">

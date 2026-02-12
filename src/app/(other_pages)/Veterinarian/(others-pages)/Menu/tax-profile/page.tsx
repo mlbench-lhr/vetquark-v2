@@ -170,7 +170,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
   };
 
   return (
-    <div className="w-full bg-background min-h-screen flex flex-col">
+    <div className="w-full bg-background flex flex-col">
       <Header title={t("menu.taxProfile")} />
 
       <div className="flex-1 overflow-y-auto px- pb-28">
