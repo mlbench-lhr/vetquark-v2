@@ -300,6 +300,13 @@
   @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 ;
 }
 
+.scroll-fix {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
 @utility menu-item-icon {
   @apply text-gray-500 group-hover:text-gray-700 ;
 }

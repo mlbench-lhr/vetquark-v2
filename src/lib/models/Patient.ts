@@ -11,6 +11,7 @@ export interface IPatient {
   breed?: string;
   sex?: "Male" | "Female" | "";
   dateOfBirth?: string;
+  ageYears?: number;
   temperament?: string;
   size?: string;
   coat?: string;
@@ -39,6 +40,7 @@ const PatientSchema = new Schema<IPatient>(
     breed: { type: String },
     sex: { type: String, enum: ["Male", "Female", ""] },
     dateOfBirth: { type: String },
+    ageYears: { type: Number },
     temperament: { type: String },
     size: { type: String },
     coat: { type: String },

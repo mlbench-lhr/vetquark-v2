@@ -118,7 +118,7 @@ export default function ForgetForm() {
             }
             toast.success(result.message ?? t("auth.otpSentToEmail"));
             setIsApiSent(true);
-            setCooldown(35);
+            setCooldown(600);
         } catch (error) {
             toast.error(t("auth.networkErrorSendingOtp"));
             console.error("Network Error:", error);
@@ -213,7 +213,7 @@ export default function ForgetForm() {
                                                 disabled={isOTPLoading || cooldown > 0}
                                                 className="text-primary font-medium underline hover:text-blue-700 transition-colors disabled:opacity-50"
                                             >
-                                                {cooldown > 0 ? `${t("auth.resendIn")} ${cooldown}s` : t("auth.sendOtp")}
+                                                {cooldown > 0 ? `${t("auth.resendIn")} ${String(Math.floor(cooldown / 60)).padStart(2, '0')}:${String(cooldown % 60).padStart(2, '0')}` : t("auth.sendOtp")}
                                             </button>
                                         </div>
                                     }

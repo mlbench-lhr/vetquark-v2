@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
       $addFields: {
         dobSortAsc: { $ifNull: ["$dobDate", new Date("9999-12-31T00:00:00.000Z")] },
         dobSortDesc: { $ifNull: ["$dobDate", new Date("1970-01-01T00:00:00.000Z")] },
-        ageYears: {
+        derivedAgeYears: {
           $cond: [
             { $ne: ["$dobDate", null] },
             {
@@ -136,6 +136,11 @@ export async function GET(req: NextRequest) {
             null,
           ],
         },
+      },
+    });
+    pipeline.push({
+      $addFields: {
+        ageYears: { $ifNull: ["$ageYears", "$derivedAgeYears"] },
       },
     });
 

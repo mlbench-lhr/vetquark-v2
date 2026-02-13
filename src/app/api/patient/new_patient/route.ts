@@ -105,6 +105,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
     }
 
+    const ageYearsRaw = (body as any).ageYears;
+    const ageYearsNum = typeof ageYearsRaw === "number" ? ageYearsRaw : Number(asOptionalTrimmedString(ageYearsRaw));
+    const ageYears = Number.isFinite(ageYearsNum) && ageYearsNum >= 0 ? ageYearsNum : undefined;
+
     const doc = await Patient.create({
       guardian: guardianId,
       veterinarian: veterinarianId,
@@ -115,6 +119,7 @@ export async function POST(req: NextRequest) {
       breed: asOptionalTrimmedString((body as any).breed),
       sex,
       dateOfBirth: asOptionalTrimmedString((body as any).dateOfBirth),
+      ageYears,
       temperament: asOptionalTrimmedString((body as any).temperament),
       size: asOptionalTrimmedString((body as any).size),
       coat: asOptionalTrimmedString((body as any).coat),
@@ -212,6 +217,10 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const ageYearsRaw = (body as any).ageYears;
+    const ageYearsNum = typeof ageYearsRaw === "number" ? ageYearsRaw : Number(asOptionalTrimmedString(ageYearsRaw));
+    const ageYears = Number.isFinite(ageYearsNum) && ageYearsNum >= 0 ? ageYearsNum : undefined;
+
     const update: Record<string, any> = {
       photo: asPhotoUrl((body as any).photo),
       animalName,
@@ -220,6 +229,7 @@ export async function PUT(req: NextRequest) {
       breed: asOptionalTrimmedString((body as any).breed),
       sex,
       dateOfBirth: asOptionalTrimmedString((body as any).dateOfBirth),
+      ageYears,
       temperament: asOptionalTrimmedString((body as any).temperament),
       size: asOptionalTrimmedString((body as any).size),
       coat: asOptionalTrimmedString((body as any).coat),

@@ -8,6 +8,30 @@ import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
+function maskCpf(digits: string) {
+  const v = digits.slice(0, 11);
+  const parts = [v.slice(0, 3), v.slice(3, 6), v.slice(6, 9), v.slice(9, 11)].filter(Boolean);
+  if (v.length <= 3) return parts[0] || "";
+  if (v.length <= 6) return `${parts[0]}.${parts[1]}`;
+  if (v.length <= 9) return `${parts[0]}.${parts[1]}.${parts[2]}`;
+  return `${parts[0]}.${parts[1]}.${parts[2]}-${parts[3]}`;
+}
+
+function maskCnpj(digits: string) {
+  const v = digits.slice(0, 14);
+  const parts = [v.slice(0, 2), v.slice(2, 5), v.slice(5, 8), v.slice(8, 12), v.slice(12, 14)].filter(Boolean);
+  if (v.length <= 2) return parts[0] || "";
+  if (v.length <= 5) return `${parts[0]}.${parts[1]}`;
+  if (v.length <= 8) return `${parts[0]}.${parts[1]}.${parts[2]}`;
+  if (v.length <= 12) return `${parts[0]}.${parts[1]}.${parts[2]}/${parts[3]}`;
+  return `${parts[0]}.${parts[1]}.${parts[2]}/${parts[3]}-${parts[4]}`;
+}
+
+function maskCpfCnpj(digits: string) {
+  if (digits.length <= 11) return maskCpf(digits);
+  return maskCnpj(digits);
+}
+
 function PageHeader({
   title,
   onBack,
@@ -48,13 +72,18 @@ export default function Page() {
     [profile?.address, profile?.dateOfBirth, profile?.taxId]
   );
 
-  const [nationalId, setNationalId] = useState(initial.taxId);
+  const [nationalIdDigits, setNationalIdDigits] = useState((initial.taxId || "").replace(/\D/g, ""));
   const [dateOfBirth, setDateOfBirth] = useState(initial.dateOfBirth);
   const [address, setAddress] = useState(initial.address);
   const [saving, setSaving] = useState(false);
 
+  const nationalIdDisplay = useMemo(() => maskCpfCnpj(nationalIdDigits), [nationalIdDigits]);
+  const isCpfValid = nationalIdDigits.length === 11;
+  const isCnpjValid = nationalIdDigits.length === 14;
+  const idValid = isCpfValid || isCnpjValid || nationalIdDigits.length === 0;
+
   useEffect(() => {
-    setNationalId(initial.taxId);
+    setNationalIdDigits((initial.taxId || "").replace(/\D/g, ""));
     setDateOfBirth(initial.dateOfBirth);
     setAddress(initial.address);
   }, [initial.address, initial.dateOfBirth, initial.taxId]);
@@ -67,7 +96,7 @@ export default function Page() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          taxId: nationalId,
+          taxId: nationalIdDigits,
           dateOfBirth,
           address,
         }),
@@ -92,10 +121,21 @@ export default function Page() {
         <div>
           <div className="text-[14px] font-medium leading-[18px] text-[#111827]">{t("profile.nationalId")}</div>
           <input
-            value={nationalId}
-            onChange={(e) => setNationalId(e.target.value)}
+            value={nationalIdDisplay}
+            onChange={(e) => {
+              const digits = (e.target.value || "").replace(/\D/g, "").slice(0, 14);
+              setNationalIdDigits(digits);
+            }}
+            placeholder={t("profile.egNationalId")}
+            inputMode="numeric"
+            pattern="[0-9]*"
             className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
           />
+          {nationalIdDigits.length > 0 && !idValid && (
+            <div className="mt-2 text-[12px] leading-[16px] text-[#EF4444]">
+              {t("profile.invalidNationalId")}
+            </div>
+          )}
 
           <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("profile.dateOfBirth")}</div>
           <div className="relative mt-3">
@@ -114,6 +154,7 @@ export default function Page() {
           <input
             value={address}
             onChange={(e) => setAddress(e.target.value)}
+            placeholder={t("profile.egAddress")}
             className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
           />
         </div>
@@ -122,7 +163,7 @@ export default function Page() {
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || !idValid}
             className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}

@@ -84,7 +84,7 @@ export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", ""]);
-  const [countdown, setCountdown] = useState(35);
+  const [countdown, setCountdown] = useState(600);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const OTP_LENGTH = 5;
 
@@ -220,7 +220,7 @@ export default function SignUpForm() {
     setShowPassword(false);
     setShowConfirmPassword(false);
     setOtp(["", "", "", "", ""]);
-    setCountdown(35);
+    setCountdown(600);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -418,7 +418,7 @@ export default function SignUpForm() {
         return;
       }
       toast.success(data.message ?? 'OTP resent');
-      setCountdown(35);
+      setCountdown(600);
     } catch (err) {
       toast.error('Network error while resending OTP');
       console.error('Resend network error:', err);
@@ -442,6 +442,13 @@ export default function SignUpForm() {
         if (!Number.isFinite(dob.getTime())) {
           toast.error("Invalid date of birth");
           return;
+        }
+        {
+          const todayIso = new Date().toISOString().slice(0, 10);
+          if (dateOfBirthStr >= todayIso) {
+            toast.error(t("auth.dateOfBirthMustBePast"));
+            return;
+          }
         }
         const today = new Date();
         let age = today.getFullYear() - dob.getFullYear();
@@ -836,7 +843,10 @@ export default function SignUpForm() {
             <p className="text-sm text-tertiary ">
               {t("auth.enterVerificationCode")}
             </p>
-            <p className="text-primary font-medium mb-8">00:{countdown.toString().padStart(2, '0')}</p>
+            <p className="text-primary font-medium mb-1">
+              {`${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')}`}
+            </p>
+            <p className="text-xs text-gray-500 mb-8">This code expires in 10 minutes</p>
 
             <div className="flex justify-center gap-3 mb-8">
               {otp.map((digit, index) => (
@@ -860,14 +870,23 @@ export default function SignUpForm() {
             </div>
             <button
               type="submit"
-              className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0"
+              disabled={submitting}
+              className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {t("auth.verify")}
+              {submitting ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {t("auth.verify")}
+                </span>
+              ) : t("auth.verify")}
             </button>
             <p className="text-center text-gray-600 mt-4">
               {t("auth.didntGetCode")}{" "}
               <button onClick={handleResendOtp} disabled={countdown > 0} className="text-primary hover:text-blue-700 font-medium bg-transparent border-0 cursor-pointer disabled:opacity-50">
-                {countdown > 0 ? `${t("auth.resendIn")} 00:${countdown.toString().padStart(2, '0')}` : t("auth.sendAgain")}
+                {countdown > 0 ? `${t("auth.resendIn")} ${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')}` : t("auth.sendAgain")}
               </button>
             </p>
 
@@ -1280,7 +1299,15 @@ export default function SignUpForm() {
             disabled={submitting || uploadingClinicLogo}
             className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {profileType === "veterinarian" && step === finalStep ? (submitting ? t("auth.creating") : t("auth.createAccount")) : t("auth.next")}
+            {submitting ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {profileType === "veterinarian" && step === finalStep ? t("auth.creating") : t("auth.next")}
+              </span>
+            ) : (profileType === "veterinarian" && step === finalStep ? t("auth.createAccount") : t("auth.next"))}
           </button>
           {(step === 1 || step === 2) && (
             <p className="text-center text-gray-600 mt-4">

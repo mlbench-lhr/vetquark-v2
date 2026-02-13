@@ -11,6 +11,7 @@ import Pusher from 'pusher-js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslation } from 'react-i18next';
 import Header from '@/components/common/header';
+import { Modal } from '@/components/ui/modal';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -23,6 +24,7 @@ interface PatientFormData {
   breed: string;
   sex: 'Male' | 'Female' | '';
   dateOfBirth: string;
+  ageYears: string;
 
   // Step 2 - Additional Information
   temperament: string;
@@ -72,6 +74,7 @@ export default function AddPatientMultiStep() {
     breed: '',
     sex: '',
     dateOfBirth: '',
+    ageYears: '',
     temperament: '',
     size: '',
     coat: '',
@@ -85,6 +88,8 @@ export default function AddPatientMultiStep() {
     otherInformation: '',
     internalNotes: ''
   });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const refreshUnread = useCallback(async () => {
     try {
@@ -157,6 +162,7 @@ export default function AddPatientMultiStep() {
             breed: item.breed ?? '',
             sex: item.sex ?? '',
             dateOfBirth: item.dateOfBirth ?? '',
+            ageYears: typeof item.ageYears === 'number' ? String(item.ageYears) : '',
             temperament: item.temperament ?? '',
             size: item.size ?? '',
             coat: item.coat ?? '',
@@ -244,8 +250,11 @@ export default function AddPatientMultiStep() {
         return false;
       }
       const dob = asNonEmptyTrimmedString(formData.dateOfBirth);
-      if (!dob) {
-        toast.error(t('newPatient.patientForm.dateOfBirthRequired'));
+      const ageRaw = (formData.ageYears || '').trim();
+      const ageNum = ageRaw ? Number(ageRaw) : NaN;
+      const hasAge = Number.isFinite(ageNum) && ageNum >= 0;
+      if (!dob && !hasAge) {
+        toast.error(t('newPatient.patientForm.dateOrAgeRequired') || 'Provide date of birth or age');
         return false;
       }
       return true;
@@ -301,6 +310,7 @@ export default function AddPatientMultiStep() {
 
   const handleChange = (field: keyof PatientFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
   };
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -352,6 +362,7 @@ export default function AddPatientMultiStep() {
       const url = json.secure_url || json.url;
       if (url) {
         setFormData(prev => ({ ...prev, photo: url }));
+        setHasUnsavedChanges(true);
       }
     } catch (err) {
       toast.error(t('newPatient.patientForm.photoUploadFailed'));
@@ -412,6 +423,7 @@ export default function AddPatientMultiStep() {
       const result = await res.json().catch(() => ({} as any));
       toast.success(patientId ? t('common.savedChanges') : t('newPatient.patientForm.patientCreated'));
       router.push(`/Veterinarian/home/patientDetails/${result?.id}`);
+      setHasUnsavedChanges(false);
     } catch (e) {
       toast.error(patientId ? t('newPatient.patientForm.networkErrorSavingChanges') : t('newPatient.patientForm.networkErrorCreatingPatient'));
       console.error('Error saving patient:', e);
@@ -423,7 +435,16 @@ export default function AddPatientMultiStep() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <Header title={patientId ? t('newPatient.editPatientTitle') : t('newPatient.addNewPatientTitle')} />
+      <Header
+        title={patientId ? t('newPatient.editPatientTitle') : t('newPatient.addNewPatientTitle')}
+        onBack={() => {
+          if (hasUnsavedChanges) {
+            setConfirmOpen(true);
+          } else {
+            router.back();
+          }
+        }}
+      />
       
       {/* Progress Tabs */}
       <div className="bg-white ">
@@ -612,7 +633,7 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('profile.dateOfBirth')}<span className="text-red-500">*</span></label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('profile.dateOfBirth')}</label>
                     <div className="relative">
                       <input
                         ref={dobRef}
@@ -635,6 +656,22 @@ export default function AddPatientMultiStep() {
                         }}
                       />
                     </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.ageYearsLabel') || 'Age (years)'}</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={40}
+                      placeholder={t('newPatient.patientForm.ageYearsPlaceholder') || 'e.g., 3'}
+                      value={formData.ageYears}
+                      onChange={(e) => handleChange('ageYears', e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      {t('newPatient.patientForm.ageYearsHint') || 'If date of birth is unknown, enter age.'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -849,6 +886,32 @@ export default function AddPatientMultiStep() {
 
         </div>
       </div>
+      <Modal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} className="max-w-md rounded-2xl p-6">
+        <div className="p-4">
+          <h3 className="text-lg font-semibold text-gray-900">{t('common.unsavedChanges') || 'Unsaved changes'}</h3>
+          <p className="mt-2 text-sm text-gray-600">{t('common.unsavedChangesDesc') || 'You have unsaved changes. Do you want to discard them?'}</p>
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              type="button"
+              className="flex-1 px-4 py-2 rounded-full bg-gray-100 text-gray-800"
+              onClick={() => setConfirmOpen(false)}
+            >
+              {t('common.keepEditing') || 'Keep editing'}
+            </button>
+            <button
+              type="button"
+              className="flex-1 px-4 py-2 rounded-full bg-primary text-white"
+              onClick={() => {
+                setConfirmOpen(false);
+                setHasUnsavedChanges(false);
+                router.back();
+              }}
+            >
+              {t('common.discardChanges') || 'Discard changes'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

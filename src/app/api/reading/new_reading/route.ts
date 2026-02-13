@@ -118,6 +118,13 @@ export async function POST(req: NextRequest) {
     if (!stripExpiry) {
       return NextResponse.json({ error: "Invalid stripExpiry" }, { status: 400 });
     }
+    {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const expiryStr = stripExpiry.toISOString().slice(0, 10);
+      if (expiryStr < todayStr) {
+        return NextResponse.json({ error: "Strip expiry must be today or a future date" }, { status: 400 });
+      }
+    }
 
     const timer = (body as any).timer || {};
     const selectedSeconds = toFiniteNumber(timer.selectedSeconds);

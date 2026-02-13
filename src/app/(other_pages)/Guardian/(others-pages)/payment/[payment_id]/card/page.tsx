@@ -94,13 +94,32 @@
      }
      try {
        setPaying(true);
-       const token = await tokenize();
-       if (!token) return;
-       const res = await fetch(`/api/payment/create`, {
-         method: "POST",
-         headers: { "content-type": "application/json" },
-         body: JSON.stringify({ paymentLinkId: paymentId, method: "credit_card", cardToken: token }),
-       });
+      let token: string | null = null;
+      try {
+        token = await tokenize();
+      } catch {
+        token = null;
+      }
+      const payload = token
+        ? { paymentLinkId: paymentId, method: "credit_card", cardToken: token }
+        : {
+            paymentLinkId: paymentId,
+            method: "credit_card",
+            card: {
+              number: number.replace(/\s+/g, ""),
+              holder_name: holderName,
+              holder_document: holderDocument.replace(/\D/g, "") || undefined,
+              exp_month: Number(expMonth || 0),
+              exp_year: Number(expYear || 0),
+              cvv,
+            },
+          };
+      const res = await fetch(`/api/payment/create`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
        const data = await res.json().catch(() => null);
        if (!res.ok) {
          const msg =

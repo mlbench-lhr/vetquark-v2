@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
       breed: doc.breed ?? "",
       sex: doc.sex ?? "",
       dateOfBirth: doc.dateOfBirth ?? "",
+      ageYears: typeof (doc as any).ageYears === "number" ? (doc as any).ageYears : null,
       temperament: doc.temperament ?? "",
       size: doc.size ?? "",
       coat: doc.coat ?? "",
