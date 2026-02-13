@@ -119,9 +119,10 @@ export default function Page() {
   }, [petId, pet?.photo]);
 
   const petData = useMemo(() => {
+    const explicitAge = typeof pet?.ageYears === "number" ? pet.ageYears : null;
     const dob = pet?.dateOfBirth ? new Date(pet.dateOfBirth) : null;
     const now = new Date();
-    const ageYears =
+    const derivedAgeYears =
       dob && !Number.isNaN(dob.getTime())
         ? Math.max(
           0,
@@ -130,6 +131,7 @@ export default function Page() {
           (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0)
         )
         : null;
+    const ageYears = explicitAge !== null ? explicitAge : derivedAgeYears;
 
     return {
       patientId: petId,

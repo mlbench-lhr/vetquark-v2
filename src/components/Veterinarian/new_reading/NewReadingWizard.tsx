@@ -50,6 +50,59 @@ export default function NewReadingWizard() {
     },
   }))
 
+  const STORAGE_KEY = 'new_reading_draft_v1'
+
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return
+      const raw = window.localStorage.getItem(STORAGE_KEY)
+      if (!raw) return
+      const saved = JSON.parse(raw) as { draft?: Partial<NewReadingDraft>; step?: NewReadingStep; signatureImageUrl?: string }
+      if (!saved || typeof saved !== 'object') return
+      const sd = saved.draft || {}
+      const sStep = saved.step
+      const sSig = saved.signatureImageUrl
+      setDraft((prev) => ({
+        identification: {
+          patientId: String(sd?.identification?.patientId ?? prev.identification.patientId ?? ''),
+          paymentLinkId: String(sd?.identification?.paymentLinkId ?? prev.identification.paymentLinkId ?? ''),
+          collectionMethod: String(sd?.identification?.collectionMethod ?? prev.identification.collectionMethod ?? ''),
+          collectionAt: String(sd?.identification?.collectionAt ?? prev.identification.collectionAt ?? ''),
+          stripLot: String(sd?.identification?.stripLot ?? prev.identification.stripLot ?? ''),
+          stripExpiry: String(sd?.identification?.stripExpiry ?? prev.identification.stripExpiry ?? ''),
+        },
+        timer: {
+          selectedSeconds: Number(sd?.timer?.selectedSeconds ?? prev.timer.selectedSeconds ?? 120),
+          analyzedAt: String(sd?.timer?.analyzedAt ?? prev.timer.analyzedAt ?? ''),
+          analysis: sd?.timer?.analysis ?? prev.timer.analysis ?? null,
+        },
+        reviewSelections: (sd?.reviewSelections as ReviewSelectionMap) ?? prev.reviewSelections ?? {},
+        results: Array.isArray(sd?.results) ? (sd.results as ReviewResultDraft[]) : prev.results ?? [],
+        report: {
+          summaryAndInterpretation: String(sd?.report?.summaryAndInterpretation ?? prev.report.summaryAndInterpretation ?? ''),
+          otherInformation: String(sd?.report?.otherInformation ?? prev.report.otherInformation ?? ''),
+          veterinarianNotes: String(sd?.report?.veterinarianNotes ?? prev.report.veterinarianNotes ?? ''),
+        },
+      } as NewReadingDraft))
+      if (sStep === 'identification' || sStep === 'timer' || sStep === 'review' || sStep === 'report') {
+        setStep(sStep)
+      }
+      if (typeof sSig === 'string') {
+        setSignatureImageUrl(sSig)
+      }
+    } catch {
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return
+      const payload = JSON.stringify({ draft, step, signatureImageUrl })
+      window.localStorage.setItem(STORAGE_KEY, payload)
+    } catch {
+    }
+  }, [draft, step, signatureImageUrl])
+
   const [patientPreview, setPatientPreview] = useState<{
     animalName: string
     breed: string
@@ -195,7 +248,10 @@ export default function NewReadingWizard() {
 
   const canSubmit = useMemo(() => {
     const i = draft.identification
-    return !!i.patientId && !!i.collectionMethod && !!i.collectionAt && !!i.stripLot && !!i.stripExpiry && !!draft.timer.analysis && draft.results.length > 0 && !!signatureImageUrl
+    const todayStr = new Date().toISOString().slice(0, 10)
+    const expiryStr = (i.stripExpiry || '').trim()
+    const expiryValid = !!expiryStr && expiryStr >= todayStr
+    return !!i.patientId && !!i.collectionMethod && !!i.collectionAt && !!i.stripLot && expiryValid && !!draft.timer.analysis && draft.results.length > 0 && !!signatureImageUrl
   }, [draft.identification, draft.timer.analysis, draft.results.length, signatureImageUrl])
 
   function makeDummyAnalysis(): { analyzedAt: string; analysis: { summary: string; confidence: number; flags: string[] } } {
@@ -257,6 +313,12 @@ export default function NewReadingWizard() {
       }))
       setSignatureImageUrl("")
       setStep("identification")
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem(STORAGE_KEY)
+        }
+      } catch {
+      }
     } catch {
       toast.error("Network error while saving reading")
     } finally {

@@ -374,6 +374,13 @@ export default function GuardianRegistration() {
                     toast.error('Invalid date of birth');
                     return;
                 }
+                {
+                    const todayIso = new Date().toISOString().slice(0, 10);
+                    if (dateOfBirth >= todayIso) {
+                        toast.error(t('auth.dateOfBirthMustBePast'));
+                        return;
+                    }
+                }
                 const today = new Date();
                 let age = today.getFullYear() - dob.getFullYear();
                 const m = today.getMonth() - dob.getMonth();

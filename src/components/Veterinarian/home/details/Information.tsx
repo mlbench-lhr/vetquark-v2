@@ -40,11 +40,11 @@ export const PatientInfoCard: React.FC<PatientInfoCardProps> = ({
     <div className="flex flex-col justify-start items-start gap-3 w-full overflow-hidden">
       <div className="px- object-center relative h-64 rounded-[16px] overflow-hidden w-full">
         <Image
-          width={100}
-          height={100}
           src={image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
           alt={name}
-          className="w-full h-full object-cover object-top rounded-[16px]"
+          fill
+          sizes="100vw"
+          className="object-cover object-top rounded-[16px]"
         />
       </div>
       <div className="px- w-full ">

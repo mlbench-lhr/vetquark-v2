@@ -87,7 +87,10 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   }, [value.paymentLinkId])
 
   const canProceed = useMemo(() => {
-    return !!value.patientId && !!value.collectionMethod && !!value.collectionAt && !!value.stripLot && !!value.stripExpiry
+    const todayStr = new Date().toISOString().slice(0, 10)
+    const expiryStr = (value.stripExpiry || '').trim()
+    const expiryValid = !!expiryStr && expiryStr >= todayStr
+    return !!value.patientId && !!value.collectionMethod && !!value.collectionAt && !!value.stripLot && expiryValid
   }, [value.collectionAt, value.collectionMethod, value.patientId, value.stripExpiry, value.stripLot])
 
   if (showLink) {
@@ -238,7 +241,15 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
                 type="date"
                 value={value.stripExpiry}
                 min={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => onChange({ stripExpiry: e.target.value })}
+                onChange={(e) => {
+                  const v = (e.target.value || '').trim()
+                  const todayStr = new Date().toISOString().slice(0, 10)
+                  if (v && v < todayStr) {
+                    toast.error(t('reading.identification.stripExpiryMustBeFuture') || 'Strip expiry must be today or future')
+                    return
+                  }
+                  onChange({ stripExpiry: v })
+                }}
                 placeholder={t("reading.identification.enterStripExpiry")}
                 className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 pr-12"
                 style={{ colorScheme: 'light' }}

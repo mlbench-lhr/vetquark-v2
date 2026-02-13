@@ -44,19 +44,6 @@ type ReadingDetail = {
   veterinarian: { id: string; fullName: string; crmv: string | null; crmvState: string | null };
 };
 
-function StatusPill({ status }: { status: ReadingResultStatus }) {
-  const { t } = useTranslation();
-  const isNormal = status === "Normal";
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium ${isNormal ? "bg-[#ECFDF5] text-[#059669]" : "bg-[#FFF7ED] text-[#F97316]"
-        }`}
-    >
-      {isNormal ? t("exam.review.statusNormal") : t("exam.review.statusAbnormal")}
-    </span>
-  );
-}
-
 function ResultRow({ item }: { item: ReadingResult }) {
   const isNormal = item.status === "Normal";
   const dotColor = isNormal ? "#10B981" : "#F59E0B";
@@ -71,7 +58,7 @@ function ResultRow({ item }: { item: ReadingResult }) {
             <p className="truncate text-[12px] text-gray-400">{value}</p>
           </div>
         </div>
-        <StatusPill status={item.status} />
+        <div className="shrink-0" />
       </div>
     </div>
   );

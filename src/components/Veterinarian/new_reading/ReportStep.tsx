@@ -32,11 +32,41 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const sigPadRef = useRef<SignaturePad | null>(null)
   const [uploading, setUploading] = useState(false)
+  const SIGNATURE_STORAGE_KEY = 'new_reading_signature_draft_v1'
 
   useEffect(() => {
     if (!canvasRef.current) return
     sigPadRef.current = new SignaturePad(canvasRef.current)
   }, [])
+
+  useEffect(() => {
+    const pad = sigPadRef.current
+    if (!pad) return
+    const handleEnd = () => {
+      try {
+        if (typeof window === 'undefined') return
+        const url = pad.toDataURL('image/png')
+        window.localStorage.setItem(SIGNATURE_STORAGE_KEY, url)
+      } catch {
+      }
+    }
+    ; (pad as any).onEnd = handleEnd
+    try {
+      if (typeof window !== 'undefined' && !signatureImageUrl) {
+        const saved = window.localStorage.getItem(SIGNATURE_STORAGE_KEY)
+        if (saved) {
+          try {
+            pad.fromDataURL(saved)
+          } catch {
+          }
+        }
+      }
+    } catch {
+    }
+    return () => {
+      ; (pad as any).onEnd = undefined
+    }
+  }, [signatureImageUrl])
 
   async function ensureSignatureUploaded() {
     if (signatureImageUrl) return true
@@ -68,6 +98,10 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
       const url = String(uploadJson?.secure_url || uploadJson?.url || '')
       if (!url) return false
       onChangeSignatureUrl?.(url)
+      try {
+        if (typeof window !== 'undefined') window.localStorage.removeItem(SIGNATURE_STORAGE_KEY)
+      } catch {
+      }
       return true
     } finally {
       setUploading(false)
@@ -78,6 +112,10 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
     if (uploading || submitting) return
     onChangeSignatureUrl?.('')
     sigPadRef.current?.clear()
+    try {
+      if (typeof window !== 'undefined') window.localStorage.removeItem(SIGNATURE_STORAGE_KEY)
+    } catch {
+    }
   }
 
   return (
@@ -114,7 +152,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
               !signatureImageUrl &&
               <button
                 type="button"
-                onClick={() => sigPadRef.current?.clear()}
+                onClick={handleRetake}
                 className="px-4 py-2 rounded-full bg-white text-gray-700 font-medium"
                 disabled={uploading || !!submitting}
               >

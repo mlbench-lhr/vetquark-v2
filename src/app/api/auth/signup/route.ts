@@ -6,6 +6,7 @@ import User, { IUser } from "@/lib/models/User";
 import VetGuardianEmailVerification from "@/lib/models/VetGuardianEmailVerification";
 import { sendVerificationEmail, sendWelcomeEmail, sendGuardianInviteEmail } from "@/lib/email";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { STATES_BY_COUNTRY, CITIES_BY_COUNTRY_STATE } from "@/lib/locationData";
 
 function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
@@ -251,11 +252,29 @@ export async function POST(req: NextRequest) {
       if (!state) {
         return NextResponse.json({ error: "State is required" }, { status: 400 });
       }
+      {
+        const states = STATES_BY_COUNTRY[String(country).trim()] || [];
+        const stateOk = states.some((s) => s.value === String(state).trim() || s.text === String(state).trim());
+        if (!stateOk) {
+          return NextResponse.json({ error: "Invalid State" }, { status: 400 });
+        }
+        const byCountry = CITIES_BY_COUNTRY_STATE[String(country).trim()] || {};
+        const listByCode = byCountry[String(state).trim()] || [];
+        const stateText = (states.find((s) => s.value === String(state).trim())?.text || "").trim();
+        const listByName = stateText ? (byCountry[stateText] || []) : [];
+        const merged = Array.from(new Set<string>([...listByCode, ...listByName]));
+        if (merged.length > 0 && !merged.includes(String(city).trim())) {
+          return NextResponse.json({ error: "Invalid City" }, { status: 400 });
+        }
+      }
       // if (!isValidCpf(String(taxId))) {
       //   return NextResponse.json({ error: "Invalid ID Card" }, { status: 400 });
       // }
       if (!postalCode) {
         return NextResponse.json({ error: "Postal Code is required" }, { status: 400 });
+      }
+      if (String(country).trim() === "Brazil" && !isValidPostalCode(String(postalCode))) {
+        return NextResponse.json({ error: "Invalid Postal Code" }, { status: 400 });
       }
       if (acceptTerms !== true) {
         return NextResponse.json({ error: "Terms must be accepted" }, { status: 400 });
@@ -463,6 +482,29 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: "Guardian must be at least 10 years old" }, { status: 400 });
         }
       }
+      {
+        const cc = String(country || "").trim();
+        const st = String(state || "").trim();
+        const ct = String(city || "").trim();
+        if (cc && st) {
+          const states = STATES_BY_COUNTRY[cc] || [];
+          const stateOk = states.some((s) => s.value === st || s.text === st);
+          if (!stateOk) {
+            return NextResponse.json({ error: "Invalid State" }, { status: 400 });
+          }
+          const byCountry = CITIES_BY_COUNTRY_STATE[cc] || {};
+          const listByCode = byCountry[st] || [];
+          const stateText = (states.find((s) => s.value === st)?.text || "").trim();
+          const listByName = stateText ? (byCountry[stateText] || []) : [];
+          const merged = Array.from(new Set<string>([...listByCode, ...listByName]));
+          if (merged.length > 0 && ct && !merged.includes(ct)) {
+            return NextResponse.json({ error: "Invalid City" }, { status: 400 });
+          }
+          if (cc === "Brazil" && postalCode && !isValidPostalCode(String(postalCode))) {
+            return NextResponse.json({ error: "Invalid Postal Code" }, { status: 400 });
+          }
+        }
+      }
       const update: Partial<IUser> = {
         fullName,
         taxId,
@@ -537,6 +579,29 @@ export async function POST(req: NextRequest) {
       reportHeaderAddress,
       reportFooter,
     };
+    {
+      const cc = String(country || "").trim();
+      const st = String(state || "").trim();
+      const ct = String(city || "").trim();
+      if (cc && st) {
+        const states = STATES_BY_COUNTRY[cc] || [];
+        const stateOk = states.some((s) => s.value === st || s.text === st);
+        if (!stateOk) {
+          return NextResponse.json({ error: "Invalid State" }, { status: 400 });
+        }
+        const byCountry = CITIES_BY_COUNTRY_STATE[cc] || {};
+        const listByCode = byCountry[st] || [];
+        const stateText = (states.find((s) => s.value === st)?.text || "").trim();
+        const listByName = stateText ? (byCountry[stateText] || []) : [];
+        const merged = Array.from(new Set<string>([...listByCode, ...listByName]));
+        if (merged.length > 0 && ct && !merged.includes(ct)) {
+          return NextResponse.json({ error: "Invalid City" }, { status: 400 });
+        }
+        if (cc === "Brazil" && postalCode && !isValidPostalCode(String(postalCode))) {
+          return NextResponse.json({ error: "Invalid Postal Code" }, { status: 400 });
+        }
+      }
+    }
     if (normalizedProfile === "Guardian") {
       const dobStr = String(dateOfBirth || "").trim();
       if (!dobStr) {

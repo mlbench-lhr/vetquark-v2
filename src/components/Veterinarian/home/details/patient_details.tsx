@@ -81,11 +81,13 @@ const PatientProfilePage: React.FC = () => {
   }, [patientId]);
 
   const patientData = useMemo(() => {
+    const explicitAge = typeof patient?.ageYears === "number" ? patient.ageYears : null;
     const dob = patient?.dateOfBirth ? new Date(patient.dateOfBirth) : null;
     const now = new Date();
-    const ageYears = dob && !Number.isNaN(dob.getTime())
+    const derivedAgeYears = dob && !Number.isNaN(dob.getTime())
       ? Math.max(0, now.getFullYear() - dob.getFullYear() - (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0))
       : null;
+    const ageYears = explicitAge !== null ? explicitAge : derivedAgeYears;
 
     return {
       name: patient?.animalName ?? "",

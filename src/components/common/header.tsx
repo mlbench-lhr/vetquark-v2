@@ -4,22 +4,26 @@ import { ArrowLeft, Search, Bell, Edit2, Eye, Download, Plus, ChevronLeft } from
 import { useRouter } from 'next/navigation';
 import { useTranslation } from "react-i18next";
 
-// Header Component
 interface HeaderProps {
     title: string;
+    onBack?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ title }) => {
+const Header: React.FC<HeaderProps> = ({ title, onBack }) => {
     const router = useRouter();
     const { t } = useTranslation();
-    const onBack = () => {
-        router.back();
+    const handleBack = () => {
+        if (typeof onBack === 'function') {
+            onBack();
+        } else {
+            router.back();
+        }
     };
     return (
         <div className="flex items-center justify-between p- ">
             <div className="flex items-center gap-3 w-full justify-center">
                 <button
-                    onClick={onBack}
+                    onClick={handleBack}
                     aria-label={t("common.back")}
                     className="w-fit h-fit rounded-full bg-gray-10 flex absolute left-1 items-center justify-center hover:bg-gray-200"
                 >
