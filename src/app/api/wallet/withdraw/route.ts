@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import WalletTransaction from "@/lib/models/WalletTransaction";
+import PlatformSettings from "@/lib/models/PlatformSettings";
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,6 +51,92 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid payout method" }, { status: 400 });
     }
 
+    const apiKey = String(process.env.PAGARME_SECRET_KEY || "").trim();
+    if (!apiKey || apiKey.startsWith("pk_")) {
+      return NextResponse.json({ error: "Missing or invalid PAGARME_SECRET_KEY" }, { status: 500 });
+    }
+
+    const urlBase = String(process.env.PAGARME_API_BASE || "https://api.pagar.me/core/v5").replace(/\/+$/, "");
+    const transferUrl = `${urlBase}/transfers`;
+    const origin = new URL(req.url).origin;
+    const basic = Buffer.from(`${apiKey}:`, "utf8").toString("base64");
+    const amountCents = Math.round(Number(withdrawAmount) * 100);
+
+    if (pm.type === "pix") {
+      return NextResponse.json({ error: "Pix withdrawals are not supported via provider" }, { status: 400 });
+    }
+
+    const nameRaw = String((user as any).fullName || (user as any).tradeName || "").trim() || "Veterinarian";
+    const docRaw = String(pm.holderCpfCnpj || "").replace(/\D/g, "");
+    const personTypeRaw = String(pm.personType || "").trim();
+    const holderType = personTypeRaw === "legal" ? "company" : "individual";
+
+    function bankCodeFromName(name: string): string {
+      const n = name.toLowerCase();
+      if (n.includes("itaú")) return "341";
+      if (n.includes("itau")) return "341";
+      if (n.includes("banco do brasil")) return "001";
+      if (n.includes("santander")) return "033";
+      if (n.includes("bradesco")) return "237";
+      if (n.includes("caixa")) return "104";
+      if (n.includes("nubank")) return "260";
+      return "001";
+    }
+    const bankCode = bankCodeFromName(String(pm.bankName || ""));
+
+    function parseNumberAndDv(raw: string) {
+      const s = String(raw || "").replace(/\s+/g, "");
+      const digits = s.replace(/\D/g, "");
+      if (!digits) return { number: "", dv: "" };
+      if (digits.length === 1) return { number: digits, dv: "" };
+      const number = digits.slice(0, -1);
+      const dv = digits.slice(-1);
+      return { number, dv };
+    }
+    const agencyParsed = parseNumberAndDv(String(pm.agency || ""));
+    const accountParsed = parseNumberAndDv(String(pm.account || ""));
+
+    const bankAccount = {
+      bank_code: bankCode,
+      branch_number: agencyParsed.number || String(pm.agency || "").replace(/\D/g, ""),
+      account_number: accountParsed.number || String(pm.account || "").replace(/\D/g, ""),
+      account_check_digit: accountParsed.dv || "",
+      holder_name: nameRaw,
+      holder_type: holderType,
+      holder_document: docRaw,
+    };
+
+    const payload: any = {
+      amount: amountCents,
+      bank_account: bankAccount,
+      metadata: { userId, withdrawAmount: withdrawAmount },
+    };
+
+    const res = await fetch(transferUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Basic ${basic}`,
+        Accept: "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        Referer: origin,
+        Origin: origin,
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36 VetQuark",
+      },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      const message =
+        typeof (json as any)?.message === "string"
+          ? (json as any).message
+          : typeof (json as any)?.error === "string"
+          ? (json as any).error
+          : "Provider failed to create transfer";
+      return NextResponse.json({ error: "providerError", message, details: json }, { status: 502 });
+    }
+
     const created = await WalletTransaction.create({
       user: userId,
       type: "withdrawal",
@@ -71,6 +158,8 @@ export async function POST(req: NextRequest) {
         transactionId: String(created._id),
         amount: withdrawAmount,
         balance: newBalance,
+        provider: "pagarme",
+        providerResponse: json,
       },
       { status: 200 }
     );
