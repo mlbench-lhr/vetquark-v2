@@ -31,6 +31,12 @@ export default function Page() {
         if (!res.ok) return;
         const nextAmountLabel = typeof data?.item?.amountLabel === "string" ? data.item.amountLabel : "";
         if (nextAmountLabel) setAmountLabel(nextAmountLabel);
+        const status = String(data?.item?.status || "").trim();
+        if (status && status !== "pending") {
+          toast.error(status === "paid" ? "This link is already paid" : "This payment link has expired");
+          router.replace("/Guardian/payment/history");
+          return;
+        }
       } catch {
         console.error("PixPage fetch link error");
       }

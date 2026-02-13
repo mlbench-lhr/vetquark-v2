@@ -23,7 +23,7 @@
    useEffect(() => {
      let mounted = true;
      if (!paymentId) return;
-     (async () => {
+    (async () => {
        try {
          const res = await fetch(`/api/payment_links/get/${encodeURIComponent(paymentId)}`);
          const data = await res.json().catch(() => null);
@@ -31,6 +31,12 @@
          if (!res.ok) return;
          const nextAmountLabel = typeof data?.item?.amountLabel === "string" ? data.item.amountLabel : "";
          if (nextAmountLabel) setAmountLabel(nextAmountLabel);
+        const status = String(data?.item?.status || "").trim();
+        if (status && status !== "pending") {
+          toast.error(status === "paid" ? "This link is already paid" : "This payment link has expired");
+          router.replace("/Guardian/payment/history");
+          return;
+        }
          const defaultName = typeof data?.item?.guardian?.name === "string" ? data.item.guardian.name : "";
          if (defaultName) setHolderName(defaultName);
        } catch {}
@@ -165,7 +171,7 @@
              onChange={(e) => setHolderDocument(e.target.value)}
              className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
            />
-           <div className="flex gap-3">
+           <div className="flex gap-3 flex-wrap">
              <input
                type="text"
                inputMode="numeric"

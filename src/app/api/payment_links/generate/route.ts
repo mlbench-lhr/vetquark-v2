@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const candidates = await PaymentLink.find({
       veterinarian: veterinarianId,
       patient: patientId,
-      status: { $in: ["pending", "paid"] },
+      status: "pending",
     })
       .sort({ createdAt: -1 })
       .limit(5)
