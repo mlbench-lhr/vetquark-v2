@@ -41,6 +41,14 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date();
+    const settingsDoc = await PlatformSettings.findOne({}).lean();
+    const platformFee = settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
+      ? Number((settingsDoc as any).platformFeeBRL)
+      : 33.0;
+    const amount = typeof veterinarian.baseExamPrice === "number" && Number.isFinite(veterinarian.baseExamPrice)
+      ? veterinarian.baseExamPrice
+      : 89.9;
+    const amountNet = Math.max(0, amount - platformFee);
     const candidates = await PaymentLink.find({
       veterinarian: veterinarianId,
       patient: patientId,
@@ -72,6 +80,22 @@ export async function POST(req: NextRequest) {
       const reading = await Reading.findById(readingId).select("_id signedAt").lean();
       if (!reading) continue;
       if (!reading.signedAt) {
+        const existingAmount = Number(link.amount || 0);
+        const existingFee = Number((link as any).platformFee || platformFee);
+        const shouldUpdate =
+          !Number.isFinite(existingAmount) ||
+          Math.abs(existingAmount - amount) > 0.0001 ||
+          !Number.isFinite(existingFee) ||
+          Math.abs(existingFee - platformFee) > 0.0001;
+        if (shouldUpdate) {
+          await PaymentLink.updateOne(
+            { _id: link._id, status: "pending" },
+            { $set: { amount, platformFee, amountNet } },
+          );
+          link.amount = amount;
+          (link as any).platformFee = platformFee;
+          (link as any).amountNet = amountNet;
+        }
         existing = link;
         break;
       }
@@ -90,12 +114,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const amount = typeof veterinarian.baseExamPrice === "number" && Number.isFinite(veterinarian.baseExamPrice) ? veterinarian.baseExamPrice : 89.9;
-    const settingsDoc = await PlatformSettings.findOne({}).lean();
-    const platformFee = settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
-      ? Number((settingsDoc as any).platformFeeBRL)
-      : 33.0;
-    const amountNet = Math.max(0, amount - platformFee);
+    // amount, platformFee, amountNet already computed above
     const expiresAt = new Date(now);
     expiresAt.setHours(expiresAt.getHours() + 24);
     const created = await PaymentLink.create({

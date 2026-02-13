@@ -44,7 +44,7 @@ export const PatientInfoCard: React.FC<PatientInfoCardProps> = ({
           height={100}
           src={image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
           alt={name}
-          className="w-full h-full object-cover rounded-[16px]"
+          className="w-full h-full object-cover object-top rounded-[16px]"
         />
       </div>
       <div className="px- w-full ">
