@@ -3,6 +3,12 @@ import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import PaymentLink from "@/lib/models/PaymentLink";
+import WalletTransaction from "@/lib/models/WalletTransaction";
+import PlatformSettings from "@/lib/models/PlatformSettings";
+import Patient from "@/lib/models/Patient";
+import Notification from "@/lib/models/Notification";
+import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
+import { isPushEnabledForUser } from "@/lib/utils";
 
 type Method = "credit_card" | "boleto" | "pix";
 type PagarmePixCharge = {
@@ -484,6 +490,114 @@ export async function POST(req: NextRequest) {
         cardBrand: String(lastTxn?.card?.brand || ""),
         cardLast4: String(lastTxn?.card?.last_four_digits || lastTxn?.card?.last_4 || ""),
       };
+      {
+        const statusOrder = String(createdV5?.status || "").toLowerCase();
+        const statusCharge = String(charge?.status || "").toLowerCase();
+        const shouldMarkPaid =
+          statusOrder === "paid" ||
+          statusCharge === "paid" ||
+          statusOrder === "authorized" ||
+          statusCharge === "authorized" ||
+          statusOrder === "captured" ||
+          statusCharge === "captured";
+        if (shouldMarkPaid) {
+          await PaymentLink.updateOne({ _id: link._id }, { $set: { status: "paid" } });
+          const readingId = String((link as any).reading || "");
+          if (readingId && mongoose.Types.ObjectId.isValid(readingId)) {
+            await (await import("@/lib/models/Reading")).default.updateOne(
+              { _id: readingId },
+              { $set: { paymentStatus: "paid", paymentLink: link._id } },
+            );
+          }
+          const veterinarianId = String(link.veterinarian || "").trim();
+          const patientId = String(link.patient || "").trim();
+          const guardianId = String(userId || "").trim();
+          if (mongoose.Types.ObjectId.isValid(veterinarianId) && mongoose.Types.ObjectId.isValid(patientId)) {
+            const patient = await Patient.findById(patientId).select("_id animalName").lean();
+            const petName = String((patient as any)?.animalName || "a patient");
+            const settingsDoc = await PlatformSettings.findOne({}).lean();
+            const feeFromLink = Number.isFinite(Number((link as any).platformFee)) ? Number((link as any).platformFee) : null;
+            const PLATFORM_FEE =
+              feeFromLink ??
+              (settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
+                ? Number((settingsDoc as any).platformFeeBRL)
+                : 33.0);
+            const gross = typeof (link as any).amount === "number" && Number.isFinite((link as any).amount) ? Number((link as any).amount) : 0;
+            const net = Math.max(0, gross - PLATFORM_FEE);
+            const releaseAt = new Date();
+            const existingTx = await WalletTransaction.findOne({ paymentLink: link._id, type: "credit" })
+              .select("_id")
+              .lean();
+            if (!existingTx) {
+              await WalletTransaction.create({
+                user: veterinarianId,
+                type: "credit",
+                amountGross: gross,
+                platformFee: PLATFORM_FEE,
+                amountNet: net,
+                currency: (link as any).currency || "BRL",
+                status: "released",
+                paymentLink: link._id,
+                patient: link.patient,
+                guardian: link.guardian,
+                releaseAt,
+              });
+            }
+            const guardianTitle = "Payment completed";
+            const guardianMessage = `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
+            const guardianUrl = `/Guardian/payment/${encodeURIComponent(String(link._id))}`;
+            const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
+            const canNotifyGuardian = isPushEnabledForUser(guardianUser, "payment_received");
+            const guardianNotification = canNotifyGuardian
+              ? await Notification.create({
+                  user: guardianId,
+                  type: "payment_received",
+                  title: guardianTitle,
+                  message: guardianMessage,
+                  url: guardianUrl,
+                  readAt: null,
+                })
+              : null;
+            if (guardianNotification) {
+              const pusher = getPusherServer();
+              await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+                id: String(guardianNotification._id),
+                type: guardianNotification.type,
+                title: guardianNotification.title,
+                message: guardianNotification.message,
+                url: guardianNotification.url,
+                createdAt: guardianNotification.createdAt ? new Date(guardianNotification.createdAt).toISOString() : new Date().toISOString(),
+              });
+            }
+            const title = "Payment received";
+            const message = `Payment completed for ${petName}. You can now complete the reading.`;
+            const url = `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(String(link._id))}&step=timer`;
+            const vetUser = await User.findById(veterinarianId).select("_id role notificationSettings").lean();
+            const canNotifyVet = isPushEnabledForUser(vetUser, "payment_received");
+            const notification = canNotifyVet
+              ? await Notification.create({
+                  user: veterinarianId,
+                  type: "payment_received",
+                  title,
+                  message,
+                  url,
+                  readAt: null,
+                })
+              : null;
+            if (notification) {
+              const pusher = getPusherServer();
+              await pusher.trigger(notificationsChannelForUser(veterinarianId), "notification:new", {
+                id: String(notification._id),
+                type: notification.type,
+                title: notification.title,
+                message: notification.message,
+                url: notification.url,
+                createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+              });
+            }
+          }
+        }
+      }
       return NextResponse.json(responseV5, { status: 200 });
     }
     if (method === "boleto") {
