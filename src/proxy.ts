@@ -63,7 +63,7 @@ function homeForRole(role: unknown) {
   return null;
 }
 
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (pathname.startsWith("/api/auth") || pathname.includes("cloudinary")) {
     return NextResponse.next();
