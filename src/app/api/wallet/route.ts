@@ -33,10 +33,8 @@ export async function GET(req: NextRequest) {
     let availableBalance = 0;
     for (const tx of docs as any[]) {
       if (tx.type === "credit") {
-        const releaseAt = tx.releaseAt ? new Date(tx.releaseAt as any) : null;
-        const isReleased = tx.status === "released" || (releaseAt && releaseAt.getTime() <= now.getTime());
-        if (isReleased) availableBalance += Number(tx.amountNet || 0);
-      } else if (tx.type === "withdrawal" && tx.status === "released") {
+        availableBalance += Number(tx.amountNet || 0);
+      } else if (tx.type === "withdrawal") {
         availableBalance -= Number(tx.amountNet || tx.amountGross || 0);
       }
     }
@@ -46,13 +44,12 @@ export async function GET(req: NextRequest) {
         ? tx.amountNet.toFixed(2).replace(".", ",")
         : "";
       const createdAtIso = tx.createdAt ? new Date(tx.createdAt as any).toISOString() : null;
-      const releaseAtIso = tx.releaseAt ? new Date(tx.releaseAt as any).toISOString() : null;
       return {
         id: String(tx._id),
         type: tx.type === "withdrawal" ? "withdrawal" : "credit",
         title: String(tx.patient?.animalName || "Urinalysis"),
         subtitle: "Urinalysis Report",
-        date: releaseAtIso ?? createdAtIso,
+        date: createdAtIso,
         amount: amountLabel,
         avatarUrl: String(tx.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
         isPix: false,

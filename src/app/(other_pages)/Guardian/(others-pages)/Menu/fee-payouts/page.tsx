@@ -23,8 +23,8 @@ export default function FeesAndPayoutsPage() {
             answer: "It is not recommended; below this, your payout would be R$0.00 or negative.",
         },
         {
-            question: "When will I see the money?",
-            answer: "Credit is released in D+2 business days after payment confirmation and contributes to your available balance.",
+                question: "When will I see the money?",
+                answer: "After payment confirmation, the net amount is available in the vet’s Wallet immediately.",
         },
         {
             question: "PIX or bank account?",
@@ -84,9 +84,8 @@ export default function FeesAndPayoutsPage() {
                 <div className="text-[14px] text-muted-foreground leading-[1.7] space-y-1">
                     <p>1. Tutor pays for the exam (link/QR).</p>
                     <p>2. The platform retains R$ {platformFee.toFixed(2)}.</p>
-                    <p>3. The net amount enters your Wallet as scheduled credit.</p>
-                    <p>4. Credit is released in D+2 business days after payment confirmation.</p>
-                    <p>5. Released amount contributes to your available balance (ready for withdrawal).</p>
+                    <p>3. The net amount enters the veterinarian’s Wallet and is available immediately.</p>
+                    <p>4. Withdrawals can be made anytime to PIX or bank.</p>
                 </div>
             </section>
 

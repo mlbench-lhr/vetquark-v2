@@ -206,19 +206,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
             : 33.0);
         const gross = typeof (link as any).amount === "number" && Number.isFinite((link as any).amount) ? Number((link as any).amount) : 0;
         const net = Math.max(0, gross - PLATFORM_FEE);
-        const releaseAt = (() => {
-          const addBusinessDays = (start: Date, days: number) => {
-            const d = new Date(start);
-            let added = 0;
-            while (added < days) {
-              d.setDate(d.getDate() + 1);
-              const day = d.getDay();
-              if (day !== 0 && day !== 6) added++;
-            }
-            return d;
-          };
-          return addBusinessDays(new Date(), 2);
-        })();
+        const releaseAt = new Date();
 
         const existingTx = await WalletTransaction.findOne({ paymentLink: link._id, type: "credit" })
           .select("_id")
@@ -231,7 +219,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
             platformFee: PLATFORM_FEE,
             amountNet: net,
             currency: (link as any).currency || "BRL",
-            status: "scheduled",
+            status: "released",
             paymentLink: link._id,
             patient: link.patient,
             guardian: link.guardian,
