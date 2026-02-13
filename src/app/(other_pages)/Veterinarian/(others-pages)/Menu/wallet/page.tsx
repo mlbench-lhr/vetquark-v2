@@ -60,7 +60,6 @@ export default function WalletCard({
     currency: currencyProp = "R$",
     pixNumber = "***222.***-00",
     transactions: transactionsProp = defaultTransactions,
-    onWithdraw,
     onBankDetails,
 }: WalletCardProps) {
     const { t } = useTranslation();
@@ -73,6 +72,45 @@ export default function WalletCard({
     const [transactions, setTransactions] = useState<Transaction[]>(transactionsProp);
     const [loading, setLoading] = useState(true);
 
+    const handleWithdraw = async () => {
+        try {
+            const res = await fetch("/api/wallet/withdraw", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({}),
+            });
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                toast.error(typeof data?.error === "string" ? data.error : "Failed to withdraw");
+                return;
+            }
+            toast.success("Withdrawal requested");
+            // Refresh wallet
+            const r = await fetch("/api/wallet", { credentials: "include" });
+            const j = await r.json().catch(() => null);
+            if (r.ok && j) {
+                const currency = String(j?.currency || "BRL");
+                const balanceNumber = typeof j?.balance === "number" ? j.balance : 0;
+                setCurrency(currency === "BRL" ? "R$" : currency);
+                setBalance(balanceNumber.toFixed(2));
+                const list: any[] = Array.isArray(j?.transactions) ? j.transactions : [];
+                const mapped: Transaction[] = list.map((it: any) => ({
+                    id: String(it.id),
+                    type: it.type === "withdrawal" ? "withdrawal" : "credit",
+                    title: String(it.title || "Urinalysis"),
+                    subtitle: String(it.subtitle || "Urinalysis Report"),
+                    date: typeof it.date === "string" ? new Date(it.date).toLocaleDateString() : "",
+                    amount: String(it.amount || ""),
+                    avatarUrl: String(it.avatarUrl || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
+                    isPix: false,
+                }));
+                setTransactions(mapped);
+            }
+        } catch {
+            toast.error("Network error");
+        }
+    };
     useEffect(() => {
         let mounted = true;
         (async () => {
@@ -144,7 +182,7 @@ export default function WalletCard({
             )}
             <div className="flex gap-3 mx- mt-4">
                 <Button
-                    onClick={onWithdraw}
+                    onClick={handleWithdraw}
                     variant="secondary"
                     className="flex-1 h-12 rounded-full bg-[#F5F6F6] text-foreground font-medium hover:bg-white/90"
                 >
