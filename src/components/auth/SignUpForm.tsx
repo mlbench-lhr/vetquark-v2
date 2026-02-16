@@ -79,7 +79,7 @@ export default function SignUpForm() {
     if (raw === "vet" || raw === "veterinarian") return "veterinarian" as const;
     return "veterinarian" as const;
   })();
-  const [step, setStep] = useState(() => (initialProfileType === "tutor" ? 2 : 1));
+  const [step, setStep] = useState(() => (initialProfileType === "tutor" ? 2 : 4));
   const [profileType, setProfileType] = useState<ProfileType>(() => initialProfileType);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -143,15 +143,15 @@ export default function SignUpForm() {
 
   const countryOptions = [
     { value: "Brazil", text: "Brazil" },
-    { value: "Argentina", text: "Argentina" },
-    { value: "Canada", text: "Canada" },
-    { value: "Chile", text: "Chile" },
-    { value: "Colombia", text: "Colombia" },
-    { value: "Mexico", text: "Mexico" },
-    { value: "Portugal", text: "Portugal" },
-    { value: "Spain", text: "Spain" },
-    { value: "United Kingdom", text: "United Kingdom" },
-    { value: "United States", text: "United States" },
+    // { value: "Argentina", text: "Argentina" },
+    // { value: "Canada", text: "Canada" },
+    // { value: "Chile", text: "Chile" },
+    // { value: "Colombia", text: "Colombia" },
+    // { value: "Mexico", text: "Mexico" },
+    // { value: "Portugal", text: "Portugal" },
+    // { value: "Spain", text: "Spain" },
+    // { value: "United Kingdom", text: "United Kingdom" },
+    // { value: "United States", text: "United States" },
   ];
 
   const brazilianStateOptions = [
