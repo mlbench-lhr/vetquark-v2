@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
     }
 
     const nameRaw = String((user as any).fullName || (user as any).tradeName || "").trim() || "Veterinarian";
-    const emailRaw = String((user as any).email || "").trim();
     const docRaw = String(pm.holderCpfCnpj || "").replace(/\D/g, "");
     const personTypeRaw = String(pm.personType || "").trim();
     const holderType = personTypeRaw === "legal" ? "company" : "individual";
@@ -140,116 +139,6 @@ export async function POST(req: NextRequest) {
         },
         { status: 502 }
       );
-    }
-
-    // Fallback to legacy v1 when v5 doesn't support POST transfers
-    if (!res.ok && (res.status === 405 || (json && (json.code === "UnsupportedApiVersion" || json.error?.code === "UnsupportedApiVersion")))) {
-      try {
-        let recipientId = String(pm?.providerRecipientId || "").trim();
-        const v1Headers: Record<string, string> = {
-          "content-type": "application/json",
-          Authorization: `Basic ${basic}`,
-          Accept: "application/json, text/plain, */*",
-          "Accept-Language": "en-US,en;q=0.9",
-          Referer: origin,
-          Origin: origin,
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36 VetQuark",
-        };
-
-        // Create recipient via legacy v1 if missing
-        if (!recipientId) {
-          const createBankUrl = `${apiBaseRoot}/1/bank_accounts`;
-          const bankBodyV1 = {
-            api_key: apiKey,
-            bank_code: bankCode,
-            agencia: bankAccount.branch_number,
-            agencia_dv: "",
-            conta: bankAccount.account_number,
-            conta_dv: bankAccount.account_check_digit,
-            legal_name: nameRaw,
-            document_number: docRaw,
-          };
-          const rb = await fetch(createBankUrl, {
-            method: "POST",
-            headers: v1Headers,
-            body: JSON.stringify(bankBodyV1),
-          });
-          const rbj = await rb.json().catch(() => null);
-          if (!rb.ok) {
-            return NextResponse.json(
-              { error: "providerError", message: "Provider failed to create bank account (v1)", details: rbj },
-              { status: 502 }
-            );
-          }
-          const bankId = String((rbj as any)?.id || (rbj as any)?.bank_account?.id || "");
-          if (!bankId) {
-            return NextResponse.json(
-              { error: "providerError", message: "Bank account id missing (v1)", details: rbj },
-              { status: 502 }
-            );
-          }
-
-          const createRecipientUrlV1 = `${apiBaseRoot}/1/recipients`;
-          const recBodyV1 = {
-            api_key: apiKey,
-            transfer_enabled: true,
-            bank_account_id: bankId,
-            automatic_anticipation_enabled: false,
-            transfer_interval: "daily",
-            transfer_day: 0,
-          };
-          const rr = await fetch(createRecipientUrlV1, {
-            method: "POST",
-            headers: v1Headers,
-            body: JSON.stringify(recBodyV1),
-          });
-          const rrj = await rr.json().catch(() => null);
-          if (!rr.ok) {
-            return NextResponse.json(
-              { error: "providerError", message: "Provider failed to create recipient (v1)", details: rrj },
-              { status: 502 }
-            );
-          }
-          recipientId = String((rrj as any)?.id || (rrj as any)?.recipient?.id || "");
-          if (!recipientId) {
-            return NextResponse.json(
-              { error: "providerError", message: "Recipient id missing (v1)", details: rrj },
-              { status: 502 }
-            );
-          }
-          await User.updateOne(
-            { _id: userId },
-            { $set: { "payoutMethod.providerRecipientId": recipientId } },
-          );
-        }
-
-        // Create transfer via legacy v1
-        const transferUrlV1 = `${apiBaseRoot}/1/transfers`;
-        const tBodyV1 = {
-          api_key: apiKey,
-          recipient_id: recipientId,
-          amount: amountCents,
-          metadata: { userId, withdrawAmount: withdrawAmount },
-        };
-        const tr = await fetch(transferUrlV1, {
-          method: "POST",
-          headers: v1Headers,
-          body: JSON.stringify(tBodyV1),
-        });
-        const trj = await tr.json().catch(() => null);
-        if (!tr.ok) {
-          return NextResponse.json(
-            { error: "providerError", message: "Provider failed to create transfer (v1)", details: trj },
-            { status: 502 }
-          );
-        }
-        json = trj;
-        res = tr as any;
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error("Legacy v1 fallback failed", e);
-      }
     }
 
     if (!res.ok) {
