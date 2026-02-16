@@ -128,18 +128,18 @@ export async function POST(req: NextRequest) {
     let json: any = await res.json().catch(() => null);
 
     // Detect Cloudflare HTML block (providerBlocked)
-    const ct = res.headers.get("content-type") || "";
-    const cfRay = res.headers.get("cf-ray") || "";
-    if (ct.includes("text/html") && (cfRay || (typeof json === "string" && /cloudflare|ray id/i.test(json)))) {
-      return NextResponse.json(
-        {
-          error: "providerBlocked",
-          message: "Provider blocked the request (Cloudflare)",
-          details: { cfRay: cfRay || null },
-        },
-        { status: 502 }
-      );
-    }
+    // const ct = res.headers.get("content-type") || "";
+    // const cfRay = res.headers.get("cf-ray") || "";
+    // if (ct.includes("text/html") && (cfRay || (typeof json === "string" && /cloudflare|ray id/i.test(json)))) {
+    //   return NextResponse.json(
+    //     {
+    //       error: "providerBlocked",
+    //       message: "Provider blocked the request (Cloudflare)",
+    //       details: { cfRay: cfRay || null },
+    //     },
+    //     { status: 502 }
+    //   );
+    // }
 
     if (!res.ok) {
       const message =
