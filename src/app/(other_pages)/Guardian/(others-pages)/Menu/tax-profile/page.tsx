@@ -159,7 +159,7 @@ export default function Page() {
 
   return (
     <div className="min-h-scree bg-white">
-      <Header title={t("menu.idAddressInfo")} onBack={() => router.back()} backAriaLabel={t("common.back")} />
+      <Header title={t("menu.idAddressInfo")} />
 
       <div className="flex min-h-[calc(100dvh-72px)] flex-col px- pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div>
