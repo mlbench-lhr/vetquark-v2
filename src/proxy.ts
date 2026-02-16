@@ -60,22 +60,61 @@ async function verifyHS256(token: string, secret: string): Promise<TokenPayload 
 function homeForRole(role: unknown) {
   if (role === "Veterinarian") return "/Veterinarian/home";
   if (role === "Guardian") return "/Guardian/home";
+  if (role === "Admin") return "/admin/dashboard";
   return null;
 }
 
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/api/auth") || pathname.includes("cloudinary")) {
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/admin/auth") || pathname.includes("cloudinary")) {
     return NextResponse.next();
+  }
+
+  const secret = process.env.AUTH_SECRET;
+  const isApi = pathname.startsWith("/api");
+
+  const adminToken = req.cookies.get("admin_session")?.value || null;
+  const adminPublicRoutes = new Set([
+    "/admin/login",
+    "/admin/forgot-password",
+    "/admin/verify-otp",
+    "/admin/reset-password",
+  ]);
+
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    if (pathname.startsWith("/admin") && adminPublicRoutes.has(pathname)) {
+      if (!adminToken || !secret) return NextResponse.next();
+      const payload = await verifyHS256(adminToken, secret);
+      const adminId = payload?.sub;
+      if (!adminId || payload?.role !== "Admin") return NextResponse.next();
+      return NextResponse.redirect(new URL("/admin/dashboard", req.nextUrl.origin));
+    }
+
+    if (!adminToken || !secret) {
+      if (isApi) {
+        return NextResponse.json({ error: !secret ? "Server auth misconfigured" : "Unauthorized" }, { status: !secret ? 500 : 401 });
+      }
+      return NextResponse.redirect(new URL("/admin/login", req.nextUrl.origin));
+    }
+
+    const payload = await verifyHS256(adminToken, secret);
+    const adminId = payload?.sub;
+    if (!adminId || payload?.role !== "Admin") {
+      if (isApi) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      return NextResponse.redirect(new URL("/admin/login", req.nextUrl.origin));
+    }
+
+    const headers = new Headers(req.headers);
+    headers.set("x-admin-id", String(adminId));
+    return NextResponse.next({ request: { headers } });
   }
 
   const authHeader = req.headers.get("authorization");
   const bearer = authHeader?.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : null;
   const cookieToken = req.cookies.get("auth_token")?.value || req.cookies.get("session_id")?.value;
   const token = bearer || cookieToken;
-
-  const secret = process.env.AUTH_SECRET;
-  const isApi = pathname.startsWith("/api");
 
   const publicAlwaysAccessible = new Set([
     "/legal/privacy",
