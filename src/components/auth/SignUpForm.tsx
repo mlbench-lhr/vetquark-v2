@@ -79,7 +79,7 @@ export default function SignUpForm() {
     if (raw === "vet" || raw === "veterinarian") return "veterinarian" as const;
     return "veterinarian" as const;
   })();
-  const [step, setStep] = useState(() => (initialProfileType === "tutor" ? 2 : 4));
+  const [step, setStep] = useState(() => (initialProfileType === "tutor" ? 2 : 1));
   const [profileType, setProfileType] = useState<ProfileType>(() => initialProfileType);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
