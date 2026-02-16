@@ -436,24 +436,24 @@ export default function ReportDetailsPage() {
 
             <div className="w-full flex justify-start items-start flex-col gap-0 px-4 mt-5">
               <h1 className="text-[18px] font-medium">{t("history.veterinaryReport")}</h1>
-              <h2 className="text-[14px] font-normal">{t("exam.report.summaryInterpretation")}</h2>
+              <h2 className="text-[14px] font-normal">{t("reading.report.summaryInterpretation")}</h2>
               <p className="text-[14px] font-normal text-black/60">
                 {reading.report?.summaryAndInterpretation || reading.timer?.analysis?.summary || "N/A"}
               </p>
               <p className="text-[14px] font-normal">
-                {t("exam.report.disclaimerNote")}
+                {t("reading.report.disclaimerNote")}
               </p>
-              <span className="text-[14px] font-normal mt-3">{t("exam.report.otherInformation")}</span>
+              <span className="text-[14px] font-normal mt-3">{t("reading.report.otherInformation")}</span>
               <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">
                 {reading.report?.otherInformation || "N/A"}
               </div>
-              <span className="text-[14px] font-normal mt-3">{t("exam.report.veterinarianNotes")}</span>
+              <span className="text-[14px] font-normal mt-3">{t("reading.report.veterinarianNotes")}</span>
               <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">
                 {reading.report?.veterinarianNotes || "N/A"}
               </div>
               {reading.signatureImageUrl ? (
                 <div className="w-full mt-4">
-                  <div className="text-[14px] font-normal mb-1">{t("exam.report.signature")}</div>
+                  <div className="text-[14px] font-normal mb-1">{t("reading.report.signature")}</div>
                   <div className="rounded-[12px] bg-[#F5F6F6] p-4">
                     <div className="w-full h-24 bg-white rounded-md flex items-center justify-center overflow-hidden">
                       <img
@@ -476,7 +476,7 @@ export default function ReportDetailsPage() {
                   : "CRMV"}
               </h2>
               <p className="text-[14px] font-normal text-black/60">
-                {generatedAtLabel ? `${t("exam.report.generatedOnPrefix")} ${generatedAtLabel}` : ""}
+                {generatedAtLabel ? `${t("reading.report.generatedOnPrefix")} ${generatedAtLabel}` : ""}
               </p>
             </div>
           </>

@@ -10,6 +10,7 @@ export type UserProfile = {
   taxId?: string;
   dateOfBirth?: string;
   address?: string;
+  country?: string;
   city?: string;
   state?: string;
   postalCode?: string;
