@@ -56,7 +56,7 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange }) => {
 
 // Main Page Component
 const PatientProfilePage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState('information');
   const params = useParams<{ patient_id: string }>();
   const patientId = params?.patient_id;
@@ -81,13 +81,45 @@ const PatientProfilePage: React.FC = () => {
   }, [patientId]);
 
   const patientData = useMemo(() => {
-    const explicitAge = typeof patient?.ageYears === "number" ? patient.ageYears : null;
     const dob = patient?.dateOfBirth ? new Date(patient.dateOfBirth) : null;
-    const now = new Date();
-    const derivedAgeYears = dob && !Number.isNaN(dob.getTime())
-      ? Math.max(0, now.getFullYear() - dob.getFullYear() - (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0))
-      : null;
-    const ageYears = explicitAge !== null ? explicitAge : derivedAgeYears;
+    let ageText = "";
+    if (dob && Number.isFinite(dob.getTime())) {
+      const now = new Date();
+      let years = now.getFullYear() - dob.getFullYear();
+      let months = now.getMonth() - dob.getMonth();
+      let days = now.getDate() - dob.getDate();
+      if (days < 0) {
+        months -= 1;
+        const daysInPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+        days += daysInPrevMonth;
+      }
+      if (months < 0) {
+        months += 12;
+        years -= 1;
+      }
+      const lang = i18n.language === "pt" ? "pt" : "en";
+      const unit = (type: "y" | "m" | "d", n: number) => {
+        if (lang === "pt") {
+          if (type === "y") return n === 1 ? "ano" : "anos";
+          if (type === "m") return n === 1 ? "mês" : "meses";
+          return n === 1 ? "dia" : "dias";
+        } else {
+          if (type === "y") return n === 1 ? "year" : "years";
+          if (type === "m") return n === 1 ? "month" : "months";
+          return n === 1 ? "day" : "days";
+        }
+      };
+      const parts: string[] = [];
+      if (years > 0) parts.push(`${years} ${unit("y", years)}`);
+      if (months > 0) parts.push(`${months} ${unit("m", months)}`);
+      if (days > 0 || parts.length === 0) parts.push(`${Math.max(0, days)} ${unit("d", Math.max(0, days))}`);
+      ageText = parts.join(" ");
+    } else if (typeof patient?.ageYears === "number") {
+      const y = Math.max(0, Number(patient.ageYears) || 0);
+      const lang = i18n.language === "pt" ? "pt" : "en";
+      const label = lang === "pt" ? (y === 1 ? "ano" : "anos") : (y === 1 ? "year" : "years");
+      ageText = `${y} ${label}`;
+    }
 
     return {
       name: patient?.animalName ?? "",
@@ -95,7 +127,7 @@ const PatientProfilePage: React.FC = () => {
       breed: patient?.breed ?? "",
       image: patient?.photo ?? "",
       sex: patient?.sex ?? "",
-      age: ageYears === null ? "" : `${ageYears} years`,
+      age: ageText,
       gender: patient?.sex ?? "",
       microchip: patient?.microchip ?? "",
       temperament: patient?.temperament ?? "",
@@ -115,7 +147,7 @@ const PatientProfilePage: React.FC = () => {
       guardianTaxId: patient?.guardian?.taxId ?? "",
       guardianEmail: patient?.guardian?.email ?? "",
     };
-  }, [patient]);
+  }, [patient, i18n.language]);
 
   const reports: Report[] = [];
 
