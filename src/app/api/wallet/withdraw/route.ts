@@ -106,55 +106,10 @@ export async function POST(req: NextRequest) {
       holder_document: docRaw,
     };
 
-    let recipientId = String(pm?.providerRecipientId || "").trim();
-    if (!recipientId) {
-      const createRecipientUrl = `${urlBase}/recipients`;
-      const createPayload: any = {
-        name: nameRaw,
-        email: emailRaw || undefined,
-        description: `VetQuark user ${userId}`,
-        document: docRaw,
-        type: holderType,
-        default_bank_account: bankAccount,
-        metadata: { userId },
-      };
-      const r = await fetch(createRecipientUrl, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          Authorization: `Basic ${basic}`,
-          Accept: "application/json, text/plain, */*",
-          "Accept-Language": "en-US,en;q=0.9",
-          Referer: origin,
-          Origin: origin,
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36 VetQuark",
-        },
-        body: JSON.stringify(createPayload),
-      });
-      const rj = await r.json().catch(() => null);
-      if (!r.ok) {
-        const message =
-          typeof (rj as any)?.message === "string"
-            ? (rj as any).message
-            : typeof (rj as any)?.error === "string"
-            ? (rj as any).error
-            : "Provider failed to create recipient";
-        return NextResponse.json({ error: "providerError", message, details: rj }, { status: 502 });
-      }
-      recipientId = String((rj as any)?.id || "");
-      if (!recipientId) {
-        return NextResponse.json({ error: "providerError", message: "Recipient id missing", details: rj }, { status: 502 });
-      }
-      await User.updateOne(
-        { _id: userId },
-        { $set: { "payoutMethod.providerRecipientId": recipientId } },
-      );
-    }
-
-    const transferUrl = `${urlBase}/recipients/${encodeURIComponent(recipientId)}/transfers`;
+    const transferUrl = `${urlBase}/transfers`;
     const payload: any = {
       amount: amountCents,
+      bank_account: bankAccount,
       metadata: { userId, withdrawAmount: withdrawAmount },
     };
     const res = await fetch(transferUrl, {
