@@ -28,7 +28,7 @@ export function ListItemSkeleton({
 
 export function BalanceCardSkeleton() {
   return (
-    <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5">
+    <div className="mx- mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5">
       <Skeleton className="h-4 w-32 rounded mb-2" />
       <Skeleton className="h-8 w-48 rounded" />
     </div>
