@@ -162,7 +162,7 @@
              Amount to be paid
            </div>
            <div className="mt-1 text-[36px] font-semibold leading-[40px] tracking-[-0.02em] text-[#3F78D8]">
-             {amountLabel}
+             {amountLabel?.replaceAll(",",".")}
            </div>
          </div>
  
