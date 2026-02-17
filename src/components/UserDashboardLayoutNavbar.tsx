@@ -79,7 +79,7 @@ export function Navbar() {
         <div className="h-fit flex items-center justify-between w-full">
           <div className="flex items-center gap-4 justify-between w-full">
             <Image
-              src={"/logo.png"}
+              src={"/blueLogo.svg"}
               alt=""
               width={59}
               height={32}
@@ -87,9 +87,8 @@ export function Navbar() {
             />
             <button
               onClick={() => dispatch(toggleCollapse())}
-              className={`hidden ${
-                isCollapsed && "md:inline-flex"
-              } mt-1 ml-[-20px]`}
+              className={`hidden ${isCollapsed && "md:inline-flex"
+                } mt-1 ml-[-20px]`}
             >
               <Menu className="h-[16px] w-[16px]" />
             </button>

@@ -88,7 +88,7 @@ export function ChartAreaGradient({
                 accessibilityLayer
                 data={data.chartData}
                 className="!p-0 w-full h-full"
-                margin={{ left: 0, right: 0 }}
+                margin={{ left: 0, right: 20, top: 20, bottom: 30 }}
               >
                 <CartesianGrid vertical={false} />
                 <XAxis
