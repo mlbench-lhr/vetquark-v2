@@ -165,7 +165,7 @@ export default function Dashboard() {
                           if (!id) return;
                           const ok = await (swal as any)({
                             title: "Delete this product?",
-                            text: "This will mark the product as inactive.",
+                            text: "This will permanently delete the product.",
                             icon: "warning",
                             buttons: ["Cancel", "Delete"],
                             dangerMode: true,
