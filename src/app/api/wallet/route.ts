@@ -23,7 +23,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const now = new Date();
     const docs: any[] = await WalletTransaction.find({ user: userId })
       .populate("patient", "animalName photo")
       .sort({ createdAt: -1 })
@@ -40,15 +39,16 @@ export async function GET(req: NextRequest) {
     }
 
     const transactions = docs.map((tx: any) => {
+      const isWithdrawal = tx.type === "withdrawal";
       const amountLabel = (typeof tx.amountNet === "number" && Number.isFinite(tx.amountNet))
         ? tx.amountNet.toFixed(2).replace(".", ",")
         : "";
       const createdAtIso = tx.createdAt ? new Date(tx.createdAt as any).toISOString() : null;
       return {
         id: String(tx._id),
-        type: tx.type === "withdrawal" ? "withdrawal" : "credit",
-        title: String(tx.patient?.animalName || "Urinalysis"),
-        subtitle: "Urinalysis Report",
+        type: isWithdrawal ? "withdrawal" : "credit",
+        title: isWithdrawal ? "Withdrawal" : String(tx.patient?.animalName || "Urinalysis"),
+        subtitle: isWithdrawal ? "Pagar.me" : "Urinalysis Report",
         date: createdAtIso,
         amount: amountLabel,
         avatarUrl: String(tx.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),

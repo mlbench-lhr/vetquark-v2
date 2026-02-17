@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import WalletTransaction from "@/lib/models/WalletTransaction";
-import PlatformSettings from "@/lib/models/PlatformSettings";
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,103 +51,107 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = String(process.env.PAGARME_SECRET_KEY || "").trim();
-    if (!apiKey || apiKey.startsWith("pk_")) {
-      return NextResponse.json({ error: "Missing or invalid PAGARME_SECRET_KEY" }, { status: 500 });
-    }
-
-    const apiBaseRoot = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
     const origin = new URL(req.url).origin;
-    const basic = Buffer.from(`${apiKey}:`, "utf8").toString("base64");
     const amountCents = Math.round(Number(withdrawAmount) * 100);
 
-    if (pm.type === "pix") {
-      return NextResponse.json({ error: "Pix withdrawals are not supported via provider" }, { status: 400 });
-    }
+    const provider = "pagarme";
+    let providerAttempted = false;
+    let providerOk = false;
+    let providerResponse: any = null;
+    let providerError: any = null;
 
-    const nameRaw = String((user as any).fullName || (user as any).tradeName || "").trim() || "Veterinarian";
-    const docRaw = String(pm.holderCpfCnpj || "").replace(/\D/g, "");
-    const personTypeRaw = String(pm.personType || "").trim();
-    const holderType = personTypeRaw === "legal" ? "company" : "individual";
+    if (!apiKey || apiKey.startsWith("pk_")) {
+      providerAttempted = false;
+      providerOk = false;
+      providerError = { code: "configError", message: "Missing or invalid PAGARME_SECRET_KEY" };
+    } else if (pm.type !== "bank") {
+      providerAttempted = false;
+      providerOk = false;
+      providerError = { code: "unsupportedPayoutMethod", message: "Provider withdrawals not supported for this payout method" };
+    } else {
+      const apiBaseRoot = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
+      const basic = Buffer.from(`${apiKey}:`, "utf8").toString("base64");
 
-    function bankCodeFromName(name: string): string {
-      const n = name.toLowerCase();
-      if (n.includes("itaú")) return "341";
-      if (n.includes("itau")) return "341";
-      if (n.includes("banco do brasil")) return "001";
-      if (n.includes("santander")) return "033";
-      if (n.includes("bradesco")) return "237";
-      if (n.includes("caixa")) return "104";
-      if (n.includes("nubank")) return "260";
-      return "001";
-    }
-    const bankCode = bankCodeFromName(String(pm.bankName || ""));
+      const nameRaw = String((user as any).fullName || (user as any).tradeName || "").trim() || "Veterinarian";
+      const docRaw = String(pm.holderCpfCnpj || "").replace(/\D/g, "");
+      const personTypeRaw = String(pm.personType || "").trim();
+      const holderType = personTypeRaw === "legal" ? "company" : "individual";
 
-    function parseNumberAndDv(raw: string) {
-      const s = String(raw || "").replace(/\s+/g, "");
-      const digits = s.replace(/\D/g, "");
-      if (!digits) return { number: "", dv: "" };
-      if (digits.length === 1) return { number: digits, dv: "" };
-      const number = digits.slice(0, -1);
-      const dv = digits.slice(-1);
-      return { number, dv };
-    }
-    const agencyParsed = parseNumberAndDv(String(pm.agency || ""));
-    const accountParsed = parseNumberAndDv(String(pm.account || ""));
+      function bankCodeFromName(name: string): string {
+        const n = name.toLowerCase();
+        if (n.includes("itaú")) return "341";
+        if (n.includes("itau")) return "341";
+        if (n.includes("banco do brasil")) return "001";
+        if (n.includes("santander")) return "033";
+        if (n.includes("bradesco")) return "237";
+        if (n.includes("caixa")) return "104";
+        if (n.includes("nubank")) return "260";
+        return "001";
+      }
+      const bankCode = bankCodeFromName(String(pm.bankName || ""));
 
-    const bankAccount = {
-      bank_code: bankCode,
-      branch_number: agencyParsed.number || String(pm.agency || "").replace(/\D/g, ""),
-      account_number: accountParsed.number || String(pm.account || "").replace(/\D/g, ""),
-      account_check_digit: accountParsed.dv || "",
-      holder_name: nameRaw,
-      holder_type: holderType,
-      holder_document: docRaw,
-    };
+      function parseNumberAndDv(raw: string) {
+        const s = String(raw || "").replace(/\s+/g, "");
+        const digits = s.replace(/\D/g, "");
+        if (!digits) return { number: "", dv: "" };
+        if (digits.length === 1) return { number: digits, dv: "" };
+        const number = digits.slice(0, -1);
+        const dv = digits.slice(-1);
+        return { number, dv };
+      }
+      const agencyParsed = parseNumberAndDv(String(pm.agency || ""));
+      const accountParsed = parseNumberAndDv(String(pm.account || ""));
 
-    const transferUrl = `${apiBaseRoot}/core/v5/transfers`;
-    const payload: any = {
-      amount: amountCents,
-      bank_account: bankAccount,
-      metadata: { userId, withdrawAmount: withdrawAmount },
-    };
-    let res = await fetch(transferUrl, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        Authorization: `Basic ${basic}`,
-        Accept: "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
-        Referer: origin,
-        Origin: origin,
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36 VetQuark",
-      },
-      body: JSON.stringify(payload),
-    });
-    let json: any = await res.json().catch(() => null);
+      const bankAccount = {
+        bank_code: bankCode,
+        branch_number: agencyParsed.number || String(pm.agency || "").replace(/\D/g, ""),
+        account_number: accountParsed.number || String(pm.account || "").replace(/\D/g, ""),
+        account_check_digit: accountParsed.dv || "",
+        holder_name: nameRaw,
+        holder_type: holderType,
+        holder_document: docRaw,
+      };
 
-    // Detect Cloudflare HTML block (providerBlocked)
-    // const ct = res.headers.get("content-type") || "";
-    // const cfRay = res.headers.get("cf-ray") || "";
-    // if (ct.includes("text/html") && (cfRay || (typeof json === "string" && /cloudflare|ray id/i.test(json)))) {
-    //   return NextResponse.json(
-    //     {
-    //       error: "providerBlocked",
-    //       message: "Provider blocked the request (Cloudflare)",
-    //       details: { cfRay: cfRay || null },
-    //     },
-    //     { status: 502 }
-    //   );
-    // }
+      const transferUrl = `${apiBaseRoot}/core/v5/transfers`;
+      const payload: any = {
+        amount: amountCents,
+        bank_account: bankAccount,
+        metadata: { userId, withdrawAmount: withdrawAmount },
+      };
 
-    if (!res.ok) {
-      const message =
-        typeof (json as any)?.message === "string"
-          ? (json as any).message
-          : typeof (json as any)?.error === "string"
-          ? (json as any).error
-          : "Provider failed to create transfer";
-      return NextResponse.json({ error: "providerError", message, details: json }, { status: 502 });
+      try {
+        providerAttempted = true;
+        const res = await fetch(transferUrl, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            Authorization: `Basic ${basic}`,
+            Accept: "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            Referer: origin,
+            Origin: origin,
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36 VetQuark",
+          },
+          body: JSON.stringify(payload),
+        });
+        providerResponse = await res.json().catch(() => null);
+        if (!res.ok) {
+          const message =
+            typeof (providerResponse as any)?.message === "string"
+              ? (providerResponse as any).message
+              : typeof (providerResponse as any)?.error === "string"
+              ? (providerResponse as any).error
+              : "Provider failed to create transfer";
+          providerOk = false;
+          providerError = { code: "providerError", message, status: res.status, details: providerResponse };
+        } else {
+          providerOk = true;
+        }
+      } catch (e) {
+        providerOk = false;
+        providerError = { code: "networkError", message: e instanceof Error ? e.message : "Provider request failed" };
+      }
     }
 
     const created = await WalletTransaction.create({
@@ -172,8 +175,11 @@ export async function POST(req: NextRequest) {
         transactionId: String(created._id),
         amount: withdrawAmount,
         balance: newBalance,
-        provider: "pagarme",
-        providerResponse: json,
+        provider,
+        providerAttempted,
+        providerOk,
+        providerResponse,
+        providerError,
       },
       { status: 200 }
     );
