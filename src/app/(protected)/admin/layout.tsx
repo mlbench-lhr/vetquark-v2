@@ -1,3 +1,4 @@
+import DashboardLayout from "@/components/DashboardLayout";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -17,5 +18,9 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
     redirect("/admin/login");
   }
 
-  return <div className="min-h-[100dvh] bg-white">{children}</div>;
+  return (
+    <DashboardLayout>
+      {children}
+    </DashboardLayout>
+  )
 }

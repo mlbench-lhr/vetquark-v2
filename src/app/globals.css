@@ -990,3 +990,15 @@ input[type="date"]:focus,
 input[type="date"]:valid {
   color: initial;
 }
+
+
+.element {
+  margin: auto;
+  width: 1460px;
+}
+
+@media (max-width: 1700px) {
+  .element {
+    width: 100%;
+  }
+}

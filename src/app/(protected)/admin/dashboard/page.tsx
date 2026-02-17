@@ -1,91 +1,121 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { BasicStructureWithName } from "@/components/BasicStructureWithName";
+import { StatCard } from "@/components/DashboardCard";
+import { ChartPieDonutText } from "@/components/donutChart";
+import { ChartAreaGradient } from "@/components/Graph";
+import { Briefcase, DollarSign, Stethoscope, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
-export default function AdminDashboardPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<{ fullName: string; email: string } | null>(null);
+type DashboardSummary = {
+  totals: {
+    veterinarians: number;
+    guardians: number;
+    patients: number;
+    revenue: { amount: number; currency: string };
+  };
+  trends: {
+    veterinarians: { value: number; isPositive: boolean };
+    guardians: { value: number; isPositive: boolean };
+    patients: { value: number; isPositive: boolean };
+    revenue: { value: number; isPositive: boolean };
+  };
+};
+
+export default function Dashboard() {
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const res = await fetch("/api/admin/auth/me", { credentials: "include" });
-        const json = await res.json().catch(() => ({}));
+        const res = await fetch("/api/admin/dashboard/summary", { credentials: "include" });
+        const json = await res.json().catch(() => null);
         if (!alive) return;
-        if (!res.ok) {
-          router.replace("/admin/login");
-          return;
-        }
-        const p = json?.profile || {};
-        setProfile({
-          fullName: typeof p?.fullName === "string" ? p.fullName : "",
-          email: typeof p?.email === "string" ? p.email : "",
-        });
-      } finally {
-        if (alive) setLoading(false);
-      }
+        if (!res.ok) return;
+        if (!json || typeof json !== "object") return;
+        setSummary(json as DashboardSummary);
+      } catch { }
     })();
     return () => {
       alive = false;
     };
-  }, [router]);
+  }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-[100dvh] flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
-  }
+  const revenueLabel = useMemo(() => {
+    const amount = summary?.totals?.revenue?.amount;
+    const currency = summary?.totals?.revenue?.currency;
+    const amountNumber = typeof amount === "number" && Number.isFinite(amount) ? amount : 0;
+    const currencyCode = typeof currency === "string" && currency ? currency : "USD";
+    try {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currencyCode,
+        maximumFractionDigits: 0,
+      }).format(amountNumber);
+    } catch {
+      return `$${amountNumber.toLocaleString()}`;
+    }
+  }, [summary]);
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
-            <div className="text-gray-600">{profile?.email || ""}</div>
-          </div>
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                const res = await fetch("/api/admin/auth/logout", { method: "POST" });
-                const json = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                  toast.error(typeof json?.error === "string" ? json.error : "Logout failed");
-                  return;
-                }
-                router.replace("/admin/login");
-              } catch {
-                router.replace("/admin/login");
-              }
-            }}
-            className="h-10 px-4 rounded-lg bg-white border border-gray-200 text-gray-700 font-semibold hover:bg-gray-100"
-          >
-            Logout
-          </button>
-        </div>
+    <BasicStructureWithName
+      name="Overview"
+      subHeading="Welcome back, here's what's happening with your veterinary platform today."
+      showBackOption={false}
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-xl bg-white border border-gray-200 p-5">
-            <div className="text-sm text-gray-500">Signed in as</div>
-            <div className="mt-1 text-lg font-semibold text-gray-900">{profile?.fullName || "Admin"}</div>
-          </div>
-          <div className="rounded-xl bg-white border border-gray-200 p-5">
-            <div className="text-sm text-gray-500">Quick action</div>
-            <div className="mt-1 text-lg font-semibold text-gray-900">Manage platform</div>
-          </div>
-          <div className="rounded-xl bg-white border border-gray-200 p-5">
-            <div className="text-sm text-gray-500">Status</div>
-            <div className="mt-1 text-lg font-semibold text-gray-900">All systems operational</div>
-          </div>
-        </div>
+    >
+
+      <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          icon={Stethoscope}
+          iconBgColor="#B3D4FF"
+          iconColor="#2986FF"
+          title="Total Veterinarians"
+          value={summary?.totals?.veterinarians ?? 0}
+          trend={summary?.trends?.veterinarians ?? { value: 0, isPositive: true }}
+        />
+
+        <StatCard
+          icon={Users}
+          iconBgColor="#FFF4E5"
+          iconColor="#FFA500"
+          title="Total Guardians"
+          value={summary?.totals?.guardians ?? 0}
+          trend={summary?.trends?.guardians ?? { value: 0, isPositive: true }}
+        />
+
+        <StatCard
+          icon={Briefcase}
+          iconBgColor="#D1FADF"
+          iconColor="#2DAA6E"
+          title="Total Patients"
+          trend={{
+            value: summary?.trends?.patients?.value ?? 0,
+            isPositive: summary?.trends?.patients?.isPositive ?? true,
+          }}
+          value={summary?.totals?.patients ?? 0}
+        />
+
+        <StatCard
+          icon={DollarSign}
+          iconBgColor="#F2F4F7"
+          iconColor="#555B61"
+          title="Revenue"
+          value={revenueLabel}
+          trend={{
+            value: summary?.trends?.revenue?.value ?? 0,
+            isPositive: summary?.trends?.revenue?.isPositive ?? true,
+          }}
+          className="hover:shadow-lg transition-shadow"
+        />
       </div>
-    </div>
+      <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="w-full lg:col-span-2">
+          <ChartAreaGradient />
+        </div>
+        <ChartPieDonutText />
+      </div>
+    </BasicStructureWithName>
   );
 }
