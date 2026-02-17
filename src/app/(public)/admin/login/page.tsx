@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -9,6 +10,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -21,7 +23,7 @@ export default function AdminLoginPage() {
         const res = await fetch("/api/admin/auth/me", { credentials: "include" });
         if (!alive) return;
         if (res.ok) router.replace("/admin/dashboard");
-      } catch {}
+      } catch { }
     })();
     return () => {
       alive = false;
@@ -77,17 +79,27 @@ export default function AdminLoginPage() {
 
         <div>
           <label className="block text-[18px] font-semibold text-[#2E3642] mb-2">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            autoComplete="current-password"
-            className="w-full h-[58px] rounded-[12px] bg-white border border-[#D8DEE7] px-5 text-[18px] text-[#2E3642] placeholder:text-[#9AA6B2] outline-none focus:ring-2 focus:ring-primary"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              className="w-full h-[58px] rounded-[12px] bg-white border border-[#D8DEE7] pl-5 pr-12 text-[18px] text-[#2E3642] placeholder:text-[#9AA6B2] outline-none focus:ring-2 focus:ring-primary"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-black/50 hover:text-black/70"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between pt-1 gap-y-2 flex-wrap">
           <label className="inline-flex items-center gap-3 text-[18px] text-[#2E3642] select-none">
             <input
               type="checkbox"
@@ -99,7 +111,7 @@ export default function AdminLoginPage() {
           </label>
 
           <Link href="/admin/forgot-password" className="text-[18px] font-semibold text-primary hover:text-[#2f67c7]">
-            Forgot password
+            Forgot password ?
           </Link>
         </div>
 
