@@ -39,6 +39,7 @@
     "jsonwebtoken": "^9.0.3",
     "libphonenumber-js": "^1.12.34",
     "lucide-react": "^0.562.0",
+    "moment": "^2.30.1",
     "mongoose": "^9.1.2",
     "next": "^16.1.1",
     "nodemailer": "^7.0.12",

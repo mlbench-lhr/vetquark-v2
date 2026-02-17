@@ -66,7 +66,7 @@ export default function Dashboard() {
 
     >
 
-      <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
         <StatCard
           icon={Stethoscope}
           iconBgColor="#B3D4FF"
@@ -110,7 +110,7 @@ export default function Dashboard() {
           className="hover:shadow-lg transition-shadow"
         />
       </div>
-      <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-2 md:gap-6">
         <div className="w-full lg:col-span-2">
           <ChartAreaGradient />
         </div>

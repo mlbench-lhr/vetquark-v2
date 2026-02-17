@@ -3,6 +3,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
   TableHeader,
   TableRow,
 } from "../ui/table";
@@ -120,36 +121,21 @@ export default function BasicTableOne() {
             {/* Table Header */}
             <TableHeader className="border-b border-gray-100 ">
               <TableRow>
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs "
-                >
+                <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs ">
                   User
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs "
-                >
+                </TableHead>
+                <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs ">
                   Project Name
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs "
-                >
+                </TableHead>
+                <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs ">
                   Team
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs "
-                >
+                </TableHead>
+                <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs ">
                   Status
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs "
-                >
+                </TableHead>
+                <TableHead className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs ">
                   Budget
-                </TableCell>
+                </TableHead>
               </TableRow>
             </TableHeader>
 
