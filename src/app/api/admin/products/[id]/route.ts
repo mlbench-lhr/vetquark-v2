@@ -72,12 +72,9 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
     }
 
     const coll = mongoose.connection.collection("store_products");
-    const result = await coll.updateOne(
-      { _id: new mongoose.Types.ObjectId(id) },
-      { $set: { active: false, updatedAt: new Date() } }
-    );
+    const result = await coll.deleteOne({ _id: new mongoose.Types.ObjectId(id) });
 
-    if (!result.matchedCount) {
+    if (!result.deletedCount) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
