@@ -41,7 +41,7 @@ function ProfileMenu() {
               <ChevronDown
                 size={22}
                 className="cursor-pointer"
-                color="#3F78D8"
+                color="#B32053"
               />
             </PopoverTrigger>
             <PopoverContent className="w-[234px] overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black/5 p-0 top-6 right-0 md:-right-8 absolute">
@@ -79,7 +79,7 @@ export function Navbar() {
         <div className="h-fit flex items-center justify-between w-full">
           <div className="flex items-center gap-4 justify-between w-full">
             <Image
-              src={"/blueLogo.svg"}
+              src={"/logo.png"}
               alt=""
               width={59}
               height={32}

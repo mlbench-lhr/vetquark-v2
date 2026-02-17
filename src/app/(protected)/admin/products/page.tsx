@@ -1,9 +1,12 @@
 "use client";
 
 import { BasicStructureWithName } from "@/components/BasicStructureWithName";
+import { SearchComponent } from "@/components/SearchComponent";
+import { useState } from "react";
 
 
 export default function Dashboard() {
+  const [search, setSearch] = useState<string>("");
   return (
     <BasicStructureWithName
       name="Products"
@@ -11,8 +14,10 @@ export default function Dashboard() {
       showBackOption={false}
 
     >
-      <div className="w-full flex flex-col justify-start items-start gap-6">
-      </div>
+      <SearchComponent
+        searchQuery={search}
+        onChangeFunc={setSearch}
+      />
     </BasicStructureWithName>
   );
 }

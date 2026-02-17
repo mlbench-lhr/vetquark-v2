@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Label, Pie, PieChart } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
@@ -39,17 +39,45 @@ interface MilestoneOverview {
 }
 
 interface Overview {
+  totalPatients: number;
   milestoneOverview: MilestoneOverview;
 }
 
 export function ChartPieDonutText() {
   const [overview, setOverview] = React.useState<Overview>({
+    totalPatients: 0,
     milestoneOverview: {
-      inProgress: 10,
-      completed: 30,
-      overdue: 2,
+      inProgress: 0,
+      completed: 0,
+      overdue: 0,
     },
   });
+
+  React.useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/dashboard/species-distribution", { credentials: "include" });
+        const json = await res.json().catch(() => null);
+        if (!alive) return;
+        if (!res.ok) return;
+        if (!json || typeof json !== "object") return;
+        const totalPatients = typeof (json as any).totalPatients === "number" ? (json as any).totalPatients : 0;
+        const mo = (json as any).milestoneOverview;
+        setOverview({
+          totalPatients,
+          milestoneOverview: {
+            inProgress: typeof mo?.inProgress === "number" ? mo.inProgress : 0,
+            completed: typeof mo?.completed === "number" ? mo.completed : 0,
+            overdue: typeof mo?.overdue === "number" ? mo.overdue : 0,
+          },
+        });
+      } catch { }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const chartData = React.useMemo(() => {
     if (!overview?.milestoneOverview) return [];
@@ -71,10 +99,6 @@ export function ChartPieDonutText() {
       },
     ];
   }, [overview]);
-
-  const totalVisitors = React.useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.visitors, 0);
-  }, [chartData]);
 
   return (
     <BoxProviderWithName
@@ -148,7 +172,7 @@ export function ChartPieDonutText() {
                               y={cy as number - 5}
                               className="fill-[#10B981] text-[28px] font-[600]"
                             >
-                              {totalVisitors.toLocaleString()}
+                              {Number(overview.totalPatients || 0).toLocaleString()}
                             </tspan>
                             <tspan
                               x={cx}

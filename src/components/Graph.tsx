@@ -9,8 +9,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { useMediaQuery } from "react-responsive";
 import { BoxProviderWithName } from "./BoxProviderWithName";
 
 export const description = "An area chart with gradient fill";
@@ -37,33 +35,41 @@ export function ChartAreaGradient({
 }: {
   className?: string;
 }) {
-  const isMobile = useMediaQuery({ maxWidth: 1350 });
   const [data, setData] = useState<RevenueSummaryResponse>({
-    totalRevenue: 120000,
-    percentageChange: 10.2,
+    totalRevenue: 0,
+    percentageChange: 0,
     incremented: true,
     chartData: [
-      { month: "January", amount: 186 },
-      { month: "February", amount: 305 },
-      { month: "March", amount: 237 },
-      { month: "April", amount: 73 },
-      { month: "May", amount: 509 },
-      { month: "June", amount: 214 },
-      { month: "July", amount: 186 },
-      { month: "August", amount: 305 },
-      { month: "September", amount: 237 },
-      { month: "October", amount: 73 },
-      { month: "November", amount: 209 },
-      { month: "December", amount: 214 },
+      { month: "January", amount: 0 },
+      { month: "February", amount: 0 },
+      { month: "March", amount: 0 },
+      { month: "April", amount: 0 },
+      { month: "May", amount: 0 },
+      { month: "June", amount: 0 },
+      { month: "July", amount: 0 },
+      { month: "August", amount: 0 },
+      { month: "September", amount: 0 },
+      { month: "October", amount: 0 },
+      { month: "November", amount: 0 },
+      { month: "December", amount: 0 },
     ],
   });
 
   useEffect(() => {
-    const getData = async () => {
-      let response = await axios.get("/api/vendor/dashboardGraph");
-      setData(response.data);
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/dashboard/exams-over-time", { credentials: "include" });
+        const json = await res.json().catch(() => null);
+        if (!alive) return;
+        if (!res.ok) return;
+        if (!json || typeof json !== "object") return;
+        setData(json as RevenueSummaryResponse);
+      } catch { }
+    })();
+    return () => {
+      alive = false;
     };
-    getData();
   }, []);
   return (
     <BoxProviderWithName
