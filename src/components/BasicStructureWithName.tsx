@@ -50,7 +50,7 @@ export const BasicStructureWithName = ({
           ))}
       </div>
       <div className="w-full">
-        <div className="w-full flex flex-col justify-start items-start gap-6">
+        <div className="w-full flex flex-col justify-start items-start gap-2 md:gap-6">
           {children}
         </div>
       </div>

@@ -67,10 +67,10 @@ export default function LogoutDialog({
           )
         ) : (
           <div className="flex gap-1 items-center justify-start">
-            <LogOut size={15} strokeWidth={2} />
+            <LogOut size={15} strokeWidth={2} color="#3F78D8" />
             <span className="block px-2 py-2 text-sm">Logout</span>
           </div>
-        ) }
+        )}
       </span>
 
       <Modal

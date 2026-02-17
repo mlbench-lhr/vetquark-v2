@@ -2,6 +2,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
   TableHeader,
   TableRow,
 } from "../ui/table";
@@ -128,30 +129,18 @@ export default function RecentOrders() {
           {/* Table Header */}
           <TableHeader className="border-gray-100  border-y">
             <TableRow>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs "
-              >
+              <TableHead className="py-3 font-medium text-gray-500 text-start text-theme-xs ">
                 Products
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs "
-              >
+              </TableHead>
+              <TableHead className="py-3 font-medium text-gray-500 text-start text-theme-xs ">
                 Category
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs "
-              >
+              </TableHead>
+              <TableHead className="py-3 font-medium text-gray-500 text-start text-theme-xs ">
                 Price
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs "
-              >
+              </TableHead>
+              <TableHead className="py-3 font-medium text-gray-500 text-start text-theme-xs ">
                 Status
-              </TableCell>
+              </TableHead>
             </TableRow>
           </TableHeader>
 

@@ -118,6 +118,7 @@ export function Sidebar() {
                     }`}
                 >
                   <Icon
+                    size={15}
                     color={pathname.includes(item.link) ? "white" : "#3F78D8"}
                   />
                   {!isCollapsed && item.name}
@@ -178,13 +179,14 @@ export function Sidebar() {
                     href={item.link}
                     key={index}
                     className={`w-full text-start px-3 py-2 rounded-md h-[36px] cursor-pointer flex justify-start items-center gap-2 ${pathname.includes(item.link)
-                      ? "text-primary bg-secondary"
+                      ? "text-white bg-primary"
                       : "hover:bg-secondary"
                       }`}
                   >
                     <Icon
+                      size={15}
                       color={
-                        pathname.includes(item.link) ? "#3F78D8" : "##3F78D8"
+                        pathname.includes(item.link) ? "white" : "#3F78D8"
                       }
                     />
                     {!isCollapsed && item.name}
@@ -254,12 +256,13 @@ export function Sidebar() {
                   href={item.link}
                   key={index}
                   className={`w-full text-start px-3 py-2 rounded-md h-[36px] cursor-pointer flex justify-start items-center gap-2 ${pathname.includes(item.link)
-                    ? "text-primary bg-secondary"
+                    ? "text-white bg-primary"
                     : "hover:bg-secondary"
                     }`}
                 >
                   <Icon
-                    color={pathname.includes(item.link) ? "#3F78D8" : "##3F78D8"}
+                    size={15}
+                    color={pathname.includes(item.link) ? "white" : "#3F78D8"}
                   />
                   {item.name}
                 </Link>
