@@ -5,17 +5,27 @@ import { BoxProviderWithName } from "@/components/BoxProviderWithName";
 import { NoDataComponent } from "@/components/NoDataComponent";
 import { ServerPaginationProvider } from "@/components/PaginationProvider";
 import { SearchComponent } from "@/components/SearchComponent";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Column, DynamicTable } from "@/components/Table/page";
 import { StatusText } from "@/components/StatusText";
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { Button } from "@/components/ui/button";
+import AddEditProductModal from "@/components/AddEditProductModal";
+import swal from "sweetalert";
 
 type AdminProductRow = {
   id: string;
+  slug: string;
   name: string;
+  description: string;
+  image: string;
+  active: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
   unitPrice: number;
+  price: number;
   stock: number;
   status: string;
   lastUpdated: string | null;
@@ -23,6 +33,9 @@ type AdminProductRow = {
 export default function Dashboard() {
   const [search, setSearch] = useState<string>("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<AdminProductRow | null>(null);
+  const refetchRef = useRef<null | (() => void)>(null);
 
   const queryParams = useMemo(() => ({ search }), [search]);
   const BookingsLoadingSkeleton = () => (
@@ -43,10 +56,24 @@ export default function Dashboard() {
       showBackOption={false}
 
     >
-      <SearchComponent
-        searchQuery={search}
-        onChangeFunc={setSearch}
-      />
+      <div className="flex justify-start items-center gap-3">
+        <SearchComponent
+          searchQuery={search}
+          onChangeFunc={setSearch}
+        />
+        <Button
+          variant={"default"}
+          size={"lg"}
+          type="button"
+          onClick={() => {
+            setEditingProduct(null);
+            setModalOpen(true);
+          }}
+        >
+          <Plus />
+          Add Product
+        </Button>
+      </div>
       <BoxProviderWithName
       // noBorder={true}
       // className="p-0!"
@@ -59,6 +86,7 @@ export default function Dashboard() {
           itemsPerPage={7}
         >
           {(data, isLoading, refetch) => {
+            refetchRef.current = refetch;
             const columns: Column[] = [
               {
                 header: "Product Name",
@@ -110,50 +138,80 @@ export default function Dashboard() {
                   const id = String(item?.id ?? "");
                   const disabled = !id || deletingId === id;
                   return (
-                    <button
-                      type="button"
-                      className={`inline-flex items-center justify-center rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-red-700 hover:bg-red-100 ${disabled ? "opacity-60 cursor-not-allowed" : ""
-                        }`}
-                      disabled={disabled}
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        if (!id) return;
-                        const ok = window.confirm("Delete this product?");
-                        if (!ok) return;
-                        try {
-                          setDeletingId(id);
-                          const res = await fetch(`/api/admin/products/${encodeURIComponent(id)}`, { method: "DELETE" });
-                          const payload = await res.json().catch(() => null);
-                          if (!res.ok) {
-                            toast.error(
-                              typeof (payload as any)?.error === "string" ? (payload as any).error : "Failed to delete"
-                            );
-                            return;
+                    <div className="flex justify-start items-center gap-2">
+                      <button
+                        type="button"
+                        className={`inline-flex items-center justify-center text-black/60 ${disabled ? "opacity-60 cursor-not-allowed" : ""
+                          }`}
+                        disabled={disabled}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!id) return;
+                          setEditingProduct(item as AdminProductRow);
+                          setModalOpen(true);
+                        }}
+                        aria-label="Edit"
+                        title="Edit"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className={`inline-flex items-center justify-center text-black/60 ${disabled ? "opacity-60 cursor-not-allowed" : ""
+                          }`}
+                        disabled={disabled}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!id) return;
+                          const ok = await (swal as any)({
+                            title: "Delete this product?",
+                            text: "This will mark the product as inactive.",
+                            icon: "warning",
+                            buttons: ["Cancel", "Delete"],
+                            dangerMode: true,
+                          });
+                          if (!ok) return;
+                          try {
+                            setDeletingId(id);
+                            const res = await fetch(`/api/admin/products/${encodeURIComponent(id)}`, { method: "DELETE" });
+                            const payload = await res.json().catch(() => null);
+                            if (!res.ok) {
+                              toast.error(
+                                typeof (payload as any)?.error === "string" ? (payload as any).error : "Failed to delete"
+                              );
+                              return;
+                            }
+                            toast.success("Product deleted");
+                            refetch();
+                          } catch {
+                            toast.error("Network error");
+                          } finally {
+                            setDeletingId(null);
                           }
-                          toast.success("Product deleted");
-                          refetch();
-                        } catch {
-                          toast.error("Network error");
-                        } finally {
-                          setDeletingId(null);
-                        }
-                      }}
-                      aria-label="Delete"
-                      title="Delete"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                        }}
+                        aria-label="Delete"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   );
                 },
               },
             ];
             return (
-              <DynamicTable
-                data={data}
-                columns={columns}
-                itemsPerPage={7}
-                isLoading={isLoading}
-              />
+              <>
+                <AddEditProductModal
+                  open={modalOpen}
+                  onOpenChange={(next) => {
+                    setModalOpen(next);
+                    if (!next) setEditingProduct(null);
+                  }}
+                  initialProduct={editingProduct}
+                  onSaved={() => refetchRef.current?.()}
+                />
+                <DynamicTable data={data} columns={columns} itemsPerPage={7} isLoading={isLoading} />
+              </>
             );
           }}
         </ServerPaginationProvider>
