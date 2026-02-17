@@ -30,7 +30,7 @@ export default function Dashboard() {
             icon={Users}
             iconBgColor="#FFF4E5"
             iconColor="#FFA500"
-            title="Active Patients"
+            title="Total Guardians"
             value="2,450"
             trend={{ value: 5, isPositive: false }}
           />
@@ -39,7 +39,7 @@ export default function Dashboard() {
             icon={Briefcase}
             iconBgColor="#D1FADF"
             iconColor="#2DAA6E"
-            title="Appointments Today"
+            title="Total Patients"
             trend={{
               value: 15,
               isPositive: true,

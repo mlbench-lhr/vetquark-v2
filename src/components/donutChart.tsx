@@ -18,17 +18,17 @@ const chartConfig = {
   visitors: {
     label: "Visitors",
   },
-  "In Progress": {
-    label: "In Progress",
-    color: "#00ACC0",
+  "Dogs": {
+    label: "Dogs",
+    color: "#3F78D8",
   },
-  Completed: {
-    label: "Completed",
-    color: "#5AD2A6",
+  Cats: {
+    label: "Cats",
+    color: "#10B981",
   },
-  "Over Due": {
-    label: "Over Due",
-    color: "#D5DCD6",
+  "Others": {
+    label: "Others",
+    color: "#F59E0B",
   },
 } satisfies ChartConfig;
 
@@ -47,7 +47,7 @@ export function ChartPieDonutText() {
     milestoneOverview: {
       inProgress: 10,
       completed: 30,
-      overdue: 50,
+      overdue: 2,
     },
   });
 
@@ -55,19 +55,19 @@ export function ChartPieDonutText() {
     if (!overview?.milestoneOverview) return [];
     return [
       {
-        milestone: "In Progress",
+        milestone: "Dogs",
         visitors: Number(overview.milestoneOverview.inProgress) || 0,
-        fill: "#00ACC0",
+        fill: "#3F78D8",
       },
       {
-        milestone: "Completed",
+        milestone: "Cats",
         visitors: Number(overview.milestoneOverview.completed) || 0,
-        fill: "#5AD2A6",
+        fill: "#10B981",
       },
       {
-        milestone: "Over Due",
+        milestone: "Others",
         visitors: Number(overview.milestoneOverview.overdue) || 0,
-        fill: "#D5DCD6",
+        fill: "#F59E0B",
       },
     ];
   }, [overview]);
@@ -146,7 +146,7 @@ export function ChartPieDonutText() {
                             <tspan
                               x={cx}
                               y={cy as number - 5}
-                              className="fill-[#5AD2A6] text-[28px] font-[600]"
+                              className="fill-[#10B981] text-[28px] font-[600]"
                             >
                               {totalVisitors.toLocaleString()}
                             </tspan>
@@ -155,7 +155,7 @@ export function ChartPieDonutText() {
                               y={cy as number + 20}
                               className="fill-muted-foreground text-[11px]"
                             >
-                              Milestones Added
+                              Dogs & Cats
                             </tspan>
                           </text>
                         </g>
@@ -172,23 +172,23 @@ export function ChartPieDonutText() {
           <div className="flex items-center gap-1">
             <span
               className="inline-block w-3 h-3 rounded-full"
-              style={{ backgroundColor: "#00ACC0" }}
+              style={{ backgroundColor: "#3F78D8" }}
             />
-            In Progress : {Number(overview.milestoneOverview.inProgress)}%
+            Dogs : {Number(overview.milestoneOverview.inProgress)}%
           </div>
           <div className="flex items-center gap-1">
             <span
               className="inline-block w-3 h-3 rounded-full"
-              style={{ backgroundColor: "#5AD2A6" }}
+              style={{ backgroundColor: "#10B981" }}
             />
-            Completed : {Number(overview.milestoneOverview.completed)}%
+            Cats : {Number(overview.milestoneOverview.completed)}%
           </div>
           <div className="flex items-center gap-1">
             <span
               className="inline-block w-3 h-3 rounded-full"
-              style={{ backgroundColor: "#D5DCD6" }}
+              style={{ backgroundColor: "#F59E0B" }}
             />
-            Over Due : {Number(overview.milestoneOverview.overdue)}%
+            Others : {Number(overview.milestoneOverview.overdue)}%
           </div>
         </div>
       </Card>

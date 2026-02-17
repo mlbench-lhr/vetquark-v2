@@ -68,7 +68,7 @@ export function ChartAreaGradient({
   return (
     <BoxProviderWithName
       className={className}
-      name="Total Revenue"
+      name="Exams Over Time"
       hFull={true}
     >
       <div className="h-[calc(100%-25px)] flex flex-col justify-center items-start relative w-full overflow-hidden">
@@ -99,9 +99,7 @@ export function ChartAreaGradient({
                   axisLine={false}
                   tickMargin={20}
                   tickCount={5}
-                  tickFormatter={(value) =>
-                    "$" + value
-                  }
+                  tickFormatter={(value) => value}
                 />
                 <ChartTooltip
                   cursor={false}
