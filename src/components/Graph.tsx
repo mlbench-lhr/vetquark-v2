@@ -15,7 +15,7 @@ export const description = "An area chart with gradient fill";
 
 const chartConfig = {
   amount: {
-    label: "Bookings",
+    label: "Exams",
     color: "#3F78D8",
   },
 } satisfies ChartConfig;
