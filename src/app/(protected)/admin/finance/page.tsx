@@ -8,7 +8,10 @@ import { SearchComponent } from "@/components/SearchComponent";
 import { Column, DynamicTable } from "@/components/Table/page";
 import { StatusText } from "@/components/StatusText";
 import { format } from "date-fns";
-import { useMemo, useState } from "react";
+import { Briefcase, CreditCard, DollarSign, Pencil, Stethoscope, Users } from "lucide-react";
+import { StatCard } from "@/components/FinanceCard";
+import { useEffect, useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
 
 type AdminTransactionRow = {
   id: string;
@@ -41,10 +44,67 @@ export default function Dashboard() {
       showBackOption={false}
 
     >
-      <div className="w-full flex flex-col justify-start items-start gap-6">
-        <SearchComponent searchQuery={search} onChangeFunc={setSearch} />
 
-        <BoxProviderWithName >
+      <div className="w-full grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
+        <StatCard
+          icon={DollarSign}
+          iconBgColor="#EFF6FF"
+          iconColor="#3F78D8"
+          title="Total Revenue"
+          value={"$1,245,231.89"}
+          trend={{ value: 0, isPositive: true }}
+        />
+
+        <StatCard
+          icon={CreditCard}
+          iconBgColor="#FAF5FF"
+          iconColor="#9810FA"
+          title="Platform Fees Collected"
+          value={"$186,784.00"}
+          trend={{ value: 0, isPositive: true }}
+        />
+
+        <StatCard
+          icon={Briefcase}
+          iconBgColor="#D1FADF"
+          iconColor="#2DAA6E"
+          title="Net Payouts"
+          trend={{
+            value: 8.2,
+            isPositive: true,
+          }}
+          value={"$186,784.00"}
+        />
+
+      </div>
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-6">
+
+
+        <BoxProviderWithName
+          rightSideComponent={
+            <Pencil size={15} className="text-black/60" />
+          }
+          name="Platform Fee"
+        >
+          <div className="border-t flex flex-col w-full justify-start pt-5 items-start gap-1.5">
+            <div className="flex w-full justify-between items-center text-sm">
+              <span className="font-medium">Commission Rate (%)</span>
+              <span className="text-black/70">Applied to all transactions</span>
+            </div>
+            <div className="w-full relative h-fit">
+              <Input disabled value={15.0} className="w-full pe-5" />
+              <span className="absolute text-black/60 right-3 top-1/2 -translate-y-1/2 ">%</span>
+            </div>
+          </div>
+        </BoxProviderWithName>
+      </div>
+      <div className="w-full flex flex-col justify-start items-start gap-6">
+
+        <BoxProviderWithName
+          rightSideComponent={
+            <SearchComponent searchQuery={search} onChangeFunc={setSearch} />
+          }
+          name="Transaction History">
           <ServerPaginationProvider<AdminTransactionRow>
             apiEndpoint="/api/admin/finance/transactions"
             queryParams={queryParams}

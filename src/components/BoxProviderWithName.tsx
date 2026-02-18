@@ -28,8 +28,8 @@ export const BoxProviderWithName = ({
   const LeftSideComponent = leftSideComponent;
   return (
     <div
-      className={`${className} w-full flex flex-col justify-start items-start gap-2 ${!noBorder && "border-0 md:border"
-        } rounded-2xl px-0 md:px-3.5 py-3`}
+      className={`${className} w-full flex flex-col justify-start items-start gap-2 ${!noBorder && "border"
+        } rounded-2xl px-2 md:px-3.5 py-3`}
     >
       {(name || rightSideLink || leftSideComponent || rightSideComponent) && (
         <div className="flex justify-between w-full gap-y-2 flex-wrap-reverse items-start">
