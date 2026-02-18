@@ -12,7 +12,7 @@ import {
 import { toggleCollapse, toggleSidebar } from "@/store/sidebarSlice";
 import Image from "next/image";
 import { ChevronDown, Menu } from "lucide-react";
-import LogoutDialog from "./ui/LogoutDialog";
+import LogoutDialog, { AdminChangePasswordDialog } from "./ui/LogoutDialog";
 
 function ProfileMenu() {
   const profile = useAppSelector((state) => state.adminAuth.profile);
@@ -45,8 +45,13 @@ function ProfileMenu() {
               />
             </PopoverTrigger>
             <PopoverContent className="w-[234px] overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black/5 p-0 top-6 right-0 md:-right-8 absolute">
-              <div className="py-1 p-[20px]">
-                <LogoutDialog adminStyle />
+              <div className="py-1 p-[20px] flex flex-col gap-1">
+                <div className="w-full text-start px-3 py-2 rounded-md hover:bg-secondary h-[36px] cursor-pointer flex justify-start items-center gap-2">
+                  <AdminChangePasswordDialog />
+                </div>
+                <div className="w-full text-start px-3 py-2 rounded-md hover:bg-secondary h-[36px] cursor-pointer flex justify-start items-center gap-2">
+                  <LogoutDialog adminStyle />
+                </div>
               </div>
             </PopoverContent>
           </Popover>
