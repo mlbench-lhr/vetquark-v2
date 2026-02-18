@@ -30,7 +30,7 @@ export function StatCard({
     const isPositive = trend?.isPositive !== false;
 
     return (
-        <div className={`p-4 border flex flex-col justify-start items-start gap-2 rounded-2xl ${className}`}>
+        <div className={`p-2 md:p-4 border flex flex-col justify-start items-start gap-2 rounded-2xl ${className}`}>
 
             <div className="flex justify-between w-full items-center gap-1">
                 <div
@@ -64,7 +64,7 @@ export function StatCard({
                     </div>
                 )}
             </div>
-            <h4 className="text-sm text-black/80">{title}</h4>
+            <h4 className="text-[10px] sm:text-sm text-black/80">{title}</h4>
             <h2 className="text-base font-bold md:text-[24px] text-black/80">
                 {typeof value === "number" ? value.toLocaleString() : value}
             </h2>

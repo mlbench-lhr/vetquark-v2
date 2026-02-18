@@ -65,6 +65,7 @@ export default function Dashboard() {
         />
 
         <StatCard
+          className="col-span-2 lg:col-span-1"
           icon={Briefcase}
           iconBgColor="#D1FADF"
           iconColor="#2DAA6E"

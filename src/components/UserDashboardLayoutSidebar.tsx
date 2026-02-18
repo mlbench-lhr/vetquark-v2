@@ -219,17 +219,13 @@ export function Sidebar() {
         <div className="min-w-[335px] bg-white h-full shadow-xl flex flex-col">
           <div className="pt-4 md:pt-[40px] pb-[16px] px-[20px] flex items-start justify-between border-b flex-col gap-2 md:gap-[12px] w-full">
             <div className="flex justify-between items-start w-full">
-              {profile?.avatar ? (
-                <Image
-                  src={profile.avatar}
-                  alt=""
-                  width={38}
-                  height={38}
-                  className="rounded-full overflow-hidden bg-green-400 flex items-center justify-center cursor-pointer w-[38px] h-[38px] object-cover object-center"
-                />
-              ) : (
-                <>{(profile?.fullName || "A").charAt(0)}</>
-              )}
+              <Image
+                src={profile?.avatar ? profile.avatar : "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
+                alt=""
+                width={38}
+                height={38}
+                className="rounded-full overflow-hidden bg-green-400 flex items-center justify-center cursor-pointer w-[38px] h-[38px] object-cover object-center"
+              />
 
               <button
                 onClick={() => dispatch(closeSidebar())}
