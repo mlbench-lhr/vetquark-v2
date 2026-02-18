@@ -11,7 +11,7 @@ import { Box, CardSim, CreditCard, LayoutDashboard, Users, Van, X } from "lucide
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMediaQuery } from "react-responsive";
-import LogoutDialog from "./ui/LogoutDialog";
+import LogoutDialog, { AdminChangePasswordDialog } from "./ui/LogoutDialog";
 
 const IconClose = ({ className = "" }: { className?: string }) => (
   <svg
@@ -264,6 +264,9 @@ export function Sidebar() {
                 </Link>
               );
             })}
+            <div className="w-full text-start px-3 py-2 rounded-md hover:bg-secondary h-[36px] cursor-pointer flex justify-start items-center gap-2">
+              <AdminChangePasswordDialog />
+            </div>
             <div className="w-full text-start px-3 py-2 rounded-md hover:bg-secondary h-[36px] cursor-pointer flex justify-start items-center gap-2">
               <LogoutDialog adminStyle />
             </div>
