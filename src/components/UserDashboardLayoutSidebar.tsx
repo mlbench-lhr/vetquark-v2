@@ -86,7 +86,7 @@ export function Sidebar() {
                   alt=""
                   width={59}
                   height={32}
-                  className="w-auto h-[32px] ms-2 mt-2"
+                  className="w-auto h-[32px] ms-1 mt-2"
                 />
               ) : (
                 <Image
