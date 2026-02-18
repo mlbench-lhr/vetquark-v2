@@ -124,12 +124,6 @@ export default function Dashboard() {
                         >
                           <Eye size={16} />
                         </button>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
-                        >
-                          <Trash size={16} />
-                        </button>
                       </div>
                     );
                   },
