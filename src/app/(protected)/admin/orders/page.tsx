@@ -7,10 +7,11 @@ import { ServerPaginationProvider } from "@/components/PaginationProvider";
 import { SearchComponent } from "@/components/SearchComponent";
 import { Column, DynamicTable } from "@/components/Table/page";
 import { StatusText } from "@/components/StatusText";
-import { Copy } from "lucide-react";
+import { Check, CheckCircle, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { StatusBadge } from "@/components/StatusBadge";
 
 type AdminOrderRow = {
   id: string;
@@ -84,12 +85,12 @@ export default function Dashboard() {
                 {
                   header: "Payment",
                   accessor: "payment",
-                  render: (item) => <span className="capitalize">{String(item?.payment ?? "—")}</span>,
+                  render: (item) => <div className="flex justify-start items-center capitalize text-[#00A63E] gap-2"><CheckCircle size={14} /> {String("Paid")}</div>,
                 },
                 {
                   header: "Status",
                   accessor: "status",
-                  render: (item) => <StatusText status={String(item?.status ?? "")} />,
+                  render: (item) => <StatusBadge status={String(item?.status ?? "")} />,
                 },
                 {
                   header: "Date",
@@ -109,21 +110,9 @@ export default function Dashboard() {
                     return (
                       <button
                         type="button"
-                        className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          if (!id) return;
-                          try {
-                            await navigator.clipboard.writeText(id);
-                            toast.success("Copied order id");
-                          } catch {
-                            toast.error("Failed to copy");
-                          }
-                        }}
-                        aria-label="Copy order id"
-                        title="Copy order id"
+                        className="inline-flex items-center justify-center rounded-md text-primary"
                       >
-                        <Copy size={16} />
+                        View Details
                       </button>
                     );
                   },

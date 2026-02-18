@@ -66,7 +66,12 @@ function homeForRole(role: unknown) {
 
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/admin/auth") || pathname.includes("cloudinary")) {
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/admin/auth") ||
+    pathname.includes("cloudinary") ||
+    (pathname === "/api/platform/settings" || pathname === "/api/platform/settings/")
+  ) {
     return NextResponse.next();
   }
 

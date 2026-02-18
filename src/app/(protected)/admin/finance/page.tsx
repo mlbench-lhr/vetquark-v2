@@ -8,7 +8,7 @@ import { SearchComponent } from "@/components/SearchComponent";
 import { Column, DynamicTable } from "@/components/Table/page";
 import { StatusText } from "@/components/StatusText";
 import { format } from "date-fns";
-import { Briefcase, CreditCard, DollarSign, Pencil, Stethoscope, Users } from "lucide-react";
+import { Briefcase, CreditCard, DollarSign, Pencil, Save, X } from "lucide-react";
 import { StatCard } from "@/components/FinanceCard";
 import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,12 @@ type AdminTransactionRow = {
 export default function Dashboard() {
   const [search, setSearch] = useState<string>("");
   const queryParams = useMemo(() => ({ search }), [search]);
+  const [stats, setStats] = useState<{ totalGross: number; feesCollected: number; netPayouts: number } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [feeEditing, setFeeEditing] = useState(false);
+  const [feeSaving, setFeeSaving] = useState(false);
+  const [platformFee, setPlatformFee] = useState<string>("33.00");
+  const [initialFee, setInitialFee] = useState<string>("33.00");
 
   const LoadingSkeleton = () => (
     <div className="w-full space-y-2 animate-pulse">
@@ -36,6 +42,69 @@ export default function Dashboard() {
   );
 
   const NoTransactionsFound = () => <NoDataComponent text="No Transactions Yet" />;
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setLoadingStats(true);
+        const [sRes, setRes] = await Promise.all([
+          fetch("/api/admin/finance/stats", { credentials: "include" }),
+          fetch("/api/platform/settings", { credentials: "include" }),
+        ]);
+        const sJson = await sRes.json().catch(() => null);
+        const setJson = await setRes.json().catch(() => null);
+        if (!alive) return;
+        if (sRes.ok && sJson) {
+          setStats({
+            totalGross: Number(sJson.totalGross || 0),
+            feesCollected: Number(sJson.feesCollected || 0),
+            netPayouts: Number(sJson.netPayouts || 0),
+          });
+        }
+        if (setRes.ok && setJson) {
+          const fee = Number(setJson.platformFee || 33.0);
+          const safe = Number.isFinite(fee) && fee >= 0 ? fee : 33.0;
+          setPlatformFee(safe.toFixed(2));
+          setInitialFee(safe.toFixed(2));
+        }
+      } finally {
+        setLoadingStats(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const handleSaveFee = async () => {
+    const feeNum = Number(platformFee);
+    if (!Number.isFinite(feeNum) || feeNum < 0) {
+      setPlatformFee(initialFee);
+      setFeeEditing(false);
+      return;
+    }
+    try {
+      setFeeSaving(true);
+      const res = await fetch("/api/platform/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ platformFee: feeNum }),
+      });
+      const json = await res.json().catch(() => null);
+      if (res.ok && json) {
+        const next = Number(json.platformFee || feeNum);
+        setPlatformFee(next.toFixed(2));
+        setInitialFee(next.toFixed(2));
+      } else {
+        setPlatformFee(initialFee);
+      }
+    } finally {
+      setFeeSaving(false);
+      setFeeEditing(false);
+    }
+  };
 
   return (
     <BasicStructureWithName
@@ -51,7 +120,7 @@ export default function Dashboard() {
           iconBgColor="#EFF6FF"
           iconColor="#3F78D8"
           title="Total Revenue"
-          value={"$1,245,231.89"}
+          value={loadingStats ? "—" : `R$ ${Number(stats?.totalGross || 0).toFixed(2)}`}
           trend={{ value: 0, isPositive: true }}
         />
 
@@ -60,7 +129,7 @@ export default function Dashboard() {
           iconBgColor="#FAF5FF"
           iconColor="#9810FA"
           title="Platform Fees Collected"
-          value={"$186,784.00"}
+          value={loadingStats ? "—" : `R$ ${Number(stats?.feesCollected || 0).toFixed(2)}`}
           trend={{ value: 0, isPositive: true }}
         />
 
@@ -74,7 +143,7 @@ export default function Dashboard() {
             value: 8.2,
             isPositive: true,
           }}
-          value={"$186,784.00"}
+          value={loadingStats ? "—" : `R$ ${Number(stats?.netPayouts || 0).toFixed(2)}`}
         />
 
       </div>
@@ -83,18 +152,60 @@ export default function Dashboard() {
 
         <BoxProviderWithName
           rightSideComponent={
-            <Pencil size={15} className="text-black/60" />
+            feeEditing ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (feeSaving) return;
+                    setPlatformFee(initialFee);
+                    setFeeEditing(false);
+                  }}
+                  aria-label="Cancel"
+                  className="text-black/60 hover:text-black/80"
+                >
+                  <X size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveFee}
+                  aria-label="Save"
+                  className="text-green-600 hover:text-green-700 disabled:opacity-60"
+                  disabled={feeSaving}
+                >
+                  <Save size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setFeeEditing(true)}
+                aria-label="Edit"
+                className="text-black/60 hover:text-black/80"
+              >
+                <Pencil size={16} />
+              </button>
+            )
           }
           name="Platform Fee"
         >
           <div className="border-t flex flex-col w-full justify-start pt-5 items-start gap-1.5">
             <div className="flex w-full justify-between items-center text-sm">
-              <span className="font-medium">Commission Rate (%)</span>
+              <span className="font-medium">Commission Rate (R$)</span>
               <span className="text-black/70">Applied to all transactions</span>
             </div>
             <div className="w-full relative h-fit">
-              <Input disabled value={15.0} className="w-full pe-5" />
-              <span className="absolute text-black/60 right-3 top-1/2 -translate-y-1/2 ">%</span>
+              <Input
+                disabled={!feeEditing || feeSaving}
+                value={platformFee}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^0-9.,]/g, "").replace(",", ".");
+                  setPlatformFee(v);
+                }}
+                className="w-full pe-5"
+                inputMode="decimal"
+              />
+              <span className="absolute text-black/60 right-3 top-1/2 -translate-y-1/2 ">R$</span>
             </div>
           </div>
         </BoxProviderWithName>
