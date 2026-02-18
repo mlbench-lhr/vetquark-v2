@@ -1,12 +1,14 @@
+'use client'
 import GridShape from "@/components/common/GridShape";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import { usePathname } from "next/navigation";
 
 export default function NotFound() {
+  const params = usePathname()
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden z-1">
-      <GridShape />
+      {/* <GridShape /> */}
       <div className="mx-auto w-full max-w-[242px] text-center sm:max-w-[472px]">
         <h1 className="mb-8 font-bold text-gray-800 text-title-md xl:text-title-2xl">
           ERROR
@@ -26,7 +28,7 @@ export default function NotFound() {
         </p>
 
         <Link
-          href="/signin"
+          href={params.includes("admin") ? "/admin/login" : "/signin"}
           className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800"
         >
           Back to Home Page
