@@ -261,61 +261,61 @@ export default function WalletCard({
                             <ListItemSkeleton />
                         </>
                     ) : filteredTransactions.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No transactions yet.</div>
+                        <div className="text-sm text-muted-foreground">No Transactions Found.</div>
                     ) : (
                         filteredTransactions.map((transaction) => (
                             <div
                                 key={transaction.id}
                                 className="flex items-center gap-3 p-3 bg-muted/30 rounded-2xl"
                             >
-                            {transaction.isPix ? (
-                                <div className="w-10 h-10 rounded-full bg-[#00D4AA]/10 flex items-center justify-center flex-shrink-0">
-                                    <Image src={"/images/pixLogo.svg"} alt="" width={20} height={20} />
+                                {transaction.isPix ? (
+                                    <div className="w-10 h-10 rounded-full bg-[#00D4AA]/10 flex items-center justify-center flex-shrink-0">
+                                        <Image src={"/images/pixLogo.svg"} alt="" width={20} height={20} />
+                                    </div>
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                                        <Image width={200} height={200}
+                                            src={transaction.avatarUrl || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
+                                            alt={transaction.title}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-foreground text-sm truncate">
+                                        {transaction.title}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {transaction.subtitle === "Urinalysis Report"
+                                            ? t("reports.urinalysisReport")
+                                            : transaction.subtitle || transaction.date}
+                                    </p>
                                 </div>
-                            ) : (
-                                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                                    <Image width={200} height={200}
-                                        src={transaction.avatarUrl||"https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
-                                        alt={transaction.title}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground text-sm truncate">
-                                    {transaction.title}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    {transaction.subtitle === "Urinalysis Report"
-                                        ? t("reports.urinalysisReport")
-                                        : transaction.subtitle || transaction.date}
-                                </p>
+                                {transaction.amount ? (
+                                    <div className="text-right flex-shrink-0">
+                                        <p
+                                            className={`font-semibold text-sm ${transaction.type === "credit"
+                                                ? "text-green-600"
+                                                : "text-red-500"
+                                                }`}
+                                        >
+                                            R$ {transaction.amount}
+                                        </p>
+                                        <p
+                                            className={`text-xs ${transaction.type === "credit"
+                                                ? "text-green-600"
+                                                : "text-red-500"
+                                                }`}
+                                        >
+                                            {transaction.type === "credit" ? t("wallet.credits") : t("wallet.withdrawal")}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-muted-foreground flex-shrink-0">
+                                        {transaction.date}
+                                    </p>
+                                )}
                             </div>
-                            {transaction.amount ? (
-                                <div className="text-right flex-shrink-0">
-                                    <p
-                                        className={`font-semibold text-sm ${transaction.type === "credit"
-                                            ? "text-green-600"
-                                            : "text-red-500"
-                                            }`}
-                                    >
-                                        R$ {transaction.amount}
-                                    </p>
-                                    <p
-                                        className={`text-xs ${transaction.type === "credit"
-                                            ? "text-green-600"
-                                            : "text-red-500"
-                                            }`}
-                                    >
-                                        {transaction.type === "credit" ? t("wallet.credits") : t("wallet.withdrawal")}
-                                    </p>
-                                </div>
-                            ) : (
-                                <p className="text-xs text-muted-foreground flex-shrink-0">
-                                    {transaction.date}
-                                </p>
-                            )}
-                        </div>
                         ))
                     )}
                 </div>

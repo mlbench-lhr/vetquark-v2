@@ -56,7 +56,7 @@ export default function Dashboard() {
       showBackOption={false}
 
     >
-      <div className="flex justify-start items-center gap-3">
+      <div className="flex justify-start items-center gap-y-1.5 gap-x-3 flex-col sm:flex-row w-full md:w-fit">
         <SearchComponent
           searchQuery={search}
           onChangeFunc={setSearch}
@@ -69,6 +69,7 @@ export default function Dashboard() {
             setEditingProduct(null);
             setModalOpen(true);
           }}
+          className="w-full md:w-fit"
         >
           <Plus />
           Add Product

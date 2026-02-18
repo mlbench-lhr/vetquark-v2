@@ -156,7 +156,7 @@ export function ServerPaginationProvider<T = any>({
         !isInitialLoading &&
         data.length > 0 &&
         totalPages > 1 && (
-          <Pagination className="w-full">
+          <Pagination className="w-full border-t-[1px] border-[#dbdfe9] pt-5 -mt-4">
             <PaginationContent className="relative w-full flex justify-end items-center">
               <PaginationItem className="">
                 <PaginationPrevious
