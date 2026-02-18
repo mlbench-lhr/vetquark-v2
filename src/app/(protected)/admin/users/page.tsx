@@ -6,7 +6,7 @@ import { NoDataComponent } from "@/components/NoDataComponent";
 import { ServerPaginationProvider } from "@/components/PaginationProvider";
 import { SearchComponent } from "@/components/SearchComponent";
 import { Column, DynamicTable } from "@/components/Table/page";
-import { Copy } from "lucide-react";
+import { Copy, Eye, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
@@ -117,24 +117,20 @@ export default function Dashboard() {
                   render: (item) => {
                     const id = String(item?.id ?? "");
                     return (
-                      <button
-                        type="button"
-                        className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          if (!id) return;
-                          try {
-                            await navigator.clipboard.writeText(id);
-                            toast.success("Copied user id");
-                          } catch {
-                            toast.error("Failed to copy");
-                          }
-                        }}
-                        aria-label="Copy user id"
-                        title="Copy user id"
-                      >
-                        <Copy size={16} />
-                      </button>
+                      <div className="flex justify-start items-center gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
+                        >
+                          <Trash size={16} />
+                        </button>
+                      </div>
                     );
                   },
                 },
