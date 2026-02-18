@@ -128,7 +128,8 @@ export async function GET(req: NextRequest) {
 
       return {
         id,
-        transactionId: `TXN-${id.slice(-6).toUpperCase()}`,
+        // transactionId: `TXN-${id.slice(-6).toUpperCase()}`,
+        transactionId: id,
         date: createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toISOString() : null,
         description,
         amount,
