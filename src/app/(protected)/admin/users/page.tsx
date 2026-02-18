@@ -9,6 +9,7 @@ import { Column, DynamicTable } from "@/components/Table/page";
 import { Copy, Eye, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 type AdminUserRow = {
@@ -21,6 +22,7 @@ type AdminUserRow = {
 };
 
 export default function Dashboard() {
+  const router = useRouter();
   const [search, setSearch] = useState<string>("");
   const [activeRole, setActiveRole] = useState<"Veterinarian" | "Guardian">("Veterinarian");
 
@@ -78,7 +80,7 @@ export default function Dashboard() {
             {(data, isLoading) => {
               const columns: Column[] = [
                 {
-                  header: "Veterinarian",
+                  header: activeRole === "Veterinarian" ? "Veterinarian" : "Guardian",
                   accessor: "name",
                   render: (item) => <span>{String(item?.name ?? "")}</span>,
                 },
@@ -121,6 +123,10 @@ export default function Dashboard() {
                         <button
                           type="button"
                           className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
+                          onClick={() => {
+                            const segment = activeRole === "Veterinarian" ? "veterinarian" : "guardian";
+                            router.push(`/admin/users/${segment}/${encodeURIComponent(id)}`);
+                          }}
                         >
                           <Eye size={16} />
                         </button>

@@ -41,7 +41,7 @@ export default function Dashboard() {
     </div>
   );
 
-  const NoTransactionsFound = () => <NoDataComponent text="No Transactions Yet" />;
+  const NoTransactionsFound = () => <NoDataComponent text="No Transactions Found" />;
 
   useEffect(() => {
     let alive = true;

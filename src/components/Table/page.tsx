@@ -133,8 +133,8 @@ export function DynamicTable({
   }
 
   return (
-    <div className={`space-y-2 md:space-y-4 w-full ${className}`}>
-      <Table className="border-separate md:border-spacing-y-0">
+    <div className={`space-y-2 md:space-y-4 w-full  ${className}`}>
+      <Table className="border-separate md:border-spacing-y-0 w-[800px] md:w-full">
         {caption && <TableCaption>{caption}</TableCaption>}
         <TableHeader>
           <TableRow>

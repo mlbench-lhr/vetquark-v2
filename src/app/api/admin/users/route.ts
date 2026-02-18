@@ -51,7 +51,8 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await requireAdmin(req);
     if (!auth.ok) return auth.res;
-
+    console.log("-----------------------");
+    
     const url = new URL(req.url);
     const page = clampInt(url.searchParams.get("page"), 1, 1, 10_000);
     const limit = clampInt(url.searchParams.get("limit"), 10, 1, 100);
