@@ -4,6 +4,9 @@ import { LogOut } from "lucide-react";
 import React from "react";
 import { Button } from "./button";
 import { Modal } from "@/components/ui/modal";
+import swal from "sweetalert";
+import { useAppDispatch } from "@/store/hooks";
+import { clearAdminProfile } from "@/store/adminAuthSlice";
 
 async function signOutUser() {
   try {
@@ -30,6 +33,7 @@ export default function LogoutDialog({
 }) {
   const TriggerComponent = triggerComponent;
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [open, setOpen] = React.useState(false);
 
   const handleConfirm = async () => {
@@ -48,14 +52,42 @@ export default function LogoutDialog({
     window.location.href = "/";
   };
 
+  const handleAdminLogout = async () => {
+    const confirmed = await (swal as any)({
+      title: "Logout",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      buttons: ["Cancel", "Logout"],
+      dangerMode: true,
+    });
+
+    if (!confirmed) return;
+
+    dispatch(clearAdminProfile());
+    await signOutAdmin();
+    router.push("/admin/login");
+    window.location.href = "/admin/login";
+  };
+
   return (
     <>
       <span
         role="button"
         tabIndex={0}
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          if (adminStyle) {
+            void handleAdminLogout();
+            return;
+          }
+          setOpen(true);
+        }}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") setOpen(true);
+          if (e.key !== "Enter" && e.key !== " ") return;
+          if (adminStyle) {
+            void handleAdminLogout();
+            return;
+          }
+          setOpen(true);
         }}
         className="inline-flex"
       >
@@ -73,29 +105,31 @@ export default function LogoutDialog({
         )}
       </span>
 
-      <Modal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        className="max-w-lg rounded-[16px] p-[24px] sm:p-[40px]"
-      >
-        <div className="flex flex-col justify-start items-center gap-[8px]">
-          <div className="text-center w-full heading-text-style-4">Logout</div>
-          <div className="mt-2 plan-text-style-3 text-center">
-            Are you sure you want to logout this account?
-          </div>
+      {!adminStyle ? (
+        <Modal
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          className="max-w-lg rounded-[16px] p-[24px] sm:p-[40px]"
+        >
+          <div className="flex flex-col justify-start items-center gap-[8px]">
+            <div className="text-center w-full heading-text-style-4">Logout</div>
+            <div className="mt-2 plan-text-style-3 text-center">
+              Are you sure you want to logout this account?
+            </div>
 
-          <div className="mt-6 w-full">
-            <div className="w-full grid grid-cols-2 gap-2">
-              <Button variant="outline" className="col-span-1" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button className="col-span-1" onClick={handleConfirm}>
-                Logout
-              </Button>
+            <div className="mt-6 w-full">
+              <div className="w-full grid grid-cols-2 gap-2">
+                <Button variant="outline" className="col-span-1" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button className="col-span-1" onClick={handleConfirm}>
+                  Logout
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
+      ) : null}
     </>
   );
 }

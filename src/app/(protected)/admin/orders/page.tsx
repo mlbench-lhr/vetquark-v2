@@ -382,7 +382,7 @@ export default function Dashboard() {
                                   <div className="px-4 py-3 flex items-center justify-between gap-4 border-t border-gray-100">
                                     <div className="text-[13px] text-gray-500">Payment Status</div>
                                     <div className="flex items-center gap-2">
-                                      <StatusBadge status="paid"/>
+                                      <StatusBadge status="paid" />
                                     </div>
                                   </div>
                                   <div className="px-4 py-3 flex items-center justify-between gap-4 border-t border-gray-100">
