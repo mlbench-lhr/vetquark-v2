@@ -134,7 +134,7 @@ export function DynamicTable({
 
   return (
     <div className={`space-y-2 md:space-y-4 w-full ${className}`}>
-      <Table className="border-separate md:border-spacing-y-3">
+      <Table className="border-separate md:border-spacing-y-0">
         {caption && <TableCaption>{caption}</TableCaption>}
         <TableHeader>
           <TableRow>
@@ -153,7 +153,7 @@ export function DynamicTable({
           {currentData.map((item, i) => (
             <TableRow
               key={i}
-              className={`border-none rounded-[35px] border-b-2 custom-table-row h-fit md:h-[75px] text-xs md:text-[14px] font-[400] ${rowClassName} ${onRowClick ? "hover:bg-transparent" : ""
+              className={`border-none rounded-[35px] border-b-2 custom-table-row h-fit md:h-[65px] text-xs md:text-[14px] font-[400] ${rowClassName} ${onRowClick ? "hover:bg-transparent" : ""
                 }`}
               onClick={() => onRowClick?.(item)}
             >

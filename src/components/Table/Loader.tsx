@@ -23,7 +23,7 @@ export function TableSkeleton({
 }: TableSkeletonProps) {
   return (
     <div className={`space-y-4 w-full ${className}`}>
-      <Table className="border-separate border-spacing-y-3">
+      <Table className="border-separate border-spacing-y-0">
         <TableHeader>
           <TableRow>
             {Array.from({ length: columns }).map((_, i) => (
@@ -37,7 +37,7 @@ export function TableSkeleton({
           {Array.from({ length: rows }).map((_, rowIndex) => (
             <TableRow
               key={rowIndex}
-              className="border-none bg-[#F8FAF6] rounded-[35px] border-b-2 custom-table-row h-[75px]"
+              className="border-none bg-[#F8FAF6] rounded-[35px] border-b-2 custom-table-row h-[65px]"
             >
               {Array.from({ length: columns }).map((_, colIndex) => (
                 <TableCell
