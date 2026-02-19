@@ -180,40 +180,57 @@ export default function ReportDetailsPage() {
       if (!r) throw new Error("Report not found");
 
       const reportStyles = StyleSheet.create({
-        page: { padding: 16, paddingBottom: 110, fontSize: 10, color: "#111827" },
-        header: { marginBottom: 0 },
+        page: { padding: 14, paddingBottom: 86, fontSize: 10, color: "#111827" },
+        header: { marginBottom: 6 },
         headerRow: { display: "flex", flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
-        appLogo: { width: 86, height: 18 },
+        appLogo: { width: 78, height: 16 },
         clinicBlock: { display: "flex", alignItems: "flex-end" },
-        title: { fontSize: 14, fontWeight: 700, textAlign: "right" },
-        subtitle: { marginTop: 2, fontSize: 8, color: "#6B7280" },
-        divider: { marginTop: 10, height: 1, backgroundColor: "#E5E7EB" },
-        sectionTitle: { marginTop: 10, marginBottom: 6, fontSize: 12, fontWeight: 700 },
+        title: { fontSize: 13, fontWeight: 700, textAlign: "right" },
+        subtitle: { marginTop: 1, fontSize: 8, color: "#6B7280" },
+        divider: { marginTop: 6, height: 1, backgroundColor: "#E5E7EB" },
+        sectionTitle: { marginTop: 6, marginBottom: 3, fontSize: 10, fontWeight: 700 },
         metaGrid: { display: "flex", flexDirection: "row", gap: 12 },
         metaCol: { flex: 1 },
         metaRow: { display: "flex", flexDirection: "row", marginTop: 2 },
-        metaKey: { width: 110, fontSize: 8, color: "#6B7280" },
+        metaKey: { width: 92, fontSize: 8, color: "#6B7280" },
         metaValue: { flex: 1, fontSize: 8, color: "#111827" },
-        table: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 6, overflow: "hidden" },
-        tr: { display: "flex", flexDirection: "row", borderTopWidth: 1, borderTopColor: "#E5E7EB" },
-        trHead: { backgroundColor: "#F3F4F6", borderTopWidth: 0 },
-        th: { paddingVertical: 7, paddingHorizontal: 8, fontSize: 8, fontWeight: 700, color: "#111827" },
-        td: { paddingVertical: 7, paddingHorizontal: 8, fontSize: 8, color: "#111827" },
-        colParam: { flex: 4 },
-        colResult: { flex: 2 },
-        colUnit: { flex: 2 },
-        colStatus: { flex: 2 },
-        statusNormal: { color: "#059669", fontWeight: 700 },
-        statusAbnormal: { color: "#D97706", fontWeight: 700 },
         block: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 10, backgroundColor: "#F9FAFB" },
-        blockText: { marginTop: 0, fontSize: 8, color: "#111827", lineHeight: 1.35 },
+        blockText: { marginTop: 0, fontSize: 8, color: "#111827", lineHeight: 1.25 },
         footer: { marginTop: 18, fontSize: 9, color: "#6B7280" },
+        resultsTable: { marginTop: 4, borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8 },
+        tableHeaderRow: {
+          display: "flex",
+          flexDirection: "row",
+          paddingVertical: 6,
+          paddingHorizontal: 8,
+          backgroundColor: "#F9FAFB",
+          borderBottomWidth: 1,
+          borderBottomColor: "#E5E7EB",
+        },
+        tableRow: {
+          display: "flex",
+          flexDirection: "row",
+          paddingVertical: 6,
+          paddingHorizontal: 8,
+          borderBottomWidth: 1,
+          borderBottomColor: "#E5E7EB",
+        },
+        tableRowLast: { borderBottomWidth: 0 },
+        colName: { flex: 1.6, paddingRight: 8 },
+        colValue: { flex: 1.2, paddingRight: 8 },
+        colStatus: { flex: 0.7 },
+        tableHeaderText: { fontSize: 8, fontWeight: 700, color: "#374151" },
+        tableCellLabel: { fontSize: 8, fontWeight: 700, color: "#111827" },
+        tableCellValue: { fontSize: 8, color: "#111827" },
+        tableCellStatus: { fontSize: 8, fontWeight: 700, textAlign: "right" },
+        tableCellStatusNormal: { color: "#6B7280" },
+        tableCellStatusAbnormal: { color: "#111827" },
         signatureArea: {
           position: "absolute",
-          left: 16,
-          right: 16,
-          bottom: 16,
-          paddingTop: 10,
+          left: 14,
+          right: 14,
+          bottom: 14,
+          paddingTop: 8,
           borderTopWidth: 1,
           borderTopColor: "#E5E7EB",
         },
@@ -236,33 +253,12 @@ export default function ReportDetailsPage() {
       const generatedAt = formatDateTimeLabel(r.signedAt || r.createdAt || null);
       const appLogoUrl = `${window.location.origin}/blueLogo.png`;
       const signatureUrl = String(r.signatureImageUrl || "").trim();
-
-      const renderTable = (items: ReadingResult[]) => (
-        <View style={reportStyles.table}>
-          <View style={[reportStyles.tr, reportStyles.trHead]}>
-            <Text style={[reportStyles.th, reportStyles.colParam]}>Parameter</Text>
-            <Text style={[reportStyles.th, reportStyles.colResult]}>Result</Text>
-            <Text style={[reportStyles.th, reportStyles.colUnit]}>Unit</Text>
-            <Text style={[reportStyles.th, reportStyles.colStatus]}>Status</Text>
-          </View>
-          {items.map((it) => (
-            <View key={it.key} style={reportStyles.tr}>
-              <Text style={[reportStyles.td, reportStyles.colParam]}>{asReportText(it.label)}</Text>
-              <Text style={[reportStyles.td, reportStyles.colResult]}>{asReportText(it.valueLabel)}</Text>
-              <Text style={[reportStyles.td, reportStyles.colUnit]}>{asReportText(it.unit || "")}</Text>
-              <Text
-                style={[
-                  reportStyles.td,
-                  reportStyles.colStatus,
-                  it.status === "Normal" ? reportStyles.statusNormal : reportStyles.statusAbnormal,
-                ]}
-              >
-                {it.status}
-              </Text>
-            </View>
-          ))}
-        </View>
-      );
+      const valueWithUnit = (it: ReadingResult) => {
+        const v = (it.valueLabel || "").trim();
+        const u = (it.unit || "").trim();
+        if (v && u) return `${v} ${u}`;
+        return v || u || "";
+      };
 
       const buildDocument = () => (
         <Document>
@@ -321,26 +317,43 @@ export default function ReportDetailsPage() {
               </View>
             </View>
 
-            {physical.length ? (
-              <>
-                <Text style={reportStyles.sectionTitle}>Physical Parameters</Text>
-                {renderTable(physical)}
-              </>
-            ) : null}
-
-            {chemical.length ? (
-              <>
-                <Text style={reportStyles.sectionTitle}>Chemical Parameters</Text>
-                {renderTable(chemical)}
-              </>
-            ) : null}
-
-            {microscopic.length ? (
-              <>
-                <Text style={reportStyles.sectionTitle}>Microscopic Parameters</Text>
-                {renderTable(microscopic)}
-              </>
-            ) : null}
+            <Text style={reportStyles.sectionTitle}>Results</Text>
+            <View style={reportStyles.resultsTable}>
+              <View style={reportStyles.tableHeaderRow}>
+                <View style={reportStyles.colName}>
+                  <Text style={reportStyles.tableHeaderText}>Test</Text>
+                </View>
+                <View style={reportStyles.colValue}>
+                  <Text style={reportStyles.tableHeaderText}>Result</Text>
+                </View>
+                <View style={reportStyles.colStatus}>
+                  <Text style={[reportStyles.tableHeaderText, { textAlign: "right" }]}>Status</Text>
+                </View>
+              </View>
+              {[...physical, ...chemical, ...microscopic].map((it, idx, arr) => (
+                <View
+                  key={it.key}
+                  style={idx === arr.length - 1 ? [reportStyles.tableRow, reportStyles.tableRowLast] : reportStyles.tableRow}
+                >
+                  <View style={reportStyles.colName}>
+                    <Text style={reportStyles.tableCellLabel}>{asReportText(it.label)}</Text>
+                  </View>
+                  <View style={reportStyles.colValue}>
+                    <Text style={reportStyles.tableCellValue}>{asReportText(valueWithUnit(it))}</Text>
+                  </View>
+                  <View style={reportStyles.colStatus}>
+                    <Text
+                      style={[
+                        reportStyles.tableCellStatus,
+                        it.status === "Normal" ? reportStyles.tableCellStatusNormal : reportStyles.tableCellStatusAbnormal,
+                      ]}
+                    >
+                      {it.status === "Normal" ? "Normal" : "Abnormal"}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
 
             <Text style={reportStyles.sectionTitle}>Remarks</Text>
             <View>
@@ -363,8 +376,7 @@ export default function ReportDetailsPage() {
               <Text style={reportStyles.footer}>{String(r.veterinarian.reportFooter || "").trim()}</Text>
             ) : null} */}
 
-            {/* <View style={reportStyles.signatureArea}> */}
-            <View>
+            <View fixed style={reportStyles.signatureArea}>
               <View style={reportStyles.signatureRow}>
                 <View>
                   <Text style={reportStyles.signatureLabel}>Veterinarian</Text>
