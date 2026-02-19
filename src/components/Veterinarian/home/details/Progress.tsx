@@ -432,7 +432,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                 </div>
                 {patientId ? (
                     <Link
-                        href={`/Veterinarian/home/patientHistory/${encodeURIComponent(patientId)}`}
+                        href={`/Guardian/history?petId=${encodeURIComponent(String(patientId || ""))}`}
                         className="flex items-center gap-1 text-sm text-primary font-medium"
                     >
                         <Clock className="w-4 h-4" />
