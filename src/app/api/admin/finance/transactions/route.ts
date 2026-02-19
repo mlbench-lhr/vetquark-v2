@@ -67,10 +67,16 @@ export async function GET(req: NextRequest) {
         { currency: { $regex: rx } },
         { "userDoc.fullName": { $regex: rx } },
         { "userDoc.tradeName": { $regex: rx } },
+        {
+          $expr: {
+            $regexMatch: {
+              input: { $toString: "$_id" },
+              regex: search,
+              options: "i",
+            },
+          },
+        },
       ];
-      if (mongoose.Types.ObjectId.isValid(search)) {
-        or.push({ _id: new mongoose.Types.ObjectId(search) });
-      }
       match.$or = or;
     }
 
