@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
+import { downloadUrinalysisPdf } from "@/utils/urinalysisPdf";
 
 type ReportStatus = "signed" | "pending";
 
@@ -92,24 +93,6 @@ function formatDateLabel(value: string) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleDateString("en-GB");
-}
-
-async function downloadReadingReport(readingId: string) {
-  const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to download report";
-    throw new Error(msg);
-  }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `urinalysis-report-${readingId}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
 }
 
 async function shareReadingReport(readingId: string, title: string) {
@@ -238,12 +221,12 @@ function PageContent() {
 
   const handleDownload = useCallback(async (id: string) => {
     try {
-      await downloadReadingReport(id);
+      await downloadUrinalysisPdf({ readingId: id });
     } catch (e) {
       const msg = e instanceof Error ? e.message : (t("history.failedToDownloadReport") as string);
       toast.error(msg);
     }
-  }, []);
+  }, [t]);
 
   const handleShare = useCallback(async (id: string) => {
     try {
@@ -257,7 +240,7 @@ function PageContent() {
       }
       // toast.error(msg);
     }
-  }, []);
+  }, [t]);
 
   return (
     <div className=" w-full bg-white">

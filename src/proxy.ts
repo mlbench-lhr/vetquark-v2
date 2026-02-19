@@ -87,6 +87,15 @@ export default async function proxy(req: NextRequest) {
   ]);
 
   if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    if (pathname === "/admin" || pathname === "/admin/") {
+      if (adminToken && secret) {
+        const payload = await verifyHS256(adminToken, secret);
+        if (payload?.sub && payload?.role === "Admin") {
+          return NextResponse.redirect(new URL("/admin/dashboard", req.nextUrl.origin));
+        }
+      }
+      return NextResponse.redirect(new URL("/admin/login", req.nextUrl.origin));
+    }
     if (pathname.startsWith("/admin") && adminPublicRoutes.has(pathname)) {
       if (!adminToken || !secret) return NextResponse.next();
       const payload = await verifyHS256(adminToken, secret);
