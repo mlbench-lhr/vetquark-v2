@@ -69,6 +69,12 @@ function orderCode(order: Pick<OrderDetail, "id" | "createdAt">) {
   return `${year}-${String(n).padStart(3, "0")}`;
 }
 
+const variants: any = {
+  "created": { bg: "#F8E6D4", text: "#FF862F" },
+  paid: { bg: "#E7FAE3", text: "#4A9E35" },
+  delivered: { bg: "#E7FAE3", text: "#4A9E35" },
+  cancelled: { bg: "#FAE3E3", text: "#DE191D" }
+};
 export default function Dashboard() {
   const [search, setSearch] = useState<string>("");
   const queryParams = useMemo(() => ({ search }), [search]);
@@ -82,7 +88,6 @@ export default function Dashboard() {
   const statusOptions = useMemo(
     () => [
       { value: "created", label: "Created" },
-      { value: "paid", label: "Paid" },
       { value: "delivered", label: "Delivered" },
       { value: "cancelled", label: "Cancelled" },
     ],
@@ -181,7 +186,8 @@ export default function Dashboard() {
                   accessor: "payment",
                   render: (item) => {
                     const status = String(item?.status ?? "").trim().toLowerCase();
-                    const paid = status === "paid" || status === "delivered" || (typeof item?.payment === "string" && item.payment.trim() && item.payment !== "—");
+                    // const paid = status === "paid" || status === "delivered" || (typeof item?.payment === "string" && item.payment.trim() && item.payment !== "—");
+                    const paid = "paid";
                     return (
                       <div className={["flex justify-start items-center capitalize gap-2", paid ? "text-[#00A63E]" : "text-gray-500"].join(" ")}>
                         {paid ? <CheckCircle size={14} /> : null}
@@ -201,10 +207,14 @@ export default function Dashboard() {
 
                     return (
                       <div className="flex items-center gap-2">
-                        <StatusBadge status={current} />
+                        {/* <StatusBadge status={current} /> */}
                         <select
-                          className="h-8 rounded-xl border border-gray-200 bg-white px-2 text-[12px] text-gray-700"
+                          className="h-fit py-1 rounded-xl border border-gray-200 bg-white px-2 text-[12px] text-gray-700"
                           value={selectValue}
+                          style={{
+                            color: variants[String(item.status || "").trim().toLowerCase()]?.text,
+                            backgroundColor: variants[String(item.status || "").trim().toLowerCase()]?.bg,
+                          }}
                           disabled={isUpdating}
                           onChange={async (e) => {
                             const next = String(e.target.value || "").trim().toLowerCase();
