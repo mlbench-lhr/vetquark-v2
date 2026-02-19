@@ -4,6 +4,7 @@ import Header from "@/components/common/header";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import { downloadUrinalysisPdf } from "@/utils/urinalysisPdf";
 
 const Page = () => {
   const router = useRouter();
@@ -153,21 +154,7 @@ function formatDateLabel(value: string) {
 }
 
 async function downloadReadingReport(readingId: string) {
-  const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to download report";
-    throw new Error(msg);
-  }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `urinalysis-report-${readingId}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  await downloadUrinalysisPdf({ readingId });
 }
 
 export function ReportCard({
@@ -209,7 +196,7 @@ export function ReportCard({
             {signed && (
               <div className="flex items-center gap-1 text-xs text-[#3F78D8] bg-[#EBF2FF] px-2 py-1 rounded-full">
                 <Check className="w-3 h-3" />
-              <span>{t("history.signed")}</span>
+                <span>{t("history.signed")}</span>
               </div>
             )}
           </div>

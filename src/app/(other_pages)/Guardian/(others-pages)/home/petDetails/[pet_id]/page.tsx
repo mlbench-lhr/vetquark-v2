@@ -10,6 +10,7 @@ import { Check } from 'lucide-react';
 import ProgressView from '@/components/Veterinarian/home/details/Progress';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
+import { downloadUrinalysisPdf } from '@/utils/urinalysisPdf';
 
 interface TabsProps {
   activeTab: string;
@@ -179,20 +180,7 @@ export default function Page() {
 
   const handleDownload = useCallback(async (readingId: string) => {
     try {
-      const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to download report");
-      }
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `urinalysis-report-${readingId}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      await downloadUrinalysisPdf({ readingId });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Download failed");
     }

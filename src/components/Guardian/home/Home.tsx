@@ -10,6 +10,7 @@ import { ReportCard } from '@/app/(other_pages)/Veterinarian/(others-pages)/home
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Pusher from 'pusher-js';
+import { downloadUrinalysisPdf } from '@/utils/urinalysisPdf';
 
 function Header({ name }: HeaderProps) {
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
@@ -226,16 +227,6 @@ function formatDateLabel(value: string) {
     return d.toLocaleDateString("en-GB");
 }
 
-async function downloadReadingReport(readingId: string) {
-    const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
-    const data = await res.json().catch(() => null);
-    if (!res.ok) {
-        const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to download report";
-        throw new Error(msg);
-    }
-    return (data as any)?.reading ?? null;
-}
-
 export default function Home() {
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     const router = useRouter();
@@ -371,77 +362,10 @@ export default function Home() {
         });
     }, [latestReading]);
 
-    function toCsvCell(v: unknown): string {
-        const s = v === null || v === undefined ? "" : String(v);
-        const escaped = s.replace(/"/g, '""');
-        return `"${escaped}"`;
-    }
-
-    function buildCsvFromReading(r: any): string {
-        const lines: string[] = [];
-        const crmv =
-            r?.veterinarian?.crmvState && r?.veterinarian?.crmv
-                ? `CRMV-${r.veterinarian.crmvState} ${r.veterinarian.crmv}`
-                : "";
-        lines.push(
-            ["Patient Name", "Guardian Name", "Veterinarian", "CRMV", "Signed At", "Created At"].map(toCsvCell).join(",")
-        );
-        lines.push(
-            [
-                r?.patient?.name || "",
-                r?.guardian?.fullName || "",
-                r?.veterinarian?.fullName || "",
-                crmv,
-                r?.signedAt || "",
-                r?.createdAt || "",
-            ].map(toCsvCell).join(",")
-        );
-        if (r?.identification) {
-            lines.push("");
-            lines.push(["Collection Method", "Collection At", "Strip Lot", "Strip Expiry"].map(toCsvCell).join(","));
-            lines.push(
-                [
-                    r.identification?.collectionMethod || "",
-                    r.identification?.collectionAt || "",
-                    r.identification?.stripLot || "",
-                    r.identification?.stripExpiry || "",
-                ].map(toCsvCell).join(",")
-            );
-        }
-        lines.push("");
-        lines.push(["Key", "Label", "Value", "Unit", "Status"].map(toCsvCell).join(","));
-        const results = Array.isArray(r?.results) ? r.results : [];
-        results.forEach((it: any) => {
-            const value = it?.valueLabel || "";
-            lines.push([it?.key || "", it?.label || "", value, it?.unit || "", it?.status || ""].map(toCsvCell).join(","));
-        });
-        if (r?.report) {
-            lines.push("");
-            lines.push(["Summary and Interpretation"].map(toCsvCell).join(","));
-            lines.push([r.report?.summaryAndInterpretation || r.timer?.analysis?.summary || ""].map(toCsvCell).join(","));
-            lines.push(["Other Information"].map(toCsvCell).join(","));
-            lines.push([r.report?.otherInformation || ""].map(toCsvCell).join(","));
-            lines.push(["Veterinarian Notes"].map(toCsvCell).join(","));
-            lines.push([r.report?.veterinarianNotes || ""].map(toCsvCell).join(","));
-        }
-        return lines.join("\r\n");
-    }
-
     const handleDownloadLatest = useCallback(async () => {
         if (!latestReadingId) return;
         try {
-            const r = latestReading || (await downloadReadingReport(latestReadingId));
-            if (!r) throw new Error("Report not found");
-            const csv = buildCsvFromReading(r);
-            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `urinalysis-report-${r.id || latestReadingId}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
+            await downloadUrinalysisPdf({ readingId: latestReadingId, reading: latestReading });
         } catch (e) {
             const msg = e instanceof Error ? e.message : "Failed to download report";
             console.error(e);
