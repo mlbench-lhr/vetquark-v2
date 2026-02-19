@@ -1029,7 +1029,7 @@ input[type="date"]:valid {
   width: 90% !important;
 }
 .swal2-confirm {
-  background-color: #b32053 !important;
+  background-color: #3F78D8 !important;
   color: white;
   border-radius: 8px;
   width: 45% !important;
@@ -1044,8 +1044,8 @@ input[type="date"]:valid {
   width: 45% !important;
 }
 .swal2-icon.swal2-warning {
-  color: #b32053 !important;
-  border-color: #b32053 !important;
+  color: #3F78D8 !important;
+  border-color: #3F78D8 !important;
   width: 60px;
   height: 60px;
 }

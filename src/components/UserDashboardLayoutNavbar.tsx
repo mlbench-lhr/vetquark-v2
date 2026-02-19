@@ -41,7 +41,7 @@ function ProfileMenu() {
               <ChevronDown
                 size={22}
                 className="cursor-pointer"
-                color="#B32053"
+                color="#3F78D8"
               />
             </PopoverTrigger>
             <PopoverContent className="w-[234px] overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black/5 p-0 top-6 right-0 md:-right-8 absolute">

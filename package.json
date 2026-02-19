@@ -66,6 +66,7 @@
     "recharts": "^2.15.4",
     "signature_pad": "^5.1.3",
     "sweetalert": "^2.1.2",
+    "sweetalert2": "^11.26.18",
     "swiper": "^11.2.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",

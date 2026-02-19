@@ -13,7 +13,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import AddEditProductModal from "@/components/AddEditProductModal";
-import swal from "sweetalert";
+import Swal from "sweetalert2";
 
 type AdminProductRow = {
   id: string;
@@ -164,14 +164,17 @@ export default function Dashboard() {
                         onClick={async (e) => {
                           e.stopPropagation();
                           if (!id) return;
-                          const ok = await (swal as any)({
+                          const result = await Swal.fire({
                             title: "Delete this product?",
                             text: "This will permanently delete the product.",
                             icon: "warning",
-                            buttons: ["Cancel", "Delete"],
-                            dangerMode: true,
+                            showCancelButton: true,
+                            confirmButtonColor: "#3F78D8",
+                            cancelButtonColor: "#d33",
+                            confirmButtonText: "Delete",
+                            cancelButtonText: "Cancel",
                           });
-                          if (!ok) return;
+                          if (!result.isConfirmed) return;
                           try {
                             setDeletingId(id);
                             const res = await fetch(`/api/admin/products/${encodeURIComponent(id)}`, { method: "DELETE" });

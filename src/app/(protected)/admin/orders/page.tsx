@@ -400,12 +400,12 @@ export default function Dashboard() {
                             ) : (
                               <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
                                 <div className="px-4 py-3 text-[12px] font-semibold text-gray-600">ITEMS ORDERED</div>
-                                <div className="border-t border-gray-100">
-                                  <div className="px-4 py-3 grid grid-cols-[1fr_70px_90px_90px] gap-3 text-[12px] text-gray-500">
-                                    <div>Product</div>
+                                <div className="border-t border-gray-100 overflow-auto">
+                                  <div className="px-4 py-3 grid grid-cols-[90px_50px_90px_90px] gap-3 justify-between text-[12px] text-gray-500">
+                                    <div className="">Product</div>
                                     <div className="text-right">Qty</div>
                                     <div className="text-right">Price</div>
-                                    <div className="text-right">Total</div>
+                                    <div className="text-right pe-4">Total</div>
                                   </div>
                                   <div className="border-t border-gray-100">
                                     {orderDetail.items.length ? (
@@ -414,12 +414,12 @@ export default function Dashboard() {
                                         return (
                                           <div
                                             key={`${orderDetail.id}_${idx}`}
-                                            className="px-4 py-3 grid grid-cols-[1fr_70px_90px_90px] gap-3 text-[13px] text-gray-900"
+                                            className="px-4 py-3 grid grid-cols-[90px_50px_90px_90px] gap-3 justify-between text-[13px] text-gray-900"
                                           >
-                                            <div className="min-w-0 truncate font-medium">{it.name}</div>
+                                            <div className=" truncate font-medium">{it.name}</div>
                                             <div className="text-right text-gray-700">{it.quantity}</div>
                                             <div className="text-right text-gray-700">{formatUsd(Number(it.price) || 0)}</div>
-                                            <div className="text-right font-semibold">{formatUsd(lineTotal)}</div>
+                                            <div className="text-right font-semibold pe-4">{formatUsd(lineTotal)}</div>
                                           </div>
                                         );
                                       })
