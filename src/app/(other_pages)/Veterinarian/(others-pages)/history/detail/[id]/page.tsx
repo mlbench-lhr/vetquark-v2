@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
+import { pdf, Document, Page as PDFPage, Text, View, StyleSheet, Image as PdfImage } from "@react-pdf/renderer";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -41,7 +42,16 @@ type ReadingDetail = {
   } | null;
   patient: { id: string; name: string; photo: string | null };
   guardian: { id: string; fullName: string };
-  veterinarian: { id: string; fullName: string; crmv: string | null; crmvState: string | null };
+  veterinarian: {
+    id: string;
+    fullName: string;
+    crmv: string | null;
+    crmvState: string | null;
+    tradeName?: string | null;
+    clinicLogoUrl?: string | null;
+    reportHeaderAddress?: string | null;
+    reportFooter?: string | null;
+  };
 };
 
 function ResultRow({ item }: { item: ReadingResult }) {
@@ -73,6 +83,20 @@ function formatDateTimeLabel(value: string | null) {
   return `${date}, ${time}`;
 }
 
+function formatCollectionMethod(value: string | null | undefined) {
+  const v = (value || "").trim().toLowerCase();
+  if (!v) return "";
+  if (v === "free_catch") return "Free catch";
+  if (v === "cystocentesis") return "Cystocentesis";
+  if (v === "catheter") return "Catheter";
+  return value || "";
+}
+
+function asReportText(value: string | null | undefined) {
+  const s = typeof value === "string" ? value.trim() : "";
+  return s ? s : "N/A";
+}
+
 async function downloadReadingReport(readingId: string) {
   const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
   const data = await res.json().catch(() => null);
@@ -83,7 +107,7 @@ async function downloadReadingReport(readingId: string) {
   return (data as any)?.reading ?? null;
 }
 
-async function shareReadingReport(readingId: string) {
+async function shareReadingReport() {
   const url = window.location.href;
   const navAny = navigator as any;
   if (typeof navAny?.share === "function") {
@@ -104,7 +128,6 @@ export default function ReportDetailsPage() {
   const readingId = useMemo(() => String((params as any)?.id || "").trim(), [params]);
   const [loading, setLoading] = useState(false);
   const [reading, setReading] = useState<ReadingDetail | null>(null);
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   useEffect(() => {
     if (!readingId) return;
@@ -151,161 +174,227 @@ export default function ReportDetailsPage() {
     return { physicalResults, chemicalResults, microscopicResults };
   }, [reading]);
 
-  function toCsvCell(v: unknown): string {
-    const s = v === null || v === undefined ? "" : String(v);
-    const escaped = s.replace(/"/g, '""');
-    return `"${escaped}"`;
-  }
+  const handleDownloadPdf = useCallback(async () => {
+    try {
+      const r = (reading || (await downloadReadingReport(readingId))) as ReadingDetail | null;
+      if (!r) throw new Error("Report not found");
 
-  function buildCsvFromReading(r: ReadingDetail): string {
-    const lines: string[] = [];
-    const crmv =
-      r.veterinarian.crmvState && r.veterinarian.crmv
-        ? `CRMV-${r.veterinarian.crmvState} ${r.veterinarian.crmv}`
-        : "";
-    lines.push(
-      ["Patient Name", "Guardian Name", "Veterinarian", "CRMV", "Signed At", "Created At"].map(toCsvCell).join(",")
-    );
-    lines.push(
-      [
-        r.patient.name,
-        r.guardian.fullName,
-        r.veterinarian.fullName,
-        crmv,
-        r.signedAt || "",
-        r.createdAt || "",
-      ].map(toCsvCell).join(",")
-    );
-    if (r.identification) {
-      lines.push("");
-      lines.push(["Collection Method", "Collection At", "Strip Lot", "Strip Expiry"].map(toCsvCell).join(","));
-      lines.push(
-        [
-          r.identification.collectionMethod || "",
-          r.identification.collectionAt || "",
-          r.identification.stripLot || "",
-          r.identification.stripExpiry || "",
-        ].map(toCsvCell).join(",")
+      const reportStyles = StyleSheet.create({
+        page: { padding: 16, paddingBottom: 110, fontSize: 10, color: "#111827" },
+        header: { marginBottom: 0 },
+        headerRow: { display: "flex", flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
+        appLogo: { width: 86, height: 18 },
+        clinicBlock: { display: "flex", alignItems: "flex-end" },
+        title: { fontSize: 14, fontWeight: 700, textAlign: "right" },
+        subtitle: { marginTop: 2, fontSize: 8, color: "#6B7280" },
+        divider: { marginTop: 10, height: 1, backgroundColor: "#E5E7EB" },
+        sectionTitle: { marginTop: 10, marginBottom: 6, fontSize: 12, fontWeight: 700 },
+        metaGrid: { display: "flex", flexDirection: "row", gap: 12 },
+        metaCol: { flex: 1 },
+        metaRow: { display: "flex", flexDirection: "row", marginTop: 2 },
+        metaKey: { width: 110, fontSize: 8, color: "#6B7280" },
+        metaValue: { flex: 1, fontSize: 8, color: "#111827" },
+        table: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 6, overflow: "hidden" },
+        tr: { display: "flex", flexDirection: "row", borderTopWidth: 1, borderTopColor: "#E5E7EB" },
+        trHead: { backgroundColor: "#F3F4F6", borderTopWidth: 0 },
+        th: { paddingVertical: 7, paddingHorizontal: 8, fontSize: 8, fontWeight: 700, color: "#111827" },
+        td: { paddingVertical: 7, paddingHorizontal: 8, fontSize: 8, color: "#111827" },
+        colParam: { flex: 4 },
+        colResult: { flex: 2 },
+        colUnit: { flex: 2 },
+        colStatus: { flex: 2 },
+        statusNormal: { color: "#059669", fontWeight: 700 },
+        statusAbnormal: { color: "#D97706", fontWeight: 700 },
+        block: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 10, backgroundColor: "#F9FAFB" },
+        blockText: { marginTop: 0, fontSize: 8, color: "#111827", lineHeight: 1.35 },
+        footer: { marginTop: 18, fontSize: 9, color: "#6B7280" },
+        signatureArea: {
+          position: "absolute",
+          left: 16,
+          right: 16,
+          bottom: 16,
+          paddingTop: 10,
+          borderTopWidth: 1,
+          borderTopColor: "#E5E7EB",
+        },
+        signatureRow: { display: "flex", flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" },
+        signatureLabel: { fontSize: 8, color: "#6B7280" },
+        signatureName: { fontSize: 10, fontWeight: 700, color: "#111827" },
+        signatureCrmv: { marginTop: 2, fontSize: 8, color: "#6B7280" },
+        signatureImage: { width: 160, height: 48, objectFit: "contain" },
+      });
+
+      const results = Array.isArray(r.results) ? r.results : [];
+      const physicalKeys = new Set(["ph", "specific-gravity"]);
+      const physical = results.filter((it) => physicalKeys.has(it.key));
+      const chemical = results.filter((it) => !physicalKeys.has(it.key));
+      const microscopic: ReadingResult[] = [];
+
+      const clinicName = (r.veterinarian.tradeName || "").trim() || r.veterinarian.fullName;
+      const crmvLabel =
+        r.veterinarian.crmvState && r.veterinarian.crmv ? `CRMV-${r.veterinarian.crmvState} ${r.veterinarian.crmv}` : "";
+      const generatedAt = formatDateTimeLabel(r.signedAt || r.createdAt || null);
+      const appLogoUrl = `${window.location.origin}/blueLogo.png`;
+      const signatureUrl = String(r.signatureImageUrl || "").trim();
+
+      const renderTable = (items: ReadingResult[]) => (
+        <View style={reportStyles.table}>
+          <View style={[reportStyles.tr, reportStyles.trHead]}>
+            <Text style={[reportStyles.th, reportStyles.colParam]}>Parameter</Text>
+            <Text style={[reportStyles.th, reportStyles.colResult]}>Result</Text>
+            <Text style={[reportStyles.th, reportStyles.colUnit]}>Unit</Text>
+            <Text style={[reportStyles.th, reportStyles.colStatus]}>Status</Text>
+          </View>
+          {items.map((it) => (
+            <View key={it.key} style={reportStyles.tr}>
+              <Text style={[reportStyles.td, reportStyles.colParam]}>{asReportText(it.label)}</Text>
+              <Text style={[reportStyles.td, reportStyles.colResult]}>{asReportText(it.valueLabel)}</Text>
+              <Text style={[reportStyles.td, reportStyles.colUnit]}>{asReportText(it.unit || "")}</Text>
+              <Text
+                style={[
+                  reportStyles.td,
+                  reportStyles.colStatus,
+                  it.status === "Normal" ? reportStyles.statusNormal : reportStyles.statusAbnormal,
+                ]}
+              >
+                {it.status}
+              </Text>
+            </View>
+          ))}
+        </View>
       );
-    }
-    lines.push("");
-    lines.push(["Key", "Label", "Value", "Unit", "Status"].map(toCsvCell).join(","));
-    const results = Array.isArray(r.results) ? r.results : [];
-    results.forEach((it) => {
-      const value = it.valueLabel;
-      lines.push([it.key, it.label, value, it.unit || "", it.status].map(toCsvCell).join(","));
-    });
-    if (r.report) {
-      lines.push("");
-      lines.push(["Summary and Interpretation"].map(toCsvCell).join(","));
-      lines.push([r.report.summaryAndInterpretation || r.timer?.analysis?.summary || ""].map(toCsvCell).join(","));
-      lines.push(["Other Information"].map(toCsvCell).join(","));
-      lines.push([r.report.otherInformation || ""].map(toCsvCell).join(","));
-      lines.push(["Veterinarian Notes"].map(toCsvCell).join(","));
-      lines.push([r.report.veterinarianNotes || ""].map(toCsvCell).join(","));
-    }
-    return lines.join("\r\n");
-  }
 
-  function buildExcelHtmlFromReading(r: ReadingDetail): string {
-    const crmv =
-      r.veterinarian.crmvState && r.veterinarian.crmv
-        ? `CRMV-${r.veterinarian.crmvState} ${r.veterinarian.crmv}`
-        : "";
-    const rows = Array.isArray(r.results) ? r.results : [];
-    const metaRows = `
-      <tr><th>Patient Name</th><td>${r.patient.name}</td></tr>
-      <tr><th>Guardian Name</th><td>${r.guardian.fullName}</td></tr>
-      <tr><th>Veterinarian</th><td>${r.veterinarian.fullName}</td></tr>
-      <tr><th>CRMV</th><td>${crmv}</td></tr>
-      <tr><th>Signed At</th><td>${r.signedAt || ""}</td></tr>
-      <tr><th>Created At</th><td>${r.createdAt || ""}</td></tr>
-    `;
-    const idRows = r.identification
-      ? `
-      <tr><th>Collection Method</th><td>${r.identification.collectionMethod || ""}</td></tr>
-      <tr><th>Collection At</th><td>${r.identification.collectionAt || ""}</td></tr>
-      <tr><th>Strip Lot</th><td>${r.identification.stripLot || ""}</td></tr>
-      <tr><th>Strip Expiry</th><td>${r.identification.stripExpiry || ""}</td></tr>
-    `
-      : "";
-    const resultRows = rows
-      .map(
-        (it) =>
-          `<tr><td>${it.key}</td><td>${it.label}</td><td>${it.valueLabel}</td><td>${it.unit || ""}</td><td>${it.status}</td></tr>`
-      )
-      .join("");
-    const reportSection = r.report
-      ? `
-      <tr><th>Summary and Interpretation</th><td>${r.report.summaryAndInterpretation || r.timer?.analysis?.summary || ""}</td></tr>
-      <tr><th>Other Information</th><td>${r.report.otherInformation || ""}</td></tr>
-      <tr><th>Veterinarian Notes</th><td>${r.report.veterinarianNotes || ""}</td></tr>
-    `
-      : "";
-    const html = `
-    <html>
-      <head><meta charset="utf-8" /></head>
-      <body>
-        <table border="1" cellspacing="0" cellpadding="4">
-          <thead>
-            <tr><th colspan="2">Report Metadata</th></tr>
-          </thead>
-          <tbody>
-            ${metaRows}
-            ${idRows}
-            ${reportSection}
-          </tbody>
-        </table>
-        <br />
-        <table border="1" cellspacing="0" cellpadding="4">
-          <thead>
-            <tr><th>Key</th><th>Label</th><th>Value</th><th>Unit</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            ${resultRows}
-          </tbody>
-        </table>
-      </body>
-    </html>`;
-    return html;
-  }
+      const buildDocument = () => (
+        <Document>
+          <PDFPage size="A4" style={reportStyles.page}>
+            <View style={reportStyles.header}>
+              <View style={reportStyles.headerRow}>
+                <PdfImage src={{ uri: appLogoUrl }} style={reportStyles.appLogo} />
+                <View style={reportStyles.clinicBlock}>
+                  <Text style={reportStyles.title}>{clinicName}</Text>
+                  {crmvLabel ? <Text style={reportStyles.subtitle}>{crmvLabel}</Text> : null}
+                  {(r.veterinarian.reportHeaderAddress || "").trim() ? (
+                    <Text style={reportStyles.subtitle}>{String(r.veterinarian.reportHeaderAddress || "").trim()}</Text>
+                  ) : null}
+                </View>
+              </View>
+              <View style={reportStyles.divider} />
+            </View>
 
-  const handleDownloadCsv = useCallback(async () => {
-    try {
-      const r = reading || (await downloadReadingReport(readingId));
-      if (!r) throw new Error("Report not found");
-      const csv = buildCsvFromReading(r as ReadingDetail);
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            <Text style={reportStyles.sectionTitle}>Urinalysis Report</Text>
+            <View style={reportStyles.metaGrid}>
+              <View style={reportStyles.metaCol}>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>Report ID</Text>
+                  <Text style={reportStyles.metaValue}>{asReportText(r.id)}</Text>
+                </View>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>Generated</Text>
+                  <Text style={reportStyles.metaValue}>{asReportText(generatedAt)}</Text>
+                </View>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>Patient</Text>
+                  <Text style={reportStyles.metaValue}>{asReportText(r.patient?.name)}</Text>
+                </View>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>Guardian</Text>
+                  <Text style={reportStyles.metaValue}>{asReportText(r.guardian?.fullName)}</Text>
+                </View>
+              </View>
+              <View style={reportStyles.metaCol}>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>Collection</Text>
+                  <Text style={reportStyles.metaValue}>{asReportText(formatCollectionMethod(r.identification?.collectionMethod))}</Text>
+                </View>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>Collected At</Text>
+                  <Text style={reportStyles.metaValue}>{asReportText(r.identification?.collectionAt || "")}</Text>
+                </View>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>Strip Lot</Text>
+                  <Text style={reportStyles.metaValue}>{asReportText(r.identification?.stripLot || "")}</Text>
+                </View>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>Strip Expiry</Text>
+                  <Text style={reportStyles.metaValue}>{asReportText(r.identification?.stripExpiry || "")}</Text>
+                </View>
+              </View>
+            </View>
+
+            {physical.length ? (
+              <>
+                <Text style={reportStyles.sectionTitle}>Physical Parameters</Text>
+                {renderTable(physical)}
+              </>
+            ) : null}
+
+            {chemical.length ? (
+              <>
+                <Text style={reportStyles.sectionTitle}>Chemical Parameters</Text>
+                {renderTable(chemical)}
+              </>
+            ) : null}
+
+            {microscopic.length ? (
+              <>
+                <Text style={reportStyles.sectionTitle}>Microscopic Parameters</Text>
+                {renderTable(microscopic)}
+              </>
+            ) : null}
+
+            <Text style={reportStyles.sectionTitle}>Remarks</Text>
+            <View>
+              <Text style={reportStyles.blockText}>
+                {asReportText(r.report?.summaryAndInterpretation || r.timer?.analysis?.summary || "")}
+              </Text>
+            </View>
+
+            <Text style={reportStyles.sectionTitle}>Additional Information</Text>
+            <View>
+              <Text style={reportStyles.blockText}>{asReportText(r.report?.otherInformation || "")}</Text>
+            </View>
+
+            <Text style={reportStyles.sectionTitle}>Veterinarian Notes</Text>
+            <View>
+              <Text style={reportStyles.blockText}>{asReportText(r.report?.veterinarianNotes || "")}</Text>
+            </View>
+
+            {/* {(r.veterinarian.reportFooter || "").trim() ? (
+              <Text style={reportStyles.footer}>{String(r.veterinarian.reportFooter || "").trim()}</Text>
+            ) : null} */}
+
+            {/* <View style={reportStyles.signatureArea}> */}
+            <View>
+              <View style={reportStyles.signatureRow}>
+                <View>
+                  <Text style={reportStyles.signatureLabel}>Veterinarian</Text>
+                  <Text style={reportStyles.signatureName}>{asReportText(r.veterinarian.fullName)}</Text>
+                  {crmvLabel ? <Text style={reportStyles.signatureCrmv}>{crmvLabel}</Text> : null}
+                  {generatedAt ? <Text style={reportStyles.signatureCrmv}>Signed at {generatedAt}</Text> : null}
+                </View>
+                <View>
+                  <Text style={[reportStyles.signatureLabel, { textAlign: "right" }]}>Signature</Text>
+                  {signatureUrl ? (
+                    <PdfImage src={{ uri: signatureUrl }} style={reportStyles.signatureImage} />
+                  ) : (
+                    <Text style={[reportStyles.signatureCrmv, { textAlign: "right" }]}>N/A</Text>
+                  )}
+                </View>
+              </View>
+            </View>
+          </PDFPage>
+        </Document>
+      );
+
+      const blob = await pdf(buildDocument()).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `urinalysis-report-${r.id}.csv`;
+      a.download = `urinalysis-report-${r.id}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setShowDownloadMenu(false);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to download report";
-      toast.error(msg);
-    }
-  }, [reading, readingId]);
-
-  const handleDownloadXls = useCallback(async () => {
-    try {
-      const r = reading || (await downloadReadingReport(readingId));
-      if (!r) throw new Error("Report not found");
-      const html = buildExcelHtmlFromReading(r as ReadingDetail);
-      const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `urinalysis-report-${r.id}.xls`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      setShowDownloadMenu(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to download report";
       toast.error(msg);
@@ -315,7 +404,7 @@ export default function ReportDetailsPage() {
   const handleShare = useCallback(async () => {
     if (!readingId) return;
     try {
-      await shareReadingReport(readingId);
+      await shareReadingReport();
       toast.success("Report link ready");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Share failed";
@@ -340,36 +429,16 @@ export default function ReportDetailsPage() {
           </button>
           <h1 className="text-base font-medium text-gray-900">{t("history.details")}</h1>
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <button
-                type="button"
-                aria-label="Download report"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#EBF2FF]"
-                onClick={() => setShowDownloadMenu((v) => !v)}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="17" viewBox="0 0 14 17" fill="none">
-                  <path d="M6.66667 0L6.76417 0.00583331C6.95018 0.0277699 7.12338 0.111733 7.25582 0.244176C7.38827 0.376619 7.47223 0.549819 7.49417 0.735833L7.5 0.833333V4.16667L7.50417 4.29167C7.53399 4.68848 7.7048 5.06152 7.98572 5.34336C8.26664 5.62519 8.63912 5.79722 9.03583 5.82833L9.16667 5.83333H12.5L12.5975 5.83917C12.7835 5.8611 12.9567 5.94507 13.0892 6.07751C13.2216 6.20995 13.3056 6.38315 13.3275 6.56917L13.3333 6.66667V14.1667C13.3334 14.8043 13.0897 15.4179 12.6523 15.8819C12.2148 16.3458 11.6166 16.6251 10.98 16.6625L10.8333 16.6667H2.5C1.86232 16.6667 1.24874 16.4231 0.784783 15.9856C0.320828 15.5481 0.0415771 14.9499 0.00416677 14.3133L3.88371e-09 14.1667V2.5C-3.55181e-05 1.86232 0.243604 1.24874 0.68107 0.784783C1.11854 0.320828 1.71676 0.0415771 2.35333 0.00416676L2.5 0H6.66667ZM6.66667 6.66667C6.44565 6.66667 6.23369 6.75446 6.07741 6.91074C5.92113 7.06702 5.83333 7.27899 5.83333 7.5V10.4875L5.1725 9.8275C5.02901 9.68402 4.83809 9.59783 4.63557 9.58509C4.43305 9.57236 4.23284 9.63396 4.0725 9.75833L3.99417 9.8275C3.83794 9.98377 3.75018 10.1957 3.75018 10.4167C3.75018 10.6376 3.83794 10.8496 3.99417 11.0058L6.0775 13.0892L6.11417 13.1242L6.17083 13.17L6.2625 13.2292L6.3575 13.2742L6.445 13.3033L6.57 13.3283L6.66667 13.3333L6.76417 13.3275L6.86167 13.3108L6.95167 13.2833L7.01917 13.255L7.10083 13.2117L7.1775 13.1583L7.25583 13.0892L9.33917 11.0058C9.49539 10.8496 9.58315 10.6376 9.58315 10.4167C9.58315 10.1957 9.49539 9.98377 9.33917 9.8275L9.26083 9.75833C9.1005 9.63396 8.90029 9.57236 8.69777 9.58509C8.49524 9.59783 8.30433 9.68402 8.16083 9.8275L7.5 10.4867V7.5C7.49997 7.29589 7.42504 7.09889 7.2894 6.94636C7.15377 6.79383 6.96688 6.69638 6.76417 6.6725L6.66667 6.66667ZM9.16583 0.8325L12.5 4.16667H9.16667L9.16583 0.8325Z" fill="#3F78D8" />
-                </svg>
-              </button>
-              {showDownloadMenu ? (
-                <div className="absolute right-0 mt-2 w-32 rounded-lg border bg-white shadow-theme-xs p-1 z-10">
-                  <button
-                    type="button"
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm"
-                    onClick={handleDownloadCsv}
-                  >
-                    CSV
-                  </button>
-                  <button
-                    type="button"
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm"
-                    onClick={handleDownloadXls}
-                  >
-                    Excel
-                  </button>
-                </div>
-              ) : null}
-            </div>
+            <button
+              type="button"
+              aria-label="Download report (PDF)"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#EBF2FF]"
+              onClick={handleDownloadPdf}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="17" viewBox="0 0 14 17" fill="none">
+                <path d="M6.66667 0L6.76417 0.00583331C6.95018 0.0277699 7.12338 0.111733 7.25582 0.244176C7.38827 0.376619 7.47223 0.549819 7.49417 0.735833L7.5 0.833333V4.16667L7.50417 4.29167C7.53399 4.68848 7.7048 5.06152 7.98572 5.34336C8.26664 5.62519 8.63912 5.79722 9.03583 5.82833L9.16667 5.83333H12.5L12.5975 5.83917C12.7835 5.8611 12.9567 5.94507 13.0892 6.07751C13.2216 6.20995 13.3056 6.38315 13.3275 6.56917L13.3333 6.66667V14.1667C13.3334 14.8043 13.0897 15.4179 12.6523 15.8819C12.2148 16.3458 11.6166 16.6251 10.98 16.6625L10.8333 16.6667H2.5C1.86232 16.6667 1.24874 16.4231 0.784783 15.9856C0.320828 15.5481 0.0415771 14.9499 0.00416677 14.3133L3.88371e-09 14.1667V2.5C-3.55181e-05 1.86232 0.243604 1.24874 0.68107 0.784783C1.11854 0.320828 1.71676 0.0415771 2.35333 0.00416676L2.5 0H6.66667ZM6.66667 6.66667C6.44565 6.66667 6.23369 6.75446 6.07741 6.91074C5.92113 7.06702 5.83333 7.27899 5.83333 7.5V10.4875L5.1725 9.8275C5.02901 9.68402 4.83809 9.59783 4.63557 9.58509C4.43305 9.57236 4.23284 9.63396 4.0725 9.75833L3.99417 9.8275C3.83794 9.98377 3.75018 10.1957 3.75018 10.4167C3.75018 10.6376 3.83794 10.8496 3.99417 11.0058L6.0775 13.0892L6.11417 13.1242L6.17083 13.17L6.2625 13.2292L6.3575 13.2742L6.445 13.3033L6.57 13.3283L6.66667 13.3333L6.76417 13.3275L6.86167 13.3108L6.95167 13.2833L7.01917 13.255L7.10083 13.2117L7.1775 13.1583L7.25583 13.0892L9.33917 11.0058C9.49539 10.8496 9.58315 10.6376 9.58315 10.4167C9.58315 10.1957 9.49539 9.98377 9.33917 9.8275L9.26083 9.75833C9.1005 9.63396 8.90029 9.57236 8.69777 9.58509C8.49524 9.59783 8.30433 9.68402 8.16083 9.8275L7.5 10.4867V7.5C7.49997 7.29589 7.42504 7.09889 7.2894 6.94636C7.15377 6.79383 6.96688 6.69638 6.76417 6.6725L6.66667 6.66667ZM9.16583 0.8325L12.5 4.16667H9.16667L9.16583 0.8325Z" fill="#3F78D8" />
+              </svg>
+            </button>
             <button
               type="button"
               aria-label="Share report"
@@ -393,8 +462,8 @@ export default function ReportDetailsPage() {
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#F5F6F6]">
                   <Image
-                  width={100}
-                  height={100}
+                    width={100}
+                    height={100}
                     src={reading.patient.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
                     alt={reading.patient.name}
                     className="h-full w-full object-cover"
