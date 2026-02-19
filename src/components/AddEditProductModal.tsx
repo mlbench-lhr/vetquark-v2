@@ -171,7 +171,7 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[95%] overflow-auto h-[90vh] md:h-fit md:max-w-[720px]">
+      <DialogContent className="max-w-[95%] overflow-auto max-h-[95vh] md:max-w-[720px]">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Product" : "Add New Product"}</DialogTitle>
         </DialogHeader>
