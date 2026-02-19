@@ -54,6 +54,25 @@ type ReadingDetail = {
   };
 };
 
+const REFERENCE_RANGES_BY_KEY: Record<string, string> = {
+  "specific-gravity": "1.015-1.030",
+  ph: "5.5-7.0",
+  protein: "0-15",
+  glucose: "Negative",
+  "ketone-bodies": "Negative",
+  bilirubin: "Negative",
+  urobilinogen: "0-1",
+  nitrite: "Negative",
+  "ascorbic-acid": "0",
+  leukocytes: "Negative",
+  blood: "Negative",
+  microalbumin: "< 0.03",
+  creatine: "0.9-26.5",
+  calcium: "0-2.5",
+  magnesium: "0-1.5",
+  "ammonium-chloride": "0",
+};
+
 function ResultRow({ item }: { item: ReadingResult }) {
   const isNormal = item.status === "Normal";
   const dotColor = isNormal ? "#10B981" : "#F59E0B";
@@ -216,12 +235,14 @@ export default function ReportDetailsPage() {
           borderBottomColor: "#E5E7EB",
         },
         tableRowLast: { borderBottomWidth: 0 },
-        colName: { flex: 1.6, paddingRight: 8 },
-        colValue: { flex: 1.2, paddingRight: 8 },
-        colStatus: { flex: 0.7 },
+        colName: { flex: 1.5, paddingRight: 8 },
+        colValue: { flex: 1.0, paddingRight: 8 },
+        colRange: { flex: 1.1, paddingRight: 8 },
+        colStatus: { flex: 0.6 },
         tableHeaderText: { fontSize: 8, fontWeight: 700, color: "#374151" },
         tableCellLabel: { fontSize: 8, fontWeight: 700, color: "#111827" },
         tableCellValue: { fontSize: 8, color: "#111827" },
+        tableCellRange: { fontSize: 8, color: "#4B5563" },
         tableCellStatus: { fontSize: 8, fontWeight: 700, textAlign: "right" },
         tableCellStatusNormal: { color: "#6B7280" },
         tableCellStatusAbnormal: { color: "#111827" },
@@ -258,6 +279,10 @@ export default function ReportDetailsPage() {
         const u = (it.unit || "").trim();
         if (v && u) return `${v} ${u}`;
         return v || u || "";
+      };
+      const rangeLabelForKey = (key: string) => {
+        const v = String(REFERENCE_RANGES_BY_KEY[key] ?? "").trim();
+        return v ? v : "—";
       };
 
       const buildDocument = () => (
@@ -326,6 +351,9 @@ export default function ReportDetailsPage() {
                 <View style={reportStyles.colValue}>
                   <Text style={reportStyles.tableHeaderText}>Result</Text>
                 </View>
+                <View style={reportStyles.colRange}>
+                  <Text style={reportStyles.tableHeaderText}>Reference</Text>
+                </View>
                 <View style={reportStyles.colStatus}>
                   <Text style={[reportStyles.tableHeaderText, { textAlign: "right" }]}>Status</Text>
                 </View>
@@ -340,6 +368,9 @@ export default function ReportDetailsPage() {
                   </View>
                   <View style={reportStyles.colValue}>
                     <Text style={reportStyles.tableCellValue}>{asReportText(valueWithUnit(it))}</Text>
+                  </View>
+                  <View style={reportStyles.colRange}>
+                    <Text style={reportStyles.tableCellRange}>{rangeLabelForKey(it.key)}</Text>
                   </View>
                   <View style={reportStyles.colStatus}>
                     <Text
