@@ -171,13 +171,13 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[720px]">
+      <DialogContent className="max-w-[95%] overflow-auto h-[90vh] md:h-fit md:max-w-[720px]">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Product" : "Add New Product"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="w-full rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <div className="w-full rounded-xl border border-gray-200 bg-gray-50 p-2 md:p-4">
             <label className="block cursor-pointer">
               <input type="file" accept="image/*" onChange={handleProductImageChange} className="hidden" disabled={saving || uploadingImage} />
               <div className="flex items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-4 py-10 text-center">
