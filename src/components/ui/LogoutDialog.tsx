@@ -11,6 +11,7 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import { Dialog, DialogContent, DialogTrigger } from "./dialog";
+import Swal from "sweetalert2";
 
 async function signOutUser() {
   try {
@@ -264,15 +265,18 @@ export default function LogoutDialog({
   };
 
   const handleAdminLogout = async () => {
-    const confirmed = await (swal as any)({
+    const result = await Swal.fire({
       title: "Logout",
       text: "Are you sure you want to logout?",
       icon: "warning",
-      buttons: ["Cancel", "Logout"],
-      dangerMode: true,
+      showCancelButton: true,
+      confirmButtonColor: "#B32053",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Logout",
+      cancelButtonText: "Cancel",
     });
 
-    if (!confirmed) return;
+    if (!result.isConfirmed) return;
 
     dispatch(clearAdminProfile());
     await signOutAdmin();
