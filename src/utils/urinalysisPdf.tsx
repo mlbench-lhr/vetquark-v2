@@ -16,6 +16,8 @@ type ReadingResult = {
 
 type ReadingDetail = {
   id: string;
+  productCode?: string;
+  panelVersion?: number;
   signedAt: string | null;
   createdAt: string | null;
   signatureImageUrl: string | null;
@@ -47,6 +49,34 @@ type ReadingDetail = {
     reportFooter?: string | null;
   };
 };
+
+function visibleKeysForProductCode(productCode?: string | null): string[] | null {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_MASTER_360") return null;
+  if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
+  if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_ADVANCED") return ["protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+  if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
+  if (code === "VETQ_GERIATRIC_CARE") {
+    return [
+      "glucose",
+      "ketone-bodies",
+      "protein",
+      "microalbumin",
+      "creatine",
+      "calcium",
+      "bilirubin",
+      "urobilinogen",
+      "leukocytes",
+      "nitrite",
+      "blood",
+      "ph",
+      "specific-gravity",
+    ];
+  }
+  return null;
+}
 
 const REFERENCE_RANGES_BY_KEY: Record<string, string> = {
   "specific-gravity": "1.015-1.030",
@@ -167,7 +197,9 @@ export async function downloadUrinalysisPdf({ readingId, reading }: { readingId:
     signatureImage: { width: 160, height: 48, objectFit: "contain" },
   });
 
-  const results = Array.isArray(r.results) ? r.results : [];
+  const resultsAll = Array.isArray(r.results) ? r.results : [];
+  const keys = visibleKeysForProductCode(r.productCode);
+  const results = keys ? resultsAll.filter((it) => keys.includes(it.key)) : resultsAll;
   const physicalKeys = new Set(["ph", "specific-gravity"]);
   const physical = results.filter((it) => physicalKeys.has(it.key));
   const chemical = results.filter((it) => !physicalKeys.has(it.key));
@@ -339,4 +371,3 @@ export async function downloadUrinalysisPdf({ readingId, reading }: { readingId:
   a.remove();
   URL.revokeObjectURL(url);
 }
-

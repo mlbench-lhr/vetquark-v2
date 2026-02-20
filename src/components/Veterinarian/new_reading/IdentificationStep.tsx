@@ -23,9 +23,64 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   const [amountLabel, setAmountLabel] = useState<string | undefined>(undefined)
   const [generating, setGenerating] = useState(false)
   const [sending, setSending] = useState(false)
+  const [panelPickerOpen, setPanelPickerOpen] = useState(false)
 
   const collectionRef = useRef<HTMLInputElement | null>(null)
   const stripExpiryRef = useRef<HTMLInputElement | null>(null)
+
+  const PANELS = useMemo(
+    () => [
+      {
+        code: "VETQ_U_START",
+        title: "U-Start",
+        description: "Essential urinary triage",
+        params: "LEU, NIT, BLD, PH, SG",
+      },
+      {
+        code: "VETQ_METABOLIC_CHECK",
+        title: "Metabolic Check",
+        description: "Metabolic screening",
+        params: "GLU, KET, PH, SG",
+      },
+      {
+        code: "VETQ_RENAL_EXPRESS",
+        title: "Renal Express",
+        description: "Early renal screening",
+        params: "GLU, KET, PH, SG",
+      },
+      {
+        code: "VETQ_RENAL_ADVANCED",
+        title: "Renal Advanced",
+        description: "Renal + minerals",
+        params: "PRO, MAL, CRE, CA, MG, PH, SG",
+      },
+      {
+        code: "VETQ_HEPATOSCREEN",
+        title: "HepatoScreen",
+        description: "Indirect hepatobiliary screening",
+        params: "BIL, UBG, PH, SG",
+      },
+      {
+        code: "VETQ_GERIATRIC_CARE",
+        title: "Geriatric Care",
+        description: "Preventive 7+ protocol",
+        params: "GLU, KET, PRO, MAL, CRE, CA, BIL, UBG, LEU, NIT, BLD, PH, SG",
+      },
+      {
+        code: "VETQ_MASTER_360",
+        title: "Master 360",
+        description: "Complete 16-parameter protocol",
+        params: "",
+      },
+    ],
+    []
+  )
+
+  const selectedPanelCode = (value.panelProductCode || "").trim() || "VETQ_MASTER_360"
+  const selectedPanel = useMemo(
+    () => PANELS.find((p) => p.code === selectedPanelCode) ?? PANELS[PANELS.length - 1],
+    [PANELS, selectedPanelCode]
+  )
 
   useEffect(() => {
     ; (async () => {
@@ -184,6 +239,21 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         </div>
 
         <div>
+          <div className="text-sm text-gray-900 mb-2">Panel Type</div>
+          <button
+            type="button"
+            onClick={() => setPanelPickerOpen(true)}
+            className="relative w-full px-4 py-4 bg-gray-100 rounded-2xl text-left text-gray-700"
+          >
+            <div className="text-[15px] leading-[18px] text-gray-900">{selectedPanel.title}</div>
+            <div className="mt-1 text-[13px] leading-[16px] text-[#9AA4AF]">
+              {selectedPanel.description}
+            </div>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
+          </button>
+        </div>
+
+        <div>
           <div className="text-sm text-gray-900 mb-2">{t("reading.identification.collectionMethod")}</div>
           <div className="relative">
             <select
@@ -302,7 +372,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
               const res = await fetch('/api/payment_links/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ patientId: value.patientId }),
+                body: JSON.stringify({ patientId: value.patientId, productCode: selectedPanelCode }),
               })
               const data = await res.json().catch(() => null)
               if (!res.ok) {
@@ -326,6 +396,54 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
           {generating ? t("reading.identification.generating") : (value.paymentLinkId || paymentLinkId ? t("reading.identification.viewPaymentLink") : t("reading.identification.generatePaymentLink"))}
         </button>
       </div>
+
+      {panelPickerOpen ? (
+        <div className="fixed inset-0 z-50">
+          <button
+            type="button"
+            aria-label="Close"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setPanelPickerOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 rounded-t-[22px] bg-white shadow-xl">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <div className="text-[18px] font-semibold text-gray-900">Panel Type</div>
+              <div className="mt-1 text-[13px] leading-[16px] text-[#9AA4AF]">
+                Tap to select a panel type, you can only select one at a time
+              </div>
+            </div>
+            <div className="max-h-[70vh] overflow-auto px-4 py-3">
+              <div className="space-y-3 pb-4">
+                {PANELS.map((p) => {
+                  const selected = p.code === selectedPanelCode
+                  return (
+                    <button
+                      key={p.code}
+                      type="button"
+                      onClick={() => {
+                        setPanelPickerOpen(false)
+                        if (p.code === selectedPanelCode) return
+                        setShowLink(false)
+                        setAmountLabel(undefined)
+                        setPaymentLinkId(null)
+                        onChange({ panelProductCode: p.code, paymentLinkId: "" })
+                      }}
+                      className={`w-full rounded-[14px] px-4 py-3 text-left ${selected ? "bg-[#EEF4FF]" : "bg-[#F5F6F6]"}`}
+                    >
+                      <div className="text-[15px] font-medium leading-[18px] text-[#111827]">
+                        {p.title}{p.description ? ` (${p.description})` : ""}
+                      </div>
+                      {p.params ? (
+                        <div className="mt-1 text-[13px] leading-[16px] text-[#9AA4AF]">{p.params}</div>
+                      ) : null}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

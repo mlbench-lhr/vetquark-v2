@@ -203,13 +203,17 @@ export async function POST(req: NextRequest) {
 
     let paymentStatus: "pending" | "paid" | "expired" | null = null;
     let paymentLinkReadingId: string | null = null;
+    let linkProductCode: string | null = null;
+    let linkPanelVersion: number | null = null;
     if (paymentLinkId) {
       const link = await PaymentLink.findOne({ _id: paymentLinkId, veterinarian: veterinarianId, patient: patientId })
-        .select("_id status reading expiresAt createdAt")
+        .select("_id status reading expiresAt createdAt productCode panelVersion")
         .lean();
       if (!link) {
         return NextResponse.json({ error: "Payment link not found" }, { status: 404 });
       }
+      linkProductCode = typeof (link as any).productCode === "string" ? String((link as any).productCode || "").trim() : null;
+      linkPanelVersion = Number.isFinite(Number((link as any).panelVersion)) ? Number((link as any).panelVersion) : null;
       const now = new Date();
       const createdAt = (link as any).createdAt ? new Date((link as any).createdAt) : null;
       const expiresAt = (link as any).expiresAt ? new Date((link as any).expiresAt) : null;
@@ -242,6 +246,8 @@ export async function POST(req: NextRequest) {
             patient: patientId,
             paymentLink: paymentLinkId,
             paymentStatus,
+            productCode: linkProductCode || "VETQ_MASTER_360",
+            panelVersion: linkPanelVersion || 1,
             identification: {
               collectionMethod,
               collectionAt,
@@ -318,6 +324,8 @@ export async function POST(req: NextRequest) {
       paymentLink: paymentLinkId,
       paymentStatus,
       testType: "urine",
+      productCode: linkProductCode || "VETQ_MASTER_360",
+      panelVersion: linkPanelVersion || 1,
       identification: {
         collectionMethod,
         collectionAt,

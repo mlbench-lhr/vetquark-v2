@@ -30,6 +30,7 @@ export type UserProfile = {
   profileImageUrl?: string;
   preferredLanguage?: "en" | "pt";
   baseExamPrice?: number;
+  panelPrices?: Record<string, number>;
   notificationSettings?: Record<string, any>;
   payoutMethod?: Record<string, any>;
   createdAt?: string;

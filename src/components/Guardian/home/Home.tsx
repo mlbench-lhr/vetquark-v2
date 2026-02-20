@@ -12,6 +12,34 @@ import { useRouter } from 'next/navigation';
 import Pusher from 'pusher-js';
 import { downloadUrinalysisPdf } from '@/utils/urinalysisPdf';
 
+function visibleKeysForProductCode(productCode?: string | null): string[] | null {
+    const code = (productCode || "").trim() || "VETQ_MASTER_360";
+    if (code === "VETQ_MASTER_360") return null;
+    if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
+    if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
+    if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
+    if (code === "VETQ_RENAL_ADVANCED") return ["protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+    if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
+    if (code === "VETQ_GERIATRIC_CARE") {
+        return [
+            "glucose",
+            "ketone-bodies",
+            "protein",
+            "microalbumin",
+            "creatine",
+            "calcium",
+            "bilirubin",
+            "urobilinogen",
+            "leukocytes",
+            "nitrite",
+            "blood",
+            "ph",
+            "specific-gravity",
+        ];
+    }
+    return null;
+}
+
 function Header({ name }: HeaderProps) {
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     const userId = profile?.id || '';
@@ -331,7 +359,9 @@ export default function Home() {
 
     const currentHealth = useMemo(() => {
         const dateRaw = String(latestReading?.signedAt || latestReading?.createdAt || readings?.[0]?.date || "");
-        const results = Array.isArray(latestReading?.results) ? latestReading.results : [];
+        const all = Array.isArray(latestReading?.results) ? latestReading.results : [];
+        const keys = visibleKeysForProductCode(latestReading?.productCode);
+        const results = keys ? all.filter((r: any) => keys.includes(String(r?.key || ""))) : all;
         if (results.length === 0) {
             return { lastTestDate: "N/A", parameters: ["No recent tests"] };
         }
@@ -345,7 +375,9 @@ export default function Home() {
     const trendItems = useMemo<TrendsProps["items"]>(() => {
         const readingId = String(latestReading?.id || "");
         const dateLabel = formatDateLabel(String(latestReading?.signedAt || latestReading?.createdAt || ""));
-        const results = Array.isArray(latestReading?.results) ? latestReading.results : [];
+        const all = Array.isArray(latestReading?.results) ? latestReading.results : [];
+        const keys = visibleKeysForProductCode(latestReading?.productCode);
+        const results = keys ? all.filter((r: any) => keys.includes(String(r?.key || ""))) : all;
         if (!readingId || results.length === 0) return [];
         return results.slice(0, 6).map((r: any, idx: number) => {
             const unit = String(r?.unit || "").trim();

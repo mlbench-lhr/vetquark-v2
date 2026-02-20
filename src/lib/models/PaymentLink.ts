@@ -8,6 +8,8 @@ export interface IPaymentLink {
   guardian: Schema.Types.ObjectId;
   patient: Schema.Types.ObjectId;
   reading?: Schema.Types.ObjectId | null;
+  productCode?: string;
+  panelVersion?: number;
   amount: number;
   platformFee?: number;
   amountNet?: number;
@@ -28,6 +30,8 @@ const PaymentLinkSchema = new Schema<IPaymentLink>(
     guardian: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     patient: { type: Schema.Types.ObjectId, ref: "Patient", required: true, index: true },
     reading: { type: Schema.Types.ObjectId, ref: "Reading", default: null, index: true },
+    productCode: { type: String, default: "VETQ_MASTER_360", trim: true, index: true },
+    panelVersion: { type: Number, default: 1, min: 1 },
     amount: { type: Number, required: true, min: 0 },
     platformFee: { type: Number, default: 33.0, min: 0 },
     amountNet: { type: Number, default: 0, min: 0 },

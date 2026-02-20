@@ -34,6 +34,7 @@ type LeanUser = {
   profileImageUrl?: unknown;
   preferredLanguage?: unknown;
   baseExamPrice?: unknown;
+  panelPrices?: unknown;
   notificationSettings?: unknown;
   payoutMethod?: unknown;
   createdAt?: unknown;
@@ -41,6 +42,19 @@ type LeanUser = {
 };
 
 function toSafeProfile(user: LeanUser) {
+  const rawPanelPrices = user.panelPrices && typeof user.panelPrices === "object" && !Array.isArray(user.panelPrices) ? (user.panelPrices as any) : null;
+  const panelPrices =
+    rawPanelPrices
+      ? Object.fromEntries(
+          Object.entries(rawPanelPrices).flatMap(([k, v]) => {
+            const key = String(k || "").trim();
+            const n = typeof v === "number" ? v : Number(v);
+            if (!key) return [];
+            if (!Number.isFinite(n) || n < 0) return [];
+            return [[key, n]];
+          })
+        )
+      : undefined;
   return {
     id: String(user._id),
     fullName: typeof user.fullName === "string" ? user.fullName : "",
@@ -68,6 +82,7 @@ function toSafeProfile(user: LeanUser) {
     profileImageUrl: typeof user.profileImageUrl === "string" ? user.profileImageUrl : undefined,
     preferredLanguage: user.preferredLanguage === "en" || user.preferredLanguage === "pt" ? user.preferredLanguage : undefined,
     baseExamPrice: typeof user.baseExamPrice === "number" && Number.isFinite(user.baseExamPrice) ? user.baseExamPrice : undefined,
+    panelPrices: panelPrices && Object.keys(panelPrices).length ? panelPrices : undefined,
     notificationSettings: user.notificationSettings && typeof user.notificationSettings === "object" ? user.notificationSettings : undefined,
     payoutMethod: user.payoutMethod && typeof user.payoutMethod === "object" ? user.payoutMethod : undefined,
     createdAt:

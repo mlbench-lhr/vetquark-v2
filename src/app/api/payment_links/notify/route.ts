@@ -79,6 +79,8 @@ export async function POST(req: NextRequest) {
         paymentLink: link._id,
         paymentStatus: "pending",
         testType: "urine",
+        productCode: String((link as any).productCode || "VETQ_MASTER_360"),
+        panelVersion: Number((link as any).panelVersion || 1),
         identification: {
           collectionMethod,
           collectionAt,
