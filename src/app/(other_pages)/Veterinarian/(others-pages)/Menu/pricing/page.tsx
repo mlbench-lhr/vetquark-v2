@@ -15,14 +15,41 @@ export default function BasePriceCard() {
     const [maxSuggested, setMaxSuggested] = useState(119.0);
 
     const initialAmount = useMemo(() => profile?.baseExamPrice ?? 89.9, [profile?.baseExamPrice]);
+    const PANEL_DEFS = useMemo(
+        () => [
+            { code: "VETQ_U_START", title: "U-Start", description: "Essential Urinary Triage (LEU, NIT, BLD, PH, SG)", suggested: 33.9 },
+            { code: "VETQ_METABOLIC_CHECK", title: "Metabolic Check", description: "Metabolic Screening (GLU, KET, PH, SG)", suggested: 49.9 },
+            { code: "VETQ_RENAL_EXPRESS", title: "Renal Express", description: "Early Renal Screening (GLU, KET, PH, SG)", suggested: 59.9 },
+            { code: "VETQ_RENAL_ADVANCED", title: "Renal Advanced", description: "Renal + Minerals (PRO, MAL, CRE, CA, MG, PH, SG)", suggested: 69.9 },
+            { code: "VETQ_HEPATOSCREEN", title: "HepatoScreen", description: "Indirect Hepatobiliary Screening (BIL, UBG, PH, SG)", suggested: 49.9 },
+            { code: "VETQ_GERIATRIC_CARE", title: "Geriatric Care", description: "Preventive 7+ Protocol (GLU, KET, PRO, MAL, CRE, CA, BIL, UBG, LEU, NIT, BLD, PH, SG)", suggested: 79.9 },
+        ],
+        []
+    );
 
     const [amount, setAmount] = useState(initialAmount);
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
+    const initialPanelPrices = useMemo(() => {
+        const raw = profile?.panelPrices && typeof profile.panelPrices === "object" ? profile.panelPrices : {};
+        return Object.fromEntries(
+            PANEL_DEFS.map((p) => {
+                const v = (raw as any)?.[p.code];
+                const n = typeof v === "number" ? v : Number(v);
+                const price = Number.isFinite(n) && n >= 0 ? n : p.suggested;
+                return [p.code, price];
+            })
+        ) as Record<string, number>;
+    }, [PANEL_DEFS, profile?.panelPrices]);
+    const [panelPrices, setPanelPrices] = useState<Record<string, number>>(initialPanelPrices);
 
     useEffect(() => {
         setAmount(initialAmount);
     }, [initialAmount]);
+
+    useEffect(() => {
+        setPanelPrices(initialPanelPrices);
+    }, [initialPanelPrices]);
 
     useEffect(() => {
         let mounted = true;
@@ -62,7 +89,7 @@ export default function BasePriceCard() {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({ baseExamPrice: amount }),
+                body: JSON.stringify({ baseExamPrice: amount, panelPrices }),
             });
             const json = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -79,6 +106,9 @@ export default function BasePriceCard() {
     const handleReset = () => {
         const midPoint = (minSuggested + maxSuggested) / 2;
         setAmount(midPoint);
+        setPanelPrices(
+            Object.fromEntries(PANEL_DEFS.map((p) => [p.code, p.suggested])) as Record<string, number>
+        );
     };
 
     return (
@@ -87,18 +117,16 @@ export default function BasePriceCard() {
             <Header title="Pricing" />
 
             <div className="mb-4">
-                <h1 className="text-[18px] font-semibold text-foreground mb-2">
-                    Base Price Per Exam
-                </h1>
+                <h1 className="text-[18px] font-semibold text-foreground mb-2">Master 360</h1>
                 <p className="text-[14px] text-muted-foreground leading-[1.5]">
-                    This is the amount that the tutor will pay. The platform will apply a fixed fee of R$ {platformFee.toFixed(2)} on this amount.
+                    This is the amount that the tutor will pay for complete 16-parameter Protocol. The platform will apply a fixed fee of R$ {platformFee.toFixed(2)} on this amount and on specific panels also.
                 </p>
             </div>
 
             {/* Amount Card */}
             <div className="bg-[hsl(220,20%,97%)] rounded-xl p-4 mb-3">
                 <p className="text-[13px] text-muted-foreground mb-1">
-                    Amount to the tutor (R$)
+                    Amount For The Tutor
                 </p>
                 <div className="flex items-center gap-2">
                     {isEditing ? (
@@ -148,6 +176,36 @@ export default function BasePriceCard() {
                 <span className="text-[28px] font-semibold text-[hsl(145,63%,35%)]">
                     R$ {netPayout.toFixed(2)}
                 </span>
+            </div>
+
+            <div className="mt-6">
+                <h2 className="text-[16px] font-semibold text-foreground mb-3">Panel Pricing</h2>
+                <div className="space-y-5">
+                    {PANEL_DEFS.map((p) => (
+                        <div key={p.code}>
+                            <div className="text-[15px] font-medium text-foreground mb-2">{p.title}</div>
+                            <div className="bg-[hsl(220,20%,97%)] rounded-xl px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[16px] font-medium text-foreground">R$</span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={panelPrices[p.code] ?? p.suggested}
+                                        onChange={(e) => {
+                                            const next = parseFloat(e.target.value);
+                                            setPanelPrices((prev) => ({
+                                                ...prev,
+                                                [p.code]: Number.isFinite(next) && next >= 0 ? next : 0,
+                                            }));
+                                        }}
+                                        className="w-full bg-transparent outline-none text-[16px] font-medium text-foreground"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-2 text-[12px] text-muted-foreground leading-[1.5]">{p.description}</div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Spacer */}

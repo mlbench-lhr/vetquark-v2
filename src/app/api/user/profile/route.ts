@@ -31,6 +31,7 @@ type LeanUser = {
   profileImageUrl?: unknown;
   preferredLanguage?: unknown;
   baseExamPrice?: unknown;
+  panelPrices?: unknown;
   notificationSettings?: unknown;
   payoutMethod?: unknown;
   createdAt?: unknown;
@@ -38,6 +39,19 @@ type LeanUser = {
 };
 
 function toSafeProfile(user: LeanUser) {
+  const rawPanelPrices = user.panelPrices && typeof user.panelPrices === "object" && !Array.isArray(user.panelPrices) ? (user.panelPrices as any) : null;
+  const panelPrices =
+    rawPanelPrices
+      ? Object.fromEntries(
+          Object.entries(rawPanelPrices).flatMap(([k, v]) => {
+            const key = String(k || "").trim();
+            const n = typeof v === "number" ? v : Number(v);
+            if (!key) return [];
+            if (!Number.isFinite(n) || n < 0) return [];
+            return [[key, n]];
+          })
+        )
+      : undefined;
   return {
     id: String(user._id),
     fullName: typeof user.fullName === "string" ? user.fullName : "",
@@ -66,6 +80,7 @@ function toSafeProfile(user: LeanUser) {
     profileImageUrl: typeof user.profileImageUrl === "string" ? user.profileImageUrl : undefined,
     preferredLanguage: user.preferredLanguage === "en" || user.preferredLanguage === "pt" ? user.preferredLanguage : undefined,
     baseExamPrice: typeof user.baseExamPrice === "number" && Number.isFinite(user.baseExamPrice) ? user.baseExamPrice : undefined,
+    panelPrices: panelPrices && Object.keys(panelPrices).length ? panelPrices : undefined,
     notificationSettings: user.notificationSettings && typeof user.notificationSettings === "object" ? user.notificationSettings : undefined,
     payoutMethod: user.payoutMethod && typeof user.payoutMethod === "object" ? user.payoutMethod : undefined,
     createdAt:
@@ -192,6 +207,26 @@ export async function PATCH(req: NextRequest) {
       const n = typeof body.baseExamPrice === "number" ? body.baseExamPrice : Number(body.baseExamPrice);
       if (!Number.isFinite(n) || n < 0) return NextResponse.json({ error: "Invalid baseExamPrice" }, { status: 400 });
       $set.baseExamPrice = n;
+    }
+
+    if (body?.panelPrices !== undefined) {
+      if (body.panelPrices === null) {
+        $unset.panelPrices = 1;
+      } else if (!body.panelPrices || typeof body.panelPrices !== "object" || Array.isArray(body.panelPrices)) {
+        return NextResponse.json({ error: "Invalid panelPrices" }, { status: 400 });
+      } else {
+        const input = body.panelPrices as any;
+        const next = Object.fromEntries(
+          Object.entries(input).flatMap(([k, v]) => {
+            const key = String(k || "").trim();
+            const n = typeof v === "number" ? v : Number(v);
+            if (!key) return [];
+            if (!Number.isFinite(n) || n < 0) return [];
+            return [[key, n]];
+          })
+        );
+        $set.panelPrices = next;
+      }
     }
 
     if (body?.notificationSettings !== undefined) {

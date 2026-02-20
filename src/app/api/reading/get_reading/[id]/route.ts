@@ -123,6 +123,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     const reading = {
       id: String((doc as any)._id),
       testType: (doc as any).testType ?? "urine",
+      productCode: (doc as any).productCode ?? "VETQ_MASTER_360",
+      panelVersion: (doc as any).panelVersion ?? 1,
       signedAt: (doc as any).signedAt ?? null,
       createdAt: (doc as any).createdAt ?? null,
       signatureImageUrl: (doc as any).signatureImageUrl ?? null,

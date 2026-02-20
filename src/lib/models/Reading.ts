@@ -28,6 +28,8 @@ export interface IReading {
   paymentLink?: Schema.Types.ObjectId | null;
   paymentStatus?: ReadingPaymentStatus | null;
   testType: "urine";
+  productCode?: string;
+  panelVersion?: number;
   identification: {
     collectionMethod: CollectionMethod;
     collectionAt: Date;
@@ -73,6 +75,8 @@ const ReadingSchema = new Schema<IReading>(
     paymentLink: { type: Schema.Types.ObjectId, ref: "PaymentLink", default: null, index: true },
     paymentStatus: { type: String, enum: ["pending", "paid", "expired"], default: null, index: true },
     testType: { type: String, enum: ["urine"], default: "urine", required: true },
+    productCode: { type: String, default: "VETQ_MASTER_360", trim: true, index: true },
+    panelVersion: { type: Number, default: 1, min: 1 },
     identification: {
       collectionMethod: { type: String, enum: ["free_catch", "cystocentesis", "catheter"], required: true },
       collectionAt: { type: Date, required: true },

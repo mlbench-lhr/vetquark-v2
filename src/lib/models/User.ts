@@ -31,6 +31,7 @@ export interface IUser {
   profileImageUrl?: string;
   preferredLanguage?: "en" | "pt";
   baseExamPrice?: number;
+  panelPrices?: Record<string, number>;
   notificationSettings?: Record<string, any>;
   payoutMethod?: Record<string, any>;
   // Account verification
@@ -89,6 +90,7 @@ const UserSchema = new Schema<IUser>(
     profileImageUrl: { type: String },
     preferredLanguage: { type: String, enum: ["en", "pt"], default: "en" },
     baseExamPrice: { type: Number, min: 0 },
+    panelPrices: { type: Schema.Types.Mixed, default: {} },
     notificationSettings: { type: Schema.Types.Mixed, default: {} },
     payoutMethod: { type: Schema.Types.Mixed, default: {} },
     // Account verification

@@ -22,6 +22,8 @@ type ReadingResult = {
 
 type ReadingDetail = {
   id: string;
+  productCode?: string;
+  panelVersion?: number;
   signedAt: string | null;
   createdAt: string | null;
   signatureImageUrl: string | null;
@@ -53,6 +55,34 @@ type ReadingDetail = {
     reportFooter?: string | null;
   };
 };
+
+function visibleKeysForProductCode(productCode?: string | null): string[] | null {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_MASTER_360") return null;
+  if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
+  if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_ADVANCED") return ["protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+  if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
+  if (code === "VETQ_GERIATRIC_CARE") {
+    return [
+      "glucose",
+      "ketone-bodies",
+      "protein",
+      "microalbumin",
+      "creatine",
+      "calcium",
+      "bilirubin",
+      "urobilinogen",
+      "leukocytes",
+      "nitrite",
+      "blood",
+      "ph",
+      "specific-gravity",
+    ];
+  }
+  return null;
+}
 
 function ResultRow({ item }: { item: ReadingResult }) {
   const isNormal = item.status === "Normal";
@@ -156,7 +186,9 @@ export default function ReportDetailsPage() {
   }, [reading?.createdAt, reading?.signedAt]);
 
   const { physicalResults, chemicalResults, microscopicResults } = useMemo(() => {
-    const results = Array.isArray(reading?.results) ? reading!.results : [];
+    const all = Array.isArray(reading?.results) ? reading!.results : [];
+    const keys = visibleKeysForProductCode(reading?.productCode);
+    const results = keys ? all.filter((r) => keys.includes(String(r?.key || ""))) : all;
     const physicalKeys = new Set(["ph", "specific-gravity"]);
     const physicalResults = results.filter((r) => physicalKeys.has(r.key));
     const chemicalResults = results.filter((r) => !physicalKeys.has(r.key));

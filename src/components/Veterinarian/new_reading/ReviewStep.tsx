@@ -10,6 +10,7 @@ type Props = {
   onChangeSelectedByKey: (next: ReviewSelectionMap) => void
   onBack: () => void
   onIssueReport: (results: ReviewResultDraft[]) => void
+  visibleKeys?: string[]
 }
 
 type ResultStatus = 'Normal' | 'Abnormal'
@@ -490,15 +491,23 @@ function parseNumericValueLabel(valueLabel: string): number | undefined {
   return Number.isFinite(n) ? n : undefined
 }
 
-export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBack, onIssueReport }: Props) {
+export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBack, onIssueReport, visibleKeys }: Props) {
   const { t } = useTranslation()
+  const visibleRows = useMemo(() => {
+    const keys = Array.isArray(visibleKeys) ? visibleKeys : null
+    return keys && keys.length ? RESULT_ROWS.filter((r) => keys.includes(r.key)) : RESULT_ROWS
+  }, [visibleKeys])
   useEffect(() => {
-    if (Object.keys(selectedByKey).length > 0) return
-    const defaults: ReviewSelectionMap = Object.fromEntries(RESULT_ROWS.map((r) => [r.key, r.defaultIndex]))
-    onChangeSelectedByKey(defaults)
-  }, [onChangeSelectedByKey, selectedByKey])
-
-  const canProceed = useMemo(() => RESULT_ROWS.length > 0, [])
+    const next: ReviewSelectionMap = { ...selectedByKey }
+    let changed = false
+    for (const row of visibleRows) {
+      if (typeof next[row.key] === "number") continue
+      next[row.key] = row.defaultIndex
+      changed = true
+    }
+    if (changed) onChangeSelectedByKey(next)
+  }, [onChangeSelectedByKey, selectedByKey, visibleRows])
+  const canProceed = useMemo(() => visibleRows.length > 0, [visibleRows.length])
 
   return (
     <div className="">
@@ -508,7 +517,7 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
       </p>
 
       <div className="mt-5 divide-y divide-[#F1F5F9] border border-[#F1F5F9] rounded-[16px] shadow-2xs">
-        {RESULT_ROWS.map((row) => (
+        {visibleRows.map((row) => (
           <ResultRow
             key={row.key}
             row={row}
@@ -521,7 +530,7 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
       <div className="mt-6 space-y-3">
         <button
           onClick={() => {
-            const results: ReviewResultDraft[] = RESULT_ROWS.map((row) => {
+            const results: ReviewResultDraft[] = visibleRows.map((row) => {
               const selectedIndex = selectedByKey[row.key] ?? row.defaultIndex
               const opt = row.options[selectedIndex]
               const valueLabel = opt ? opt.topLabel : row.options[row.defaultIndex]?.topLabel ?? ""

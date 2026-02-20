@@ -16,6 +16,34 @@ import type { RootState } from '@/store/store'
 import Pusher from 'pusher-js'
 import { useTranslation } from 'react-i18next'
 
+function visibleKeysForProductCode(productCode: string): string[] | null {
+  const code = (productCode || '').trim() || 'VETQ_MASTER_360'
+  if (code === 'VETQ_MASTER_360') return null
+  if (code === 'VETQ_U_START') return ['leukocytes', 'nitrite', 'blood', 'ph', 'specific-gravity']
+  if (code === 'VETQ_METABOLIC_CHECK') return ['glucose', 'ketone-bodies', 'ph', 'specific-gravity']
+  if (code === 'VETQ_RENAL_EXPRESS') return ['glucose', 'ketone-bodies', 'ph', 'specific-gravity']
+  if (code === 'VETQ_RENAL_ADVANCED') return ['protein', 'microalbumin', 'creatine', 'calcium', 'magnesium', 'ph', 'specific-gravity']
+  if (code === 'VETQ_HEPATOSCREEN') return ['bilirubin', 'urobilinogen', 'ph', 'specific-gravity']
+  if (code === 'VETQ_GERIATRIC_CARE') {
+    return [
+      'glucose',
+      'ketone-bodies',
+      'protein',
+      'microalbumin',
+      'creatine',
+      'calcium',
+      'bilirubin',
+      'urobilinogen',
+      'leukocytes',
+      'nitrite',
+      'blood',
+      'ph',
+      'specific-gravity',
+    ]
+  }
+  return null
+}
+
 export default function NewReadingWizard() {
   const { t } = useTranslation()
   const searchParams = useSearchParams()
@@ -31,6 +59,7 @@ export default function NewReadingWizard() {
     identification: {
       patientId: '',
       paymentLinkId: '',
+      panelProductCode: 'VETQ_MASTER_360',
       collectionMethod: '',
       collectionAt: '',
       stripLot: '',
@@ -50,6 +79,11 @@ export default function NewReadingWizard() {
     },
   }))
 
+  const visibleKeys = useMemo(
+    () => visibleKeysForProductCode(draft.identification.panelProductCode || 'VETQ_MASTER_360'),
+    [draft.identification.panelProductCode]
+  )
+
   const STORAGE_KEY = 'new_reading_draft_v1'
 
   useEffect(() => {
@@ -66,6 +100,7 @@ export default function NewReadingWizard() {
         identification: {
           patientId: String(sd?.identification?.patientId ?? prev.identification.patientId ?? ''),
           paymentLinkId: String(sd?.identification?.paymentLinkId ?? prev.identification.paymentLinkId ?? ''),
+          panelProductCode: String(sd?.identification?.panelProductCode ?? prev.identification.panelProductCode ?? 'VETQ_MASTER_360'),
           collectionMethod: String(sd?.identification?.collectionMethod ?? prev.identification.collectionMethod ?? ''),
           collectionAt: String(sd?.identification?.collectionAt ?? prev.identification.collectionAt ?? ''),
           stripLot: String(sd?.identification?.stripLot ?? prev.identification.stripLot ?? ''),
@@ -373,6 +408,7 @@ export default function NewReadingWizard() {
             setDraft((prev) => ({ ...prev, results }))
             setStep('report')
           }}
+          visibleKeys={visibleKeys ?? undefined}
         />
       )}
 

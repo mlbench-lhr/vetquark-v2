@@ -11,6 +11,20 @@ function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2).replace(".", ",")}`;
 }
 
+const DEFAULT_PANEL_PRICES: Record<string, number> = {
+  VETQ_U_START: 33.9,
+  VETQ_METABOLIC_CHECK: 49.9,
+  VETQ_RENAL_EXPRESS: 59.9,
+  VETQ_RENAL_ADVANCED: 69.9,
+  VETQ_HEPATOSCREEN: 49.9,
+  VETQ_GERIATRIC_CARE: 79.9,
+  VETQ_MASTER_360: 89.9,
+};
+
+function isSupportedProductCode(code: string) {
+  return Object.prototype.hasOwnProperty.call(DEFAULT_PANEL_PRICES, code);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const veterinarianId = String(req.headers.get("x-user-id") || "").trim();
@@ -24,10 +38,12 @@ export async function POST(req: NextRequest) {
     if (!patientId || !mongoose.Types.ObjectId.isValid(patientId)) {
       return NextResponse.json({ error: "Invalid patientId" }, { status: 400 });
     }
+    const productCodeRaw = String(body?.productCode || "").trim();
+    const productCode = productCodeRaw && isSupportedProductCode(productCodeRaw) ? productCodeRaw : "VETQ_MASTER_360";
 
     await connectMongo();
 
-    const veterinarian = await User.findById(veterinarianId).select("_id role baseExamPrice tradeName fullName").lean();
+    const veterinarian = await User.findById(veterinarianId).select("_id role baseExamPrice panelPrices tradeName fullName").lean();
     if (!veterinarian || veterinarian.role !== "Veterinarian") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -45,14 +61,28 @@ export async function POST(req: NextRequest) {
     const platformFee = settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
       ? Number((settingsDoc as any).platformFeeBRL)
       : 33.0;
-    const amount = typeof veterinarian.baseExamPrice === "number" && Number.isFinite(veterinarian.baseExamPrice)
-      ? veterinarian.baseExamPrice
-      : 89.9;
+    const rawPanelPrices =
+      (veterinarian as any).panelPrices && typeof (veterinarian as any).panelPrices === "object" && !Array.isArray((veterinarian as any).panelPrices)
+        ? ((veterinarian as any).panelPrices as any)
+        : null;
+    const customPanelPrice =
+      rawPanelPrices && Object.prototype.hasOwnProperty.call(rawPanelPrices, productCode)
+        ? (typeof rawPanelPrices[productCode] === "number" ? rawPanelPrices[productCode] : Number(rawPanelPrices[productCode]))
+        : null;
+    const fallback =
+      productCode === "VETQ_MASTER_360"
+        ? (typeof veterinarian.baseExamPrice === "number" && Number.isFinite(veterinarian.baseExamPrice) ? veterinarian.baseExamPrice : DEFAULT_PANEL_PRICES.VETQ_MASTER_360)
+        : DEFAULT_PANEL_PRICES[productCode] ?? DEFAULT_PANEL_PRICES.VETQ_MASTER_360;
+    const amount =
+      typeof customPanelPrice === "number" && Number.isFinite(customPanelPrice) && customPanelPrice >= 0
+        ? customPanelPrice
+        : fallback;
     const amountNet = Math.max(0, amount - platformFee);
     const candidates = await PaymentLink.find({
       veterinarian: veterinarianId,
       patient: patientId,
       status: "pending",
+      productCode,
     })
       .sort({ createdAt: -1 })
       .limit(5)
@@ -90,11 +120,13 @@ export async function POST(req: NextRequest) {
         if (shouldUpdate) {
           await PaymentLink.updateOne(
             { _id: link._id, status: "pending" },
-            { $set: { amount, platformFee, amountNet } },
+            { $set: { amount, platformFee, amountNet, productCode, panelVersion: 1 } },
           );
           link.amount = amount;
           (link as any).platformFee = platformFee;
           (link as any).amountNet = amountNet;
+          (link as any).productCode = productCode;
+          (link as any).panelVersion = 1;
         }
         existing = link;
         break;
@@ -121,6 +153,8 @@ export async function POST(req: NextRequest) {
       veterinarian: veterinarianId,
       guardian: (patient as any).guardian?._id ?? (patient as any).guardian,
       patient: patientId,
+      productCode,
+      panelVersion: 1,
       amount,
       platformFee,
       amountNet,
