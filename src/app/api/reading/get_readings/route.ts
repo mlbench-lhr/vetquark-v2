@@ -7,6 +7,17 @@ import Patient from "@/lib/models/Patient";
 import Reading from "@/lib/models/Reading";
 import { parsePagination, toPaginationMeta } from "@/lib/utils";
 
+function panelTitleForProductCode(productCode?: string | null) {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_U_START") return "U-Start";
+  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
+  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
+  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
+  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
+  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
+  return "Master 360";
+}
+
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
   if (headerId?.trim()) return { userId: headerId.trim(), error: null };
@@ -165,6 +176,8 @@ export async function GET(req: NextRequest) {
     const items = docs.map((r: any) => {
       const paymentStatus = typeof r.paymentStatus === "string" ? r.paymentStatus : null;
       const isPaymentBlocking = paymentStatus === "pending" || paymentStatus === "expired";
+      const productCode = typeof r.productCode === "string" ? String(r.productCode || "").trim() : "";
+      const normalizedProductCode = productCode || "VETQ_MASTER_360";
       return {
         id: String(r._id),
         patientId: String(r.patient?._id ?? r.patient ?? ""),
@@ -176,6 +189,8 @@ export async function GET(req: NextRequest) {
         avatarSrc: r.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
         paymentStatus,
         paymentLinkId: r.paymentLink ? String(r.paymentLink) : "",
+        productCode: normalizedProductCode,
+        panelTitle: panelTitleForProductCode(normalizedProductCode),
       };
     });
 

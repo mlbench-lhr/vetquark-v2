@@ -41,6 +41,17 @@ function visibleKeysForProductCode(productCode?: string | null): string[] | null
     return null;
 }
 
+function panelTitleForProductCode(productCode?: string | null) {
+    const code = (productCode || "").trim() || "VETQ_MASTER_360";
+    if (code === "VETQ_U_START") return "U-Start";
+    if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
+    if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
+    if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
+    if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
+    if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
+    return "Master 360";
+}
+
 function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: string[] | null): string[] | null {
     const codes = [
         (productCode || "").trim() || "VETQ_MASTER_360",
@@ -440,7 +451,7 @@ export default function Home() {
                 <div className="bg-[#F5F6F6] w-[calc(100%+40px)] -ms-6 h-2 my-4"></div>
                 {readings?.[0]?.id ? (
                     <ReportCard
-                        title="Urinalysis Report"
+                        title={panelTitleForProductCode(latestReading?.productCode)}
                         date={formatDateLabel(String(readings?.[0]?.date || ""))}
                         avatarUrl={String(readings?.[0]?.avatarSrc || "")}
                         signed={readings?.[0]?.status === "signed"}

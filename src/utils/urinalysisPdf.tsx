@@ -55,8 +55,10 @@ function visibleKeysForProductCode(productCode?: string | null): string[] | null
   if (code === "VETQ_MASTER_360") return null;
   if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
   if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_ADVANCED") return ["protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_ADVANCED") {
+    return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+  }
   if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
   if (code === "VETQ_GERIATRIC_CARE") {
     return [
@@ -66,6 +68,7 @@ function visibleKeysForProductCode(productCode?: string | null): string[] | null
       "microalbumin",
       "creatine",
       "calcium",
+      "magnesium",
       "bilirubin",
       "urobilinogen",
       "leukocytes",
@@ -76,6 +79,17 @@ function visibleKeysForProductCode(productCode?: string | null): string[] | null
     ];
   }
   return null;
+}
+
+function panelTitleForProductCode(productCode?: string | null) {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_U_START") return "U-Start";
+  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
+  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
+  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
+  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
+  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
+  return "Master 360";
 }
 
 const REFERENCE_RANGES_BY_KEY: Record<string, string> = {
@@ -241,7 +255,7 @@ export async function downloadUrinalysisPdf({ readingId, reading }: { readingId:
           <View style={reportStyles.divider} />
         </View>
 
-        <Text style={reportStyles.sectionTitle}>Urinalysis Report</Text>
+        <Text style={reportStyles.sectionTitle}>{`${panelTitleForProductCode(r.productCode)} Report`}</Text>
         <View style={reportStyles.metaGrid}>
           <View style={reportStyles.metaCol}>
             <View style={reportStyles.metaRow}>

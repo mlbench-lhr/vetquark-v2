@@ -182,11 +182,11 @@ function canUpgradeToTarget(
   return targetKeys.some((k) => !currentSet.has(k));
 }
 
-async function shareReadingReport() {
+async function shareReadingReport(title: string) {
   const url = window.location.href;
   const navAny = navigator as any;
   if (typeof navAny?.share === "function") {
-    await navAny.share({ title: "Urinalysis Report", url });
+    await navAny.share({ title, url });
     return;
   }
   if (navigator.clipboard?.writeText) {
@@ -201,6 +201,9 @@ export default function ReportDetailsPage() {
   const params = useParams();
   const { t } = useTranslation();
   const profile = useAppSelector((s: RootState) => s.userProfile.profile);
+  const role = String((profile as any)?.role || "");
+  const isVeterinarian = role === "Veterinarian";
+  const isGuardian = role === "Guardian";
   const readingId = useMemo(() => String((params as any)?.id || "").trim(), [params]);
   const [loading, setLoading] = useState(false);
   const [reading, setReading] = useState<ReadingDetail | null>(null);
@@ -246,14 +249,14 @@ export default function ReportDetailsPage() {
 
   const { physicalResults, chemicalResults, microscopicResults } = useMemo(() => {
     const all = Array.isArray(reading?.results) ? reading!.results : [];
-    const keys = visibleKeysForAccess(reading?.productCode, reading?.unlockedProductCodes);
+    const keys = isGuardian ? visibleKeysForAccess(reading?.productCode, reading?.unlockedProductCodes) : null;
     const results = keys ? all.filter((r) => keys.includes(String(r?.key || ""))) : all;
     const physicalKeys = new Set(["ph", "specific-gravity"]);
     const physicalResults = results.filter((r) => physicalKeys.has(r.key));
     const chemicalResults = results.filter((r) => !physicalKeys.has(r.key));
     const microscopicResults: ReadingResult[] = [];
     return { physicalResults, chemicalResults, microscopicResults };
-  }, [reading]);
+  }, [isGuardian, reading]);
 
   const handleDownloadPdf = useCallback(async () => {
     if (!readingId) return;
@@ -268,7 +271,7 @@ export default function ReportDetailsPage() {
   const handleShare = useCallback(async () => {
     if (!readingId) return;
     try {
-      await shareReadingReport();
+      await shareReadingReport(`${panelTitleForProductCode(reading?.productCode)} Report`);
       toast.success("Report link ready");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Share failed";
@@ -278,7 +281,7 @@ export default function ReportDetailsPage() {
       }
       // toast.error(msg);
     }
-  }, [readingId]);
+  }, [reading?.productCode, readingId]);
 
   const currentProductCode = useMemo(() => String(reading?.productCode || "VETQ_MASTER_360"), [reading?.productCode]);
   const unlockedProductCodes = useMemo(
@@ -378,18 +381,20 @@ export default function ReportDetailsPage() {
                 <path d="M10.0003 4.16634V11.2497M12.5003 5.83301L10.0003 3.33301L7.50033 5.83301M4.16699 9.99967V14.1663C4.16699 14.6084 4.34259 15.0323 4.65515 15.3449C4.96771 15.6574 5.39163 15.833 5.83366 15.833H14.167C14.609 15.833 15.0329 15.6574 15.3455 15.3449C15.6581 15.0323 15.8337 14.6084 15.8337 14.1663V9.99967" stroke="#3E9306" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
-            <button
-              type="button"
-              aria-label="Invite to upgrade"
-              className="inline-flex h-9 items-center justify-center rounded-full bg-[#EBF2FF] px-3 text-[13px] font-medium text-[#3F78D8]"
-              onClick={() => {
-                setUpgradeOpen(true);
-                setUpgradeProductCode("");
-              }}
-              disabled={!reading || accessKeys === null}
-            >
-              Invite To Upgrade
-            </button>
+            {isVeterinarian ? (
+              <button
+                type="button"
+                aria-label="Invite to upgrade"
+                className="inline-flex h-9 items-center justify-center rounded-full bg-[#EBF2FF] px-3 text-[13px] font-medium text-[#3F78D8]"
+                onClick={() => {
+                  setUpgradeOpen(true);
+                  setUpgradeProductCode("");
+                }}
+                disabled={!reading || accessKeys === null}
+              >
+                Invite To Upgrade
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -494,7 +499,7 @@ export default function ReportDetailsPage() {
         )}
       </div>
 
-      {upgradeOpen ? (
+      {isVeterinarian && upgradeOpen ? (
         <div className="fixed inset-0 z-50">
           <button
             type="button"
