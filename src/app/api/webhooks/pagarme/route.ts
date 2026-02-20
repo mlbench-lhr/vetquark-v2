@@ -135,7 +135,10 @@ export async function POST(req: NextRequest) {
         if (shouldMarkPaid) {
           await Reading.updateOne(
             { _id: readingId },
-            { $set: { productCode: String((link as any).productCode || "VETQ_MASTER_360"), panelVersion: Number((link as any).panelVersion || 1) } },
+            {
+              $addToSet: { unlockedProductCodes: String((link as any).productCode || "VETQ_MASTER_360") },
+              $set: { panelVersion: Number((link as any).panelVersion || 1) },
+            },
           );
           console.log("WebhookPagarme reading upgraded", JSON.stringify({ readingId, productCode: String((link as any).productCode || "VETQ_MASTER_360") }));
         }

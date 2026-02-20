@@ -26,6 +26,7 @@ type ReadingDetail = {
   id: string;
   productCode?: string;
   panelVersion?: number;
+  unlockedProductCodes?: string[];
   signedAt: string | null;
   createdAt: string | null;
   signatureImageUrl: string | null;
@@ -63,8 +64,10 @@ function visibleKeysForProductCode(productCode?: string | null): string[] | null
   if (code === "VETQ_MASTER_360") return null;
   if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
   if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_ADVANCED") return ["protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_ADVANCED") {
+    return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+  }
   if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
   if (code === "VETQ_GERIATRIC_CARE") {
     return [
@@ -74,6 +77,7 @@ function visibleKeysForProductCode(productCode?: string | null): string[] | null
       "microalbumin",
       "creatine",
       "calcium",
+      "magnesium",
       "bilirubin",
       "urobilinogen",
       "leukocytes",
@@ -139,15 +143,38 @@ const PANEL_DEFS: Array<{ code: string; title: string; subtitle: string; suggest
   { code: "VETQ_MASTER_360", title: "Master 360", subtitle: "Complete 16-Parameter Protocol", suggested: 89.9 },
 ];
 
-function isStrictSupersetUpgrade(currentProductCode: string, targetProductCode: string) {
-  const currentKeys = visibleKeysForProductCode(currentProductCode);
+function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: string[] | null): string[] | null {
+  const codes = [
+    (productCode || "").trim() || "VETQ_MASTER_360",
+    ...((Array.isArray(unlockedProductCodes) ? unlockedProductCodes : []).map((c) => String(c || "").trim()).filter(Boolean)),
+  ];
+  for (const c of codes) {
+    if (visibleKeysForProductCode(c) === null) return null;
+  }
+  const set = new Set<string>();
+  for (const c of codes) {
+    const keys = visibleKeysForProductCode(c);
+    if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+  }
+  return [...set];
+}
+
+function canUpgradeToTarget(
+  currentProductCode: string,
+  unlockedProductCodes: string[] | null | undefined,
+  targetProductCode: string
+) {
+  const normalizedTarget = (targetProductCode || "").trim() || "VETQ_MASTER_360";
+  const normalizedCurrent = (currentProductCode || "").trim() || "VETQ_MASTER_360";
+  const unlocked = Array.isArray(unlockedProductCodes) ? unlockedProductCodes.map((c) => String(c || "").trim()).filter(Boolean) : [];
+  if (normalizedTarget === normalizedCurrent) return false;
+  if (unlocked.includes(normalizedTarget)) return false;
+  const currentKeys = visibleKeysForAccess(normalizedCurrent, unlocked);
   if (currentKeys === null) return false;
-  const targetKeys = visibleKeysForProductCode(targetProductCode);
-  if (targetKeys === null) return (currentProductCode || "").trim() !== "VETQ_MASTER_360";
-  if (!Array.isArray(currentKeys) || !Array.isArray(targetKeys)) return false;
-  const targetSet = new Set(targetKeys);
-  const allIncluded = currentKeys.every((k) => targetSet.has(k));
-  return allIncluded && targetKeys.length > currentKeys.length;
+  const targetKeys = visibleKeysForProductCode(normalizedTarget);
+  if (targetKeys === null) return true;
+  const currentSet = new Set(currentKeys);
+  return targetKeys.some((k) => !currentSet.has(k));
 }
 
 async function shareReadingReport() {
@@ -214,7 +241,7 @@ export default function ReportDetailsPage() {
 
   const { physicalResults, chemicalResults, microscopicResults } = useMemo(() => {
     const all = Array.isArray(reading?.results) ? reading!.results : [];
-    const keys = visibleKeysForProductCode(reading?.productCode);
+    const keys = visibleKeysForAccess(reading?.productCode, reading?.unlockedProductCodes);
     const results = keys ? all.filter((r) => keys.includes(String(r?.key || ""))) : all;
     const physicalKeys = new Set(["ph", "specific-gravity"]);
     const physicalResults = results.filter((r) => physicalKeys.has(r.key));
@@ -249,24 +276,38 @@ export default function ReportDetailsPage() {
   }, [readingId]);
 
   const currentProductCode = useMemo(() => String(reading?.productCode || "VETQ_MASTER_360"), [reading?.productCode]);
+  const unlockedProductCodes = useMemo(
+    () => (Array.isArray(reading?.unlockedProductCodes) ? reading!.unlockedProductCodes : []),
+    [reading?.unlockedProductCodes]
+  );
+  const accessKeys = useMemo(
+    () => visibleKeysForAccess(currentProductCode, unlockedProductCodes),
+    [currentProductCode, unlockedProductCodes]
+  );
   const upgradeOptions = useMemo(() => {
     const current = currentProductCode;
+    const unlocked = unlockedProductCodes;
     return PANEL_DEFS.map((p) => ({
       ...p,
-      disabled: !isStrictSupersetUpgrade(current, p.code),
+      disabled: !canUpgradeToTarget(current, unlocked, p.code),
     }));
-  }, [currentProductCode]);
+  }, [currentProductCode, unlockedProductCodes]);
 
   const priceLabelFor = useCallback(
     (productCode: string, suggested: number) => {
+      if (productCode === "VETQ_MASTER_360") {
+        const n = typeof profile?.baseExamPrice === "number" && Number.isFinite(profile.baseExamPrice) ? profile.baseExamPrice : suggested;
+        return `R$ ${n.toFixed(2).replace(".", ",")}`;
+      }
       const raw = profile?.panelPrices && typeof profile.panelPrices === "object" ? (profile.panelPrices as any) : null;
       const v = raw && Object.prototype.hasOwnProperty.call(raw, productCode) ? (raw as any)[productCode] : null;
-      const n = typeof v === "number" ? v : Number(v);
-      const fallback =
-        productCode === "VETQ_MASTER_360"
-          ? (typeof profile?.baseExamPrice === "number" && Number.isFinite(profile.baseExamPrice) ? profile.baseExamPrice : suggested)
-          : suggested;
-      const amount = Number.isFinite(n) && n >= 0 ? n : fallback;
+      const n =
+        typeof v === "string" && v.trim() === ""
+          ? NaN
+          : typeof v === "number"
+            ? v
+            : Number(v);
+      const amount = Number.isFinite(n) && n >= 0 ? n : suggested;
       return `R$ ${amount.toFixed(2).replace(".", ",")}`;
     },
     [profile?.baseExamPrice, profile?.panelPrices]
@@ -300,7 +341,7 @@ export default function ReportDetailsPage() {
   }, [readingId, sendingUpgrade, upgradeProductCode]);
 
   return (
-    <div className="min-h-[100dvh] w-full bg-white">
+    <div className="min-h-[100dvh w-full bg-white">
       <div className="mx-auto w-full pb-6">
         <div className="flex items-center justify-between px-">
           <button
@@ -340,7 +381,7 @@ export default function ReportDetailsPage() {
                 setUpgradeOpen(true);
                 setUpgradeProductCode("");
               }}
-              disabled={!reading || currentProductCode === "VETQ_MASTER_360"}
+              disabled={!reading || accessKeys === null}
             >
               Invite To Upgrade
             </button>

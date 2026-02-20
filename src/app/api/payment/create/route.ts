@@ -508,7 +508,10 @@ export async function POST(req: NextRequest) {
             if (kind === "upgrade") {
               await (await import("@/lib/models/Reading")).default.updateOne(
                 { _id: readingId },
-                { $set: { productCode: String((link as any).productCode || "VETQ_MASTER_360"), panelVersion: Number((link as any).panelVersion || 1) } },
+                {
+                  $addToSet: { unlockedProductCodes: String((link as any).productCode || "VETQ_MASTER_360") },
+                  $set: { panelVersion: Number((link as any).panelVersion || 1) },
+                },
               );
             } else {
               await (await import("@/lib/models/Reading")).default.updateOne(

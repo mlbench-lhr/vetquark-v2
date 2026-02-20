@@ -30,6 +30,7 @@ export interface IReading {
   testType: "urine";
   productCode?: string;
   panelVersion?: number;
+  unlockedProductCodes?: string[];
   identification: {
     collectionMethod: CollectionMethod;
     collectionAt: Date;
@@ -77,6 +78,7 @@ const ReadingSchema = new Schema<IReading>(
     testType: { type: String, enum: ["urine"], default: "urine", required: true },
     productCode: { type: String, default: "VETQ_MASTER_360", trim: true, index: true },
     panelVersion: { type: Number, default: 1, min: 1 },
+    unlockedProductCodes: { type: [String], default: [] },
     identification: {
       collectionMethod: { type: String, enum: ["free_catch", "cystocentesis", "catheter"], required: true },
       collectionAt: { type: Date, required: true },
