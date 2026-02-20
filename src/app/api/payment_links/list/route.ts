@@ -4,6 +4,17 @@ import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import PaymentLink from "@/lib/models/PaymentLink";
 
+function panelTitleForProductCode(productCode?: string | null) {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_U_START") return "U-Start";
+  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
+  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
+  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
+  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
+  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
+  return "Master 360";
+}
+
 export async function GET(req: NextRequest) {
   try {
     const veterinarianId = String(req.headers.get("x-user-id") || "").trim();
@@ -62,6 +73,9 @@ export async function GET(req: NextRequest) {
       date: (it.createdAt ? new Date(it.createdAt).toISOString() : new Date().toISOString()),
       avatarSrc: String(it.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
       paymentLinkStatus: String(it.status || "pending"),
+      kind: String(it.kind || "reading_payment"),
+      productCode: String(it.productCode || "VETQ_MASTER_360"),
+      panelTitle: panelTitleForProductCode(String(it.productCode || "VETQ_MASTER_360")),
     }));
 
     return NextResponse.json({ items }, { status: 200 });

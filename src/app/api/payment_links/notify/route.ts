@@ -9,6 +9,17 @@ import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer
 import Reading from "@/lib/models/Reading";
 import { isPushEnabledForUser } from "@/lib/utils";
 
+function panelTitleForProductCode(productCode?: string | null) {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_U_START") return "U-Start";
+  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
+  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
+  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
+  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
+  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
+  return "Master 360";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const veterinarianId = String(req.headers.get("x-user-id") || "").trim();
@@ -109,9 +120,10 @@ export async function POST(req: NextRequest) {
     const url = `/Guardian/payment/${encodeURIComponent(String(link._id))}`;
     const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
     const petName = String((patient as any)?.animalName || "your pet");
+    const panelTitle = panelTitleForProductCode(String((link as any).productCode || "VETQ_MASTER_360"));
 
     const title = "Payment link received";
-    const message = `${vetName} sent a payment link for ${petName}.`;
+    const message = `${vetName} sent a payment link for ${petName} (${panelTitle}).`;
 
     const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
     const canNotify = isPushEnabledForUser(guardianUser, "payment_link");

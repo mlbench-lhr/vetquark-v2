@@ -143,6 +143,11 @@ const PANEL_DEFS: Array<{ code: string; title: string; subtitle: string; suggest
   { code: "VETQ_MASTER_360", title: "Master 360", subtitle: "Complete 16-Parameter Protocol", suggested: 89.9 },
 ];
 
+function panelTitleForProductCode(productCode?: string | null) {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  return PANEL_DEFS.find((p) => p.code === code)?.title ?? "Master 360";
+}
+
 function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: string[] | null): string[] | null {
   const codes = [
     (productCode || "").trim() || "VETQ_MASTER_360",
@@ -408,6 +413,7 @@ export default function ReportDetailsPage() {
                 <div className="min-w-0">
                   <div className="truncate text-[16px] font-medium text-[#111827]">{reading.patient.name}</div>
                   <div className="truncate text-[13px] text-[#9AA4AF]">{reading.guardian.fullName}</div>
+                  <div className="truncate text-[13px] text-[#9AA4AF]">{panelTitleForProductCode(reading.productCode)}</div>
                 </div>
               </div>
             </div>
