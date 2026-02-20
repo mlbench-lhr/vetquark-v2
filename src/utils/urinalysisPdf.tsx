@@ -17,6 +17,7 @@ type ReadingResult = {
 type ReadingDetail = {
   id: string;
   productCode?: string;
+  unlockedProductCodes?: string[];
   panelVersion?: number;
   signedAt: string | null;
   createdAt: string | null;
@@ -90,6 +91,22 @@ function panelTitleForProductCode(productCode?: string | null) {
   if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
   if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
   return "Master 360";
+}
+
+function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: unknown): string[] | null {
+  const unlocked = Array.isArray(unlockedProductCodes)
+    ? unlockedProductCodes.map((c) => String(c || "").trim()).filter(Boolean)
+    : [];
+  const codes = [(productCode || "").trim() || "VETQ_MASTER_360", ...unlocked];
+  for (const c of codes) {
+    if (visibleKeysForProductCode(c) === null) return null;
+  }
+  const set = new Set<string>();
+  for (const c of codes) {
+    const keys = visibleKeysForProductCode(c);
+    if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+  }
+  return [...set];
 }
 
 const REFERENCE_RANGES_BY_KEY: Record<string, string> = {
@@ -212,7 +229,7 @@ export async function downloadUrinalysisPdf({ readingId, reading }: { readingId:
   });
 
   const resultsAll = Array.isArray(r.results) ? r.results : [];
-  const keys = visibleKeysForProductCode(r.productCode);
+  const keys = visibleKeysForAccess(r.productCode, (r as any).unlockedProductCodes);
   const results = keys ? resultsAll.filter((it) => keys.includes(it.key)) : resultsAll;
   const physicalKeys = new Set(["ph", "specific-gravity"]);
   const physical = results.filter((it) => physicalKeys.has(it.key));
