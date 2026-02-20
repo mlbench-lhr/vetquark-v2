@@ -457,7 +457,7 @@ function ResultRow({
                     </div>
                   ) : (
                     <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-white flex items-center justify-center shadow-md">
-                      <Check className={`h-3 w-3 ${opt.topLabel === 'Neg' ? 'text-primary' : 'text-white'}`} />
+                      <Check className="h-3 w-3 text-white" />
                     </div>
                   )
                 )}
