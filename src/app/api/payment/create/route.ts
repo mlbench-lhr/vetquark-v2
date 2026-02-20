@@ -21,6 +21,17 @@ type PagarmeOrder = {
   charges?: PagarmePixCharge[];
 };
 
+function panelTitleForProductCode(productCode?: string | null) {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_U_START") return "U-Start";
+  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
+  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
+  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
+  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
+  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
+  return "Master 360";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const userId = String(req.headers.get("x-user-id") || "").trim();
@@ -526,6 +537,7 @@ export async function POST(req: NextRequest) {
           if (mongoose.Types.ObjectId.isValid(veterinarianId) && mongoose.Types.ObjectId.isValid(patientId)) {
             const patient = await Patient.findById(patientId).select("_id animalName").lean();
             const petName = String((patient as any)?.animalName || "a patient");
+            const panelTitle = panelTitleForProductCode(String((link as any).productCode || "VETQ_MASTER_360"));
             const settingsDoc = await PlatformSettings.findOne({}).lean();
             const feeFromLink = Number.isFinite(Number((link as any).platformFee)) ? Number((link as any).platformFee) : null;
             const PLATFORM_FEE =
@@ -558,8 +570,8 @@ export async function POST(req: NextRequest) {
             const isUpgrade = kind === "upgrade";
             const guardianTitle = isUpgrade ? "Upgrade activated" : "Payment completed";
             const guardianMessage = isUpgrade
-              ? `Upgrade completed for ${petName}. Additional parameters are now available.`
-              : `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
+              ? `Upgrade ${panelTitle} activated for ${petName}. Additional parameters are now available.`
+              : `Payment for ${panelTitle} completed for ${petName}. Your veterinarian will finalize the reading soon.`;
             const guardianUrl = isUpgrade && readingId
               ? `/Guardian/history/detail/${encodeURIComponent(String(readingId))}`
               : `/Guardian/payment/${encodeURIComponent(String(link._id))}`;
@@ -588,8 +600,8 @@ export async function POST(req: NextRequest) {
             }
             const title = isUpgrade ? "Upgrade purchased" : "Payment received";
             const message = isUpgrade
-              ? `Upgrade completed for ${petName}.`
-              : `Payment completed for ${petName}. You can now complete the reading.`;
+              ? `Upgrade ${panelTitle} completed for ${petName}.`
+              : `Payment for ${panelTitle} completed for ${petName}. You can now complete the reading.`;
             const url = isUpgrade && readingId
               ? `/Veterinarian/history/detail/${encodeURIComponent(String(readingId))}`
               : `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(String(link._id))}&step=timer`;

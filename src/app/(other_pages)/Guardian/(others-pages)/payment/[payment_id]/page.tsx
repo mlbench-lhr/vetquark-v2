@@ -11,6 +11,8 @@ type PaymentDetails = {
   id: string;
   petName: string;
   amountLabel: string;
+  panelTitle: string;
+  kind: string;
   vetName: string;
   vetCrmv: string;
   invoiceDate: string;
@@ -45,6 +47,8 @@ export default function Page() {
           id: String(item.id),
           petName: String(item.patient?.name || ""),
           amountLabel: String(item.amountLabel || ""),
+          panelTitle: String(item.panelTitle || "Master 360"),
+          kind: String(item.kind || "reading_payment"),
           vetName: String(item.veterinarian?.name || ""),
           vetCrmv:
             item.veterinarian?.crmv && item.veterinarian?.crmvState
@@ -69,6 +73,8 @@ export default function Page() {
         id: String(paymentId || ""),
         petName: "",
         amountLabel: "",
+        panelTitle: "Master 360",
+        kind: "reading_payment",
         vetName: "",
         vetCrmv: "",
         invoiceDate: "",
@@ -121,7 +127,7 @@ export default function Page() {
             Link Generated
           </div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
-            Please proceed to pay to view urinalysis results
+            Please proceed to pay to view {safePayment.kind === "upgrade" ? "upgrade" : "urinalysis"} results ({safePayment.panelTitle})
           </div>
         </div>
 

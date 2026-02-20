@@ -84,7 +84,7 @@ export default function Page() {
         const mapped: PaymentHistoryItem[] = list.map((it: any) => ({
           id: String(it.id),
           petName: String(it.patient?.name || "N/A"),
-          reportName: "Urinalysis Report",
+          reportName: `${it.kind === "upgrade" ? "Upgrade" : "Urinalysis Report"} (${String(it.panelTitle || "Master 360")})`,
           amountLabel: String(it.amountLabel || ""),
           status: String(it.status) === "paid" ? "completed" : "pending",
           vetName: String(it.veterinarian?.name || "N/A"),

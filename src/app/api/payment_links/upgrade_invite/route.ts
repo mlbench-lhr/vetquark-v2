@@ -14,6 +14,17 @@ function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2).replace(".", ",")}`;
 }
 
+function panelTitleForProductCode(productCode?: string | null) {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_U_START") return "U-Start";
+  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
+  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
+  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
+  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
+  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
+  return "Master 360";
+}
+
 const DEFAULT_PANEL_PRICES: Record<string, number> = {
   VETQ_U_START: 33.9,
   VETQ_METABOLIC_CHECK: 49.9,
@@ -178,9 +189,10 @@ export async function POST(req: NextRequest) {
     const url = `/Guardian/payment/${encodeURIComponent(String(created._id))}`;
     const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
     const petName = String((patient as any)?.animalName || "your pet");
+    const panelTitle = panelTitleForProductCode(productCode);
 
     const title = "Upgrade available";
-    const message = `${vetName} sent an upgrade link for ${petName}.`;
+    const message = `${vetName} sent an upgrade link for ${petName} (${panelTitle}).`;
 
     const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
     const canNotify = isPushEnabledForUser(guardianUser, "payment_link");

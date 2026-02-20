@@ -15,6 +15,17 @@ function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2).replace(".", ",")}`;
 }
 
+function panelTitleForProductCode(productCode?: string | null) {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_U_START") return "U-Start";
+  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
+  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
+  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
+  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
+  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
+  return "Master 360";
+}
+
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> | { id: string } }) {
   try {
     const userId = String(req.headers.get("x-user-id") || "").trim();
@@ -68,6 +79,9 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       {
         item: {
           id: String(link._id),
+          kind: String((link as any).kind || "reading_payment"),
+          productCode: String((link as any).productCode || "VETQ_MASTER_360"),
+          panelTitle: panelTitleForProductCode(String((link as any).productCode || "VETQ_MASTER_360")),
           amount: link.amount,
           amountLabel: formatBRL(link.amount),
           platformFee: Number.isFinite(Number((link as any).platformFee)) ? Number((link as any).platformFee) : null,
@@ -126,11 +140,15 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
     const readingId = link.reading ? String(link.reading) : "";
     const kind = String((link as any).kind || "reading_payment");
+    const panelTitle = panelTitleForProductCode(String((link as any).productCode || "VETQ_MASTER_360"));
     if (readingId && mongoose.Types.ObjectId.isValid(readingId)) {
       if (kind === "upgrade") {
         await Reading.updateOne(
           { _id: readingId },
-          { $set: { productCode: String((link as any).productCode || "VETQ_MASTER_360"), panelVersion: Number((link as any).panelVersion || 1) } },
+          {
+            $addToSet: { unlockedProductCodes: String((link as any).productCode || "VETQ_MASTER_360") },
+            $set: { panelVersion: Number((link as any).panelVersion || 1) },
+          },
         );
       } else {
         await Reading.updateOne(
@@ -151,8 +169,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         const isUpgrade = kind === "upgrade";
         const guardianTitle = isUpgrade ? "Upgrade activated" : "Payment completed";
         const guardianMessage = isUpgrade
-          ? `Upgrade completed for ${petName}. Additional parameters are now available.`
-          : `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
+          ? `Upgrade ${panelTitle} activated for ${petName}. Additional parameters are now available.`
+          : `Payment for ${panelTitle} completed for ${petName}. Your veterinarian will finalize the reading soon.`;
         const guardianUrl = isUpgrade && readingId ? `/Guardian/history/detail/${encodeURIComponent(readingId)}` : `/Guardian/payment/${encodeURIComponent(id)}`;
 
         const guardianUser = await User.findById(userId).select("_id role notificationSettings").lean();
@@ -182,8 +200,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
         const title = isUpgrade ? "Upgrade purchased" : "Payment received";
         const message = isUpgrade
-          ? `Upgrade completed for ${petName}.`
-          : `Payment completed for ${petName}. You can now complete the reading.`;
+          ? `Upgrade ${panelTitle} completed for ${petName}.`
+          : `Payment for ${panelTitle} completed for ${petName}. You can now complete the reading.`;
         const url = isUpgrade && readingId
           ? `/Veterinarian/history/detail/${encodeURIComponent(readingId)}`
           : `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(id)}&step=timer`;
