@@ -500,7 +500,7 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
   useEffect(() => {
     const next: ReviewSelectionMap = { ...selectedByKey }
     let changed = false
-    for (const row of visibleRows) {
+    for (const row of RESULT_ROWS) {
       if (typeof next[row.key] === "number") continue
       next[row.key] = row.defaultIndex
       changed = true
@@ -530,7 +530,7 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
       <div className="mt-6 space-y-3">
         <button
           onClick={() => {
-            const results: ReviewResultDraft[] = visibleRows.map((row) => {
+            const results: ReviewResultDraft[] = RESULT_ROWS.map((row) => {
               const selectedIndex = selectedByKey[row.key] ?? row.defaultIndex
               const opt = row.options[selectedIndex]
               const valueLabel = opt ? opt.topLabel : row.options[row.defaultIndex]?.topLabel ?? ""

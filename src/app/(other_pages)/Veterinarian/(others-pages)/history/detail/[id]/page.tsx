@@ -7,6 +7,8 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { downloadUrinalysisPdf } from "@/utils/urinalysisPdf";
+import { useAppSelector } from "@/store/hooks";
+import type { RootState } from "@/store/store";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -127,6 +129,27 @@ function asReportText(value: string | null | undefined) {
   return s ? s : "N/A";
 }
 
+const PANEL_DEFS: Array<{ code: string; title: string; subtitle: string; suggested: number }> = [
+  { code: "VETQ_U_START", title: "U-Start", subtitle: "Essential Urinary Triage", suggested: 33.9 },
+  { code: "VETQ_METABOLIC_CHECK", title: "Metabolic Check", subtitle: "Metabolic Screening", suggested: 49.9 },
+  { code: "VETQ_RENAL_EXPRESS", title: "Renal Express", subtitle: "Early Renal Screening", suggested: 59.9 },
+  { code: "VETQ_RENAL_ADVANCED", title: "Renal Advanced", subtitle: "Renal + Minerals", suggested: 69.9 },
+  { code: "VETQ_HEPATOSCREEN", title: "HepatoScreen", subtitle: "Indirect Hepatobiliary Screening", suggested: 49.9 },
+  { code: "VETQ_GERIATRIC_CARE", title: "Geriatric Care", subtitle: "Preventive 7+ Protocol", suggested: 79.9 },
+  { code: "VETQ_MASTER_360", title: "Master 360", subtitle: "Complete 16-Parameter Protocol", suggested: 89.9 },
+];
+
+function isStrictSupersetUpgrade(currentProductCode: string, targetProductCode: string) {
+  const currentKeys = visibleKeysForProductCode(currentProductCode);
+  if (currentKeys === null) return false;
+  const targetKeys = visibleKeysForProductCode(targetProductCode);
+  if (targetKeys === null) return (currentProductCode || "").trim() !== "VETQ_MASTER_360";
+  if (!Array.isArray(currentKeys) || !Array.isArray(targetKeys)) return false;
+  const targetSet = new Set(targetKeys);
+  const allIncluded = currentKeys.every((k) => targetSet.has(k));
+  return allIncluded && targetKeys.length > currentKeys.length;
+}
+
 async function shareReadingReport() {
   const url = window.location.href;
   const navAny = navigator as any;
@@ -145,9 +168,13 @@ export default function ReportDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { t } = useTranslation();
+  const profile = useAppSelector((s: RootState) => s.userProfile.profile);
   const readingId = useMemo(() => String((params as any)?.id || "").trim(), [params]);
   const [loading, setLoading] = useState(false);
   const [reading, setReading] = useState<ReadingDetail | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeProductCode, setUpgradeProductCode] = useState<string>("");
+  const [sendingUpgrade, setSendingUpgrade] = useState(false);
 
   useEffect(() => {
     if (!readingId) return;
@@ -221,6 +248,57 @@ export default function ReportDetailsPage() {
     }
   }, [readingId]);
 
+  const currentProductCode = useMemo(() => String(reading?.productCode || "VETQ_MASTER_360"), [reading?.productCode]);
+  const upgradeOptions = useMemo(() => {
+    const current = currentProductCode;
+    return PANEL_DEFS.map((p) => ({
+      ...p,
+      disabled: !isStrictSupersetUpgrade(current, p.code),
+    }));
+  }, [currentProductCode]);
+
+  const priceLabelFor = useCallback(
+    (productCode: string, suggested: number) => {
+      const raw = profile?.panelPrices && typeof profile.panelPrices === "object" ? (profile.panelPrices as any) : null;
+      const v = raw && Object.prototype.hasOwnProperty.call(raw, productCode) ? (raw as any)[productCode] : null;
+      const n = typeof v === "number" ? v : Number(v);
+      const fallback =
+        productCode === "VETQ_MASTER_360"
+          ? (typeof profile?.baseExamPrice === "number" && Number.isFinite(profile.baseExamPrice) ? profile.baseExamPrice : suggested)
+          : suggested;
+      const amount = Number.isFinite(n) && n >= 0 ? n : fallback;
+      return `R$ ${amount.toFixed(2).replace(".", ",")}`;
+    },
+    [profile?.baseExamPrice, profile?.panelPrices]
+  );
+
+  const handleSendUpgradeInvite = useCallback(async () => {
+    if (!readingId) return;
+    const productCode = (upgradeProductCode || "").trim();
+    if (!productCode) return;
+    if (sendingUpgrade) return;
+    try {
+      setSendingUpgrade(true);
+      const res = await fetch("/api/payment_links/upgrade_invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ readingId, productCode }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        toast.error(typeof (json as any)?.error === "string" ? (json as any).error : "Failed to send invite");
+        return;
+      }
+      toast.success("Invite sent");
+      setUpgradeOpen(false);
+      setUpgradeProductCode("");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to send invite");
+    } finally {
+      setSendingUpgrade(false);
+    }
+  }, [readingId, sendingUpgrade, upgradeProductCode]);
+
   return (
     <div className="min-h-[100dvh] w-full bg-white">
       <div className="mx-auto w-full pb-6">
@@ -253,6 +331,18 @@ export default function ReportDetailsPage() {
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M10.0003 4.16634V11.2497M12.5003 5.83301L10.0003 3.33301L7.50033 5.83301M4.16699 9.99967V14.1663C4.16699 14.6084 4.34259 15.0323 4.65515 15.3449C4.96771 15.6574 5.39163 15.833 5.83366 15.833H14.167C14.609 15.833 15.0329 15.6574 15.3455 15.3449C15.6581 15.0323 15.8337 14.6084 15.8337 14.1663V9.99967" stroke="#3E9306" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
+            </button>
+            <button
+              type="button"
+              aria-label="Invite to upgrade"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-[#EBF2FF] px-3 text-[13px] font-medium text-[#3F78D8]"
+              onClick={() => {
+                setUpgradeOpen(true);
+                setUpgradeProductCode("");
+              }}
+              disabled={!reading || currentProductCode === "VETQ_MASTER_360"}
+            >
+              Invite To Upgrade
             </button>
           </div>
         </div>
@@ -356,6 +446,68 @@ export default function ReportDetailsPage() {
           </>
         )}
       </div>
+
+      {upgradeOpen ? (
+        <div className="fixed inset-0 z-50">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/30"
+            onClick={() => {
+              setUpgradeOpen(false);
+              setUpgradeProductCode("");
+            }}
+            aria-label="Close"
+          />
+          <div className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 shadow-xl">
+            <div className="text-center">
+              <div className="text-[16px] font-semibold text-[#111827]">Invite To Upgrade</div>
+              <div className="mt-1 text-[13px] text-[#6B7280]">Tap to select a panel type & invite the guardian</div>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {upgradeOptions.map((p) => {
+                const selected = upgradeProductCode === p.code;
+                const disabled = p.disabled;
+                return (
+                  <button
+                    key={p.code}
+                    type="button"
+                    className={`w-full rounded-2xl px-4 py-3 text-left ${disabled ? "bg-gray-100 opacity-60" : "bg-[#F5F6F6]"}`}
+                    onClick={() => {
+                      if (disabled) return;
+                      setUpgradeProductCode(p.code);
+                    }}
+                    disabled={disabled}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-[15px] font-medium text-[#111827]">{p.title}</div>
+                        <div className="mt-1 text-[12px] text-[#3F78D8]">
+                          {p.subtitle} - {priceLabelFor(p.code, p.suggested)}
+                        </div>
+                      </div>
+                      <div
+                        className={`h-6 w-10 rounded-full p-1 transition-colors ${selected ? "bg-[#3F78D8]" : "bg-gray-300"}`}
+                      >
+                        <div className={`h-4 w-4 rounded-full bg-white transition-transform ${selected ? "translate-x-4" : "translate-x-0"}`} />
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="mt-5 w-full rounded-full bg-[#3F78D8] py-4 text-[15px] font-medium text-white disabled:opacity-60"
+              onClick={handleSendUpgradeInvite}
+              disabled={!upgradeProductCode || sendingUpgrade}
+            >
+              {sendingUpgrade ? "Sending..." : "Send Invite"}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

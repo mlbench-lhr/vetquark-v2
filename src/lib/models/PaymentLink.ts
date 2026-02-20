@@ -1,6 +1,7 @@
 import { Schema, model, models } from "mongoose";
 
 export type PaymentLinkStatus = "pending" | "paid" | "expired";
+export type PaymentLinkKind = "reading_payment" | "upgrade";
 
 export interface IPaymentLink {
   _id?: string;
@@ -8,6 +9,7 @@ export interface IPaymentLink {
   guardian: Schema.Types.ObjectId;
   patient: Schema.Types.ObjectId;
   reading?: Schema.Types.ObjectId | null;
+  kind?: PaymentLinkKind;
   productCode?: string;
   panelVersion?: number;
   amount: number;
@@ -30,6 +32,7 @@ const PaymentLinkSchema = new Schema<IPaymentLink>(
     guardian: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     patient: { type: Schema.Types.ObjectId, ref: "Patient", required: true, index: true },
     reading: { type: Schema.Types.ObjectId, ref: "Reading", default: null, index: true },
+    kind: { type: String, enum: ["reading_payment", "upgrade"], default: "reading_payment", index: true },
     productCode: { type: String, default: "VETQ_MASTER_360", trim: true, index: true },
     panelVersion: { type: Number, default: 1, min: 1 },
     amount: { type: Number, required: true, min: 0 },

@@ -82,11 +82,11 @@ export async function POST(req: NextRequest) {
 
     let link: any = null;
     if (linkIdRaw && mongoose.Types.ObjectId.isValid(linkIdRaw)) {
-      link = await PaymentLink.findById(linkIdRaw).select("_id status veterinarian patient guardian amount currency reading").lean();
+      link = await PaymentLink.findById(linkIdRaw).select("_id status kind productCode panelVersion veterinarian patient guardian amount currency reading platformFee").lean();
     }
     if (!link && txId) {
       link = await PaymentLink.findOne({ provider: "pagarme", providerTransactionId: txId })
-        .select("_id status veterinarian patient guardian amount currency reading")
+        .select("_id status kind productCode panelVersion veterinarian patient guardian amount currency reading platformFee")
         .lean();
     }
     if (!link) {
@@ -121,6 +121,7 @@ export async function POST(req: NextRequest) {
     const wasPaid = String(link.status) === "paid";
     const shouldMarkPaid = statusRaw === "paid" || statusRaw === "authorized" || statusRaw === "captured";
     const shouldMarkExpired = statusRaw === "refused" || statusRaw === "failed" || statusRaw === "chargedback";
+    const kind = String((link as any).kind || "reading_payment");
 
     if (!wasPaid && shouldMarkPaid) {
       await PaymentLink.updateOne({ _id: link._id }, { $set: { status: "paid" } });
@@ -130,11 +131,21 @@ export async function POST(req: NextRequest) {
 
     const readingId = link.reading ? String(link.reading) : "";
     if (readingId && mongoose.Types.ObjectId.isValid(readingId)) {
-      await Reading.updateOne(
-        { _id: readingId },
-        { $set: { paymentStatus: shouldMarkExpired ? "expired" : shouldMarkPaid ? "paid" : String(link.status), paymentLink: link._id } },
-      );
-      console.log("WebhookPagarme reading updated", JSON.stringify({ readingId, status: shouldMarkExpired ? "expired" : shouldMarkPaid ? "paid" : String(link.status) }));
+      if (kind === "upgrade") {
+        if (shouldMarkPaid) {
+          await Reading.updateOne(
+            { _id: readingId },
+            { $set: { productCode: String((link as any).productCode || "VETQ_MASTER_360"), panelVersion: Number((link as any).panelVersion || 1) } },
+          );
+          console.log("WebhookPagarme reading upgraded", JSON.stringify({ readingId, productCode: String((link as any).productCode || "VETQ_MASTER_360") }));
+        }
+      } else {
+        await Reading.updateOne(
+          { _id: readingId },
+          { $set: { paymentStatus: shouldMarkExpired ? "expired" : shouldMarkPaid ? "paid" : String(link.status), paymentLink: link._id } },
+        );
+        console.log("WebhookPagarme reading updated", JSON.stringify({ readingId, status: shouldMarkExpired ? "expired" : shouldMarkPaid ? "paid" : String(link.status) }));
+      }
     }
 
     if (!wasPaid && shouldMarkPaid) {
@@ -146,9 +157,13 @@ export async function POST(req: NextRequest) {
         const patient = await Patient.findById(patientId).select("_id animalName").lean();
         const petName = String((patient as any)?.animalName || "a patient");
 
-        const guardianTitle = "Payment completed";
-        const guardianMessage = `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
-        const guardianUrl = `/Guardian/payment/${encodeURIComponent(String(link._id))}`;
+        const guardianTitle = kind === "upgrade" ? "Upgrade activated" : "Payment completed";
+        const guardianMessage = kind === "upgrade"
+          ? `Upgrade completed for ${petName}. Additional parameters are now available.`
+          : `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
+        const guardianUrl = kind === "upgrade"
+          ? `/Guardian/history/detail/${encodeURIComponent(String(readingId))}`
+          : `/Guardian/payment/${encodeURIComponent(String(link._id))}`;
 
         const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
         const canNotifyGuardian = isPushEnabledForUser(guardianUser, "payment_received");
@@ -175,9 +190,13 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        const title = "Payment received";
-        const message = `Payment completed for ${petName}. You can now complete the reading.`;
-        const url = `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(String(link._id))}&step=timer`;
+        const title = kind === "upgrade" ? "Upgrade purchased" : "Payment received";
+        const message = kind === "upgrade"
+          ? `Upgrade completed for ${petName}.`
+          : `Payment completed for ${petName}. You can now complete the reading.`;
+        const url = kind === "upgrade"
+          ? `/Veterinarian/history/detail/${encodeURIComponent(String(readingId))}`
+          : `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(String(link._id))}&step=timer`;
 
         const vetUser = await User.findById(veterinarianId).select("_id role notificationSettings").lean();
         const canNotifyVet = isPushEnabledForUser(vetUser, "payment_received");

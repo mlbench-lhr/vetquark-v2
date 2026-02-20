@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     console.log("PaymentCreate user ok", JSON.stringify({ userId, role: (user as any).role }));
 
     const link: any = await PaymentLink.findOne({ _id: paymentLinkId, guardian: userId })
-      .select("_id amount currency status veterinarian patient")
+      .select("_id amount currency status kind productCode panelVersion veterinarian patient reading platformFee")
       .lean();
     if (!link) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (String(link.status) !== "pending") {
@@ -504,10 +504,18 @@ export async function POST(req: NextRequest) {
           await PaymentLink.updateOne({ _id: link._id }, { $set: { status: "paid" } });
           const readingId = String((link as any).reading || "");
           if (readingId && mongoose.Types.ObjectId.isValid(readingId)) {
-            await (await import("@/lib/models/Reading")).default.updateOne(
-              { _id: readingId },
-              { $set: { paymentStatus: "paid", paymentLink: link._id } },
-            );
+            const kind = String((link as any).kind || "reading_payment");
+            if (kind === "upgrade") {
+              await (await import("@/lib/models/Reading")).default.updateOne(
+                { _id: readingId },
+                { $set: { productCode: String((link as any).productCode || "VETQ_MASTER_360"), panelVersion: Number((link as any).panelVersion || 1) } },
+              );
+            } else {
+              await (await import("@/lib/models/Reading")).default.updateOne(
+                { _id: readingId },
+                { $set: { paymentStatus: "paid", paymentLink: link._id } },
+              );
+            }
           }
           const veterinarianId = String(link.veterinarian || "").trim();
           const patientId = String(link.patient || "").trim();
@@ -543,9 +551,15 @@ export async function POST(req: NextRequest) {
                 releaseAt,
               });
             }
-            const guardianTitle = "Payment completed";
-            const guardianMessage = `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
-            const guardianUrl = `/Guardian/payment/${encodeURIComponent(String(link._id))}`;
+            const kind = String((link as any).kind || "reading_payment");
+            const isUpgrade = kind === "upgrade";
+            const guardianTitle = isUpgrade ? "Upgrade activated" : "Payment completed";
+            const guardianMessage = isUpgrade
+              ? `Upgrade completed for ${petName}. Additional parameters are now available.`
+              : `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
+            const guardianUrl = isUpgrade && readingId
+              ? `/Guardian/history/detail/${encodeURIComponent(String(readingId))}`
+              : `/Guardian/payment/${encodeURIComponent(String(link._id))}`;
             const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
             const canNotifyGuardian = isPushEnabledForUser(guardianUser, "payment_received");
             const guardianNotification = canNotifyGuardian
@@ -569,9 +583,13 @@ export async function POST(req: NextRequest) {
                 createdAt: guardianNotification.createdAt ? new Date(guardianNotification.createdAt).toISOString() : new Date().toISOString(),
               });
             }
-            const title = "Payment received";
-            const message = `Payment completed for ${petName}. You can now complete the reading.`;
-            const url = `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(String(link._id))}&step=timer`;
+            const title = isUpgrade ? "Upgrade purchased" : "Payment received";
+            const message = isUpgrade
+              ? `Upgrade completed for ${petName}.`
+              : `Payment completed for ${petName}. You can now complete the reading.`;
+            const url = isUpgrade && readingId
+              ? `/Veterinarian/history/detail/${encodeURIComponent(String(readingId))}`
+              : `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(String(link._id))}&step=timer`;
             const vetUser = await User.findById(veterinarianId).select("_id role notificationSettings").lean();
             const canNotifyVet = isPushEnabledForUser(vetUser, "payment_received");
             const notification = canNotifyVet
