@@ -153,6 +153,7 @@ export async function POST(req: NextRequest) {
       veterinarian: veterinarianId,
       guardian: (patient as any).guardian?._id ?? (patient as any).guardian,
       patient: patientId,
+      kind: "reading_payment",
       productCode,
       panelVersion: 1,
       amount,

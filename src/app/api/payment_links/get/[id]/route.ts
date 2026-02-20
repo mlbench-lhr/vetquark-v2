@@ -56,7 +56,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     }
 
     const readingId = link.reading ? String(link.reading) : "";
-    if (readingId && mongoose.Types.ObjectId.isValid(readingId)) {
+    const kind = String((link as any).kind || "reading_payment");
+    if (kind !== "upgrade" && readingId && mongoose.Types.ObjectId.isValid(readingId)) {
       await Reading.updateOne(
         { _id: readingId },
         { $set: { paymentStatus: link.status, paymentLink: link._id } },
@@ -124,11 +125,19 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     }
 
     const readingId = link.reading ? String(link.reading) : "";
+    const kind = String((link as any).kind || "reading_payment");
     if (readingId && mongoose.Types.ObjectId.isValid(readingId)) {
-      await Reading.updateOne(
-        { _id: readingId },
-        { $set: { paymentStatus: "paid", paymentLink: link._id } },
-      );
+      if (kind === "upgrade") {
+        await Reading.updateOne(
+          { _id: readingId },
+          { $set: { productCode: String((link as any).productCode || "VETQ_MASTER_360"), panelVersion: Number((link as any).panelVersion || 1) } },
+        );
+      } else {
+        await Reading.updateOne(
+          { _id: readingId },
+          { $set: { paymentStatus: "paid", paymentLink: link._id } },
+        );
+      }
     }
 
     if (!wasPaid) {
@@ -139,9 +148,12 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         const patient = await Patient.findById(patientId).select("_id animalName").lean();
         const petName = String((patient as any)?.animalName || "a patient");
 
-        const guardianTitle = "Payment completed";
-        const guardianMessage = `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
-        const guardianUrl = `/Guardian/payment/${encodeURIComponent(id)}`;
+        const isUpgrade = kind === "upgrade";
+        const guardianTitle = isUpgrade ? "Upgrade activated" : "Payment completed";
+        const guardianMessage = isUpgrade
+          ? `Upgrade completed for ${petName}. Additional parameters are now available.`
+          : `Payment completed for ${petName}. Your veterinarian will finalize the reading soon.`;
+        const guardianUrl = isUpgrade && readingId ? `/Guardian/history/detail/${encodeURIComponent(readingId)}` : `/Guardian/payment/${encodeURIComponent(id)}`;
 
         const guardianUser = await User.findById(userId).select("_id role notificationSettings").lean();
         const canNotifyGuardian = isPushEnabledForUser(guardianUser, "payment_received");
@@ -168,9 +180,13 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
           });
         }
 
-        const title = "Payment received";
-        const message = `Payment completed for ${petName}. You can now complete the reading.`;
-        const url = `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(id)}&step=timer`;
+        const title = isUpgrade ? "Upgrade purchased" : "Payment received";
+        const message = isUpgrade
+          ? `Upgrade completed for ${petName}.`
+          : `Payment completed for ${petName}. You can now complete the reading.`;
+        const url = isUpgrade && readingId
+          ? `/Veterinarian/history/detail/${encodeURIComponent(readingId)}`
+          : `/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}&paymentLinkId=${encodeURIComponent(id)}&step=timer`;
 
         const vetUser = await User.findById(veterinarianId).select("_id role notificationSettings").lean();
         const canNotifyVet = isPushEnabledForUser(vetUser, "payment_received");
