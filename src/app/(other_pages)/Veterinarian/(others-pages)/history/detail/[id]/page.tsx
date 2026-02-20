@@ -249,14 +249,14 @@ export default function ReportDetailsPage() {
 
   const { physicalResults, chemicalResults, microscopicResults } = useMemo(() => {
     const all = Array.isArray(reading?.results) ? reading!.results : [];
-    const keys = isGuardian ? visibleKeysForAccess(reading?.productCode, reading?.unlockedProductCodes) : null;
+    const keys = visibleKeysForAccess(reading?.productCode, reading?.unlockedProductCodes);
     const results = keys ? all.filter((r) => keys.includes(String(r?.key || ""))) : all;
     const physicalKeys = new Set(["ph", "specific-gravity"]);
     const physicalResults = results.filter((r) => physicalKeys.has(r.key));
     const chemicalResults = results.filter((r) => !physicalKeys.has(r.key));
     const microscopicResults: ReadingResult[] = [];
     return { physicalResults, chemicalResults, microscopicResults };
-  }, [isGuardian, reading]);
+  }, [reading]);
 
   const handleDownloadPdf = useCallback(async () => {
     if (!readingId) return;

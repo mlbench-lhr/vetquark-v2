@@ -182,7 +182,6 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       timer: (doc as any).timer ?? null,
       results: (() => {
         const all = Array.isArray((doc as any).results) ? (doc as any).results : [];
-        if (user.role !== "Guardian") return all;
         const keys = visibleKeysForAccess((doc as any).productCode, (doc as any).unlockedProductCodes);
         return keys ? all.filter((r: any) => keys.includes(String(r?.key || ""))) : all;
       })(),
