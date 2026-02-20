@@ -8,6 +8,53 @@ import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { isPushEnabledForUser } from "@/lib/utils";
 
+function visibleKeysForProductCode(productCode?: string | null): string[] | null {
+  const code = (productCode || "").trim() || "VETQ_MASTER_360";
+  if (code === "VETQ_MASTER_360") return null;
+  if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
+  if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_ADVANCED") {
+    return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+  }
+  if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
+  if (code === "VETQ_GERIATRIC_CARE") {
+    return [
+      "glucose",
+      "ketone-bodies",
+      "protein",
+      "microalbumin",
+      "creatine",
+      "calcium",
+      "magnesium",
+      "bilirubin",
+      "urobilinogen",
+      "leukocytes",
+      "nitrite",
+      "blood",
+      "ph",
+      "specific-gravity",
+    ];
+  }
+  return null;
+}
+
+function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: unknown): string[] | null {
+  const unlocked = Array.isArray(unlockedProductCodes)
+    ? unlockedProductCodes.map((c) => String(c || "").trim()).filter(Boolean)
+    : [];
+  const codes = [(productCode || "").trim() || "VETQ_MASTER_360", ...unlocked];
+  for (const c of codes) {
+    if (visibleKeysForProductCode(c) === null) return null;
+  }
+  const set = new Set<string>();
+  for (const c of codes) {
+    const keys = visibleKeysForProductCode(c);
+    if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+  }
+  return [...set];
+}
+
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
   if (headerId?.trim()) return { userId: headerId.trim(), error: null };
@@ -133,7 +180,12 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       paymentLinkId,
       identification: (doc as any).identification ?? null,
       timer: (doc as any).timer ?? null,
-      results: Array.isArray((doc as any).results) ? (doc as any).results : [],
+      results: (() => {
+        const all = Array.isArray((doc as any).results) ? (doc as any).results : [];
+        if (user.role !== "Guardian") return all;
+        const keys = visibleKeysForAccess((doc as any).productCode, (doc as any).unlockedProductCodes);
+        return keys ? all.filter((r: any) => keys.includes(String(r?.key || ""))) : all;
+      })(),
       report: (doc as any).report ?? null,
       patient: {
         id: patientId,

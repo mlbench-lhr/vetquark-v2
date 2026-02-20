@@ -169,7 +169,7 @@ function PageContent() {
         setReports(
           items.map((r: any) => ({
             id: String(r.id || r._id || ""),
-            title: "Urinalysis Report",
+            title: String(r.panelTitle || "Urinalysis Report"),
             dateLabel: formatDateLabel(String(r.date || "")),
             status: r.status === "signed" ? "signed" : "pending",
             avatarSrc: String(r.avatarSrc || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),

@@ -75,6 +75,25 @@ function isAllowedCloudinaryUrl(value: unknown): boolean {
   }
 }
 
+const REQUIRED_RESULT_KEYS = [
+  "leukocytes",
+  "nitrite",
+  "urobilinogen",
+  "protein",
+  "ph",
+  "blood",
+  "specific-gravity",
+  "ascorbic-acid",
+  "ketone-bodies",
+  "bilirubin",
+  "glucose",
+  "microalbumin",
+  "creatine",
+  "calcium",
+  "magnesium",
+  "ammonium-chloride",
+] as const;
+
 export async function POST(req: NextRequest) {
   try {
     const { userId: veterinarianId, error } = getUserIdFromRequest(req);
@@ -177,6 +196,21 @@ export async function POST(req: NextRequest) {
       if (r.numericValue === null) {
         return NextResponse.json({ error: "Invalid results numericValue" }, { status: 400 });
       }
+    }
+
+    const keys = results.map((r) => r.key);
+    const uniqueKeys = new Set(keys);
+    if (uniqueKeys.size !== keys.length) {
+      return NextResponse.json({ error: "Duplicate results key" }, { status: 400 });
+    }
+    const allowed = new Set<string>(REQUIRED_RESULT_KEYS);
+    const extras = keys.filter((k) => !allowed.has(k));
+    if (extras.length) {
+      return NextResponse.json({ error: "Unexpected results key" }, { status: 400 });
+    }
+    const missing = REQUIRED_RESULT_KEYS.filter((k) => !uniqueKeys.has(k));
+    if (missing.length) {
+      return NextResponse.json({ error: "Missing results key" }, { status: 400 });
     }
 
     const report = (body as any).report || {};
