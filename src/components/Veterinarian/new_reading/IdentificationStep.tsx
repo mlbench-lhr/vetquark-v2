@@ -46,13 +46,13 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         code: "VETQ_RENAL_EXPRESS",
         title: "Renal Express",
         description: "Early renal screening",
-        params: "GLU, KET, PH, SG",
+        params: "GLU, KET, PRO, MAL, PH, SG",
       },
       {
         code: "VETQ_RENAL_ADVANCED",
         title: "Renal Advanced",
         description: "Renal + minerals",
-        params: "PRO, MAL, CRE, CA, MG, PH, SG",
+        params: "GLU, KET, PRO, MAL, CRE, CA, MG, PH, SG",
       },
       {
         code: "VETQ_HEPATOSCREEN",
@@ -64,7 +64,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         code: "VETQ_GERIATRIC_CARE",
         title: "Geriatric Care",
         description: "Preventive 7+ protocol",
-        params: "GLU, KET, PRO, MAL, CRE, CA, BIL, UBG, LEU, NIT, BLD, PH, SG",
+        params: "GLU, KET, PRO, MAL, CRE, CA, MG, BIL, UBG, LEU, NIT, BLD, PH, SG",
       },
       {
         code: "VETQ_MASTER_360",

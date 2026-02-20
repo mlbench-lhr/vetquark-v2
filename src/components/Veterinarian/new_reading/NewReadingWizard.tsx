@@ -21,8 +21,8 @@ function visibleKeysForProductCode(productCode: string): string[] | null {
   if (code === 'VETQ_MASTER_360') return null
   if (code === 'VETQ_U_START') return ['leukocytes', 'nitrite', 'blood', 'ph', 'specific-gravity']
   if (code === 'VETQ_METABOLIC_CHECK') return ['glucose', 'ketone-bodies', 'ph', 'specific-gravity']
-  if (code === 'VETQ_RENAL_EXPRESS') return ['glucose', 'ketone-bodies', 'ph', 'specific-gravity']
-  if (code === 'VETQ_RENAL_ADVANCED') return ['protein', 'microalbumin', 'creatine', 'calcium', 'magnesium', 'ph', 'specific-gravity']
+  if (code === 'VETQ_RENAL_EXPRESS') return ['glucose', 'ketone-bodies', 'protein', 'microalbumin', 'ph', 'specific-gravity']
+  if (code === 'VETQ_RENAL_ADVANCED') return ['glucose', 'ketone-bodies', 'protein', 'microalbumin', 'creatine', 'calcium', 'magnesium', 'ph', 'specific-gravity']
   if (code === 'VETQ_HEPATOSCREEN') return ['bilirubin', 'urobilinogen', 'ph', 'specific-gravity']
   if (code === 'VETQ_GERIATRIC_CARE') {
     return [
@@ -32,6 +32,7 @@ function visibleKeysForProductCode(productCode: string): string[] | null {
       'microalbumin',
       'creatine',
       'calcium',
+      'magnesium',
       'bilirubin',
       'urobilinogen',
       'leukocytes',

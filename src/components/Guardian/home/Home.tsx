@@ -17,8 +17,8 @@ function visibleKeysForProductCode(productCode?: string | null): string[] | null
     if (code === "VETQ_MASTER_360") return null;
     if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
     if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-    if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-    if (code === "VETQ_RENAL_ADVANCED") return ["protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+    if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
+    if (code === "VETQ_RENAL_ADVANCED") return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
     if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
     if (code === "VETQ_GERIATRIC_CARE") {
         return [
@@ -28,6 +28,7 @@ function visibleKeysForProductCode(productCode?: string | null): string[] | null
             "microalbumin",
             "creatine",
             "calcium",
+            "magnesium",
             "bilirubin",
             "urobilinogen",
             "leukocytes",
@@ -38,6 +39,22 @@ function visibleKeysForProductCode(productCode?: string | null): string[] | null
         ];
     }
     return null;
+}
+
+function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: string[] | null): string[] | null {
+    const codes = [
+        (productCode || "").trim() || "VETQ_MASTER_360",
+        ...((Array.isArray(unlockedProductCodes) ? unlockedProductCodes : []).map((c) => String(c || "").trim()).filter(Boolean)),
+    ];
+    for (const c of codes) {
+        if (visibleKeysForProductCode(c) === null) return null;
+    }
+    const set = new Set<string>();
+    for (const c of codes) {
+        const keys = visibleKeysForProductCode(c);
+        if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+    }
+    return [...set];
 }
 
 function Header({ name }: HeaderProps) {
@@ -360,7 +377,7 @@ export default function Home() {
     const currentHealth = useMemo(() => {
         const dateRaw = String(latestReading?.signedAt || latestReading?.createdAt || readings?.[0]?.date || "");
         const all = Array.isArray(latestReading?.results) ? latestReading.results : [];
-        const keys = visibleKeysForProductCode(latestReading?.productCode);
+        const keys = visibleKeysForAccess(latestReading?.productCode, (latestReading as any)?.unlockedProductCodes);
         const results = keys ? all.filter((r: any) => keys.includes(String(r?.key || ""))) : all;
         if (results.length === 0) {
             return { lastTestDate: "N/A", parameters: ["No recent tests"] };
@@ -376,7 +393,7 @@ export default function Home() {
         const readingId = String(latestReading?.id || "");
         const dateLabel = formatDateLabel(String(latestReading?.signedAt || latestReading?.createdAt || ""));
         const all = Array.isArray(latestReading?.results) ? latestReading.results : [];
-        const keys = visibleKeysForProductCode(latestReading?.productCode);
+        const keys = visibleKeysForAccess(latestReading?.productCode, (latestReading as any)?.unlockedProductCodes);
         const results = keys ? all.filter((r: any) => keys.includes(String(r?.key || ""))) : all;
         if (!readingId || results.length === 0) return [];
         return results.slice(0, 6).map((r: any, idx: number) => {

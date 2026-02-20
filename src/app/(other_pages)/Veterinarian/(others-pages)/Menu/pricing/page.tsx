@@ -19,10 +19,10 @@ export default function BasePriceCard() {
         () => [
             { code: "VETQ_U_START", title: "U-Start", description: "Essential Urinary Triage (LEU, NIT, BLD, PH, SG)", suggested: 33.9 },
             { code: "VETQ_METABOLIC_CHECK", title: "Metabolic Check", description: "Metabolic Screening (GLU, KET, PH, SG)", suggested: 49.9 },
-            { code: "VETQ_RENAL_EXPRESS", title: "Renal Express", description: "Early Renal Screening (GLU, KET, PH, SG)", suggested: 59.9 },
-            { code: "VETQ_RENAL_ADVANCED", title: "Renal Advanced", description: "Renal + Minerals (PRO, MAL, CRE, CA, MG, PH, SG)", suggested: 69.9 },
+            { code: "VETQ_RENAL_EXPRESS", title: "Renal Express", description: "Early Renal Screening (GLU, KET, PRO, MAL, PH, SG)", suggested: 59.9 },
+            { code: "VETQ_RENAL_ADVANCED", title: "Renal Advanced", description: "Renal + Minerals (GLU, KET, PRO, MAL, CRE, CA, MG, PH, SG)", suggested: 69.9 },
             { code: "VETQ_HEPATOSCREEN", title: "HepatoScreen", description: "Indirect Hepatobiliary Screening (BIL, UBG, PH, SG)", suggested: 49.9 },
-            { code: "VETQ_GERIATRIC_CARE", title: "Geriatric Care", description: "Preventive 7+ Protocol (GLU, KET, PRO, MAL, CRE, CA, BIL, UBG, LEU, NIT, BLD, PH, SG)", suggested: 79.9 },
+            { code: "VETQ_GERIATRIC_CARE", title: "Geriatric Care", description: "Preventive 7+ Protocol (GLU, KET, PRO, MAL, CRE, CA, MG, BIL, UBG, LEU, NIT, BLD, PH, SG)", suggested: 79.9 },
         ],
         []
     );

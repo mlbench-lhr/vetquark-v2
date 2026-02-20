@@ -11,6 +11,13 @@ function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2).replace(".", ",")}`;
 }
 
+function parsePriceMaybe(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 const DEFAULT_PANEL_PRICES: Record<string, number> = {
   VETQ_U_START: 33.9,
   VETQ_METABOLIC_CHECK: 49.9,
@@ -66,9 +73,11 @@ export async function POST(req: NextRequest) {
         ? ((veterinarian as any).panelPrices as any)
         : null;
     const customPanelPrice =
-      rawPanelPrices && Object.prototype.hasOwnProperty.call(rawPanelPrices, productCode)
-        ? (typeof rawPanelPrices[productCode] === "number" ? rawPanelPrices[productCode] : Number(rawPanelPrices[productCode]))
-        : null;
+      productCode === "VETQ_MASTER_360"
+        ? null
+        : rawPanelPrices && Object.prototype.hasOwnProperty.call(rawPanelPrices, productCode)
+          ? parsePriceMaybe(rawPanelPrices[productCode])
+          : null;
     const fallback =
       productCode === "VETQ_MASTER_360"
         ? (typeof veterinarian.baseExamPrice === "number" && Number.isFinite(veterinarian.baseExamPrice) ? veterinarian.baseExamPrice : DEFAULT_PANEL_PRICES.VETQ_MASTER_360)

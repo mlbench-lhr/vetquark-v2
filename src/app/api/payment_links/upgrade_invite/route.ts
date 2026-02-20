@@ -29,8 +29,10 @@ function keysForProductCode(productCode: string): string[] | null {
   if (code === "VETQ_MASTER_360") return null;
   if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
   if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_ADVANCED") return ["protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
+  if (code === "VETQ_RENAL_ADVANCED") {
+    return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
+  }
   if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
   if (code === "VETQ_GERIATRIC_CARE") {
     return [
@@ -40,6 +42,7 @@ function keysForProductCode(productCode: string): string[] | null {
       "microalbumin",
       "creatine",
       "calcium",
+      "magnesium",
       "bilirubin",
       "urobilinogen",
       "leukocytes",
@@ -52,15 +55,35 @@ function keysForProductCode(productCode: string): string[] | null {
   return null;
 }
 
-function isStrictSupersetUpgrade(currentProductCode: string, targetProductCode: string) {
-  const currentKeys = keysForProductCode(currentProductCode);
+function accessKeysForReading(productCode: string, unlockedProductCodes: unknown): string[] | null {
+  const unlocked = Array.isArray(unlockedProductCodes)
+    ? unlockedProductCodes.map((c) => String(c || "").trim()).filter(Boolean)
+    : [];
+  const codes = [(productCode || "").trim() || "VETQ_MASTER_360", ...unlocked];
+  for (const c of codes) {
+    if (keysForProductCode(c) === null) return null;
+  }
+  const set = new Set<string>();
+  for (const c of codes) {
+    const keys = keysForProductCode(c);
+    if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+  }
+  return [...set];
+}
+
+function doesTargetAddNewKeys(currentKeys: string[] | null, targetProductCode: string) {
   if (currentKeys === null) return false;
   const targetKeys = keysForProductCode(targetProductCode);
-  if (targetKeys === null) return (currentProductCode || "").trim() !== "VETQ_MASTER_360";
-  if (!Array.isArray(currentKeys) || !Array.isArray(targetKeys)) return false;
-  const targetSet = new Set(targetKeys);
-  const allIncluded = currentKeys.every((k) => targetSet.has(k));
-  return allIncluded && targetKeys.length > currentKeys.length;
+  if (targetKeys === null) return true;
+  const currentSet = new Set(currentKeys);
+  return targetKeys.some((k) => !currentSet.has(k));
+}
+
+function parsePriceMaybe(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 export async function POST(req: NextRequest) {
@@ -89,14 +112,19 @@ export async function POST(req: NextRequest) {
     }
 
     const reading: any = await Reading.findOne({ _id: readingId, veterinarian: veterinarianId })
-      .select("_id patient guardian signedAt paymentStatus productCode panelVersion")
+      .select("_id patient guardian signedAt paymentStatus productCode panelVersion unlockedProductCodes")
       .lean();
     if (!reading) return NextResponse.json({ error: "Reading not found" }, { status: 404 });
     if (!reading.signedAt) return NextResponse.json({ error: "Reading not signed" }, { status: 409 });
     if (String(reading.paymentStatus) !== "paid") return NextResponse.json({ error: "Reading payment not completed" }, { status: 409 });
 
     const currentProductCode = String(reading.productCode || "VETQ_MASTER_360");
-    if (!isStrictSupersetUpgrade(currentProductCode, productCode)) {
+    const unlocked = Array.isArray(reading.unlockedProductCodes) ? reading.unlockedProductCodes.map((c: any) => String(c || "").trim()).filter(Boolean) : [];
+    if (productCode === currentProductCode || unlocked.includes(productCode)) {
+      return NextResponse.json({ error: "Upgrade already applied" }, { status: 409 });
+    }
+    const currentAccessKeys = accessKeysForReading(currentProductCode, unlocked);
+    if (!doesTargetAddNewKeys(currentAccessKeys, productCode)) {
       return NextResponse.json({ error: "Invalid upgrade target" }, { status: 400 });
     }
 
@@ -110,9 +138,11 @@ export async function POST(req: NextRequest) {
         ? ((veterinarian as any).panelPrices as any)
         : null;
     const customPanelPrice =
-      rawPanelPrices && Object.prototype.hasOwnProperty.call(rawPanelPrices, productCode)
-        ? (typeof rawPanelPrices[productCode] === "number" ? rawPanelPrices[productCode] : Number(rawPanelPrices[productCode]))
-        : null;
+      productCode === "VETQ_MASTER_360"
+        ? null
+        : rawPanelPrices && Object.prototype.hasOwnProperty.call(rawPanelPrices, productCode)
+          ? parsePriceMaybe(rawPanelPrices[productCode])
+          : null;
     const fallback =
       productCode === "VETQ_MASTER_360"
         ? (typeof (veterinarian as any).baseExamPrice === "number" && Number.isFinite((veterinarian as any).baseExamPrice) ? (veterinarian as any).baseExamPrice : DEFAULT_PANEL_PRICES.VETQ_MASTER_360)
@@ -190,4 +220,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
