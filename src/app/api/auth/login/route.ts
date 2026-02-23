@@ -199,11 +199,14 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
 
+    const sessionMaxAgeSeconds = 60 * 60 * 24 * 7;
     res.cookies.set("session_id", token, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
+      maxAge: sessionMaxAgeSeconds,
+      expires: new Date(Date.now() + sessionMaxAgeSeconds * 1000),
     });
 
     return res;
