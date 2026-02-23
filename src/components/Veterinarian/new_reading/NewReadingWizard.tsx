@@ -9,7 +9,7 @@ import TimerStep from './TimerStep'
 import ReviewStep from './ReviewStep'
 import ReportStep from './ReportStep'
 import { toast } from 'react-toastify'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAppSelector } from '@/store/hooks'
 import type { RootState } from '@/store/store'
@@ -50,6 +50,7 @@ function visibleKeysForProductCode(productCode: string): string[] | null {
 export default function NewReadingWizard() {
   const { t } = useTranslation()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const profile = useAppSelector((s: RootState) => s.userProfile.profile)
   const userId = profile?.id || ''
   const [unreadCount, setUnreadCount] = useState(0)
@@ -357,6 +358,7 @@ export default function NewReadingWizard() {
         }
       } catch {
       }
+      router.push('/Veterinarian/history')
     } catch {
       toast.error("Network error while saving reading")
     } finally {
