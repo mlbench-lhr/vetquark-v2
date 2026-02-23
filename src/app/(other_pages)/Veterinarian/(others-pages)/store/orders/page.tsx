@@ -32,8 +32,7 @@ type StoreOrder = {
   address: OrderAddress | null;
 };
 
-const formatBrl = (value: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+const formatBrl = (value: number) => `R$ ${Number(value || 0).toFixed(2)}`;
 
 const formatDateLabel = (iso: string | null) => {
   if (!iso) return "—";
@@ -158,4 +157,3 @@ export default function Page() {
     </div>
   );
 }
-

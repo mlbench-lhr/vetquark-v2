@@ -11,7 +11,7 @@ import { isPushEnabledForUser } from "@/lib/utils";
 import PlatformSettings from "@/lib/models/PlatformSettings";
 
 function formatBRL(amount: number) {
-  return `R$ ${amount.toFixed(2).replace(".", ",")}`;
+  return `R$ ${amount.toFixed(2)}`;
 }
 
 function panelTitleForProductCode(productCode?: string | null) {

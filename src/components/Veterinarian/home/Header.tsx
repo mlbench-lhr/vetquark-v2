@@ -22,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
   const resolvedName = profile?.fullName || userName || 'User';
   const userId = profile?.id || '';
   const [unreadCount, setUnreadCount] = useState(0);
-  const [walletBalance, setWalletBalance] = useState<string>(balance || "R$ 0,00");
+  const [walletBalance, setWalletBalance] = useState<string>(balance || "R$ 0.00");
 
   const refreshUnread = useCallback(async () => {
     try {

@@ -124,7 +124,7 @@ export default function Page() {
           type="button"
           onClick={() => router.back()}
           className="flex h-0 w-fit items-center justify-center rounded-full"
-          aria-label="Back"
+          // aria-label="Back"
         >
           <ChevronLeft className="h-6 w-6 text-[#111827]" />
         </button>

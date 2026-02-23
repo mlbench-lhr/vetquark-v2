@@ -5,7 +5,7 @@ import User from "@/lib/models/User";
 import WalletTransaction from "@/lib/models/WalletTransaction";
 
 function formatBRL(amount: number) {
-  return `R$ ${amount.toFixed(2).replace(".", ",")}`;
+  return `R$ ${amount.toFixed(2)}`;
 }
 
 export async function GET(req: NextRequest) {
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     const transactions = docs.map((tx: any) => {
       const isWithdrawal = tx.type === "withdrawal";
       const amountLabel = (typeof tx.amountNet === "number" && Number.isFinite(tx.amountNet))
-        ? tx.amountNet.toFixed(2).replace(".", ",")
+        ? tx.amountNet.toFixed(2)
         : "";
       const createdAtIso = tx.createdAt ? new Date(tx.createdAt as any).toISOString() : null;
       return {

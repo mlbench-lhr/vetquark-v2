@@ -305,7 +305,7 @@ export default function ReportDetailsPage() {
     (productCode: string, suggested: number) => {
       if (productCode === "VETQ_MASTER_360") {
         const n = typeof profile?.baseExamPrice === "number" && Number.isFinite(profile.baseExamPrice) ? profile.baseExamPrice : suggested;
-        return `R$ ${n.toFixed(2).replace(".", ",")}`;
+        return `R$ ${n.toFixed(2)}`;
       }
       const raw = profile?.panelPrices && typeof profile.panelPrices === "object" ? (profile.panelPrices as any) : null;
       const v = raw && Object.prototype.hasOwnProperty.call(raw, productCode) ? (raw as any)[productCode] : null;
@@ -316,7 +316,7 @@ export default function ReportDetailsPage() {
             ? v
             : Number(v);
       const amount = Number.isFinite(n) && n >= 0 ? n : suggested;
-      return `R$ ${amount.toFixed(2).replace(".", ",")}`;
+      return `R$ ${amount.toFixed(2)}`;
     },
     [profile?.baseExamPrice, profile?.panelPrices]
   );

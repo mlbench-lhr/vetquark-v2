@@ -5,7 +5,7 @@ import User from "@/lib/models/User";
 import PaymentLink from "@/lib/models/PaymentLink";
 
 function formatBRL(amount: number) {
-  return `R$ ${amount.toFixed(2).replace(".", ",")}`;
+  return `R$ ${amount.toFixed(2)}`;
 }
 
 function panelTitleForProductCode(productCode?: string | null) {

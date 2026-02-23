@@ -12,7 +12,7 @@ import WalletTransaction from "@/lib/models/WalletTransaction";
 import PlatformSettings from "@/lib/models/PlatformSettings";
 
 function formatBRL(amount: number) {
-  return `R$ ${amount.toFixed(2).replace(".", ",")}`;
+  return `R$ ${amount.toFixed(2)}`;
 }
 
 function panelTitleForProductCode(productCode?: string | null) {
