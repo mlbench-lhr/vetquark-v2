@@ -124,7 +124,7 @@ export default function Home() {
     }, []);
     return (
         <div className="">
-            <Header userName={profile?.fullName} balance="$ 925,00" />
+            <Header userName={profile?.fullName} balance="$ 925.00" />
             <SearchBar />
 
             <div className="mt-3 grid grid-cols-2 gap-3">

@@ -10,7 +10,7 @@ type Props = {
   sending?: boolean
 }
 
-export default function LinkGenerated({ amountLabel = 'R$ 5,00', onSend, onBack, sending }: Props) {
+export default function LinkGenerated({ amountLabel = 'R$ 5.00', onSend, onBack, sending }: Props) {
   const { t } = useTranslation()
   return (
     <div className="">
@@ -19,7 +19,7 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', onSend, onBack,
 
       <div className="mt-6 rounded-2xl bg-linear-to-r to-[#EBF2FF] from-[#F5F6F6] px-5 py-4">
         <div className="text-sm text-gray-700">{t('reading.identification.amountToBePaid')}</div>
-        <div className="text-4xl font-bold text-primary mt-2">{amountLabel?.replaceAll(",",".")}</div>
+        <div className="text-4xl font-bold text-primary mt-2">{amountLabel}</div>
       </div>
       {/* show while its generating... */}
       {/* <div className="mt-10 flex items-center justify-center">

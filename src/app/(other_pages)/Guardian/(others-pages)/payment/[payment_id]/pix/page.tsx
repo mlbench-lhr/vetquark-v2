@@ -9,7 +9,7 @@ export default function Page() {
 
   const params = useParams<{ payment_id: string }>();
   const paymentId = String(params?.payment_id || "").trim();
-  const [amountLabel, setAmountLabel] = useState("R$ 0,00");
+  const [amountLabel, setAmountLabel] = useState("R$ 0.00");
   const [paying, setPaying] = useState(false);
   const [pixCode] = useState<string>("");
   const [qrUrl] = useState<string>("");

@@ -8,7 +8,7 @@ import Reading from "@/lib/models/Reading";
 import PlatformSettings from "@/lib/models/PlatformSettings";
 
 function formatBRL(amount: number) {
-  return `R$ ${amount.toFixed(2).replace(".", ",")}`;
+  return `R$ ${amount.toFixed(2)}`;
 }
 
 function parsePriceMaybe(value: unknown): number | null {

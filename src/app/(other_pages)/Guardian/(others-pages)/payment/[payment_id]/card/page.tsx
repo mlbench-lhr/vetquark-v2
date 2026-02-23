@@ -9,7 +9,7 @@
    const router = useRouter();
    const params = useParams<{ payment_id: string }>();
    const paymentId = String(params?.payment_id || "").trim();
-   const [amountLabel, setAmountLabel] = useState("R$ 0,00");
+  const [amountLabel, setAmountLabel] = useState("R$ 0.00");
    const [number, setNumber] = useState("");
    const [holderName, setHolderName] = useState("");
    const [holderDocument, setHolderDocument] = useState("");
@@ -162,7 +162,7 @@
              Amount to be paid
            </div>
            <div className="mt-1 text-[36px] font-semibold leading-[40px] tracking-[-0.02em] text-[#3F78D8]">
-             {amountLabel?.replaceAll(",",".")}
+             {amountLabel}
            </div>
          </div>
  

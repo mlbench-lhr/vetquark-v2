@@ -35,7 +35,7 @@ const defaultTransactions: Transaction[] = [
         type: "credit",
         title: "Wolfy",
         subtitle: "Urinalysis Report",
-        amount: "5,00",
+        amount: "5.00",
         avatarUrl: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&h=100&fit=crop&crop=face",
     },
     {
@@ -50,7 +50,7 @@ const defaultTransactions: Transaction[] = [
         type: "withdrawal",
         title: "PIX (CPF/CNPJ)",
         date: "15/02/2026",
-        amount: "5,00",
+        amount: "5.00",
         isPix: true,
     },
 ];
