@@ -9,6 +9,8 @@ import { ToastContainer } from 'react-toastify';
 import { Metadata } from 'next';
 import ReduxProvider from '@/store/ReduxProvider';
 import I18nProvider from '@/i18n/I18nProvider';
+import { Suspense } from 'react';
+import Image from 'next/image';
 
 
 const outfit = Outfit({
@@ -23,6 +25,14 @@ export const metadata: Metadata = {
   },
 };
 
+function GlobalLoader() {
+  return (
+    <div className="flex items-center justify-center flex-col gap-1.5 h-[100vh] w-[100vw] bg-primary">
+      <Image src={"/Group 1261153125.png"} alt='' width={47} height={42} />
+      <span className='text-white font-bold'>V e t Q u a r k</span>
+    </div>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -50,7 +60,11 @@ export default function RootLayout({
                   pauseOnHover
                   theme="colored"
                 />
-                <SidebarProvider>{children}</SidebarProvider>
+                <SidebarProvider>
+                  <Suspense fallback={<GlobalLoader />}>
+                    {children}
+                  </Suspense>
+                </SidebarProvider>
               </ThemeProvider>
             </UserProvider>
           </I18nProvider>
