@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
+import connectMongo from "@/lib/mongodb";
+import User from "@/lib/models/User";
 import PaymentLink from "@/lib/models/PaymentLink";
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> | { id: string } }) {
   try {
+    const userId = String(req.headers.get("x-user-id") || "").trim();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const apiKey = String(process.env.PAGARME_SECRET_KEY || "").trim();
     if (!apiKey) return NextResponse.json({ error: "Missing PAGARME_SECRET_KEY" }, { status: 500 });
 
@@ -11,10 +19,27 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     const idRaw = String(resolved?.id || "").trim();
     if (!idRaw) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
-    const link = mongoose.Types.ObjectId.isValid(idRaw)
-      ? await PaymentLink.findById(idRaw).select("_id providerTransactionId status").lean()
-      : null;
-    const txId = link ? String((link as any).providerTransactionId || "") : idRaw;
+    await connectMongo();
+
+    const user = await User.findById(userId).select("_id role").lean();
+    if (!user || ((user as any).role !== "Guardian" && (user as any).role !== "Veterinarian")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const filter =
+      (user as any).role === "Guardian"
+        ? mongoose.Types.ObjectId.isValid(idRaw)
+          ? { _id: idRaw, guardian: userId }
+          : { provider: "pagarme", providerTransactionId: idRaw, guardian: userId }
+        : mongoose.Types.ObjectId.isValid(idRaw)
+          ? { _id: idRaw, veterinarian: userId }
+          : { provider: "pagarme", providerTransactionId: idRaw, veterinarian: userId };
+
+    const link: any = await PaymentLink.findOne(filter)
+      .select("_id providerTransactionId status reading kind productCode panelVersion")
+      .lean();
+    const txId = String(link?.providerTransactionId || (mongoose.Types.ObjectId.isValid(idRaw) ? "" : idRaw) || "").trim();
+    if (!txId) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const base = String(process.env.PAGARME_API_BASE || "https://api.pagar.me").replace(/\/+$/, "");
     const origin = new URL(req.url).origin;
@@ -48,6 +73,47 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     const charge = Array.isArray(ord?.charges) ? ord.charges[0] : null;
     const status = String(ord?.status || charge?.status || "");
     console.log("PaymentStatus v5 ok", JSON.stringify({ id: txId, status }));
+
+    const statusLower = status.trim().toLowerCase();
+    const shouldMarkPaid = statusLower === "paid" || statusLower === "authorized" || statusLower === "captured";
+    const shouldMarkExpired = statusLower === "refused" || statusLower === "failed" || statusLower === "chargedback";
+
+    if (link?._id) {
+      const wasPaid = String(link.status) === "paid";
+      const wasPending = String(link.status) === "pending";
+
+      if (!wasPaid && shouldMarkPaid) {
+        await PaymentLink.updateOne({ _id: link._id }, { $set: { status: "paid" } });
+        const readingId = link.reading ? String(link.reading) : "";
+        if (readingId && mongoose.Types.ObjectId.isValid(readingId)) {
+          const kind = String(link.kind || "reading_payment");
+          if (kind === "upgrade") {
+            await (await import("@/lib/models/Reading")).default.updateOne(
+              { _id: readingId },
+              {
+                $addToSet: { unlockedProductCodes: String(link.productCode || "VETQ_MASTER_360") },
+                $set: { panelVersion: Number(link.panelVersion || 1) },
+              },
+            );
+          } else {
+            await (await import("@/lib/models/Reading")).default.updateOne(
+              { _id: readingId },
+              { $set: { paymentStatus: "paid", paymentLink: link._id } },
+            );
+          }
+        }
+      } else if (wasPending && shouldMarkExpired) {
+        await PaymentLink.updateOne({ _id: link._id, status: "pending" }, { $set: { status: "expired" } });
+        const readingId = link.reading ? String(link.reading) : "";
+        if (readingId && mongoose.Types.ObjectId.isValid(readingId)) {
+          await (await import("@/lib/models/Reading")).default.updateOne(
+            { _id: readingId },
+            { $set: { paymentStatus: "expired", paymentLink: link._id } },
+          );
+        }
+      }
+    }
+
     return NextResponse.json({ id: txId, status }, { status: 200 });
   } catch (e) {
     console.error("PaymentStatus fatal", e);

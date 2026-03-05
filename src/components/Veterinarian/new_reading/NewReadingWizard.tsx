@@ -182,8 +182,20 @@ export default function NewReadingWizard() {
     const channelName = `private-notifications-${userId}`
     const channel = pusher.subscribe(channelName)
 
-    const handler = () => {
+    const handler = (payload: any) => {
       setUnreadCount((prev) => (prev > 0 ? prev + 1 : 1))
+      const type = String(payload?.type || '')
+      const urlStr = String(payload?.url || '')
+      if (type === 'payment_received' && urlStr) {
+        try {
+          const u = new URL(urlStr, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
+          const pid = (u.searchParams.get('paymentLinkId') || '').trim()
+          if (pid && pid === (draft.identification.paymentLinkId || '').trim()) {
+            setPaymentLinkStatus('paid')
+          }
+        } catch {
+        }
+      }
     }
     channel.bind('notification:new', handler)
 
@@ -192,7 +204,7 @@ export default function NewReadingWizard() {
       pusher.unsubscribe(channelName)
       pusher.disconnect()
     }
-  }, [userId])
+  }, [userId, draft.identification.paymentLinkId])
 
   useEffect(() => {
     const onVisibility = () => {
@@ -277,13 +289,18 @@ export default function NewReadingWizard() {
 
     fetchStatus()
     if (paymentLinkId) {
-      interval = setInterval(fetchStatus, 5000)
+      const key = process.env.NEXT_PUBLIC_PUSHER_KEY
+      const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER
+      const pusherConfigured = !!key && !!cluster && !!userId
+      if (!pusherConfigured) {
+        interval = setInterval(fetchStatus, 5000)
+      }
     }
     return () => {
       mounted = false
       if (interval) clearInterval(interval)
     }
-  }, [paymentLinkId])
+  }, [paymentLinkId, userId])
 
   const canSubmit = useMemo(() => {
     const i = draft.identification
