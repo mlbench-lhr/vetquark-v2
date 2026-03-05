@@ -266,8 +266,31 @@ export async function POST(req: NextRequest) {
       const orderId = String(createdV5?.id || "");
       const charge: any = Array.isArray(createdV5?.charges) ? createdV5.charges[0] : null;
       const paymentPix = charge?.payment?.pix || {};
-      const qrCodeText = String(paymentPix?.qr_code || createdV5?.last_transaction?.qr_code || "");
-      const qrCodeBase64 = String(paymentPix?.qr_code_base64 || createdV5?.last_transaction?.qr_code_base64 || "");
+      const lastTxn: any =
+        charge?.last_transaction ||
+        charge?.lastTransaction ||
+        createdV5?.last_transaction ||
+        createdV5?.lastTransaction ||
+        null;
+      const qrCodeText = String(
+        paymentPix?.qr_code ||
+          lastTxn?.qr_code ||
+          lastTxn?.pix_qr_code ||
+          lastTxn?.pix_qrcode ||
+          ""
+      );
+      const qrCodeBase64 = String(
+        paymentPix?.qr_code_base64 ||
+          lastTxn?.qr_code_base64 ||
+          lastTxn?.pix_qr_code_base64 ||
+          ""
+      );
+      const qrCodeUrl = String(
+        paymentPix?.qr_code_url ||
+          lastTxn?.qr_code_url ||
+          lastTxn?.pix_qr_code_url ||
+          ""
+      );
       const statusOrder = String(createdV5?.status || "").toLowerCase();
       const statusCharge = String(charge?.status || "").toLowerCase();
       if (statusOrder === "failed" || statusCharge === "failed") {
@@ -297,7 +320,11 @@ export async function POST(req: NextRequest) {
         transactionId: orderId,
         status: String(createdV5?.status || charge?.status || ""),
         pixQrCode: qrCodeText || null,
-        pixQrCodeUrl: qrCodeBase64 ? `data:image/png;base64,${qrCodeBase64}` : null,
+        pixQrCodeUrl: qrCodeBase64
+          ? `data:image/png;base64,${qrCodeBase64}`
+          : qrCodeUrl
+            ? qrCodeUrl
+            : null,
       };
       return NextResponse.json(responseV5, { status: 200 });
     }
