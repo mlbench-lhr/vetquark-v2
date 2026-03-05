@@ -230,10 +230,6 @@ export default function AddPatientMultiStep() {
         return false;
       }
       const microchip = asNonEmptyTrimmedString(formData.microchip);
-      if (!microchip) {
-        toast.error(t('newPatient.patientForm.microchipRequired'));
-        return false;
-      }
       const species = asNonEmptyTrimmedString(formData.species);
       if (!species) {
         toast.error(t('newPatient.patientForm.speciesRequired'));
@@ -283,28 +279,17 @@ export default function AddPatientMultiStep() {
       return true;
     }
     if (step === 3) {
-      const planName = asNonEmptyTrimmedString(formData.planName);
-      if (!planName) {
-        toast.error(t('newPatient.patientForm.planNameRequired'));
-        return false;
-      }
-      const cardNumber = asNonEmptyTrimmedString(formData.cardNumber);
-      if (!cardNumber) {
-        toast.error(t('newPatient.patientForm.cardNumberRequired'));
-        return false;
-      }
       const cardValidityStr = asNonEmptyTrimmedString(formData.cardValidity);
-      if (!cardValidityStr) {
-        toast.error(t('newPatient.patientForm.cardValidityRequired'));
-        return false;
-      }
-      const todayStr = new Date().toISOString().slice(0, 10);
-      if (cardValidityStr <= todayStr) {
-        toast.error(t('newPatient.patientForm.cardValidityMustBeFuture'));
-        return false;
+      if (cardValidityStr) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (cardValidityStr <= todayStr) {
+          toast.error(t('newPatient.patientForm.cardValidityMustBeFuture'));
+          return false;
+        }
       }
       return true;
     }
+
     return true;
   };
 
@@ -445,7 +430,7 @@ export default function AddPatientMultiStep() {
           }
         }}
       />
-      
+
       {/* Progress Tabs */}
       <div className="bg-white ">
         <div className="flex items-center justify-between relative">
@@ -534,15 +519,15 @@ export default function AddPatientMultiStep() {
                 <div className="space-y-4">
                   <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p- text-center">
                     {formData.photo ? (
-                  <div className="flex w-full h-[200px] flex-col relative items-center gap-3">
-                    <Image width={200} height={200} src={formData.photo} alt="Patient" className="w-full h-full object-contain rounded-lg bg-white" />
-                    <label className="inline-block absolute -top-2 -right-2">
+                      <div className="flex w-full h-[200px] flex-col relative items-center gap-3">
+                        <Image width={200} height={200} src={formData.photo} alt="Patient" className="w-full h-full object-contain rounded-lg bg-white" />
+                        <label className="inline-block absolute -top-2 -right-2">
                           <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                            {uploadingPhoto ?<span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer"> {t('auth.uploading')} 
+                          {uploadingPhoto ? <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer"> {t('auth.uploading')}
                           </span>
-                              :  <div className="p-2 bg-primary rounded-full">
-                            <Pencil color="white" size={16} />
-                          </div>}
+                            : <div className="p-2 bg-primary rounded-full">
+                              <Pencil color="white" size={16} />
+                            </div>}
                         </label>
                       </div>
                     ) : (
@@ -574,7 +559,7 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.microchipLabel')}<span className="text-red-500">*</span></label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.microchipLabel')}</label>
                     <input
                       type="number"
                       placeholder={t('newPatient.patientForm.microchipPlaceholder')}
@@ -657,7 +642,7 @@ export default function AddPatientMultiStep() {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.ageYearsLabel') || 'Age (years)'}</label>
                     <input
@@ -761,7 +746,7 @@ export default function AddPatientMultiStep() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.healthPlanNameLabel')}<span className="text-red-500">*</span></label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.healthPlanNameLabel')}</label>
                     <input
                       type="text"
                       placeholder={t('newPatient.patientForm.healthPlanNamePlaceholder')}
@@ -772,7 +757,7 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.planCardNumberLabel')}<span className="text-red-500">*</span></label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.planCardNumberLabel')}</label>
                     <input
                       type="number"
                       placeholder={t('newPatient.patientForm.planCardNumberPlaceholder')}
@@ -783,7 +768,7 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.cardValidityLabel')}<span className="text-red-500">*</span></label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.cardValidityLabel')}</label>
                     <div className="relative">
                       <input
                         ref={cardValidityRef}
@@ -879,8 +864,8 @@ export default function AddPatientMultiStep() {
           >
             {currentStep === 4
               ? (submitting
-                  ? (patientId ? t('common.saving') : t('auth.creating'))
-                  : (patientId ? t('common.saveChanges') : t('newPatient.patientForm.addAnimalButton')))
+                ? (patientId ? t('common.saving') : t('auth.creating'))
+                : (patientId ? t('common.saveChanges') : t('newPatient.patientForm.addAnimalButton')))
               : t('auth.next')}
           </button>
 
