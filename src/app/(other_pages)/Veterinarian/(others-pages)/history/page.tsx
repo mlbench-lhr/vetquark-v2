@@ -20,6 +20,9 @@ type ReportHistoryItem = {
   guardianName: string;
   dateLabel: string;
   status: ReportStatus;
+  signedAt: string | null;
+  isSigned: boolean;
+  wizardStep: "identification" | "timer" | "review" | "report";
   avatarSrc: string;
   paymentStatus: PaymentStatus | null;
   paymentLinkId: string;
@@ -32,6 +35,9 @@ type ApiReportHistoryItem = {
   guardianName: string;
   date: string;
   status: ReportStatus;
+  signedAt?: string | null;
+  isSigned?: boolean;
+  wizardStep?: "identification" | "timer" | "review" | "report";
   avatarSrc: string;
   paymentStatus?: PaymentStatus | null;
   paymentLinkId?: string;
@@ -110,7 +116,13 @@ async function shareReadingReport(readingId: string, title: string) {
 }
 
 function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; onDownload: () => void; onShare: () => void }) {
-  const viewHref = useMemo(() => `/Veterinarian/history/detail/${item.id}`, [item.id]);
+  const viewHref = useMemo(() => {
+    if (item.isSigned) return `/Veterinarian/history/detail/${item.id}`;
+    const params = new URLSearchParams();
+    params.set("draftId", item.id);
+    params.set("step", item.wizardStep);
+    return `/Veterinarian/new-reading?${params.toString()}`;
+  }, [item.id, item.isSigned, item.wizardStep]);
   const { t } = useTranslation();
 
   return (
@@ -199,6 +211,12 @@ function PageContent() {
             guardianName: it.guardianName,
             dateLabel: formatDateLabel(it.date),
             status: it.status,
+            signedAt: typeof it.signedAt === "string" ? it.signedAt : null,
+            isSigned: typeof it.isSigned === "boolean" ? it.isSigned : typeof it.signedAt === "string" ? true : it.status === "signed",
+            wizardStep:
+              it.wizardStep === "identification" || it.wizardStep === "timer" || it.wizardStep === "review" || it.wizardStep === "report"
+                ? it.wizardStep
+                : "identification",
             avatarSrc: it.avatarSrc,
             paymentStatus: it.paymentStatus === "pending" || it.paymentStatus === "paid" || it.paymentStatus === "expired" ? it.paymentStatus : null,
             paymentLinkId: String(it.paymentLinkId || ""),

@@ -161,7 +161,7 @@ async function fetchReadingDetail(readingId: string) {
   return ((data as any)?.reading ?? null) as ReadingDetail | null;
 }
 
-export async function downloadUrinalysisPdf({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
+async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
   const r = (reading || (await fetchReadingDetail(readingId))) as ReadingDetail | null;
   if (!r) throw new Error("Report not found");
 
@@ -394,11 +394,26 @@ export async function downloadUrinalysisPdf({ readingId, reading }: { readingId:
 
   const blob = await pdf(buildDocument()).toBlob();
   const url = URL.createObjectURL(blob);
+  const fileName = `urinalysis-report-${r.id}.pdf`;
+  return { url, fileName };
+}
+
+export async function downloadUrinalysisPdf({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
+  const { url, fileName } = await createUrinalysisPdfObjectUrl({ readingId, reading });
   const a = document.createElement("a");
   a.href = url;
-  a.download = `urinalysis-report-${r.id}.pdf`;
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+export async function openUrinalysisPdf({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
+  const { url } = await createUrinalysisPdfObjectUrl({ readingId, reading });
+  const opened = window.open(url, "_blank", "noopener,noreferrer");
+  if (!opened) {
+    window.location.assign(url);
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

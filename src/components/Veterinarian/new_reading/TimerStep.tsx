@@ -93,6 +93,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const alertedAtSetRef = useRef<Set<number>>(new Set())
   const audioCtxRef = useRef<AudioContext | null>(null)
   const prevGrayRef = useRef<Uint8Array | null>(null)
+  const analyzeAbortRef = useRef<AbortController | null>(null)
 
   const [cameraError, setCameraError] = useState('')
   const [needsTap, setNeedsTap] = useState(false)
@@ -101,6 +102,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [secondsLeft, setSecondsLeft] = useState(() => Math.max(selectedSeconds, requiredTotalSeconds))
   const [running, setRunning] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
+  const [analysisFailed, setAnalysisFailed] = useState(false)
   const [started, setStarted] = useState(false)
   const [qualityOk, setQualityOk] = useState(false)
   const [qualityChecking, setQualityChecking] = useState(false)
@@ -117,6 +119,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     capturedAtSetRef.current = new Set()
     alertedAtSetRef.current = new Set()
     setStarted(false)
+    setAnalysisFailed(false)
   }, [onChangeSelectedSeconds, selectedSeconds])
 
   useEffect(() => {
@@ -412,6 +415,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   }, [cameraReady, qualityChecking, qualityIssue, qualityOk, t])
   const handlePrimaryClick = useCallback(() => {
     if (!started) {
+      setAnalysisFailed(false)
       setStarted(true)
       setRunning(true)
       const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext
@@ -427,8 +431,30 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     setRunning((r) => !r)
   }, [started])
 
+  const handleRetry = useCallback(() => {
+    setAnalysisFailed(false)
+    setAnalyzing(false)
+    setRunning(false)
+    setStarted(false)
+    setSecondsLeft(selectedSeconds)
+    setImages([])
+    capturedAtSetRef.current = new Set()
+    alertedAtSetRef.current = new Set()
+    prevGrayRef.current = null
+  }, [selectedSeconds])
+
+  const handleCancelAnalyze = useCallback(() => {
+    const ctrl = analyzeAbortRef.current
+    analyzeAbortRef.current = null
+    if (ctrl) ctrl.abort()
+    setAnalysisFailed(false)
+    setAnalyzing(false)
+    toast.info(t('reading.timer.analysisCanceled'))
+  }, [t])
+
   const handleAnalyze = async () => {
     try {
+      setAnalysisFailed(false)
       setAnalyzing(true)
       const payload = {
         images: images.map((img) => ({
@@ -440,10 +466,13 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       let data: any
       try {
+        const controller = new AbortController()
+        analyzeAbortRef.current = controller
         const res = await fetch('https://waqassultani-best-matching-backend.hf.space/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
+          signal: controller.signal,
         })
 
         if (!res.ok) {
@@ -454,8 +483,11 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         if (data?.success === false) {
           throw new Error('Analysis failed')
         }
-      } catch {
+      } catch (e) {
+        if ((e as any)?.name === 'AbortError') throw e
         data = buildDemoAnalysisResponse(times)
+      } finally {
+        analyzeAbortRef.current = null
       }
 
       const numericResults = transformTestBoxes(data)
@@ -472,7 +504,11 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       onAnalyzeAndProceed(mappedResults)
     } catch (e) {
+      if ((e as any)?.name === 'AbortError') {
+        return
+      }
       console.error(e)
+      setAnalysisFailed(true)
       toast.error(t('reading.timer.failedToAnalyzeImages'))
     } finally {
       setAnalyzing(false)
@@ -485,17 +521,54 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       <p className="text-sm text-tertiary">{t('reading.timer.desc')}</p>
 
       <div className="mt-6 rounded-3xl border-2 border-primary overflow-hidden bg-black/10">
-        <div className="relative h-72 bg-black">
-          <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
+        <div className="relative h-72 bg-black overflow-hidden">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`h-full w-full object-cover transition ${analyzing ? 'opacity-70 blur-[1px] scale-[1.01]' : ''}`}
+          />
           <canvas ref={canvasRef} className="hidden" />
+
+          {cameraReady && (
+            <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+              <div className="w-12 h-[90%] rounded-xl border-2 border-dashed border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
+            </div>
+          )}
+
           {!cameraReady ? (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-white/80">
+            <div className="absolute inset-0 z-20 flex items-center justify-center text-sm text-white/80">
               {cameraError ? cameraError : t('reading.timer.startingCamera')}
             </div>
           ) : null}
           {cameraReady ? (
-            <div className="absolute left-2 bottom-2 text-xs px-2 py-1 rounded bg-black/50 text-white">
+            <div className="absolute z-20 left-2 bottom-2 text-xs px-2 py-1 rounded bg-black/50 text-white">
               {qualityMessage}
+            </div>
+          ) : null}
+
+          {analyzing ? (
+            <div className="absolute inset-0 z-30 flex items-end p-3">
+              <div className="w-full rounded-2xl bg-black/55 backdrop-blur-sm border border-white/10 px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-white min-w-0">
+                    <div className="h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
+                    <div className="text-sm font-medium truncate">{t('reading.timer.analyzing')}</div>
+                  </div>
+                  {/* <button
+                    type="button"
+                    onClick={handleCancelAnalyze}
+                    className="shrink-0 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs font-medium px-3 py-1.5"
+                  >
+                    {t('reading.timer.cancel')}
+                  </button> */}
+                </div>
+
+                <div className="mt-2 h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full w-1/3 bg-white/60 animate-pulse" />
+                </div>
+              </div>
             </div>
           ) : null}
         </div>
@@ -537,8 +610,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
             {captureProgress.allDone
               ? t('reading.timer.allCapturesComplete')
               : captureProgress.next != null
-              ? t('reading.timer.nextAt', { seconds: captureProgress.next })
-              : '—'}
+                ? t('reading.timer.nextAt', { seconds: captureProgress.next })
+                : '—'}
           </div>
         </div>
       </div>
@@ -575,16 +648,29 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       </div>
 
       <div className="mt-6 space-y-3">
-        <button
-          onClick={handleAnalyze}
-          disabled={!captureProgress.allDone || analyzing}
-          className={`w-full py-4 rounded-full font-medium ${captureProgress.allDone && !analyzing
-            ? 'bg-primary text-white'
-            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-            }`}
-        >
-          {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
-        </button>
+        {analysisFailed ? (
+          <button
+            onClick={handleRetry}
+            disabled={analyzing}
+            className={`w-full py-4 rounded-full font-medium ${!analyzing
+              ? 'bg-primary text-white'
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            {t('reading.timer.retry')}
+          </button>
+        ) : (
+          <button
+            onClick={handleAnalyze}
+            disabled={!captureProgress.allDone || analyzing}
+            className={`w-full py-4 rounded-full font-medium ${captureProgress.allDone && !analyzing
+              ? 'bg-primary text-white'
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
+          </button>
+        )}
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
           {t('common.back')}
         </button>

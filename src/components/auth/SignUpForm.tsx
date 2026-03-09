@@ -11,7 +11,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useAppDispatch } from "@/store/hooks";
 import { setProfile as setUserProfile } from "@/store/userProfileSlice";
 import { useTranslation } from "react-i18next";
-import { STATES_BY_COUNTRY, CITIES_BY_COUNTRY_STATE } from "@/lib/locationData";
+import { STATES_BY_COUNTRY, getCountryCities } from "@/lib/locationData";
 import Image from "next/image";
 
 type ProfileType = "veterinarian" | "tutor";
@@ -198,17 +198,7 @@ export default function SignUpForm() {
   }
 
   async function fetchCountryStateCities(country: string, stateName: string, stateCode?: string, signal?: AbortSignal): Promise<string[]> {
-    const normalizedCountry = String(country || "").trim();
-    const byCountry = CITIES_BY_COUNTRY_STATE[normalizedCountry] || {};
-    const listByCode = stateCode ? (byCountry[stateCode] || []) : [];
-    const listByName = stateName ? (byCountry[stateName] || []) : [];
-    const seen = new Set<string>();
-    const merged = [...listByCode, ...listByName].filter((c) => {
-      if (seen.has(c)) return false;
-      seen.add(c);
-      return true;
-    });
-    return merged;
+    return getCountryCities(country, stateCode, stateName);
   }
 
   const [formData, setFormData] = useState<SignUpFormData>(() => getEmptyFormData());

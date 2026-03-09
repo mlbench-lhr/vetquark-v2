@@ -27,6 +27,9 @@ type ReadingDetail = {
   productCode?: string;
   panelVersion?: number;
   unlockedProductCodes?: string[];
+  paymentStatus?: "pending" | "paid" | "expired" | null;
+  paymentLinkId?: string;
+  wizardStep?: "identification" | "timer" | "review" | "report";
   signedAt: string | null;
   createdAt: string | null;
   signatureImageUrl: string | null;
@@ -241,6 +244,19 @@ export default function ReportDetailsPage() {
       mounted = false;
     };
   }, [readingId]);
+
+  useEffect(() => {
+    if (!isVeterinarian) return;
+    if (!reading) return;
+    if (reading.signedAt) return;
+    const params = new URLSearchParams();
+    params.set("draftId", String(reading.id || readingId));
+    const ws = String((reading as any).wizardStep || "").trim();
+    const step =
+      ws === "identification" || ws === "timer" || ws === "review" || ws === "report" ? ws : "identification";
+    params.set("step", step);
+    router.replace(`/Veterinarian/new-reading?${params.toString()}`);
+  }, [isVeterinarian, reading, router]);
 
   const generatedAtLabel = useMemo(() => {
     const ts = reading?.signedAt ?? reading?.createdAt ?? null;

@@ -45,38 +45,64 @@ export async function GET(req: NextRequest) {
     const resultArr = await coll
       .aggregate([
         {
-          $group: {
-            _id: null,
-            totalGross: {
-              $sum: {
-                $cond: [{ $eq: ["$type", "credit"] }, { $ifNull: ["$amountGross", 0] }, 0],
+          $facet: {
+            summary: [
+              {
+                $group: {
+                  _id: null,
+                  totalGross: {
+                    $sum: {
+                      $cond: [{ $eq: ["$type", "credit"] }, { $ifNull: ["$amountGross", 0] }, 0],
+                    },
+                  },
+                  feesCollected: {
+                    $sum: {
+                      $cond: [{ $eq: ["$type", "credit"] }, { $ifNull: ["$platformFee", 0] }, 0],
+                    },
+                  },
+                  netPayouts: {
+                    $sum: {
+                      $cond: [{ $eq: ["$type", "withdrawal"] }, { $ifNull: ["$amountNet", 0] }, 0],
+                    },
+                  },
+                },
               },
-            },
-            feesCollected: {
-              $sum: {
-                $cond: [{ $eq: ["$type", "credit"] }, { $ifNull: ["$platformFee", 0] }, 0],
+            ],
+            avgChargePerTestPerVet: [
+              { $match: { type: "credit" } },
+              {
+                $group: {
+                  _id: "$user",
+                  avgCharge: { $avg: { $ifNull: ["$amountGross", 0] } },
+                },
               },
-            },
-            netPayouts: {
-              $sum: {
-                $cond: [{ $eq: ["$type", "withdrawal"] }, { $ifNull: ["$amountNet", 0] }, 0],
+              {
+                $group: {
+                  _id: null,
+                  value: { $avg: "$avgCharge" },
+                },
               },
-            },
+            ],
           },
         },
       ])
       .toArray();
 
-    const agg = (resultArr && resultArr[0]) || { totalGross: 0, feesCollected: 0, netPayouts: 0 };
-    const totalGross = Number.isFinite(Number(agg.totalGross)) ? Number(agg.totalGross) : 0;
-    const feesCollected = Number.isFinite(Number(agg.feesCollected)) ? Number(agg.feesCollected) : 0;
-    const netPayouts = Number.isFinite(Number(agg.netPayouts)) ? Number(agg.netPayouts) : 0;
+    const out = (resultArr && resultArr[0]) || { summary: [], avgChargePerTestPerVet: [] };
+    const summaryDoc = Array.isArray((out as any).summary) ? (out as any).summary[0] : null;
+    const avgDoc = Array.isArray((out as any).avgChargePerTestPerVet) ? (out as any).avgChargePerTestPerVet[0] : null;
+
+    const totalGross = Number.isFinite(Number(summaryDoc?.totalGross)) ? Number(summaryDoc.totalGross) : 0;
+    const feesCollected = Number.isFinite(Number(summaryDoc?.feesCollected)) ? Number(summaryDoc.feesCollected) : 0;
+    const netPayouts = Number.isFinite(Number(summaryDoc?.netPayouts)) ? Number(summaryDoc.netPayouts) : 0;
+    const avgChargePerTestPerVet = Number.isFinite(Number(avgDoc?.value)) ? Number(avgDoc.value) : 0;
 
     return NextResponse.json(
       {
         totalGross,
         feesCollected,
         netPayouts,
+        avgChargePerTestPerVet,
       },
       { status: 200 }
     );
@@ -84,4 +110,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

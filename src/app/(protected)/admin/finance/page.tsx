@@ -8,7 +8,7 @@ import { SearchComponent } from "@/components/SearchComponent";
 import { Column, DynamicTable } from "@/components/Table/page";
 import { StatusText } from "@/components/StatusText";
 import { format } from "date-fns";
-import { Briefcase, CreditCard, DollarSign, Pencil, Save, X } from "lucide-react";
+import { Briefcase, CreditCard, DollarSign, Pencil, Save, Stethoscope, X } from "lucide-react";
 import { StatCard } from "@/components/FinanceCard";
 import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ type AdminTransactionRow = {
 export default function Dashboard() {
   const [search, setSearch] = useState<string>("");
   const queryParams = useMemo(() => ({ search }), [search]);
-  const [stats, setStats] = useState<{ totalGross: number; feesCollected: number; netPayouts: number } | null>(null);
+  const [stats, setStats] = useState<{ totalGross: number; feesCollected: number; netPayouts: number; avgChargePerTestPerVet: number } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [feeEditing, setFeeEditing] = useState(false);
   const [feeSaving, setFeeSaving] = useState(false);
@@ -60,6 +60,7 @@ export default function Dashboard() {
             totalGross: Number(sJson.totalGross || 0),
             feesCollected: Number(sJson.feesCollected || 0),
             netPayouts: Number(sJson.netPayouts || 0),
+            avgChargePerTestPerVet: Number(sJson.avgChargePerTestPerVet || 0),
           });
         }
         if (setRes.ok && setJson) {
@@ -114,7 +115,7 @@ export default function Dashboard() {
 
     >
 
-      <div className="w-full grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
+      <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
         <StatCard
           icon={DollarSign}
           iconBgColor="#EFF6FF"
@@ -134,7 +135,6 @@ export default function Dashboard() {
         />
 
         <StatCard
-          className="col-span-2 lg:col-span-1"
           icon={Briefcase}
           iconBgColor="#D1FADF"
           iconColor="#2DAA6E"
@@ -144,6 +144,15 @@ export default function Dashboard() {
             isPositive: true,
           }}
           value={loadingStats ? "—" : `R$ ${Number(stats?.netPayouts || 0).toFixed(2)}`}
+        />
+
+        <StatCard
+          icon={Stethoscope}
+          iconBgColor="#FFF7ED"
+          iconColor="#F97316"
+          title="Avg Charge / Test / Vet"
+          value={loadingStats ? "—" : `R$ ${Number(stats?.avgChargePerTestPerVet || 0).toFixed(2)}`}
+          trend={{ value: 0, isPositive: true }}
         />
 
       </div>

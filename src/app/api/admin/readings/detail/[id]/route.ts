@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
-import User from "@/lib/models/User";
+import Admin from "@/lib/models/Admin";
 import Reading from "@/lib/models/Reading";
-import Notification from "@/lib/models/Notification";
-import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
-import { isPushEnabledForUser } from "@/lib/utils";
 
 function visibleKeysForProductCode(productCode?: string | null): string[] | null {
   const code = (productCode || "").trim() || "VETQ_MASTER_360";
@@ -55,41 +52,40 @@ function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?
   return [...set];
 }
 
-function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
-  const headerId = req.headers.get("x-user-id");
-  if (headerId?.trim()) return { userId: headerId.trim(), error: null };
-
-  const token = req.cookies.get("session_id")?.value || req.cookies.get("auth_token")?.value;
-  if (!token) return { userId: null, error: null };
-
+async function requireAdmin(req: NextRequest) {
+  const token = req.cookies.get("admin_session")?.value;
   const authSecret = process.env.AUTH_SECRET;
+  if (!token) return { ok: false as const, res: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   if (!authSecret) {
-    return {
-      userId: null,
-      error: NextResponse.json({ error: "Server auth misconfigured" }, { status: 500 }),
-    };
+    return { ok: false as const, res: NextResponse.json({ error: "Server auth misconfigured" }, { status: 500 }) };
   }
 
+  let adminId: string | null = null;
+  let role: string | null = null;
   try {
     const decoded = jwt.verify(token, authSecret);
-    if (decoded && typeof decoded === "object" && "sub" in decoded) {
-      const sub = (decoded as { sub?: unknown }).sub;
-      if (typeof sub === "string" && sub.trim()) return { userId: sub.trim(), error: null };
+    if (decoded && typeof decoded === "object") {
+      adminId = typeof (decoded as any).sub === "string" ? String((decoded as any).sub) : null;
+      role = typeof (decoded as any).role === "string" ? String((decoded as any).role) : null;
     }
-    return { userId: null, error: null };
   } catch {
-    return { userId: null, error: null };
+    return { ok: false as const, res: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
+
+  if (!adminId || role !== "Admin" || !mongoose.Types.ObjectId.isValid(adminId)) {
+    return { ok: false as const, res: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  }
+
+  await connectMongo();
+  const admin = await Admin.findById(adminId).select("_id").lean();
+  if (!admin) return { ok: false as const, res: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  return { ok: true as const, adminId };
 }
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> | { id: string } }) {
   try {
-    const { userId, error } = getUserIdFromRequest(req);
-    if (error) return error;
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return auth.res;
 
     const resolvedParams = await Promise.resolve(ctx.params);
     const readingId = String(resolvedParams?.id || "").trim();
@@ -99,77 +95,17 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
 
     await connectMongo();
 
-    const user = await User.findById(userId).select("_id role").lean();
-    if (!user || (user.role !== "Veterinarian" && user.role !== "Guardian")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const filter =
-      user.role === "Veterinarian"
-        ? { _id: readingId, veterinarian: userId }
-        : { _id: readingId, guardian: userId };
-
-    const doc = await Reading.findOne(filter)
+    const doc = await Reading.findById(readingId)
       .populate("patient", "animalName photo")
-      .populate("guardian", "fullName")
-      .populate("veterinarian", "fullName crmv crmvState tradeName clinicLogoUrl reportHeaderAddress reportFooter")
+      .populate("guardian", "fullName email")
+      .populate("veterinarian", "fullName email crmv crmvState tradeName clinicLogoUrl reportHeaderAddress reportFooter")
       .lean();
 
-    if (!doc) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    if (user.role === "Guardian" && (doc as any).isDraft === true) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
+    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const paymentStatus = typeof (doc as any).paymentStatus === "string" ? String((doc as any).paymentStatus) : "";
     const paymentLinkId = (doc as any).paymentLink ? String((doc as any).paymentLink) : "";
     const patientId = String((doc as any).patient?._id ?? (doc as any).patient ?? "");
-
-    if (user.role === "Guardian" && (paymentStatus === "pending" || paymentStatus === "expired")) {
-      return NextResponse.json(
-        { error: "Payment required", paymentStatus, paymentLinkId, patientId },
-        { status: 402 },
-      );
-    }
-
-    if (user.role === "Guardian" && !(doc as any).viewedAt && (doc as any).veterinarian) {
-      await Reading.updateOne({ _id: doc._id }, { $set: { viewedAt: new Date() } });
-
-      const vetId = String((doc as any).veterinarian._id || (doc as any).veterinarian);
-      if (mongoose.Types.ObjectId.isValid(vetId)) {
-        const patientName = (doc as any).patient?.animalName || "a patient";
-        const title = "Reading viewed";
-        const message = `Guardian viewed the reading for ${patientName}.`;
-        const url = `/Veterinarian/history/detail/${encodeURIComponent(String(doc._id))}`;
-
-        const vetUser = await User.findById(vetId).select("_id role notificationSettings").lean();
-        const canNotifyVet = isPushEnabledForUser(vetUser, "reading_viewed");
-        const notification = canNotifyVet
-          ? await Notification.create({
-              user: vetId,
-              type: "reading_viewed",
-              title,
-              message,
-              url,
-              readAt: null,
-            })
-          : null;
-
-        if (notification) {
-          const pusher = getPusherServer();
-          await pusher.trigger(notificationsChannelForUser(vetId), "notification:new", {
-            id: String(notification._id),
-            type: notification.type,
-            title: notification.title,
-            message: notification.message,
-            url: notification.url,
-            createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
-          });
-        }
-      }
-    }
 
     const reading = {
       id: String((doc as any)._id),
@@ -224,3 +160,4 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

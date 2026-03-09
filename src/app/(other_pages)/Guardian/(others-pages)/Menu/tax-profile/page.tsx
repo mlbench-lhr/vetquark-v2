@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { CITIES_BY_COUNTRY_STATE, STATES_BY_COUNTRY } from "@/lib/locationData";
+import { getCountryCities, STATES_BY_COUNTRY } from "@/lib/locationData";
 import Header from "@/components/common/header";
 
 function maskCpf(digits: string) {
@@ -38,18 +38,6 @@ function normalizeStateValue(country: string, raw: string) {
   const list = STATES_BY_COUNTRY[country] || [];
   const found = list.find((s) => s.value === raw || s.text === raw);
   return found?.value || raw;
-}
-
-function getCountryCities(country: string, stateValue: string, stateName: string) {
-  const byCountry = CITIES_BY_COUNTRY_STATE[country] || {};
-  const listByCode = stateValue ? (byCountry[stateValue] || []) : [];
-  const listByName = stateName ? (byCountry[stateName] || []) : [];
-  const seen = new Set<string>();
-  return [...listByCode, ...listByName].filter((c) => {
-    if (seen.has(c)) return false;
-    seen.add(c);
-    return true;
-  });
 }
 
 function PageHeader({
