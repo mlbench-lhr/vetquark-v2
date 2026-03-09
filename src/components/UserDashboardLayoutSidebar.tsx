@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import type { RootState } from "@/store/store";
 import { closeSidebar, toggleCollapse } from "@/store/sidebarSlice";
 import Image from "next/image";
-import { Box, CardSim, CreditCard, LayoutDashboard, Users, Van, X } from "lucide-react";
+import { Box, CreditCard, FileText, LayoutDashboard, Users, Van, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMediaQuery } from "react-responsive";
@@ -40,6 +40,11 @@ const pathsArray: { name: string; link: string; icon: any }[] = [
     name: "Users",
     link: "/admin/users",
     icon: Users,
+  },
+  {
+    name: "Records",
+    link: "/admin/records",
+    icon: FileText,
   },
   {
     name: "Orders & Deliveries",
