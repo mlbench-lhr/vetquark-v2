@@ -6,7 +6,7 @@ import User, { IUser } from "@/lib/models/User";
 import VetGuardianEmailVerification from "@/lib/models/VetGuardianEmailVerification";
 import { sendVerificationEmail, sendWelcomeEmail, sendGuardianInviteEmail } from "@/lib/email";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { STATES_BY_COUNTRY, CITIES_BY_COUNTRY_STATE } from "@/lib/locationData";
+import { STATES_BY_COUNTRY, getCountryCities } from "@/lib/locationData";
 
 function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
@@ -258,11 +258,8 @@ export async function POST(req: NextRequest) {
         if (!stateOk) {
           return NextResponse.json({ error: "Invalid State" }, { status: 400 });
         }
-        const byCountry = CITIES_BY_COUNTRY_STATE[String(country).trim()] || {};
-        const listByCode = byCountry[String(state).trim()] || [];
         const stateText = (states.find((s) => s.value === String(state).trim())?.text || "").trim();
-        const listByName = stateText ? (byCountry[stateText] || []) : [];
-        const merged = Array.from(new Set<string>([...listByCode, ...listByName]));
+        const merged = getCountryCities(String(country).trim(), String(state).trim(), stateText);
         if (merged.length > 0 && !merged.includes(String(city).trim())) {
           return NextResponse.json({ error: "Invalid City" }, { status: 400 });
         }
@@ -492,11 +489,8 @@ export async function POST(req: NextRequest) {
           if (!stateOk) {
             return NextResponse.json({ error: "Invalid State" }, { status: 400 });
           }
-          const byCountry = CITIES_BY_COUNTRY_STATE[cc] || {};
-          const listByCode = byCountry[st] || [];
           const stateText = (states.find((s) => s.value === st)?.text || "").trim();
-          const listByName = stateText ? (byCountry[stateText] || []) : [];
-          const merged = Array.from(new Set<string>([...listByCode, ...listByName]));
+          const merged = getCountryCities(cc, st, stateText);
           if (merged.length > 0 && ct && !merged.includes(ct)) {
             return NextResponse.json({ error: "Invalid City" }, { status: 400 });
           }
@@ -589,11 +583,8 @@ export async function POST(req: NextRequest) {
         if (!stateOk) {
           return NextResponse.json({ error: "Invalid State" }, { status: 400 });
         }
-        const byCountry = CITIES_BY_COUNTRY_STATE[cc] || {};
-        const listByCode = byCountry[st] || [];
         const stateText = (states.find((s) => s.value === st)?.text || "").trim();
-        const listByName = stateText ? (byCountry[stateText] || []) : [];
-        const merged = Array.from(new Set<string>([...listByCode, ...listByName]));
+        const merged = getCountryCities(cc, st, stateText);
         if (merged.length > 0 && ct && !merged.includes(ct)) {
           return NextResponse.json({ error: "Invalid City" }, { status: 400 });
         }
