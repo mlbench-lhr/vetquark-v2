@@ -92,6 +92,8 @@ export async function POST(req: NextRequest) {
         testType: "urine",
         productCode: String((link as any).productCode || "VETQ_MASTER_360"),
         panelVersion: Number((link as any).panelVersion || 1),
+        isDraft: true,
+        wizardStep: "timer",
         identification: {
           collectionMethod,
           collectionAt,

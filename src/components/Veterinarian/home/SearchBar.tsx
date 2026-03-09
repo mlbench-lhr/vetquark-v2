@@ -13,6 +13,7 @@ type ExamSuggestion = {
   patientName: string;
   guardianName: string;
   status: 'signed' | 'pending';
+  wizardStep: 'identification' | 'timer' | 'review' | 'report';
   date: string;
 };
 
@@ -89,6 +90,10 @@ const SearchBar: React.FC = () => {
               patientName: String(r.patientName || 'N/A'),
               guardianName: String(r.guardianName || 'N/A'),
               status: r.status === 'signed' ? 'signed' : 'pending',
+              wizardStep:
+                r.wizardStep === 'identification' || r.wizardStep === 'timer' || r.wizardStep === 'review' || r.wizardStep === 'report'
+                  ? r.wizardStep
+                  : 'identification',
               date: String(r.date || ''),
             })),
           );
@@ -122,7 +127,14 @@ const SearchBar: React.FC = () => {
   const selectExam = (exam: ExamSuggestion) => {
     setQuery(exam.patientName);
     setOpen(false);
-    router.push(`/Veterinarian/history/detail/${exam.id}`);
+    if (exam.status === 'signed') {
+      router.push(`/Veterinarian/history/detail/${exam.id}`);
+      return
+    }
+    const params = new URLSearchParams()
+    params.set('draftId', exam.id)
+    params.set('step', exam.wizardStep)
+    router.push(`/Veterinarian/new-reading?${params.toString()}`)
   };
 
   const formatExamDate = (raw: string) => {

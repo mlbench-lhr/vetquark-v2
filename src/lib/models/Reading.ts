@@ -31,23 +31,25 @@ export interface IReading {
   productCode?: string;
   panelVersion?: number;
   unlockedProductCodes?: string[];
-  identification: {
-    collectionMethod: CollectionMethod;
-    collectionAt: Date;
-    stripLot: string;
-    stripExpiry: Date;
-  };
+  isDraft?: boolean;
+  wizardStep?: "identification" | "timer" | "review" | "report";
+  identification?: {
+    collectionMethod?: CollectionMethod | null;
+    collectionAt?: Date | null;
+    stripLot?: string | null;
+    stripExpiry?: Date | null;
+  } | null;
   timer?: {
     selectedSeconds: number;
     analyzedAt: Date;
     analysis: ReadingTimerAnalysis;
   } | null;
-  results: ReadingResult[];
-  report: {
-    summaryAndInterpretation: string;
-    otherInformation: string;
-    veterinarianNotes: string;
-  };
+  results?: ReadingResult[];
+  report?: {
+    summaryAndInterpretation?: string;
+    otherInformation?: string;
+    veterinarianNotes?: string;
+  } | null;
   signatureImageUrl?: string;
   signedAt?: Date;
   viewedAt?: Date;
@@ -79,11 +81,13 @@ const ReadingSchema = new Schema<IReading>(
     productCode: { type: String, default: "VETQ_MASTER_360", trim: true, index: true },
     panelVersion: { type: Number, default: 1, min: 1 },
     unlockedProductCodes: { type: [String], default: [] },
+    isDraft: { type: Boolean, default: true, index: true },
+    wizardStep: { type: String, enum: ["identification", "timer", "review", "report"], default: "identification", index: true },
     identification: {
-      collectionMethod: { type: String, enum: ["free_catch", "cystocentesis", "catheter"], required: true },
-      collectionAt: { type: Date, required: true },
-      stripLot: { type: String, required: true, trim: true },
-      stripExpiry: { type: Date, required: true },
+      collectionMethod: { type: String, enum: ["free_catch", "cystocentesis", "catheter"], default: null },
+      collectionAt: { type: Date, default: null },
+      stripLot: { type: String, trim: true, default: "" },
+      stripExpiry: { type: Date, default: null },
     },
     timer: {
       selectedSeconds: { type: Number, min: 1 },

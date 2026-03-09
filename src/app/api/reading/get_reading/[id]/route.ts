@@ -119,6 +119,10 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    if (user.role === "Guardian" && (doc as any).isDraft === true) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     const paymentStatus = typeof (doc as any).paymentStatus === "string" ? String((doc as any).paymentStatus) : "";
     const paymentLinkId = (doc as any).paymentLink ? String((doc as any).paymentLink) : "";
     const patientId = String((doc as any).patient?._id ?? (doc as any).patient ?? "");
@@ -173,6 +177,14 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       productCode: (doc as any).productCode ?? "VETQ_MASTER_360",
       panelVersion: (doc as any).panelVersion ?? 1,
       unlockedProductCodes: Array.isArray((doc as any).unlockedProductCodes) ? (doc as any).unlockedProductCodes : [],
+      isDraft: typeof (doc as any).isDraft === "boolean" ? (doc as any).isDraft : !(doc as any).signedAt,
+      wizardStep:
+        (doc as any).wizardStep === "identification" ||
+        (doc as any).wizardStep === "timer" ||
+        (doc as any).wizardStep === "review" ||
+        (doc as any).wizardStep === "report"
+          ? (doc as any).wizardStep
+          : "identification",
       signedAt: (doc as any).signedAt ?? null,
       createdAt: (doc as any).createdAt ?? null,
       signatureImageUrl: (doc as any).signatureImageUrl ?? null,

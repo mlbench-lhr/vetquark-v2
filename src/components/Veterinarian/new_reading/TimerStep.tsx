@@ -485,16 +485,23 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       <p className="text-sm text-tertiary">{t('reading.timer.desc')}</p>
 
       <div className="mt-6 rounded-3xl border-2 border-primary overflow-hidden bg-black/10">
-        <div className="relative h-72 bg-black">
+        <div className="relative h-72 bg-black overflow-hidden">
           <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
           <canvas ref={canvasRef} className="hidden" />
+
+          {cameraReady && (
+            <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+              <div className="w-12 h-[90%] rounded-xl border-2 border-dashed border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
+            </div>
+          )}
+
           {!cameraReady ? (
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-white/80">
+            <div className="absolute inset-0 z-20 flex items-center justify-center text-sm text-white/80">
               {cameraError ? cameraError : t('reading.timer.startingCamera')}
             </div>
           ) : null}
           {cameraReady ? (
-            <div className="absolute left-2 bottom-2 text-xs px-2 py-1 rounded bg-black/50 text-white">
+            <div className="absolute z-20 left-2 bottom-2 text-xs px-2 py-1 rounded bg-black/50 text-white">
               {qualityMessage}
             </div>
           ) : null}
@@ -537,8 +544,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
             {captureProgress.allDone
               ? t('reading.timer.allCapturesComplete')
               : captureProgress.next != null
-              ? t('reading.timer.nextAt', { seconds: captureProgress.next })
-              : '—'}
+                ? t('reading.timer.nextAt', { seconds: captureProgress.next })
+                : '—'}
           </div>
         </div>
       </div>

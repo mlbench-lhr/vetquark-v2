@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Stepper from './Stepper'
 import { NewReadingDraft, NewReadingStep, ReviewResultDraft, ReviewSelectionMap } from './types'
@@ -47,19 +47,8 @@ function visibleKeysForProductCode(productCode: string): string[] | null {
   return null
 }
 
-export default function NewReadingWizard() {
-  const { t } = useTranslation()
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const profile = useAppSelector((s: RootState) => s.userProfile.profile)
-  const userId = profile?.id || ''
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [step, setStep] = useState<NewReadingStep>('identification')
-  const [submitting, setSubmitting] = useState(false)
-  const [paymentLinkStatus, setPaymentLinkStatus] = useState<"unknown" | "pending" | "paid" | "expired">("unknown")
-  const [signatureImageUrl, setSignatureImageUrl] = useState<string>("")
-
-  const [draft, setDraft] = useState<NewReadingDraft>(() => ({
+function makeEmptyDraft(): NewReadingDraft {
+  return {
     identification: {
       patientId: '',
       paymentLinkId: '',
@@ -81,66 +70,45 @@ export default function NewReadingWizard() {
       otherInformation: '',
       veterinarianNotes: '',
     },
+  }
+}
+
+function inferFirstIncompleteStep(draft: NewReadingDraft, signatureImageUrl: string): NewReadingStep {
+  const i = draft.identification
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const expiryStr = (i.stripExpiry || '').trim()
+  const expiryValid = !!expiryStr && expiryStr >= todayStr
+  if (!i.patientId || !i.collectionMethod || !i.collectionAt || !i.stripLot || !expiryValid) return 'identification'
+  if (!draft.timer.analysis) return 'timer'
+  if (!draft.results || draft.results.length === 0) return 'review'
+  if (!signatureImageUrl) return 'report'
+  return 'report'
+}
+
+export default function NewReadingWizard() {
+  const { t } = useTranslation()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const profile = useAppSelector((s: RootState) => s.userProfile.profile)
+  const userId = profile?.id || ''
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [step, setStep] = useState<NewReadingStep>('identification')
+  const [submitting, setSubmitting] = useState(false)
+  const [paymentLinkStatus, setPaymentLinkStatus] = useState<"unknown" | "pending" | "paid" | "expired">("unknown")
+  const [signatureImageUrl, setSignatureImageUrl] = useState<string>("")
+  const [draftId, setDraftId] = useState<string>("")
+  const lastSavedJsonRef = useRef<string>("")
+  const saveTimerRef = useRef<any>(null)
+  const creatingDraftRef = useRef(false)
+
+  const [draft, setDraft] = useState<NewReadingDraft>(() => ({
+    ...makeEmptyDraft(),
   }))
 
   const visibleKeys = useMemo(
     () => visibleKeysForProductCode(draft.identification.panelProductCode || 'VETQ_MASTER_360'),
     [draft.identification.panelProductCode]
   )
-
-  const STORAGE_KEY = 'new_reading_draft_v1'
-
-  useEffect(() => {
-    try {
-      if (typeof window === 'undefined') return
-      const raw = window.localStorage.getItem(STORAGE_KEY)
-      if (!raw) return
-      const saved = JSON.parse(raw) as { draft?: Partial<NewReadingDraft>; step?: NewReadingStep; signatureImageUrl?: string }
-      if (!saved || typeof saved !== 'object') return
-      const sd = saved.draft || {}
-      const sStep = saved.step
-      const sSig = saved.signatureImageUrl
-      setDraft((prev) => ({
-        identification: {
-          patientId: String(sd?.identification?.patientId ?? prev.identification.patientId ?? ''),
-          paymentLinkId: String(sd?.identification?.paymentLinkId ?? prev.identification.paymentLinkId ?? ''),
-          panelProductCode: String(sd?.identification?.panelProductCode ?? prev.identification.panelProductCode ?? 'VETQ_MASTER_360'),
-          collectionMethod: String(sd?.identification?.collectionMethod ?? prev.identification.collectionMethod ?? ''),
-          collectionAt: String(sd?.identification?.collectionAt ?? prev.identification.collectionAt ?? ''),
-          stripLot: String(sd?.identification?.stripLot ?? prev.identification.stripLot ?? ''),
-          stripExpiry: String(sd?.identification?.stripExpiry ?? prev.identification.stripExpiry ?? ''),
-        },
-        timer: {
-          selectedSeconds: Number(sd?.timer?.selectedSeconds ?? prev.timer.selectedSeconds ?? 120),
-          analyzedAt: String(sd?.timer?.analyzedAt ?? prev.timer.analyzedAt ?? ''),
-          analysis: sd?.timer?.analysis ?? prev.timer.analysis ?? null,
-        },
-        reviewSelections: (sd?.reviewSelections as ReviewSelectionMap) ?? prev.reviewSelections ?? {},
-        results: Array.isArray(sd?.results) ? (sd.results as ReviewResultDraft[]) : prev.results ?? [],
-        report: {
-          summaryAndInterpretation: String(sd?.report?.summaryAndInterpretation ?? prev.report.summaryAndInterpretation ?? ''),
-          otherInformation: String(sd?.report?.otherInformation ?? prev.report.otherInformation ?? ''),
-          veterinarianNotes: String(sd?.report?.veterinarianNotes ?? prev.report.veterinarianNotes ?? ''),
-        },
-      } as NewReadingDraft))
-      if (sStep === 'identification' || sStep === 'timer' || sStep === 'review' || sStep === 'report') {
-        setStep(sStep)
-      }
-      if (typeof sSig === 'string') {
-        setSignatureImageUrl(sSig)
-      }
-    } catch {
-    }
-  }, [])
-
-  useEffect(() => {
-    try {
-      if (typeof window === 'undefined') return
-      const payload = JSON.stringify({ draft, step, signatureImageUrl })
-      window.localStorage.setItem(STORAGE_KEY, payload)
-    } catch {
-    }
-  }, [draft, step, signatureImageUrl])
 
   const [patientPreview, setPatientPreview] = useState<{
     animalName: string
@@ -152,6 +120,7 @@ export default function NewReadingWizard() {
   const patientIdFromQuery = useMemo(() => (searchParams.get('patientId') || '').trim(), [searchParams])
   const paymentLinkIdFromQuery = useMemo(() => (searchParams.get('paymentLinkId') || '').trim(), [searchParams])
   const stepFromQuery = useMemo(() => (searchParams.get('step') || '').trim(), [searchParams])
+  const draftIdFromQuery = useMemo(() => (searchParams.get('draftId') || '').trim(), [searchParams])
 
   const refreshUnread = useCallback(async () => {
     try {
@@ -215,25 +184,197 @@ export default function NewReadingWizard() {
   }, [refreshUnread])
 
   useEffect(() => {
-    if (!patientIdFromQuery) return
-    setDraft((prev) => ({
-      ...prev,
-      identification: { ...prev.identification, patientId: patientIdFromQuery },
-    }))
-  }, [patientIdFromQuery])
-
-  useEffect(() => {
-    if (!paymentLinkIdFromQuery) return
-    setDraft((prev) => ({
-      ...prev,
-      identification: { ...prev.identification, paymentLinkId: paymentLinkIdFromQuery },
-    }))
-  }, [paymentLinkIdFromQuery])
+    setDraftId(draftIdFromQuery)
+  }, [draftIdFromQuery])
 
   useEffect(() => {
     if (stepFromQuery !== 'identification' && stepFromQuery !== 'timer' && stepFromQuery !== 'review' && stepFromQuery !== 'report') return
     setStep(stepFromQuery)
   }, [stepFromQuery])
+
+  useEffect(() => {
+    if (!draftIdFromQuery) return
+    let mounted = true
+    ; (async () => {
+      try {
+        const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(draftIdFromQuery)}`, { method: 'GET' })
+        const data = await res.json().catch(() => null)
+        if (!mounted) return
+        if (!res.ok) return
+        const r = data?.reading
+        if (!r) return
+        const nextDraft = makeEmptyDraft()
+        nextDraft.identification.patientId = String(r?.patient?.id || '')
+        nextDraft.identification.paymentLinkId = String(r?.paymentLinkId || '')
+        nextDraft.identification.panelProductCode = String(r?.productCode || 'VETQ_MASTER_360')
+        const cm = String(r?.identification?.collectionMethod || '').trim()
+        nextDraft.identification.collectionMethod = cm === 'free_catch' || cm === 'cystocentesis' || cm === 'catheter' ? cm : ''
+        nextDraft.identification.collectionAt = r?.identification?.collectionAt ? String(r.identification.collectionAt) : ''
+        nextDraft.identification.stripLot = String(r?.identification?.stripLot || '')
+        nextDraft.identification.stripExpiry = r?.identification?.stripExpiry ? String(r.identification.stripExpiry) : ''
+        nextDraft.timer.selectedSeconds = Number(r?.timer?.selectedSeconds || 120)
+        nextDraft.timer.analyzedAt = r?.timer?.analyzedAt ? String(r.timer.analyzedAt) : ''
+        nextDraft.timer.analysis = r?.timer?.analysis ?? null
+        nextDraft.results = Array.isArray(r?.results) ? r.results : []
+        nextDraft.report = r?.report ?? nextDraft.report
+        setDraft(nextDraft)
+        setSignatureImageUrl(typeof r?.signatureImageUrl === 'string' ? r.signatureImageUrl : '')
+        const ws = String(r?.wizardStep || '').trim()
+        const storedStep =
+          ws === 'identification' || ws === 'timer' || ws === 'review' || ws === 'report'
+            ? (ws as NewReadingStep)
+            : inferFirstIncompleteStep(nextDraft, typeof r?.signatureImageUrl === 'string' ? r.signatureImageUrl : '')
+        if (!(stepFromQuery === 'identification' || stepFromQuery === 'timer' || stepFromQuery === 'review' || stepFromQuery === 'report')) {
+          setStep(storedStep)
+        }
+      } catch {
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [draftIdFromQuery, stepFromQuery])
+
+  useEffect(() => {
+    if (draftIdFromQuery) return
+    if (!patientIdFromQuery) return
+    setDraft((prev) => {
+      const prevPatientId = (prev.identification.patientId || '').trim()
+      if (prevPatientId && prevPatientId !== patientIdFromQuery) {
+        const next = makeEmptyDraft()
+        next.identification.patientId = patientIdFromQuery
+        next.identification.paymentLinkId = paymentLinkIdFromQuery || ''
+        return next
+      }
+      return {
+        ...prev,
+        identification: {
+          ...prev.identification,
+          patientId: patientIdFromQuery,
+          paymentLinkId: paymentLinkIdFromQuery || prev.identification.paymentLinkId,
+        },
+      }
+    })
+    setSignatureImageUrl('')
+    lastSavedJsonRef.current = ''
+    creatingDraftRef.current = false
+    setDraftId('')
+  }, [draftIdFromQuery, patientIdFromQuery, paymentLinkIdFromQuery])
+
+  const saveDraftNow = useCallback(
+    async (payload: {
+      draftId?: string
+      patientId: string
+      paymentLinkId?: string
+      wizardStep: NewReadingStep
+      productCode?: string
+      identification: {
+        collectionMethod: string
+        collectionAt: string
+        stripLot: string
+        stripExpiry: string
+      }
+      timer: {
+        selectedSeconds: number
+        analyzedAt: string
+        analysis: any
+      }
+      results: any[]
+      report: any
+      signatureImageUrl: string
+    }) => {
+      try {
+        const res = await fetch('/api/reading/save_draft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json().catch(() => null)
+        if (!res.ok) return null
+        const id = String(data?.id || '').trim()
+        return id || null
+      } catch {
+        return null
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    const patientId = (draft.identification.patientId || '').trim()
+    if (!patientId) return
+    if (draftId) return
+    if (creatingDraftRef.current) return
+    ; (async () => {
+      creatingDraftRef.current = true
+      const createdId = await saveDraftNow({
+        patientId,
+        paymentLinkId: (draft.identification.paymentLinkId || '').trim() || undefined,
+        wizardStep: step,
+        productCode: (draft.identification.panelProductCode || 'VETQ_MASTER_360').trim(),
+        identification: {
+          collectionMethod: String(draft.identification.collectionMethod || ''),
+          collectionAt: String(draft.identification.collectionAt || ''),
+          stripLot: String(draft.identification.stripLot || ''),
+          stripExpiry: String(draft.identification.stripExpiry || ''),
+        },
+        timer: {
+          selectedSeconds: Number(draft.timer.selectedSeconds || 120),
+          analyzedAt: String(draft.timer.analyzedAt || ''),
+          analysis: draft.timer.analysis,
+        },
+        results: Array.isArray(draft.results) ? draft.results : [],
+        report: draft.report,
+        signatureImageUrl: String(signatureImageUrl || ''),
+      })
+      creatingDraftRef.current = false
+      if (!createdId) return
+      setDraftId(createdId)
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('draftId', createdId)
+      params.delete('resume')
+      router.replace(`/Veterinarian/new-reading?${params.toString()}`)
+    })()
+  }, [draft.identification.patientId, draft.identification.paymentLinkId, draft.identification.panelProductCode, draft.report, draft.results, draft.timer, draftId, router, saveDraftNow, searchParams, signatureImageUrl, step])
+
+  useEffect(() => {
+    const patientId = (draft.identification.patientId || '').trim()
+    if (!patientId) return
+    if (!draftId) return
+    const payloadObj = {
+      draftId,
+      patientId,
+      paymentLinkId: (draft.identification.paymentLinkId || '').trim() || undefined,
+      wizardStep: step,
+      productCode: (draft.identification.panelProductCode || 'VETQ_MASTER_360').trim(),
+      identification: {
+        collectionMethod: String(draft.identification.collectionMethod || ''),
+        collectionAt: String(draft.identification.collectionAt || ''),
+        stripLot: String(draft.identification.stripLot || ''),
+        stripExpiry: String(draft.identification.stripExpiry || ''),
+      },
+      timer: {
+        selectedSeconds: Number(draft.timer.selectedSeconds || 120),
+        analyzedAt: String(draft.timer.analyzedAt || ''),
+        analysis: draft.timer.analysis,
+      },
+      results: Array.isArray(draft.results) ? draft.results : [],
+      report: draft.report,
+      signatureImageUrl: String(signatureImageUrl || ''),
+    }
+    const payloadJson = JSON.stringify(payloadObj)
+    if (payloadJson === lastSavedJsonRef.current) return
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(async () => {
+      const id = await saveDraftNow(payloadObj)
+      if (id) {
+        lastSavedJsonRef.current = payloadJson
+      }
+    }, 700)
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [draft, draftId, saveDraftNow, signatureImageUrl, step])
 
   useEffect(() => {
     const patientId = draft.identification.patientId
@@ -335,6 +476,7 @@ export default function NewReadingWizard() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          draftId: draftId || undefined,
           patientId: draft.identification.patientId,
           paymentLinkId: paymentLinkId || undefined,
           identification: {
@@ -359,6 +501,8 @@ export default function NewReadingWizard() {
         return
       }
       toast.success(t("reading.wizard.savedReading"))
+      const nextId = String(data?.id || '').trim()
+      if (nextId) setDraftId(nextId)
       setDraft((prev) => ({
         ...prev,
         identification: { patientId: "", paymentLinkId: "", collectionMethod: "", collectionAt: "", stripLot: "", stripExpiry: "" },
@@ -369,12 +513,7 @@ export default function NewReadingWizard() {
       }))
       setSignatureImageUrl("")
       setStep("identification")
-      try {
-        if (typeof window !== 'undefined') {
-          window.localStorage.removeItem(STORAGE_KEY)
-        }
-      } catch {
-      }
+      setDraftId("")
       router.push('/Veterinarian/history')
     } catch {
       toast.error("Network error while saving reading")

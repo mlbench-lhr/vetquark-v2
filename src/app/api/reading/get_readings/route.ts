@@ -103,7 +103,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const baseFilter: any = user.role === "Veterinarian" ? { veterinarian: userId } : { guardian: userId };
+    const baseFilter: any =
+      user.role === "Veterinarian" ? { veterinarian: userId } : { guardian: userId, isDraft: { $ne: true } };
     if (patientId) baseFilter.patient = patientId;
     if (user.role === "Veterinarian" && guardianId) baseFilter.guardian = guardianId;
 
@@ -178,6 +179,13 @@ export async function GET(req: NextRequest) {
       const isPaymentBlocking = paymentStatus === "pending" || paymentStatus === "expired";
       const productCode = typeof r.productCode === "string" ? String(r.productCode || "").trim() : "";
       const normalizedProductCode = productCode || "VETQ_MASTER_360";
+      const signedAt = r.signedAt ? (new Date(r.signedAt).toISOString?.() ?? String(r.signedAt)) : null;
+      const wizardStepRaw = typeof r.wizardStep === "string" ? String(r.wizardStep || "").trim() : "";
+      const wizardStep =
+        wizardStepRaw === "identification" || wizardStepRaw === "timer" || wizardStepRaw === "review" || wizardStepRaw === "report"
+          ? wizardStepRaw
+          : "identification";
+      const isDraft = typeof r.isDraft === "boolean" ? r.isDraft : !r.signedAt;
       return {
         id: String(r._id),
         patientId: String(r.patient?._id ?? r.patient ?? ""),
@@ -186,6 +194,10 @@ export async function GET(req: NextRequest) {
         veterinarianName: r.veterinarian?.tradeName ?? r.veterinarian?.fullName ?? "N/A",
         date: (r.signedAt ?? r.createdAt ?? new Date()).toISOString?.() ?? String(r.signedAt ?? r.createdAt ?? ""),
         status: isPaymentBlocking ? "pending" : r.signedAt ? "signed" : "pending",
+        signedAt,
+        isSigned: !!r.signedAt,
+        isDraft,
+        wizardStep,
         avatarSrc: r.patient?.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png",
         paymentStatus,
         paymentLinkId: r.paymentLink ? String(r.paymentLink) : "",

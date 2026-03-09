@@ -119,6 +119,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid paymentLinkId" }, { status: 400 });
     }
 
+    const draftIdRaw = String((body as any).draftId || "").trim();
+    const draftId = draftIdRaw ? draftIdRaw : null;
+    if (draftId && !mongoose.Types.ObjectId.isValid(draftId)) {
+      return NextResponse.json({ error: "Invalid draftId" }, { status: 400 });
+    }
+
     const identification = (body as any).identification || {};
     const collectionMethod = identification.collectionMethod;
     const stripLot = String(identification.stripLot || "").trim();
@@ -282,6 +288,8 @@ export async function POST(req: NextRequest) {
             paymentStatus,
             productCode: linkProductCode || "VETQ_MASTER_360",
             panelVersion: linkPanelVersion || 1,
+            isDraft: false,
+            wizardStep: "report",
             identification: {
               collectionMethod,
               collectionAt,
@@ -311,6 +319,10 @@ export async function POST(req: NextRequest) {
       ).lean();
 
       if (updatedReading?._id) {
+        await PaymentLink.updateOne(
+          { _id: paymentLinkId, veterinarian: veterinarianId, patient: patientId, $or: [{ reading: null }, { reading: updatedReading._id }] },
+          { $set: { reading: updatedReading._id } },
+        );
         if (paymentStatus === "paid") {
           const guardianId = String((patient as any).guardian || "");
           const petName = String((patient as any).animalName || "your pet");
@@ -349,6 +361,99 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (draftId) {
+      if (paymentLinkId && paymentLinkReadingId && mongoose.Types.ObjectId.isValid(paymentLinkReadingId) && paymentLinkReadingId !== draftId) {
+        return NextResponse.json({ error: "draftId does not match payment link reading" }, { status: 409 });
+      }
+
+      const updatedReading = await Reading.findOneAndUpdate(
+        { _id: draftId, veterinarian: veterinarianId, $or: [{ signedAt: { $exists: false } }, { signedAt: null }] },
+        {
+          $set: {
+            guardian: (patient as any).guardian,
+            patient: patientId,
+            paymentLink: paymentLinkId,
+            paymentStatus,
+            productCode: linkProductCode || "VETQ_MASTER_360",
+            panelVersion: linkPanelVersion || 1,
+            isDraft: false,
+            wizardStep: "report",
+            identification: {
+              collectionMethod,
+              collectionAt,
+              stripLot,
+              stripExpiry,
+            },
+            timer: {
+              selectedSeconds,
+              analyzedAt,
+              analysis: {
+                summary: analysisSummary,
+                confidence: analysisConfidence,
+                flags: analysisFlags,
+              },
+            },
+            results,
+            report: {
+              summaryAndInterpretation,
+              otherInformation,
+              veterinarianNotes,
+            },
+            signatureImageUrl,
+            signedAt: new Date(),
+          },
+        },
+        { new: true }
+      ).lean();
+
+      if (!updatedReading?._id) {
+        return NextResponse.json({ error: "Draft not found" }, { status: 404 });
+      }
+
+      if (paymentLinkId) {
+        await PaymentLink.updateOne(
+          { _id: paymentLinkId, veterinarian: veterinarianId, patient: patientId, $or: [{ reading: null }, { reading: updatedReading._id }] },
+          { $set: { reading: updatedReading._id } },
+        );
+      }
+
+      if (paymentStatus === "paid") {
+        const guardianId = String((patient as any).guardian || "");
+        const petName = String((patient as any).animalName || "your pet");
+        const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
+        const title = "New reading available";
+        const message = `${vetName} added a new reading for ${petName}.`;
+        const url = `/Guardian/history/detail/${encodeURIComponent(String(updatedReading._id))}`;
+
+        const guardianUser = await User.findById(guardianId).select("_id role notificationSettings").lean();
+        const canNotifyGuardian = isPushEnabledForUser(guardianUser, "reading_signed");
+        const notification = canNotifyGuardian
+          ? await Notification.create({
+              user: guardianId,
+              type: "reading_signed",
+              title,
+              message,
+              url,
+              readAt: null,
+            })
+          : null;
+
+        if (notification) {
+          const pusher = getPusherServer();
+          await pusher.trigger(notificationsChannelForUser(guardianId), "notification:new", {
+            id: String(notification._id),
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            url: notification.url,
+            createdAt: notification.createdAt ? new Date(notification.createdAt).toISOString() : new Date().toISOString(),
+          });
+        }
+      }
+
+      return NextResponse.json({ id: String(updatedReading._id) }, { status: 201 });
+    }
+
     const readingId = new mongoose.Types.ObjectId();
     const created = await Reading.create({
       _id: readingId,
@@ -360,6 +465,8 @@ export async function POST(req: NextRequest) {
       testType: "urine",
       productCode: linkProductCode || "VETQ_MASTER_360",
       panelVersion: linkPanelVersion || 1,
+      isDraft: false,
+      wizardStep: "report",
       identification: {
         collectionMethod,
         collectionAt,

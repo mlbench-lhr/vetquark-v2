@@ -54,8 +54,12 @@ const Page = () => {
           rawItems.map((it: any) => ({
             id: String(it.id || ""),
             date: String(it.date || ""),
-            signed: String(it.status || "") === "signed",
+            signed: typeof it.isSigned === "boolean" ? it.isSigned : typeof it.signedAt === "string" ? true : String(it.status || "") === "signed",
             avatarUrl: String(it.avatarSrc || ""),
+            wizardStep:
+              it.wizardStep === "identification" || it.wizardStep === "timer" || it.wizardStep === "review" || it.wizardStep === "report"
+                ? it.wizardStep
+                : "identification",
           })),
         );
       } catch (e) {
@@ -88,9 +92,16 @@ const Page = () => {
   }, []);
 
   const handleDetails = useCallback(
-    (readingId: string) => {
-      if (!readingId) return;
-      router.push(`/Veterinarian/history/detail/${encodeURIComponent(readingId)}`);
+    (item: ReportHistoryItem) => {
+      if (!item?.id) return;
+      if (item.signed) {
+        router.push(`/Veterinarian/history/detail/${encodeURIComponent(item.id)}`);
+        return;
+      }
+      const params = new URLSearchParams();
+      params.set("draftId", item.id);
+      params.set("step", item.wizardStep);
+      router.push(`/Veterinarian/new-reading?${params.toString()}`);
     },
     [router],
   );
@@ -114,7 +125,7 @@ const Page = () => {
                 avatarUrl={it.avatarUrl || undefined}
                 signed={it.signed}
                 onDownload={() => handleDownload(it.id)}
-                onDetails={() => handleDetails(it.id)}
+                onDetails={() => handleDetails(it)}
               />
             ))}
           </div>
@@ -145,6 +156,7 @@ type ReportHistoryItem = {
   date: string;
   signed: boolean;
   avatarUrl: string;
+  wizardStep: "identification" | "timer" | "review" | "report";
 };
 
 function formatDateLabel(value: string) {
