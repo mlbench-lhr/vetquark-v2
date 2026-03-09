@@ -101,6 +101,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [secondsLeft, setSecondsLeft] = useState(() => Math.max(selectedSeconds, requiredTotalSeconds))
   const [running, setRunning] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
+  const [analysisFailed, setAnalysisFailed] = useState(false)
   const [started, setStarted] = useState(false)
   const [qualityOk, setQualityOk] = useState(false)
   const [qualityChecking, setQualityChecking] = useState(false)
@@ -117,6 +118,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     capturedAtSetRef.current = new Set()
     alertedAtSetRef.current = new Set()
     setStarted(false)
+    setAnalysisFailed(false)
   }, [onChangeSelectedSeconds, selectedSeconds])
 
   useEffect(() => {
@@ -412,6 +414,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   }, [cameraReady, qualityChecking, qualityIssue, qualityOk, t])
   const handlePrimaryClick = useCallback(() => {
     if (!started) {
+      setAnalysisFailed(false)
       setStarted(true)
       setRunning(true)
       const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext
@@ -427,8 +430,21 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     setRunning((r) => !r)
   }, [started])
 
+  const handleRetry = useCallback(() => {
+    setAnalysisFailed(false)
+    setAnalyzing(false)
+    setRunning(false)
+    setStarted(false)
+    setSecondsLeft(selectedSeconds)
+    setImages([])
+    capturedAtSetRef.current = new Set()
+    alertedAtSetRef.current = new Set()
+    prevGrayRef.current = null
+  }, [selectedSeconds])
+
   const handleAnalyze = async () => {
     try {
+      setAnalysisFailed(false)
       setAnalyzing(true)
       const payload = {
         images: images.map((img) => ({
@@ -473,6 +489,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       onAnalyzeAndProceed(mappedResults)
     } catch (e) {
       console.error(e)
+      setAnalysisFailed(true)
       toast.error(t('reading.timer.failedToAnalyzeImages'))
     } finally {
       setAnalyzing(false)
@@ -582,16 +599,29 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       </div>
 
       <div className="mt-6 space-y-3">
-        <button
-          onClick={handleAnalyze}
-          disabled={!captureProgress.allDone || analyzing}
-          className={`w-full py-4 rounded-full font-medium ${captureProgress.allDone && !analyzing
-            ? 'bg-primary text-white'
-            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-            }`}
-        >
-          {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
-        </button>
+        {analysisFailed ? (
+          <button
+            onClick={handleRetry}
+            disabled={analyzing}
+            className={`w-full py-4 rounded-full font-medium ${!analyzing
+              ? 'bg-primary text-white'
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            {t('reading.timer.retry')}
+          </button>
+        ) : (
+          <button
+            onClick={handleAnalyze}
+            disabled={!captureProgress.allDone || analyzing}
+            className={`w-full py-4 rounded-full font-medium ${captureProgress.allDone && !analyzing
+              ? 'bg-primary text-white'
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
+          </button>
+        )}
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
           {t('common.back')}
         </button>
