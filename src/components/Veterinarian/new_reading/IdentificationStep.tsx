@@ -20,6 +20,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   const [patients, setPatients] = useState<PatientListItem[]>([])
   const [showLink, setShowLink] = useState(false)
   const [paymentLinkId, setPaymentLinkId] = useState<string | null>((value.paymentLinkId || '').trim() || null)
+  const [paymentLinkUrl, setPaymentLinkUrl] = useState<string | null>(null)
   const [amountLabel, setAmountLabel] = useState<string | undefined>(undefined)
   const [generating, setGenerating] = useState(false)
   const [sending, setSending] = useState(false)
@@ -141,6 +142,14 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
     setPaymentLinkId(next)
   }, [value.paymentLinkId])
 
+  const buildPaymentLinkUrl = (id: string, serverPath?: string | null) => {
+    const trimmedId = (id || '').trim()
+    if (!trimmedId) return null
+    const path = typeof serverPath === 'string' && serverPath.trim() ? serverPath.trim() : `/Guardian/payment/${encodeURIComponent(trimmedId)}`
+    if (typeof window === 'undefined') return path
+    return `${window.location.origin}${path.startsWith('/') ? '' : '/'}${path}`
+  }
+
   const canProceed = useMemo(() => {
     const todayStr = new Date().toISOString().slice(0, 10)
     const expiryStr = (value.stripExpiry || '').trim()
@@ -152,6 +161,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
     return (
       <LinkGenerated
         amountLabel={amountLabel}
+        paymentUrl={paymentLinkUrl}
         sending={generating || sending}
         onSend={async () => {
           if (sending || generating) return
@@ -191,6 +201,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         onBack={() => {
           setShowLink(false)
           setAmountLabel(undefined)
+          setPaymentLinkUrl(null)
         }}
       />
     )
@@ -359,6 +370,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
                 const nextAmountLabel = typeof data?.item?.amountLabel === "string" ? data.item.amountLabel : undefined
                 setAmountLabel(nextAmountLabel)
                 setPaymentLinkId(existingId)
+                setPaymentLinkUrl(buildPaymentLinkUrl(existingId))
                 setShowLink(true)
               } catch {
                 toast.error(t("reading.identification.networkErrorLoadingPaymentLink"))
@@ -383,6 +395,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
               setPaymentLinkId(id)
               onChange({ paymentLinkId: id })
               setAmountLabel(typeof data?.amountLabel === "string" ? data.amountLabel : undefined)
+              setPaymentLinkUrl(buildPaymentLinkUrl(id, typeof data?.url === "string" ? data.url : null))
               setShowLink(true)
             } catch {
               toast.error(t("reading.identification.networkErrorGeneratingPaymentLink"))
@@ -426,6 +439,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
                         setShowLink(false)
                         setAmountLabel(undefined)
                         setPaymentLinkId(null)
+                        setPaymentLinkUrl(null)
                         onChange({ panelProductCode: p.code, paymentLinkId: "" })
                       }}
                       className={`w-full rounded-[14px] px-4 py-3 text-left ${selected ? "bg-[#EEF4FF]" : "bg-[#F5F6F6]"}`}

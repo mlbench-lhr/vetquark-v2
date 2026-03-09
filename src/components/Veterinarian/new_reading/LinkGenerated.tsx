@@ -1,17 +1,98 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'react-toastify'
 
 type Props = {
   amountLabel?: string
+  paymentUrl?: string | null
   onSend: () => void
   onBack: () => void
   sending?: boolean
 }
 
-export default function LinkGenerated({ amountLabel = 'R$ 5.00', onSend, onBack, sending }: Props) {
+export default function LinkGenerated({ amountLabel = 'R$ 5.00', paymentUrl, onSend, onBack, sending }: Props) {
   const { t } = useTranslation()
+  const [shareOpen, setShareOpen] = useState(false)
+
+  const safeUrl = useMemo(() => {
+    const v = typeof paymentUrl === 'string' ? paymentUrl.trim() : ''
+    return v || null
+  }, [paymentUrl])
+
+  const copyLabel = useMemo(() => t('reading.identification.copyPaymentLink'), [t])
+  const shareLabel = useMemo(() => t('reading.identification.sharePaymentLink'), [t])
+
+  const handleCopy = async () => {
+    if (!safeUrl) {
+      toast.error(t('reading.identification.paymentLinkNotReady'))
+      return
+    }
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(safeUrl)
+        toast.success(t('reading.identification.paymentLinkCopied'))
+        return
+      }
+    } catch {
+    }
+
+    try {
+      const input = document.createElement('input')
+      input.value = safeUrl
+      input.setAttribute('readonly', 'true')
+      input.style.position = 'absolute'
+      input.style.left = '-9999px'
+      document.body.appendChild(input)
+      input.select()
+      input.setSelectionRange(0, input.value.length)
+      const ok = document.execCommand('copy')
+      document.body.removeChild(input)
+      if (ok) toast.success(t('reading.identification.paymentLinkCopied'))
+      else toast.error(t('reading.identification.unableToCopyPaymentLink'))
+    } catch {
+      toast.error(t('reading.identification.unableToCopyPaymentLink'))
+    }
+  }
+
+  const handleShare = async () => {
+    if (!safeUrl) {
+      toast.error(t('reading.identification.paymentLinkNotReady'))
+      return
+    }
+
+    const shareText = `${t('reading.identification.shareTextPrefix')} ${safeUrl}`
+
+    try {
+      if (typeof navigator !== 'undefined' && 'share' in navigator) {
+        await (navigator as any).share({
+          title: t('reading.identification.shareTitle'),
+          text: shareText,
+          url: safeUrl,
+        })
+        return
+      }
+    } catch {
+    }
+
+    setShareOpen(true)
+  }
+
+  const handleShareWhatsApp = () => {
+    if (!safeUrl) return
+    const text = `${t('reading.identification.shareTextPrefix')} ${safeUrl}`
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+    setShareOpen(false)
+  }
+
+  const handleShareEmail = () => {
+    if (!safeUrl) return
+    const subject = t('reading.identification.emailSubject')
+    const body = `${t('reading.identification.emailBodyPrefix')} ${safeUrl}`
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    setShareOpen(false)
+  }
   return (
     <div className="">
       <h2 className="text-lg font-medium text-gray-900">{t('reading.identification.linkGeneratedTitle')}</h2>
@@ -35,6 +116,24 @@ export default function LinkGenerated({ amountLabel = 'R$ 5.00', onSend, onBack,
       </div>
 
       <div className="mt-10 space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={handleCopy}
+            disabled={!safeUrl}
+            className="w-full py-4 rounded-full bg-gray-100 text-gray-700 font-medium disabled:opacity-60"
+          >
+            {copyLabel}
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            disabled={!safeUrl}
+            className="w-full py-4 rounded-full bg-gray-100 text-gray-700 font-medium disabled:opacity-60"
+          >
+            {shareLabel}
+          </button>
+        </div>
         <button
           onClick={onSend}
           disabled={!!sending}
