@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
       const rx = new RegExp(escapeRegex(search), "i");
       const or: any[] = [
         { productCode: { $regex: rx } },
+        { unlockedProductCodes: { $regex: rx } },
         { paymentStatus: { $regex: rx } },
         { "patient.animalName": { $regex: rx } },
         { "guardian.fullName": { $regex: rx } },
@@ -147,6 +148,9 @@ export async function GET(req: NextRequest) {
 
       const paymentStatus = typeof d?.paymentStatus === "string" ? d.paymentStatus : null;
       const productCode = typeof d?.productCode === "string" ? d.productCode : "VETQ_MASTER_360";
+      const unlockedProductCodes = Array.isArray(d?.unlockedProductCodes)
+        ? d.unlockedProductCodes.map((c: any) => String(c || "").trim()).filter(Boolean)
+        : [];
 
       return {
         id: String(d?._id),
@@ -156,6 +160,7 @@ export async function GET(req: NextRequest) {
         guardianName,
         guardianEmail,
         productCode,
+        unlockedProductCodes,
         signedAt: signedAt && !Number.isNaN(signedAt.getTime()) ? signedAt.toISOString() : null,
         createdAt: createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toISOString() : null,
         paymentStatus,
@@ -178,4 +183,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

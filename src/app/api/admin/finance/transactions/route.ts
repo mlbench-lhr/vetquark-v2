@@ -67,6 +67,8 @@ export async function GET(req: NextRequest) {
         { currency: { $regex: rx } },
         { "userDoc.fullName": { $regex: rx } },
         { "userDoc.tradeName": { $regex: rx } },
+        { "link.kind": { $regex: rx } },
+        { "link.productCode": { $regex: rx } },
         {
           $expr: {
             $regexMatch: {
@@ -92,6 +94,16 @@ export async function GET(req: NextRequest) {
       },
       { $addFields: { userDoc: { $first: "$userArr" } } },
       { $project: { userArr: 0 } },
+      {
+        $lookup: {
+          from: "paymentlinks",
+          localField: "paymentLink",
+          foreignField: "_id",
+          as: "linkArr",
+        },
+      },
+      { $addFields: { link: { $first: "$linkArr" } } },
+      { $project: { linkArr: 0 } },
       ...(Object.keys(match).length ? [{ $match: match }] : []),
       { $sort: { createdAt: -1, _id: -1 } },
       {
@@ -120,17 +132,17 @@ export async function GET(req: NextRequest) {
             ? d.userDoc.fullName
             : "—";
 
-      const platformFee = Number(d?.platformFee);
-      const amountNet = Number(d?.amountNet);
-      const amount =
-        type === "withdrawal"
-          ? -(Number.isFinite(amountNet) ? amountNet : 0)
-          : Number.isFinite(platformFee)
-            ? platformFee
-            : 0;
+      const grossRaw = Number(d?.amountGross);
+      const platformFeeRaw = Number(d?.platformFee);
+      const amountNetRaw = Number(d?.amountNet);
+      const gross = Number.isFinite(grossRaw) ? grossRaw : 0;
+      const platformFee = Number.isFinite(platformFeeRaw) ? platformFeeRaw : 0;
+      const amountNet = Number.isFinite(amountNetRaw) ? amountNetRaw : 0;
 
-      const description =
-        type === "withdrawal" ? `Platform Payout – ${userName}` : `Commission Fee – ${userName}`;
+      const kind = d?.link?.kind === "upgrade" ? "upgrade" : "reading_payment";
+      const productCode = typeof d?.link?.productCode === "string" && d.link.productCode.trim() ? d.link.productCode.trim() : null;
+
+      const description = type === "withdrawal" ? `Platform Payout – ${userName}` : kind === "upgrade" ? "Panel upgrade payment" : "Exam payment";
 
       return {
         id,
@@ -138,7 +150,13 @@ export async function GET(req: NextRequest) {
         transactionId: id,
         date: createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toISOString() : null,
         description,
-        amount,
+        type,
+        veterinarianName: userName,
+        kind,
+        productCode,
+        amountGross: gross,
+        platformFee,
+        amountNet,
         currency: typeof d?.currency === "string" && d.currency ? d.currency : "BRL",
         status: statusRaw,
       };
@@ -160,4 +178,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
