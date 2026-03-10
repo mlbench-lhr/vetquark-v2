@@ -7,6 +7,7 @@ interface StatCardProps {
     iconColor?: string;
     title: string;
     value: string | number;
+    breakdown?: { label: string; value: string; tone?: "neutral" | "blue" | "purple" }[];
     trend?: {
         value: string | number;
         isPositive?: boolean;
@@ -22,6 +23,7 @@ export function StatCard({
     iconColor = "#2986FF",
     title,
     value,
+    breakdown,
     trend,
     className = "",
 }: StatCardProps) {
@@ -69,6 +71,24 @@ export function StatCard({
                 {typeof value === "number" ? value.toLocaleString() : value}
             </h2>
 
+            {Array.isArray(breakdown) && breakdown.length ? (
+                <div className="w-full flex flex-col gap-1">
+                    {breakdown.map((b) => {
+                        const tone =
+                            b.tone === "blue"
+                                ? "text-blue-700"
+                                : b.tone === "purple"
+                                    ? "text-purple-700"
+                                    : "text-black/70";
+                        return (
+                            <div key={b.label} className="w-full flex items-center justify-between gap-2">
+                                <span className={`text-[11px] ${tone}`}>{b.label}</span>
+                                <span className={`text-[11px] font-medium ${tone}`}>{b.value}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : null}
 
         </div>
     );

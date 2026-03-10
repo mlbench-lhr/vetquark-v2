@@ -68,6 +68,37 @@ export async function GET(req: NextRequest) {
                 },
               },
             ],
+            grossSplit: [
+              { $match: { type: "credit" } },
+              {
+                $lookup: {
+                  from: "paymentlinks",
+                  localField: "paymentLink",
+                  foreignField: "_id",
+                  as: "linkArr",
+                },
+              },
+              { $addFields: { link: { $first: "$linkArr" } } },
+              { $project: { linkArr: 0 } },
+              {
+                $addFields: {
+                  kind: {
+                    $cond: [
+                      { $eq: ["$link.kind", "upgrade"] },
+                      "upgrade",
+                      "reading_payment",
+                    ],
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: "$kind",
+                  gross: { $sum: { $ifNull: ["$amountGross", 0] } },
+                  count: { $sum: 1 },
+                },
+              },
+            ],
             avgChargePerTestPerVet: [
               { $match: { type: "credit" } },
               {
@@ -88,8 +119,9 @@ export async function GET(req: NextRequest) {
       ])
       .toArray();
 
-    const out = (resultArr && resultArr[0]) || { summary: [], avgChargePerTestPerVet: [] };
+    const out = (resultArr && resultArr[0]) || { summary: [], grossSplit: [], avgChargePerTestPerVet: [] };
     const summaryDoc = Array.isArray((out as any).summary) ? (out as any).summary[0] : null;
+    const splitDocs = Array.isArray((out as any).grossSplit) ? (out as any).grossSplit : [];
     const avgDoc = Array.isArray((out as any).avgChargePerTestPerVet) ? (out as any).avgChargePerTestPerVet[0] : null;
 
     const totalGross = Number.isFinite(Number(summaryDoc?.totalGross)) ? Number(summaryDoc.totalGross) : 0;
@@ -97,12 +129,33 @@ export async function GET(req: NextRequest) {
     const netPayouts = Number.isFinite(Number(summaryDoc?.netPayouts)) ? Number(summaryDoc.netPayouts) : 0;
     const avgChargePerTestPerVet = Number.isFinite(Number(avgDoc?.value)) ? Number(avgDoc.value) : 0;
 
+    let examsGross = 0;
+    let examsCount = 0;
+    let upgradesGross = 0;
+    let upgradesCount = 0;
+    for (const d of splitDocs as any[]) {
+      const kind = String(d?._id || "");
+      const gross = Number.isFinite(Number(d?.gross)) ? Number(d.gross) : 0;
+      const count = Number.isFinite(Number(d?.count)) ? Number(d.count) : 0;
+      if (kind === "upgrade") {
+        upgradesGross += gross;
+        upgradesCount += count;
+      } else {
+        examsGross += gross;
+        examsCount += count;
+      }
+    }
+
     return NextResponse.json(
       {
         totalGross,
         feesCollected,
         netPayouts,
         avgChargePerTestPerVet,
+        grossSplit: {
+          exams: { gross: examsGross, count: examsCount },
+          upgrades: { gross: upgradesGross, count: upgradesCount },
+        },
       },
       { status: 200 }
     );

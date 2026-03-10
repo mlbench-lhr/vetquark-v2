@@ -21,6 +21,7 @@ type AdminRecordRow = {
   guardianName: string;
   guardianEmail: string;
   productCode: string;
+  unlockedProductCodes?: string[];
   signedAt: string | null;
   createdAt: string | null;
   paymentStatus: string | null;
@@ -72,10 +73,17 @@ export default function RecordsPage() {
     };
   }, []);
 
-  const panelTitleForCode = useCallback(
-    (productCode?: string | null) => {
-      const code = normalizePanelCode(productCode);
-      return panelTitleByCode.get(code) || code;
+  const panelBadgesForRecord = useCallback(
+    (item: any) => {
+      const baseCode = normalizePanelCode(typeof item?.productCode === "string" ? item.productCode : "");
+      const unlocked = Array.isArray(item?.unlockedProductCodes) ? item.unlockedProductCodes : [];
+      const codes = [baseCode, ...unlocked.map((c: any) => normalizePanelCode(String(c || "")))].filter(Boolean);
+      const uniqueCodes = [...new Set(codes)];
+      return uniqueCodes.map((code) => ({
+        code,
+        title: panelTitleByCode.get(code) || code,
+        isBase: code === baseCode,
+      }));
     },
     [panelTitleByCode]
   );
@@ -167,7 +175,28 @@ export default function RecordsPage() {
                 {
                   header: "Panel",
                   accessor: "productCode",
-                  render: (item) => <span>{panelTitleForCode(String(item?.productCode ?? ""))}</span>,
+                  render: (item) => {
+                    const badges = panelBadgesForRecord(item);
+                    if (!badges.length) return <span>—</span>;
+                    return (
+                      <div className="flex flex-wrap items-center gap-1.5 max-w-[260px]">
+                        {badges.map((b) => (
+                          <span
+                            key={b.code}
+                            title={b.code}
+                            className={[
+                              "inline-flex items-center rounded-full border px-2 py-0.5 text-[12px] leading-[16px] truncate max-w-[240px]",
+                              b.isBase
+                                ? "border-gray-200 bg-gray-50 text-gray-800"
+                                : "border-blue-200 bg-blue-50 text-blue-800",
+                            ].join(" ")}
+                          >
+                            {b.title}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  },
                 },
                 {
                   header: "Signed",
