@@ -648,7 +648,6 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       </div>
 
       <div className="mt-6 space-y-3">
-        {analysisFailed ? (
           <button
             onClick={handleRetry}
             disabled={analyzing}
@@ -659,7 +658,6 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           >
             {t('reading.timer.retry')}
           </button>
-        ) : (
           <button
             onClick={handleAnalyze}
             disabled={!captureProgress.allDone || analyzing}
@@ -670,7 +668,6 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           >
             {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
           </button>
-        )}
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
           {t('common.back')}
         </button>
