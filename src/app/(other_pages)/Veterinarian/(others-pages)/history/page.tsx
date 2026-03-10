@@ -43,9 +43,11 @@ type ApiReportHistoryItem = {
   paymentLinkId?: string;
 };
 
-function StatusPill({ status }: { status: ReportStatus }) {
+type StatusPillKind = "signed" | "payment_pending" | "payment_expired" | "not_signed";
+
+function StatusPill({ kind }: { kind: StatusPillKind }) {
   const { t } = useTranslation();
-  if (status === "signed") {
+  if (kind === "signed") {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-[13px] font-normal text-primary">
         <Check className="h-4 w-4" />
@@ -54,10 +56,28 @@ function StatusPill({ status }: { status: ReportStatus }) {
     );
   }
 
+  if (kind === "payment_pending") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-[13px] font-normal text-amber-700">
+        <Clock className="h-4 w-4" />
+        {t("history.paymentPending")}
+      </span>
+    );
+  }
+
+  if (kind === "payment_expired") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-[13px] font-normal text-red-700">
+        <Clock className="h-4 w-4" />
+        {t("history.paymentExpired")}
+      </span>
+    );
+  }
+
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-[13px] font-normal text-gray-500">
       <Clock className="h-4 w-4" />
-      {t("history.pending")}
+      {t("history.notSigned")}
     </span>
   );
 }
@@ -115,6 +135,13 @@ async function shareReadingReport(readingId: string, title: string) {
   throw new Error(url);
 }
 
+function getStatusPillKind(item: Pick<ReportHistoryItem, "isSigned" | "paymentStatus">): StatusPillKind {
+  if (item.isSigned) return "signed";
+  if (item.paymentStatus === "pending") return "payment_pending";
+  if (item.paymentStatus === "expired") return "payment_expired";
+  return "not_signed";
+}
+
 function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; onDownload: () => void; onShare: () => void }) {
   const viewHref = useMemo(() => {
     if (item.isSigned) return `/Veterinarian/history/detail/${item.id}`;
@@ -153,7 +180,7 @@ function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; on
       </div>
 
       <div className="mt-2.5 flex items-center justify-between gap-3">
-        <StatusPill status={item.status} />
+        <StatusPill kind={getStatusPillKind(item)} />
         <div className="flex items-center gap-2">
           <Link
             href={viewHref}
