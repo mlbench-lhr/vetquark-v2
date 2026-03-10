@@ -37,6 +37,25 @@ type Props = {
   onSaved?: () => void;
 };
 
+const PARAMETER_OPTIONS: Array<{ key: string; title: string }> = [
+  { key: "specific-gravity", title: "Specific gravity" },
+  { key: "ph", title: "pH" },
+  { key: "protein", title: "Protein" },
+  { key: "glucose", title: "Glucose" },
+  { key: "ketone-bodies", title: "Ketone bodies" },
+  { key: "bilirubin", title: "Bilirubin" },
+  { key: "urobilinogen", title: "Urobilinogen" },
+  { key: "nitrite", title: "Nitrite" },
+  { key: "ascorbic-acid", title: "Ascorbic acid" },
+  { key: "leukocytes", title: "Leukocytes" },
+  { key: "blood", title: "Blood" },
+  { key: "microalbumin", title: "Microalbumin" },
+  { key: "creatine", title: "Creatine" },
+  { key: "calcium", title: "Calcium" },
+  { key: "magnesium", title: "Magnesium" },
+  { key: "ammonium-chloride", title: "Ammonium chloride" },
+];
+
 function normalizePanelCode(value: unknown) {
   return String(value || "")
     .trim()
@@ -59,7 +78,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
       subtitle: typeof initialPanel?.subtitle === "string" ? initialPanel.subtitle : "",
       description: typeof initialPanel?.description === "string" ? initialPanel.description : "",
       params: typeof initialPanel?.params === "string" ? initialPanel.params : "",
-      visibleKeysCsv: Array.isArray(initialPanel?.visibleKeys) ? initialPanel.visibleKeys.join(", ") : "",
+      visibleKeys: Array.isArray(initialPanel?.visibleKeys) ? initialPanel.visibleKeys : [],
       suggestedPriceBRL: Number.isFinite(Number(initialPanel?.suggestedPriceBRL)) ? String(Number(initialPanel?.suggestedPriceBRL)) : "0",
       commissionPriceBRL:
         initialPanel?.commissionPriceBRL === null || initialPanel?.commissionPriceBRL === undefined
@@ -105,7 +124,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
           subtitle: typeof panel.subtitle === "string" ? panel.subtitle : "",
           description: typeof panel.description === "string" ? panel.description : "",
           params: typeof panel.params === "string" ? panel.params : "",
-          visibleKeysCsv: Array.isArray(panel.visibleKeys) ? panel.visibleKeys.join(", ") : "",
+          visibleKeys: Array.isArray(panel.visibleKeys) ? panel.visibleKeys : [],
           suggestedPriceBRL: Number.isFinite(Number(panel.suggestedPriceBRL)) ? String(Number(panel.suggestedPriceBRL)) : "0",
           commissionPriceBRL: Number.isFinite(Number(panel.commissionPriceBRL)) ? String(Number(panel.commissionPriceBRL)) : "",
           sortOrder: Number.isFinite(Number(panel.sortOrder)) ? String(Number(panel.sortOrder)) : "0",
@@ -197,10 +216,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
       return;
     }
 
-    const visibleKeys = form.visibleKeysCsv
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const visibleKeys = Array.isArray(form.visibleKeys) ? form.visibleKeys : [];
     const visibleKeysValue = visibleKeys.length ? visibleKeys : null;
 
     const ranges: PanelReferenceRangeValue[] = [];
@@ -377,14 +393,37 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="panel-visible-keys">Visible Keys (comma-separated)</Label>
-              <Input
-                id="panel-visible-keys"
-                value={form.visibleKeysCsv}
-                onChange={(e) => setForm((p) => ({ ...p, visibleKeysCsv: e.target.value }))}
-                placeholder="glucose, ketone-bodies, ph"
-                disabled={saving || loadingDetails}
-              />
+              <Label>Parameters</Label>
+              <div className="rounded-md border border-input px-3 py-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {PARAMETER_OPTIONS.map((opt) => {
+                    const checked = Array.isArray(form.visibleKeys) ? form.visibleKeys.includes(opt.key) : false;
+                    return (
+                      <label key={opt.key} className="flex items-center gap-2 text-sm text-gray-900">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            const nextChecked = e.target.checked;
+                            setForm((p) => {
+                              const prevKeys = Array.isArray((p as any).visibleKeys) ? ((p as any).visibleKeys as string[]) : [];
+                              const set = new Set(prevKeys);
+                              if (nextChecked) set.add(opt.key);
+                              else set.delete(opt.key);
+                              return { ...p, visibleKeys: [...set] };
+                            });
+                          }}
+                          disabled={saving || loadingDetails}
+                        />
+                        <span>{opt.title}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 text-[12px] text-gray-500">
+                  Leave all unchecked to include all parameters (Master 360).
+                </div>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
@@ -418,11 +457,22 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                         <div className="md:col-span-3 space-y-1.5">
                           <Label>Key</Label>
-                          <Input
+                          <Select
                             value={rr.key}
-                            onChange={(e) => handleUpdateRange(idx, { key: e.target.value })}
+                            onValueChange={(v) => handleUpdateRange(idx, { key: v })}
                             disabled={saving || loadingDetails}
-                          />
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select parameter" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PARAMETER_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.key} value={opt.key}>
+                                  {opt.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="md:col-span-3 space-y-1.5">
                           <Label>Label</Label>
@@ -530,4 +580,3 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
     </Dialog>
   );
 }
-

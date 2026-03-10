@@ -117,12 +117,13 @@ export function ServerPaginationProvider<T = any>({
 
   // Fetch data when dependencies change
   useEffect(() => {
-    setCurrentPage(1); // Reset to first page on query change
-  }, [queryParams]);
+    setIsInitialLoading(true);
+    setCurrentPage(1);
+  }, [apiEndpoint, enabled, itemsPerPage, queryParams]);
 
   useEffect(() => {
     fetchData(currentPage);
-  }, [currentPage, queryParams, refreshData]);
+  }, [currentPage, fetchData, refreshData]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
