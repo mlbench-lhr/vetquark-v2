@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 export default function ForgetForm() {
     const OTP_LENGTH = 5;
+    const RESEND_COOLDOWN_SECONDS = 35;
     const [isApiSent, setIsApiSent] = useState(false);
     const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -118,7 +119,7 @@ export default function ForgetForm() {
             }
             toast.success(result.message ?? t("auth.otpSentToEmail"));
             setIsApiSent(true);
-            setCooldown(600);
+            setCooldown(RESEND_COOLDOWN_SECONDS);
         } catch (error) {
             toast.error(t("auth.networkErrorSendingOtp"));
             console.error("Network Error:", error);

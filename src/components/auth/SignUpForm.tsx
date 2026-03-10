@@ -84,7 +84,8 @@ export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", ""]);
-  const [countdown, setCountdown] = useState(600);
+  const RESEND_COOLDOWN_SECONDS = 35;
+  const [countdown, setCountdown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const OTP_LENGTH = 5;
 
@@ -210,7 +211,7 @@ export default function SignUpForm() {
     setShowPassword(false);
     setShowConfirmPassword(false);
     setOtp(["", "", "", "", ""]);
-    setCountdown(600);
+    setCountdown(0);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -403,12 +404,17 @@ export default function SignUpForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(typeof data.error === 'string' ? data.error : 'Failed to resend OTP');
+        const message = typeof data.error === 'string' ? data.error : 'Failed to resend OTP';
+        toast.error(message);
+        if (res.status === 429 && typeof data.error === "string") {
+          const m = data.error.match(/(\d+)\s*s/);
+          if (m) setCountdown(Math.max(0, parseInt(m[1], 10)));
+        }
         console.error('Resend error:', data.error || data);
         return;
       }
       toast.success(data.message ?? 'OTP resent');
-      setCountdown(600);
+      setCountdown(RESEND_COOLDOWN_SECONDS);
     } catch (err) {
       toast.error('Network error while resending OTP');
       console.error('Resend network error:', err);
@@ -607,6 +613,7 @@ export default function SignUpForm() {
         return;
       }
       toast.success(data.message ?? "OTP sent to your email");
+      setCountdown(RESEND_COOLDOWN_SECONDS);
       handleNext();
     } finally {
       setSubmitting(false);
