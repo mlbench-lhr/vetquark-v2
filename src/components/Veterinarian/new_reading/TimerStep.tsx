@@ -54,7 +54,7 @@ type CapturedImage = {
 async function getBackCameraStream(): Promise<MediaStream> {
   try {
     return await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: 'environment' } },
+      video: { facingMode: { exact: 'environment' }, width: { ideal: 720 }, height: { ideal: 1280 } },
       audio: false,
     })
   } catch {
@@ -62,7 +62,7 @@ async function getBackCameraStream(): Promise<MediaStream> {
 
   try {
     return await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' } },
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 720 }, height: { ideal: 1280 } },
       audio: false,
     })
   } catch {
@@ -75,7 +75,7 @@ async function getBackCameraStream(): Promise<MediaStream> {
     const preferred = videoInputs.find((d) => /back|rear|environment/i.test(d.label)) || videoInputs[videoInputs.length - 1]
     if (!preferred?.deviceId) throw new Error('Back camera not found.')
     return await navigator.mediaDevices.getUserMedia({
-      video: { deviceId: { exact: preferred.deviceId } },
+      video: { deviceId: { exact: preferred.deviceId }, width: { ideal: 720 }, height: { ideal: 1280 } },
       audio: false,
     })
   } finally {
@@ -520,8 +520,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       <h2 className="text-lg font-medium text-gray-900">{t('reading.timer.title')}</h2>
       <p className="text-sm text-tertiary">{t('reading.timer.desc')}</p>
 
-      <div className="mt-6 rounded-3xl border-2 border-primary overflow-hidden bg-black/10">
-        <div className="relative h-72 bg-black overflow-hidden">
+      <div className="mt-6 mx-auto w-full max-w-[22rem] rounded-3xl border-2 border-primary overflow-hidden bg-black/10">
+        <div className="relative aspect-[3/4] bg-black overflow-hidden">
           <video
             ref={videoRef}
             autoPlay
