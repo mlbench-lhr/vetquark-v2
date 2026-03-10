@@ -3,20 +3,10 @@ import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import PaymentLink from "@/lib/models/PaymentLink";
+import { getPanelTitle } from "@/lib/panels";
 
 function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2)}`;
-}
-
-function panelTitleForProductCode(productCode?: string | null) {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_U_START") return "U-Start";
-  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
-  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
-  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
-  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
-  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
-  return "Master 360";
 }
 
 export async function GET(req: NextRequest) {
@@ -66,11 +56,11 @@ export async function GET(req: NextRequest) {
       keep.push(it);
     }
 
-    const items = keep.map((it: any) => ({
+    const items = await Promise.all(keep.map(async (it: any) => ({
       id: String(it._id),
       kind: String(it.kind || "reading_payment"),
       productCode: String(it.productCode || "VETQ_MASTER_360"),
-      panelTitle: panelTitleForProductCode(String(it.productCode || "VETQ_MASTER_360")),
+      panelTitle: await getPanelTitle(String(it.productCode || "VETQ_MASTER_360")),
       amount: Number(it.amount || 0),
       amountLabel: formatBRL(Number(it.amount || 0)),
       status: String(it.status || "pending"),
@@ -86,7 +76,7 @@ export async function GET(req: NextRequest) {
         crmv: it.veterinarian?.crmv ?? null,
         crmvState: it.veterinarian?.crmvState ?? null,
       },
-    }));
+    })));
 
     return NextResponse.json({ items }, { status: 200 });
   } catch {

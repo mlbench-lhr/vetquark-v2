@@ -25,63 +25,50 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   const [generating, setGenerating] = useState(false)
   const [sending, setSending] = useState(false)
   const [panelPickerOpen, setPanelPickerOpen] = useState(false)
+  const [panels, setPanels] = useState<Array<{ code: string; title: string; description: string; params: string; sortOrder: number }>>([])
 
   const collectionRef = useRef<HTMLInputElement | null>(null)
   const stripExpiryRef = useRef<HTMLInputElement | null>(null)
 
-  const PANELS = useMemo(
-    () => [
-      {
-        code: "VETQ_U_START",
-        title: "U-Start",
-        description: "Essential urinary triage",
-        params: "LEU, NIT, BLD, PH, SG",
-      },
-      {
-        code: "VETQ_METABOLIC_CHECK",
-        title: "Metabolic Check",
-        description: "Metabolic screening",
-        params: "GLU, KET, PH, SG",
-      },
-      {
-        code: "VETQ_RENAL_EXPRESS",
-        title: "Renal Express",
-        description: "Early renal screening",
-        params: "GLU, KET, PRO, MAL, PH, SG",
-      },
-      {
-        code: "VETQ_RENAL_ADVANCED",
-        title: "Renal Advanced",
-        description: "Renal + minerals",
-        params: "GLU, KET, PRO, MAL, CRE, CA, MG, PH, SG",
-      },
-      {
-        code: "VETQ_HEPATOSCREEN",
-        title: "HepatoScreen",
-        description: "Indirect hepatobiliary screening",
-        params: "BIL, UBG, PH, SG",
-      },
-      {
-        code: "VETQ_GERIATRIC_CARE",
-        title: "Geriatric Care",
-        description: "Preventive 7+ protocol",
-        params: "GLU, KET, PRO, MAL, CRE, CA, MG, BIL, UBG, LEU, NIT, BLD, PH, SG",
-      },
-      {
-        code: "VETQ_MASTER_360",
-        title: "Master 360",
-        description: "Complete 16-parameter protocol",
-        params: "",
-      },
-    ],
-    []
-  )
-
   const selectedPanelCode = (value.panelProductCode || "").trim() || "VETQ_MASTER_360"
   const selectedPanel = useMemo(
-    () => PANELS.find((p) => p.code === selectedPanelCode) ?? PANELS[PANELS.length - 1],
-    [PANELS, selectedPanelCode]
+    () =>
+      panels.find((p) => p.code === selectedPanelCode) ?? {
+        code: selectedPanelCode,
+        title: selectedPanelCode,
+        description: "",
+        params: "",
+        sortOrder: 0,
+      },
+    [panels, selectedPanelCode]
   )
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await fetch('/api/panels', { method: 'GET' })
+        const data = await res.json().catch(() => null)
+        if (!mounted) return
+        const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : []
+        const next = raw
+          .map((p) => ({
+            code: String(p?.code || '').trim(),
+            title: String(p?.title || '').trim(),
+            description: String(p?.description || '').trim(),
+            params: String(p?.params || '').trim(),
+            sortOrder: Number.isFinite(Number(p?.sortOrder)) ? Number(p.sortOrder) : 0,
+          }))
+          .filter((p) => p.code)
+          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || a.title.localeCompare(b.title))
+        setPanels(next)
+      } catch {
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   useEffect(() => {
     ; (async () => {
@@ -427,7 +414,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
             </div>
             <div className="max-h-[70vh] overflow-auto px-4 py-3">
               <div className="space-y-3 pb-4">
-                {PANELS.map((p) => {
+                {(panels.length ? panels : [selectedPanel]).map((p) => {
                   const selected = p.code === selectedPanelCode
                   return (
                     <button

@@ -12,60 +12,8 @@ import { useRouter } from 'next/navigation';
 import Pusher from 'pusher-js';
 import { downloadUrinalysisPdf } from '@/utils/urinalysisPdf';
 
-function visibleKeysForProductCode(productCode?: string | null): string[] | null {
-    const code = (productCode || "").trim() || "VETQ_MASTER_360";
-    if (code === "VETQ_MASTER_360") return null;
-    if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
-    if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-    if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
-    if (code === "VETQ_RENAL_ADVANCED") return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
-    if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
-    if (code === "VETQ_GERIATRIC_CARE") {
-        return [
-            "glucose",
-            "ketone-bodies",
-            "protein",
-            "microalbumin",
-            "creatine",
-            "calcium",
-            "magnesium",
-            "bilirubin",
-            "urobilinogen",
-            "leukocytes",
-            "nitrite",
-            "blood",
-            "ph",
-            "specific-gravity",
-        ];
-    }
-    return null;
-}
-
-function panelTitleForProductCode(productCode?: string | null) {
-    const code = (productCode || "").trim() || "VETQ_MASTER_360";
-    if (code === "VETQ_U_START") return "U-Start";
-    if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
-    if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
-    if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
-    if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
-    if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
-    return "Master 360";
-}
-
-function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: string[] | null): string[] | null {
-    const codes = [
-        (productCode || "").trim() || "VETQ_MASTER_360",
-        ...((Array.isArray(unlockedProductCodes) ? unlockedProductCodes : []).map((c) => String(c || "").trim()).filter(Boolean)),
-    ];
-    for (const c of codes) {
-        if (visibleKeysForProductCode(c) === null) return null;
-    }
-    const set = new Set<string>();
-    for (const c of codes) {
-        const keys = visibleKeysForProductCode(c);
-        if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
-    }
-    return [...set];
+function normalizePanelCode(value?: string | null) {
+    return (value || "").trim() || "VETQ_MASTER_360";
 }
 
 function Header({ name }: HeaderProps) {
@@ -286,6 +234,7 @@ function formatDateLabel(value: string) {
 export default function Home() {
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     const router = useRouter();
+    const [panelByCode, setPanelByCode] = useState<Map<string, { title: string; visibleKeys: string[] | null }>>(new Map());
     const [pets, setPets] = useState<Pet[]>([]);
     const [activePetId, setActivePetId] = useState("");
     const [loadingPets, setLoadingPets] = useState(false);
@@ -296,6 +245,52 @@ export default function Home() {
     const latestReadingId = useMemo(() => String(readings?.[0]?.id || ""), [readings]);
     const [loadingLatestReading, setLoadingLatestReading] = useState(false);
     const [latestReading, setLatestReading] = useState<any | null>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await fetch('/api/panels', { method: 'GET' });
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : [];
+                const map = new Map<string, { title: string; visibleKeys: string[] | null }>();
+                for (const p of raw) {
+                    const code = String(p?.code || "").trim();
+                    if (!code) continue;
+                    const title = String(p?.title || "").trim();
+                    const keys = Array.isArray(p?.visibleKeys)
+                        ? (p.visibleKeys as any[]).map((k) => String(k || "").trim()).filter(Boolean)
+                        : null;
+                    map.set(code, { title: title || code, visibleKeys: keys && keys.length ? keys : null });
+                }
+                setPanelByCode(map);
+            } catch {
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    const visibleKeysForAccess = useCallback((productCode?: string | null, unlockedProductCodes?: string[] | null): string[] | null => {
+        const codes = [
+            normalizePanelCode(productCode),
+            ...((Array.isArray(unlockedProductCodes) ? unlockedProductCodes : []).map((c) => normalizePanelCode(String(c || ""))).filter(Boolean)),
+        ];
+        const keysByCode = codes.map((c) => panelByCode.get(c)?.visibleKeys ?? null);
+        if (keysByCode.some((k) => k === null)) return null;
+        const set = new Set<string>();
+        for (const keys of keysByCode) {
+            if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+        }
+        return [...set];
+    }, [panelByCode]);
+
+    const panelTitleForCode = useCallback((productCode?: string | null) => {
+        const code = normalizePanelCode(productCode);
+        return panelByCode.get(code)?.title || code;
+    }, [panelByCode]);
 
     useEffect(() => {
         let mounted = true;
@@ -398,7 +393,7 @@ export default function Home() {
             lastTestDate: formatDateLabel(dateRaw),
             parameters: abnormal.length ? abnormal.slice(0, 4) : ["All parameters normal"],
         };
-    }, [latestReading, readings]);
+    }, [latestReading, readings, visibleKeysForAccess]);
 
     const trendItems = useMemo<TrendsProps["items"]>(() => {
         const readingId = String(latestReading?.id || "");
@@ -420,7 +415,7 @@ export default function Home() {
                 dateLabel,
             };
         });
-    }, [latestReading]);
+    }, [latestReading, visibleKeysForAccess]);
 
     const handleDownloadLatest = useCallback(async () => {
         if (!latestReadingId) return;
@@ -451,7 +446,7 @@ export default function Home() {
                 <div className="bg-[#F5F6F6] w-[calc(100%+40px)] -ms-6 h-2 my-4"></div>
                 {readings?.[0]?.id ? (
                     <ReportCard
-                        title={panelTitleForProductCode(latestReading?.productCode)}
+                        title={panelTitleForCode(latestReading?.productCode)}
                         date={formatDateLabel(String(readings?.[0]?.date || ""))}
                         avatarUrl={String(readings?.[0]?.avatarSrc || "")}
                         signed={readings?.[0]?.status === "signed"}

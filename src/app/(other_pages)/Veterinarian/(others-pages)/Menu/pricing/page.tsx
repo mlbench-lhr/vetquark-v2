@@ -15,17 +15,7 @@ export default function BasePriceCard() {
     const [maxSuggested, setMaxSuggested] = useState(119.0);
 
     const initialAmount = useMemo(() => profile?.baseExamPrice ?? 89.9, [profile?.baseExamPrice]);
-    const PANEL_DEFS = useMemo(
-        () => [
-            { code: "VETQ_U_START", title: "U-Start", description: "Essential Urinary Triage (LEU, NIT, BLD, PH, SG)", suggested: 33.9 },
-            { code: "VETQ_METABOLIC_CHECK", title: "Metabolic Check", description: "Metabolic Screening (GLU, KET, PH, SG)", suggested: 49.9 },
-            { code: "VETQ_RENAL_EXPRESS", title: "Renal Express", description: "Early Renal Screening (GLU, KET, PRO, MAL, PH, SG)", suggested: 59.9 },
-            { code: "VETQ_RENAL_ADVANCED", title: "Renal Advanced", description: "Renal + Minerals (GLU, KET, PRO, MAL, CRE, CA, MG, PH, SG)", suggested: 69.9 },
-            { code: "VETQ_HEPATOSCREEN", title: "HepatoScreen", description: "Indirect Hepatobiliary Screening (BIL, UBG, PH, SG)", suggested: 49.9 },
-            { code: "VETQ_GERIATRIC_CARE", title: "Geriatric Care", description: "Preventive 7+ Protocol (GLU, KET, PRO, MAL, CRE, CA, MG, BIL, UBG, LEU, NIT, BLD, PH, SG)", suggested: 79.9 },
-        ],
-        []
-    );
+    const [panelDefs, setPanelDefs] = useState<Array<{ code: string; title: string; description: string; suggested: number; sortOrder: number }>>([]);
 
     const [amount, setAmount] = useState(initialAmount);
     const [isEditing, setIsEditing] = useState(false);
@@ -33,14 +23,14 @@ export default function BasePriceCard() {
     const initialPanelPrices = useMemo(() => {
         const raw = profile?.panelPrices && typeof profile.panelPrices === "object" ? profile.panelPrices : {};
         return Object.fromEntries(
-            PANEL_DEFS.map((p) => {
+            panelDefs.map((p) => {
                 const v = (raw as any)?.[p.code];
                 const n = typeof v === "number" ? v : Number(v);
                 const price = Number.isFinite(n) && n >= 0 ? n : p.suggested;
                 return [p.code, price];
             })
         ) as Record<string, number>;
-    }, [PANEL_DEFS, profile?.panelPrices]);
+    }, [panelDefs, profile?.panelPrices]);
     const [panelPrices, setPanelPrices] = useState<Record<string, number>>(initialPanelPrices);
 
     useEffect(() => {
@@ -66,6 +56,39 @@ export default function BasePriceCard() {
                     setMinSuggested(min);
                     setMaxSuggested(max);
                 }
+            } catch {
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await fetch("/api/panels", { method: "GET" });
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : [];
+                const next = raw
+                    .map((p) => {
+                        const code = String(p?.code || "").trim();
+                        if (!code || code === "VETQ_MASTER_360") return null;
+                        const title = String(p?.title || "").trim() || code;
+                        const subtitle = String(p?.subtitle || "").trim();
+                        const descRaw = String(p?.description || "").trim();
+                        const params = String(p?.params || "").trim();
+                        const head = subtitle || descRaw;
+                        const description = params ? (head ? `${head} (${params})` : params) : head;
+                        const suggested = Number.isFinite(Number(p?.suggestedPriceBRL)) ? Number(p.suggestedPriceBRL) : 0;
+                        const sortOrder = Number.isFinite(Number(p?.sortOrder)) ? Number(p.sortOrder) : 0;
+                        return { code, title, description, suggested, sortOrder };
+                    })
+                    .filter(Boolean) as Array<{ code: string; title: string; description: string; suggested: number; sortOrder: number }>;
+                next.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || a.title.localeCompare(b.title));
+                setPanelDefs(next);
             } catch {
             }
         })();
@@ -107,7 +130,7 @@ export default function BasePriceCard() {
         const midPoint = (minSuggested + maxSuggested) / 2;
         setAmount(midPoint);
         setPanelPrices(
-            Object.fromEntries(PANEL_DEFS.map((p) => [p.code, p.suggested])) as Record<string, number>
+            Object.fromEntries(panelDefs.map((p) => [p.code, p.suggested])) as Record<string, number>
         );
     };
 
@@ -181,7 +204,7 @@ export default function BasePriceCard() {
             <div className="mt-6">
                 <h2 className="text-[16px] font-semibold text-foreground mb-3">Panel Pricing</h2>
                 <div className="space-y-5">
-                    {PANEL_DEFS.map((p) => (
+                    {panelDefs.map((p) => (
                         <div key={p.code}>
                             <div className="text-[15px] font-medium text-foreground mb-2">{p.title}</div>
                             <div className="bg-[hsl(220,20%,97%)] rounded-xl px-4 py-3">

@@ -9,6 +9,7 @@ import Patient from "@/lib/models/Patient";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { isPushEnabledForUser } from "@/lib/utils";
+import { getPanelTitle } from "@/lib/panels";
 
 type Method = "credit_card" | "boleto" | "pix";
 type PagarmePixCharge = {
@@ -20,17 +21,6 @@ type PagarmeOrder = {
   status?: string;
   charges?: PagarmePixCharge[];
 };
-
-function panelTitleForProductCode(productCode?: string | null) {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_U_START") return "U-Start";
-  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
-  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
-  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
-  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
-  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
-  return "Master 360";
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -564,7 +554,7 @@ export async function POST(req: NextRequest) {
           if (mongoose.Types.ObjectId.isValid(veterinarianId) && mongoose.Types.ObjectId.isValid(patientId)) {
             const patient = await Patient.findById(patientId).select("_id animalName").lean();
             const petName = String((patient as any)?.animalName || "a patient");
-            const panelTitle = panelTitleForProductCode(String((link as any).productCode || "VETQ_MASTER_360"));
+            const panelTitle = await getPanelTitle(String((link as any).productCode || "VETQ_MASTER_360"));
             const settingsDoc = await PlatformSettings.findOne({}).lean();
             const feeFromLink = Number.isFinite(Number((link as any).platformFee)) ? Number((link as any).platformFee) : null;
             const PLATFORM_FEE =

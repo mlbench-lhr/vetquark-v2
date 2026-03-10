@@ -6,6 +6,7 @@ import Patient from "@/lib/models/Patient";
 import PaymentLink from "@/lib/models/PaymentLink";
 import Reading from "@/lib/models/Reading";
 import PlatformSettings from "@/lib/models/PlatformSettings";
+import { getPanelByCode, normalizePanelCode } from "@/lib/panels";
 
 function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2)}`;
@@ -16,20 +17,6 @@ function parsePriceMaybe(value: unknown): number | null {
   if (typeof value === "string" && value.trim() === "") return null;
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : null;
-}
-
-const DEFAULT_PANEL_PRICES: Record<string, number> = {
-  VETQ_U_START: 33.9,
-  VETQ_METABOLIC_CHECK: 49.9,
-  VETQ_RENAL_EXPRESS: 59.9,
-  VETQ_RENAL_ADVANCED: 69.9,
-  VETQ_HEPATOSCREEN: 49.9,
-  VETQ_GERIATRIC_CARE: 79.9,
-  VETQ_MASTER_360: 89.9,
-};
-
-function isSupportedProductCode(code: string) {
-  return Object.prototype.hasOwnProperty.call(DEFAULT_PANEL_PRICES, code);
 }
 
 export async function POST(req: NextRequest) {
@@ -46,9 +33,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid patientId" }, { status: 400 });
     }
     const productCodeRaw = String(body?.productCode || "").trim();
-    const productCode = productCodeRaw && isSupportedProductCode(productCodeRaw) ? productCodeRaw : "VETQ_MASTER_360";
+    const productCode = productCodeRaw ? normalizePanelCode(productCodeRaw) : "VETQ_MASTER_360";
 
     await connectMongo();
+
+    const panel = await getPanelByCode(productCode);
+    if (productCode !== "VETQ_MASTER_360" && (!panel || panel.active === false)) {
+      return NextResponse.json({ error: "Invalid productCode" }, { status: 400 });
+    }
 
     const veterinarian = await User.findById(veterinarianId).select("_id role baseExamPrice panelPrices tradeName fullName").lean();
     if (!veterinarian || veterinarian.role !== "Veterinarian") {
@@ -65,9 +57,11 @@ export async function POST(req: NextRequest) {
 
     const now = new Date();
     const settingsDoc = await PlatformSettings.findOne({}).lean();
-    const platformFee = settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
+    const settingsFee = settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
       ? Number((settingsDoc as any).platformFeeBRL)
       : 33.0;
+    const overrideFee = panel && Number.isFinite(Number(panel.commissionPriceBRL)) ? Number(panel.commissionPriceBRL) : null;
+    const platformFee = overrideFee !== null ? overrideFee : settingsFee;
     const rawPanelPrices =
       (veterinarian as any).panelPrices && typeof (veterinarian as any).panelPrices === "object" && !Array.isArray((veterinarian as any).panelPrices)
         ? ((veterinarian as any).panelPrices as any)
@@ -78,10 +72,11 @@ export async function POST(req: NextRequest) {
         : rawPanelPrices && Object.prototype.hasOwnProperty.call(rawPanelPrices, productCode)
           ? parsePriceMaybe(rawPanelPrices[productCode])
           : null;
+    const suggested = panel && Number.isFinite(Number(panel.suggestedPriceBRL)) ? Number(panel.suggestedPriceBRL) : null;
     const fallback =
       productCode === "VETQ_MASTER_360"
-        ? (typeof veterinarian.baseExamPrice === "number" && Number.isFinite(veterinarian.baseExamPrice) ? veterinarian.baseExamPrice : DEFAULT_PANEL_PRICES.VETQ_MASTER_360)
-        : DEFAULT_PANEL_PRICES[productCode] ?? DEFAULT_PANEL_PRICES.VETQ_MASTER_360;
+        ? (typeof veterinarian.baseExamPrice === "number" && Number.isFinite(veterinarian.baseExamPrice) ? veterinarian.baseExamPrice : suggested ?? 0)
+        : suggested ?? 0;
     const amount =
       typeof customPanelPrice === "number" && Number.isFinite(customPanelPrice) && customPanelPrice >= 0
         ? customPanelPrice

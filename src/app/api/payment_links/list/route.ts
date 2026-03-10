@@ -3,17 +3,7 @@ import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import PaymentLink from "@/lib/models/PaymentLink";
-
-function panelTitleForProductCode(productCode?: string | null) {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_U_START") return "U-Start";
-  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
-  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
-  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
-  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
-  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
-  return "Master 360";
-}
+import { getPanelTitle } from "@/lib/panels";
 
 export async function GET(req: NextRequest) {
   try {
@@ -65,7 +55,7 @@ export async function GET(req: NextRequest) {
       keep.push(it);
     }
 
-    const items = keep.map((it: any) => ({
+    const items = await Promise.all(keep.map(async (it: any) => ({
       id: String(it._id),
       patientId: String(it.patient?._id ?? it.patient ?? ""),
       patientName: String(it.patient?.animalName ?? "N/A"),
@@ -75,8 +65,8 @@ export async function GET(req: NextRequest) {
       paymentLinkStatus: String(it.status || "pending"),
       kind: String(it.kind || "reading_payment"),
       productCode: String(it.productCode || "VETQ_MASTER_360"),
-      panelTitle: panelTitleForProductCode(String(it.productCode || "VETQ_MASTER_360")),
-    }));
+      panelTitle: await getPanelTitle(String(it.productCode || "VETQ_MASTER_360")),
+    })));
 
     return NextResponse.json({ items }, { status: 200 });
   } catch {

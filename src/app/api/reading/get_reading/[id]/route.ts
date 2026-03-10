@@ -7,53 +7,7 @@ import Reading from "@/lib/models/Reading";
 import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { isPushEnabledForUser } from "@/lib/utils";
-
-function visibleKeysForProductCode(productCode?: string | null): string[] | null {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_MASTER_360") return null;
-  if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
-  if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_ADVANCED") {
-    return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
-  }
-  if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
-  if (code === "VETQ_GERIATRIC_CARE") {
-    return [
-      "glucose",
-      "ketone-bodies",
-      "protein",
-      "microalbumin",
-      "creatine",
-      "calcium",
-      "magnesium",
-      "bilirubin",
-      "urobilinogen",
-      "leukocytes",
-      "nitrite",
-      "blood",
-      "ph",
-      "specific-gravity",
-    ];
-  }
-  return null;
-}
-
-function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: unknown): string[] | null {
-  const unlocked = Array.isArray(unlockedProductCodes)
-    ? unlockedProductCodes.map((c) => String(c || "").trim()).filter(Boolean)
-    : [];
-  const codes = [(productCode || "").trim() || "VETQ_MASTER_360", ...unlocked];
-  for (const c of codes) {
-    if (visibleKeysForProductCode(c) === null) return null;
-  }
-  const set = new Set<string>();
-  for (const c of codes) {
-    const keys = visibleKeysForProductCode(c);
-    if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
-  }
-  return [...set];
-}
+import { getActivePanels, getPanelVisibleKeys, normalizePanelCode } from "@/lib/panels";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -171,6 +125,38 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       }
     }
 
+    const panels = await getActivePanels();
+    const visibleKeysByCode = new Map<string, string[] | null>();
+    for (const p of panels) {
+      visibleKeysByCode.set(normalizePanelCode(p.code), Array.isArray(p.visibleKeys) ? p.visibleKeys : null);
+    }
+    const visibleKeyPromises = new Map<string, Promise<string[] | null>>();
+    const visibleKeysForProductCode = (productCode?: string | null): Promise<string[] | null> => {
+      const code = normalizePanelCode(productCode);
+      if (visibleKeysByCode.has(code)) return Promise.resolve(visibleKeysByCode.get(code) ?? null);
+      const existing = visibleKeyPromises.get(code);
+      if (existing) return existing;
+      const p = getPanelVisibleKeys(code);
+      visibleKeyPromises.set(code, p);
+      return p;
+    };
+    const visibleKeysForAccess = async (productCode?: string | null, unlockedProductCodes?: unknown): Promise<string[] | null> => {
+      const unlocked = Array.isArray(unlockedProductCodes)
+        ? unlockedProductCodes.map((c) => normalizePanelCode(c)).filter(Boolean)
+        : [];
+      const codes = [normalizePanelCode(productCode), ...unlocked];
+      const keysByCode = await Promise.all(codes.map((c) => visibleKeysForProductCode(c)));
+      if (keysByCode.some((k) => k === null)) return null;
+      const set = new Set<string>();
+      for (const keys of keysByCode) {
+        if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+      }
+      return [...set];
+    };
+    const allResults = Array.isArray((doc as any).results) ? (doc as any).results : [];
+    const keys = await visibleKeysForAccess((doc as any).productCode, (doc as any).unlockedProductCodes);
+    const results = keys ? allResults.filter((r: any) => keys.includes(String(r?.key || ""))) : allResults;
+
     const reading = {
       id: String((doc as any)._id),
       testType: (doc as any).testType ?? "urine",
@@ -192,11 +178,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       paymentLinkId,
       identification: (doc as any).identification ?? null,
       timer: (doc as any).timer ?? null,
-      results: (() => {
-        const all = Array.isArray((doc as any).results) ? (doc as any).results : [];
-        const keys = visibleKeysForAccess((doc as any).productCode, (doc as any).unlockedProductCodes);
-        return keys ? all.filter((r: any) => keys.includes(String(r?.key || ""))) : all;
-      })(),
+      results,
       report: (doc as any).report ?? null,
       patient: {
         id: patientId,

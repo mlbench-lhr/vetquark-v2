@@ -9,85 +9,10 @@ import Notification from "@/lib/models/Notification";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { isPushEnabledForUser } from "@/lib/utils";
 import PlatformSettings from "@/lib/models/PlatformSettings";
+import { getPanelByCode, getPanelTitle, getPanelVisibleKeys, normalizePanelCode } from "@/lib/panels";
 
 function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2)}`;
-}
-
-function panelTitleForProductCode(productCode?: string | null) {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_U_START") return "U-Start";
-  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
-  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
-  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
-  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
-  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
-  return "Master 360";
-}
-
-const DEFAULT_PANEL_PRICES: Record<string, number> = {
-  VETQ_U_START: 33.9,
-  VETQ_METABOLIC_CHECK: 49.9,
-  VETQ_RENAL_EXPRESS: 59.9,
-  VETQ_RENAL_ADVANCED: 69.9,
-  VETQ_HEPATOSCREEN: 49.9,
-  VETQ_GERIATRIC_CARE: 79.9,
-  VETQ_MASTER_360: 89.9,
-};
-
-function keysForProductCode(productCode: string): string[] | null {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_MASTER_360") return null;
-  if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
-  if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_ADVANCED") {
-    return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
-  }
-  if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
-  if (code === "VETQ_GERIATRIC_CARE") {
-    return [
-      "glucose",
-      "ketone-bodies",
-      "protein",
-      "microalbumin",
-      "creatine",
-      "calcium",
-      "magnesium",
-      "bilirubin",
-      "urobilinogen",
-      "leukocytes",
-      "nitrite",
-      "blood",
-      "ph",
-      "specific-gravity",
-    ];
-  }
-  return null;
-}
-
-function accessKeysForReading(productCode: string, unlockedProductCodes: unknown): string[] | null {
-  const unlocked = Array.isArray(unlockedProductCodes)
-    ? unlockedProductCodes.map((c) => String(c || "").trim()).filter(Boolean)
-    : [];
-  const codes = [(productCode || "").trim() || "VETQ_MASTER_360", ...unlocked];
-  for (const c of codes) {
-    if (keysForProductCode(c) === null) return null;
-  }
-  const set = new Set<string>();
-  for (const c of codes) {
-    const keys = keysForProductCode(c);
-    if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
-  }
-  return [...set];
-}
-
-function doesTargetAddNewKeys(currentKeys: string[] | null, targetProductCode: string) {
-  if (currentKeys === null) return false;
-  const targetKeys = keysForProductCode(targetProductCode);
-  if (targetKeys === null) return true;
-  const currentSet = new Set(currentKeys);
-  return targetKeys.some((k) => !currentSet.has(k));
 }
 
 function parsePriceMaybe(value: unknown): number | null {
@@ -107,15 +32,41 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => null);
     const readingId = String(body?.readingId || "").trim();
-    const productCode = String(body?.productCode || "").trim();
+    const productCodeRaw = String(body?.productCode || "").trim();
+    const productCode = normalizePanelCode(productCodeRaw);
     if (!readingId || !mongoose.Types.ObjectId.isValid(readingId)) {
       return NextResponse.json({ error: "Invalid readingId" }, { status: 400 });
     }
-    if (!productCode || !Object.prototype.hasOwnProperty.call(DEFAULT_PANEL_PRICES, productCode)) {
+    if (!productCodeRaw) {
       return NextResponse.json({ error: "Invalid productCode" }, { status: 400 });
     }
 
     await connectMongo();
+
+    const targetPanel = await getPanelByCode(productCode);
+    if (productCode !== "VETQ_MASTER_360" && (!targetPanel || targetPanel.active === false)) {
+      return NextResponse.json({ error: "Invalid productCode" }, { status: 400 });
+    }
+    const accessKeysForReading = async (baseProductCode: string, unlockedProductCodes: unknown): Promise<string[] | null> => {
+      const unlocked = Array.isArray(unlockedProductCodes)
+        ? unlockedProductCodes.map((c) => normalizePanelCode(c)).filter(Boolean)
+        : [];
+      const codes = [normalizePanelCode(baseProductCode), ...unlocked];
+      const keysByCode = await Promise.all(codes.map((c) => getPanelVisibleKeys(c)));
+      if (keysByCode.some((k) => k === null)) return null;
+      const set = new Set<string>();
+      for (const keys of keysByCode) {
+        if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+      }
+      return [...set];
+    };
+    const doesTargetAddNewKeys = async (currentKeys: string[] | null, targetProductCode: string) => {
+      if (currentKeys === null) return false;
+      const targetKeys = await getPanelVisibleKeys(targetProductCode);
+      if (targetKeys === null) return true;
+      const currentSet = new Set(currentKeys);
+      return targetKeys.some((k) => !currentSet.has(k));
+    };
 
     const veterinarian = await User.findById(veterinarianId).select("_id role tradeName fullName panelPrices baseExamPrice").lean();
     if (!veterinarian || (veterinarian as any).role !== "Veterinarian") {
@@ -134,15 +85,20 @@ export async function POST(req: NextRequest) {
     if (productCode === currentProductCode || unlocked.includes(productCode)) {
       return NextResponse.json({ error: "Upgrade already applied" }, { status: 409 });
     }
-    const currentAccessKeys = accessKeysForReading(currentProductCode, unlocked);
-    if (!doesTargetAddNewKeys(currentAccessKeys, productCode)) {
+    const currentAccessKeys = await accessKeysForReading(currentProductCode, unlocked);
+    if (!(await doesTargetAddNewKeys(currentAccessKeys, productCode))) {
       return NextResponse.json({ error: "Invalid upgrade target" }, { status: 400 });
     }
 
     const settingsDoc = await PlatformSettings.findOne({}).lean();
-    const platformFee = settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
+    const settingsFee = settingsDoc && Number.isFinite(Number((settingsDoc as any).platformFeeBRL))
       ? Number((settingsDoc as any).platformFeeBRL)
       : 33.0;
+    const overrideFee =
+      targetPanel && Number.isFinite(Number(targetPanel.commissionPriceBRL))
+        ? Number(targetPanel.commissionPriceBRL)
+        : null;
+    const platformFee = overrideFee !== null ? overrideFee : settingsFee;
 
     const rawPanelPrices =
       (veterinarian as any).panelPrices && typeof (veterinarian as any).panelPrices === "object" && !Array.isArray((veterinarian as any).panelPrices)
@@ -154,10 +110,14 @@ export async function POST(req: NextRequest) {
         : rawPanelPrices && Object.prototype.hasOwnProperty.call(rawPanelPrices, productCode)
           ? parsePriceMaybe(rawPanelPrices[productCode])
           : null;
+    const suggested =
+      targetPanel && Number.isFinite(Number(targetPanel.suggestedPriceBRL))
+        ? Number(targetPanel.suggestedPriceBRL)
+        : null;
     const fallback =
       productCode === "VETQ_MASTER_360"
-        ? (typeof (veterinarian as any).baseExamPrice === "number" && Number.isFinite((veterinarian as any).baseExamPrice) ? (veterinarian as any).baseExamPrice : DEFAULT_PANEL_PRICES.VETQ_MASTER_360)
-        : DEFAULT_PANEL_PRICES[productCode] ?? DEFAULT_PANEL_PRICES.VETQ_MASTER_360;
+        ? (typeof (veterinarian as any).baseExamPrice === "number" && Number.isFinite((veterinarian as any).baseExamPrice) ? (veterinarian as any).baseExamPrice : suggested ?? 0)
+        : suggested ?? 0;
     const amount =
       typeof customPanelPrice === "number" && Number.isFinite(customPanelPrice) && customPanelPrice >= 0
         ? customPanelPrice
@@ -189,7 +149,7 @@ export async function POST(req: NextRequest) {
     const url = `/Guardian/payment/${encodeURIComponent(String(created._id))}`;
     const vetName = String((veterinarian as any).tradeName || (veterinarian as any).fullName || "Veterinarian");
     const petName = String((patient as any)?.animalName || "your pet");
-    const panelTitle = panelTitleForProductCode(productCode);
+    const panelTitle = await getPanelTitle(productCode);
 
     const title = "Upgrade available";
     const message = `${vetName} sent an upgrade link for ${petName} (${panelTitle}).`;
