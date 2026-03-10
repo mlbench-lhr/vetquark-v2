@@ -51,82 +51,17 @@ type ReadingDetail = {
   };
 };
 
-function visibleKeysForProductCode(productCode?: string | null): string[] | null {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_MASTER_360") return null;
-  if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
-  if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_ADVANCED") {
-    return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
-  }
-  if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
-  if (code === "VETQ_GERIATRIC_CARE") {
-    return [
-      "glucose",
-      "ketone-bodies",
-      "protein",
-      "microalbumin",
-      "creatine",
-      "calcium",
-      "magnesium",
-      "bilirubin",
-      "urobilinogen",
-      "leukocytes",
-      "nitrite",
-      "blood",
-      "ph",
-      "specific-gravity",
-    ];
-  }
-  return null;
-}
-
-function panelTitleForProductCode(productCode?: string | null) {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_U_START") return "U-Start";
-  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
-  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
-  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
-  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
-  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
-  return "Master 360";
-}
-
-function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: unknown): string[] | null {
-  const unlocked = Array.isArray(unlockedProductCodes)
-    ? unlockedProductCodes.map((c) => String(c || "").trim()).filter(Boolean)
-    : [];
-  const codes = [(productCode || "").trim() || "VETQ_MASTER_360", ...unlocked];
-  for (const c of codes) {
-    if (visibleKeysForProductCode(c) === null) return null;
-  }
-  const set = new Set<string>();
-  for (const c of codes) {
-    const keys = visibleKeysForProductCode(c);
-    if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
-  }
-  return [...set];
-}
-
-const REFERENCE_RANGES_BY_KEY: Record<string, string> = {
-  "specific-gravity": "1.015-1.030",
-  ph: "5.5-7.0",
-  protein: "0-15",
-  glucose: "Negative",
-  "ketone-bodies": "Negative",
-  bilirubin: "Negative",
-  urobilinogen: "0-1",
-  nitrite: "Negative",
-  "ascorbic-acid": "0",
-  leukocytes: "Negative",
-  blood: "Negative",
-  microalbumin: "< 0.03",
-  creatine: "0.9-26.5",
-  calcium: "0-2.5",
-  magnesium: "0-1.5",
-  "ammonium-chloride": "0",
+type PanelReferenceRange = { key: string; label: string };
+type PanelMeta = {
+  code: string;
+  title: string;
+  visibleKeys: string[] | null;
+  referenceRanges: PanelReferenceRange[];
 };
+
+function normalizePanelCode(value?: string | null) {
+  return (value || "").trim() || "VETQ_MASTER_360";
+}
 
 function formatDateTimeLabel(value: string | null) {
   if (!value) return "";
@@ -161,9 +96,57 @@ async function fetchReadingDetail(readingId: string) {
   return ((data as any)?.reading ?? null) as ReadingDetail | null;
 }
 
+async function fetchPanels() {
+  const res = await fetch("/api/panels", { method: "GET" });
+  const data = await res.json().catch(() => null);
+  const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : [];
+  const out: PanelMeta[] = [];
+  for (const p of raw) {
+    const code = String(p?.code || "").trim();
+    if (!code) continue;
+    const title = String(p?.title || "").trim() || code;
+    const keys = Array.isArray(p?.visibleKeys) ? (p.visibleKeys as any[]).map((k) => String(k || "").trim()).filter(Boolean) : null;
+    const referenceRanges = Array.isArray(p?.referenceRanges)
+      ? (p.referenceRanges as any[])
+          .map((rr) => ({ key: String(rr?.key || "").trim(), label: String(rr?.label || "").trim() }))
+          .filter((rr) => rr.key && rr.label)
+      : [];
+    out.push({ code, title, visibleKeys: keys && keys.length ? keys : null, referenceRanges });
+  }
+  return out;
+}
+
 async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
   const r = (reading || (await fetchReadingDetail(readingId))) as ReadingDetail | null;
   if (!r) throw new Error("Report not found");
+  const panels = await fetchPanels().catch(() => [] as PanelMeta[]);
+  const panelByCode = new Map<string, PanelMeta>();
+  for (const p of panels) panelByCode.set(normalizePanelCode(p.code), p);
+  const codesForAccess = [
+    normalizePanelCode(r.productCode),
+    ...((Array.isArray((r as any).unlockedProductCodes) ? (r as any).unlockedProductCodes : [])
+      .map((c: any) => normalizePanelCode(String(c || "")))
+      .filter(Boolean)),
+  ];
+  const visibleKeysByCode = codesForAccess.map((c) => panelByCode.get(c)?.visibleKeys ?? null);
+  const accessKeys = visibleKeysByCode.some((k) => k === null)
+    ? null
+    : (() => {
+        const set = new Set<string>();
+        for (const keys of visibleKeysByCode) {
+          if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+        }
+        return [...set];
+      })();
+  const referenceLabelByKey = new Map<string, string>();
+  for (const c of codesForAccess) {
+    const ranges = panelByCode.get(c)?.referenceRanges ?? [];
+    for (const rr of ranges) {
+      if (!rr?.key || !rr?.label) continue;
+      if (!referenceLabelByKey.has(rr.key)) referenceLabelByKey.set(rr.key, rr.label);
+    }
+  }
+  const panelTitle = panelByCode.get(normalizePanelCode(r.productCode))?.title || normalizePanelCode(r.productCode);
 
   const reportStyles = StyleSheet.create({
     page: { padding: 14, paddingBottom: 86, fontSize: 10, color: "#111827" },
@@ -229,8 +212,7 @@ async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId:
   });
 
   const resultsAll = Array.isArray(r.results) ? r.results : [];
-  const keys = visibleKeysForAccess(r.productCode, (r as any).unlockedProductCodes);
-  const results = keys ? resultsAll.filter((it) => keys.includes(it.key)) : resultsAll;
+  const results = accessKeys ? resultsAll.filter((it) => accessKeys.includes(it.key)) : resultsAll;
   const physicalKeys = new Set(["ph", "specific-gravity"]);
   const physical = results.filter((it) => physicalKeys.has(it.key));
   const chemical = results.filter((it) => !physicalKeys.has(it.key));
@@ -251,7 +233,7 @@ async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId:
   };
 
   const rangeLabelForKey = (key: string) => {
-    const v = String(REFERENCE_RANGES_BY_KEY[key] ?? "").trim();
+    const v = String(referenceLabelByKey.get(key) ?? "").trim();
     return v ? v : "—";
   };
 
@@ -272,7 +254,7 @@ async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId:
           <View style={reportStyles.divider} />
         </View>
 
-        <Text style={reportStyles.sectionTitle}>{`${panelTitleForProductCode(r.productCode)} Report`}</Text>
+        <Text style={reportStyles.sectionTitle}>{`${panelTitle} Report`}</Text>
         <View style={reportStyles.metaGrid}>
           <View style={reportStyles.metaCol}>
             <View style={reportStyles.metaRow}>

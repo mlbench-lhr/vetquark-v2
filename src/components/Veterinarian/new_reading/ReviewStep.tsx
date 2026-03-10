@@ -22,25 +22,6 @@ type NormalRule =
   | { type: 'lt'; value: number }
   | { type: 'gt'; value: number }
 
-const NORMALS: Record<string, { label: string; rule: NormalRule }> = {
-  'specific-gravity': { label: '1.015-1.030', rule: { type: 'range', low: 1.015, high: 1.03 } },
-  'ph': { label: '5.5-7.0', rule: { type: 'range', low: 5.5, high: 7.0 } },
-  'protein': { label: '0-15', rule: { type: 'range', low: 0, high: 15 } },
-  'glucose': { label: 'Negative', rule: { type: 'negative' } },
-  'ketone-bodies': { label: 'Negative', rule: { type: 'negative' } },
-  'bilirubin': { label: 'Negative', rule: { type: 'negative' } },
-  'urobilinogen': { label: '0-1', rule: { type: 'range', low: 0, high: 1 } },
-  'nitrite': { label: 'Negative', rule: { type: 'negative' } },
-  'ascorbic-acid': { label: '0', rule: { type: 'exact', value: 0 } },
-  'leukocytes': { label: 'Negative', rule: { type: 'negative' } },
-  'blood': { label: 'Negative', rule: { type: 'negative' } },
-  'microalbumin': { label: '< 0.03', rule: { type: 'lt', value: 0.03 } },
-  'creatine': { label: '0.9-26.5', rule: { type: 'range', low: 0.9, high: 26.5 } },
-  'calcium': { label: '0-2.5', rule: { type: 'range', low: 0, high: 2.5 } },
-  'magnesium': { label: '0-1.5', rule: { type: 'range', low: 0, high: 1.5 } },
-  'ammonium-chloride': { label: '0', rule: { type: 'exact', value: 0 } },
-}
-
 function parseNumericLoose(valueLabel: string): number | undefined {
   const cleaned = String(valueLabel || '').replace(/[^\d.\-]/g, '')
   if (!cleaned) return undefined
@@ -53,10 +34,9 @@ function numericValueFromLabel(key: string, label: string): number | undefined {
   return parseNumericLoose(label)
 }
 
-function isNormalByRule(key: string, valueLabel: string, numeric?: number): boolean {
-  const info = NORMALS[key]
-  if (!info) return false
-  const rule = info.rule
+function isNormalByRule(ruleByKey: Record<string, NormalRule | undefined>, key: string, valueLabel: string, numeric?: number): boolean {
+  const rule = ruleByKey[key]
+  if (!rule) return false
   if (rule.type === 'negative') {
     const v = String(valueLabel || '').toLowerCase()
     return v === 'neg' || v === 'negative'
@@ -355,10 +335,12 @@ function ResultRow({
   row,
   selectedIndex,
   onSelect,
+  normalRuleByKey,
 }: {
   row: ResultRowConfig
   selectedIndex: number
   onSelect: (index: number) => void
+  normalRuleByKey: Record<string, NormalRule | undefined>
 }) {
   const { t } = useTranslation()
   const [editing, setEditing] = useState(false)
@@ -381,8 +363,8 @@ function ResultRow({
     const opt = row.options[selectedIndex]
     const label = opt ? opt.topLabel : ''
     const num = numericValueFromLabel(row.key, label)
-    return isNormalByRule(row.key, label, num) ? 'Normal' : 'Abnormal'
-  }, [row.key, row.options, selectedIndex])
+    return isNormalByRule(normalRuleByKey, row.key, label, num) ? 'Normal' : 'Abnormal'
+  }, [normalRuleByKey, row.key, row.options, selectedIndex])
   return (
     <div className={`py-4 px-3 ${editing ? 'bg-[#F5F6F6] rounded-xl' : ''}`}>
       <div className="flex items-center opa justify-between">
@@ -493,10 +475,62 @@ function parseNumericValueLabel(valueLabel: string): number | undefined {
 
 export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBack, onIssueReport, visibleKeys }: Props) {
   const { t } = useTranslation()
+  const [normalRuleByKey, setNormalRuleByKey] = useState<Record<string, NormalRule | undefined>>({})
   const visibleRows = useMemo(() => {
     const keys = Array.isArray(visibleKeys) ? visibleKeys : null
     return keys && keys.length ? RESULT_ROWS.filter((r) => keys.includes(r.key)) : RESULT_ROWS
   }, [visibleKeys])
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await fetch('/api/panels', { method: 'GET' })
+        const data = await res.json().catch(() => null)
+        if (!mounted) return
+        const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : []
+        const next: Record<string, NormalRule | undefined> = {}
+        for (const p of raw) {
+          const ranges = Array.isArray(p?.referenceRanges) ? (p.referenceRanges as any[]) : []
+          for (const rr of ranges) {
+            const key = String(rr?.key || '').trim()
+            if (!key || next[key]) continue
+            const rule = rr?.rule
+            const type = String(rule?.type || '').trim()
+            if (type === 'negative') {
+              next[key] = { type: 'negative' }
+              continue
+            }
+            if (type === 'range') {
+              const low = Number(rule?.low)
+              const high = Number(rule?.high)
+              if (Number.isFinite(low) && Number.isFinite(high)) next[key] = { type: 'range', low, high }
+              continue
+            }
+            if (type === 'exact') {
+              const value = Number(rule?.value)
+              if (Number.isFinite(value)) next[key] = { type: 'exact', value }
+              continue
+            }
+            if (type === 'lt') {
+              const value = Number(rule?.value)
+              if (Number.isFinite(value)) next[key] = { type: 'lt', value }
+              continue
+            }
+            if (type === 'gt') {
+              const value = Number(rule?.value)
+              if (Number.isFinite(value)) next[key] = { type: 'gt', value }
+              continue
+            }
+          }
+        }
+        setNormalRuleByKey(next)
+      } catch {
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
   useEffect(() => {
     const next: ReviewSelectionMap = { ...selectedByKey }
     let changed = false
@@ -523,6 +557,7 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
             row={row}
             selectedIndex={selectedByKey[row.key] ?? row.defaultIndex}
             onSelect={(idx) => onChangeSelectedByKey({ ...selectedByKey, [row.key]: idx })}
+            normalRuleByKey={normalRuleByKey}
           />
         ))}
       </div>
@@ -535,7 +570,7 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
               const opt = row.options[selectedIndex]
               const valueLabel = opt ? opt.topLabel : row.options[row.defaultIndex]?.topLabel ?? ""
               const numericValue = numericValueFromLabel(row.key, valueLabel)
-              const status: ResultStatus = isNormalByRule(row.key, valueLabel, numericValue) ? 'Normal' : 'Abnormal'
+              const status: ResultStatus = isNormalByRule(normalRuleByKey, row.key, valueLabel, numericValue) ? 'Normal' : 'Abnormal'
               return {
                 key: row.key,
                 label: row.label,

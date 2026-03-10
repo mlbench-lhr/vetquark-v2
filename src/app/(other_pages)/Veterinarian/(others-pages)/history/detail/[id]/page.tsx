@@ -62,35 +62,18 @@ type ReadingDetail = {
   };
 };
 
-function visibleKeysForProductCode(productCode?: string | null): string[] | null {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_MASTER_360") return null;
-  if (code === "VETQ_U_START") return ["leukocytes", "nitrite", "blood", "ph", "specific-gravity"];
-  if (code === "VETQ_METABOLIC_CHECK") return ["glucose", "ketone-bodies", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_EXPRESS") return ["glucose", "ketone-bodies", "protein", "microalbumin", "ph", "specific-gravity"];
-  if (code === "VETQ_RENAL_ADVANCED") {
-    return ["glucose", "ketone-bodies", "protein", "microalbumin", "creatine", "calcium", "magnesium", "ph", "specific-gravity"];
-  }
-  if (code === "VETQ_HEPATOSCREEN") return ["bilirubin", "urobilinogen", "ph", "specific-gravity"];
-  if (code === "VETQ_GERIATRIC_CARE") {
-    return [
-      "glucose",
-      "ketone-bodies",
-      "protein",
-      "microalbumin",
-      "creatine",
-      "calcium",
-      "magnesium",
-      "bilirubin",
-      "urobilinogen",
-      "leukocytes",
-      "nitrite",
-      "blood",
-      "ph",
-      "specific-gravity",
-    ];
-  }
-  return null;
+type PanelDef = {
+  code: string;
+  title: string;
+  subtitle: string;
+  suggestedPriceBRL: number;
+  visibleKeys: string[] | null;
+  sortOrder: number;
+};
+
+function normalizePanelCode(value?: string | null) {
+  const code = (value || "").trim();
+  return code ? code : "VETQ_MASTER_360";
 }
 
 function ResultRow({ item }: { item: ReadingResult }) {
@@ -136,55 +119,6 @@ function asReportText(value: string | null | undefined) {
   return s ? s : "N/A";
 }
 
-const PANEL_DEFS: Array<{ code: string; title: string; subtitle: string; suggested: number }> = [
-  { code: "VETQ_U_START", title: "U-Start", subtitle: "Essential Urinary Triage", suggested: 33.9 },
-  { code: "VETQ_METABOLIC_CHECK", title: "Metabolic Check", subtitle: "Metabolic Screening", suggested: 49.9 },
-  { code: "VETQ_RENAL_EXPRESS", title: "Renal Express", subtitle: "Early Renal Screening", suggested: 59.9 },
-  { code: "VETQ_RENAL_ADVANCED", title: "Renal Advanced", subtitle: "Renal + Minerals", suggested: 69.9 },
-  { code: "VETQ_HEPATOSCREEN", title: "HepatoScreen", subtitle: "Indirect Hepatobiliary Screening", suggested: 49.9 },
-  { code: "VETQ_GERIATRIC_CARE", title: "Geriatric Care", subtitle: "Preventive 7+ Protocol", suggested: 79.9 },
-  { code: "VETQ_MASTER_360", title: "Master 360", subtitle: "Complete 16-Parameter Protocol", suggested: 89.9 },
-];
-
-function panelTitleForProductCode(productCode?: string | null) {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  return PANEL_DEFS.find((p) => p.code === code)?.title ?? "Master 360";
-}
-
-function visibleKeysForAccess(productCode?: string | null, unlockedProductCodes?: string[] | null): string[] | null {
-  const codes = [
-    (productCode || "").trim() || "VETQ_MASTER_360",
-    ...((Array.isArray(unlockedProductCodes) ? unlockedProductCodes : []).map((c) => String(c || "").trim()).filter(Boolean)),
-  ];
-  for (const c of codes) {
-    if (visibleKeysForProductCode(c) === null) return null;
-  }
-  const set = new Set<string>();
-  for (const c of codes) {
-    const keys = visibleKeysForProductCode(c);
-    if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
-  }
-  return [...set];
-}
-
-function canUpgradeToTarget(
-  currentProductCode: string,
-  unlockedProductCodes: string[] | null | undefined,
-  targetProductCode: string
-) {
-  const normalizedTarget = (targetProductCode || "").trim() || "VETQ_MASTER_360";
-  const normalizedCurrent = (currentProductCode || "").trim() || "VETQ_MASTER_360";
-  const unlocked = Array.isArray(unlockedProductCodes) ? unlockedProductCodes.map((c) => String(c || "").trim()).filter(Boolean) : [];
-  if (normalizedTarget === normalizedCurrent) return false;
-  if (unlocked.includes(normalizedTarget)) return false;
-  const currentKeys = visibleKeysForAccess(normalizedCurrent, unlocked);
-  if (currentKeys === null) return false;
-  const targetKeys = visibleKeysForProductCode(normalizedTarget);
-  if (targetKeys === null) return true;
-  const currentSet = new Set(currentKeys);
-  return targetKeys.some((k) => !currentSet.has(k));
-}
-
 async function shareReadingReport(title: string) {
   const url = window.location.href;
   const navAny = navigator as any;
@@ -213,6 +147,100 @@ export default function ReportDetailsPage() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeProductCode, setUpgradeProductCode] = useState<string>("");
   const [sendingUpgrade, setSendingUpgrade] = useState(false);
+  const [panels, setPanels] = useState<PanelDef[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/panels", { method: "GET" });
+        const data = await res.json().catch(() => null);
+        if (!mounted) return;
+        const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : [];
+        const next = raw
+          .map((p) => {
+            const code = normalizePanelCode(String(p?.code || ""));
+            const title = String(p?.title || "").trim();
+            if (!code) return null;
+            return {
+              code,
+              title: title || code,
+              subtitle: String(p?.subtitle || "").trim(),
+              suggestedPriceBRL: Number.isFinite(Number(p?.suggestedPriceBRL)) ? Number(p.suggestedPriceBRL) : 0,
+              visibleKeys: Array.isArray(p?.visibleKeys) ? p.visibleKeys.map((k: any) => String(k || "").trim()).filter(Boolean) : null,
+              sortOrder: Number.isFinite(Number(p?.sortOrder)) ? Number(p.sortOrder) : 0,
+            } satisfies PanelDef;
+          })
+          .filter(Boolean) as PanelDef[];
+        next.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || a.title.localeCompare(b.title));
+        setPanels(next);
+      } catch {
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const panelByCode = useMemo(() => {
+    const map = new Map<string, PanelDef>();
+    for (const p of panels) map.set(normalizePanelCode(p.code), p);
+    return map;
+  }, [panels]);
+
+  const panelTitleForCode = useCallback(
+    (productCode?: string | null) => {
+      const code = normalizePanelCode(productCode);
+      return panelByCode.get(code)?.title || code;
+    },
+    [panelByCode]
+  );
+
+  const visibleKeysForAccess = useCallback(
+    (productCode?: string | null, unlockedProductCodes?: string[] | null): string[] | null => {
+      const codes = [
+        normalizePanelCode(productCode),
+        ...((Array.isArray(unlockedProductCodes) ? unlockedProductCodes : [])
+          .map((c) => normalizePanelCode(String(c || "")))
+          .filter(Boolean)),
+      ];
+
+      for (const c of codes) {
+        const keys = panelByCode.get(c)?.visibleKeys ?? null;
+        if (keys === null) return null;
+      }
+
+      const set = new Set<string>();
+      for (const c of codes) {
+        const keys = panelByCode.get(c)?.visibleKeys ?? null;
+        if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+      }
+      return [...set];
+    },
+    [panelByCode]
+  );
+
+  const canUpgradeToTarget = useCallback(
+    (currentProductCode: string, unlockedProductCodes: string[] | null | undefined, targetProductCode: string) => {
+      const normalizedTarget = normalizePanelCode(targetProductCode);
+      const normalizedCurrent = normalizePanelCode(currentProductCode);
+      const unlocked = Array.isArray(unlockedProductCodes)
+        ? unlockedProductCodes.map((c) => normalizePanelCode(String(c || ""))).filter(Boolean)
+        : [];
+      if (normalizedTarget === normalizedCurrent) return false;
+      if (unlocked.includes(normalizedTarget)) return false;
+
+      const currentKeys = visibleKeysForAccess(normalizedCurrent, unlocked);
+      if (currentKeys === null) return false;
+
+      const targetKeys = panelByCode.get(normalizedTarget)?.visibleKeys ?? null;
+      if (targetKeys === null) return true;
+
+      const currentSet = new Set(currentKeys);
+      return targetKeys.some((k) => !currentSet.has(k));
+    },
+    [panelByCode, visibleKeysForAccess]
+  );
 
   useEffect(() => {
     if (!readingId) return;
@@ -287,7 +315,7 @@ export default function ReportDetailsPage() {
   const handleShare = useCallback(async () => {
     if (!readingId) return;
     try {
-      await shareReadingReport(`${panelTitleForProductCode(reading?.productCode)} Report`);
+      await shareReadingReport(`${panelTitleForCode(reading?.productCode)} Report`);
       toast.success("Report link ready");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Share failed";
@@ -311,16 +339,19 @@ export default function ReportDetailsPage() {
   const upgradeOptions = useMemo(() => {
     const current = currentProductCode;
     const unlocked = unlockedProductCodes;
-    return PANEL_DEFS.map((p) => ({
+    return panels.map((p) => ({
       ...p,
       disabled: !canUpgradeToTarget(current, unlocked, p.code),
     }));
-  }, [currentProductCode, unlockedProductCodes]);
+  }, [canUpgradeToTarget, currentProductCode, panels, unlockedProductCodes]);
 
   const priceLabelFor = useCallback(
-    (productCode: string, suggested: number) => {
+    (productCode: string, suggestedPriceBRL: number) => {
       if (productCode === "VETQ_MASTER_360") {
-        const n = typeof profile?.baseExamPrice === "number" && Number.isFinite(profile.baseExamPrice) ? profile.baseExamPrice : suggested;
+        const n =
+          typeof profile?.baseExamPrice === "number" && Number.isFinite(profile.baseExamPrice)
+            ? profile.baseExamPrice
+            : suggestedPriceBRL;
         return `R$ ${n.toFixed(2)}`;
       }
       const raw = profile?.panelPrices && typeof profile.panelPrices === "object" ? (profile.panelPrices as any) : null;
@@ -331,7 +362,7 @@ export default function ReportDetailsPage() {
           : typeof v === "number"
             ? v
             : Number(v);
-      const amount = Number.isFinite(n) && n >= 0 ? n : suggested;
+      const amount = Number.isFinite(n) && n >= 0 ? n : suggestedPriceBRL;
       return `R$ ${amount.toFixed(2)}`;
     },
     [profile?.baseExamPrice, profile?.panelPrices]
@@ -434,7 +465,7 @@ export default function ReportDetailsPage() {
                 <div className="min-w-0">
                   <div className="truncate text-[16px] font-medium text-[#111827]">{reading.patient.name}</div>
                   <div className="truncate text-[13px] text-[#9AA4AF]">{reading.guardian.fullName}</div>
-                  <div className="truncate text-[13px] text-[#9AA4AF]">{panelTitleForProductCode(reading.productCode)}</div>
+                  <div className="truncate text-[13px] text-[#9AA4AF]">{panelTitleForCode(reading.productCode)}</div>
                 </div>
               </div>
             </div>
@@ -551,7 +582,7 @@ export default function ReportDetailsPage() {
                       <div className="min-w-0">
                         <div className="text-[15px] font-medium text-[#111827]">{p.title}</div>
                         <div className="mt-1 text-[12px] text-[#3F78D8]">
-                          {p.subtitle} - {priceLabelFor(p.code, p.suggested)}
+                          {p.subtitle} - {priceLabelFor(p.code, p.suggestedPriceBRL)}
                         </div>
                       </div>
                       <div

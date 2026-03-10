@@ -16,43 +16,12 @@ import type { RootState } from '@/store/store'
 import Pusher from 'pusher-js'
 import { useTranslation } from 'react-i18next'
 
-function visibleKeysForProductCode(productCode: string): string[] | null {
-  const code = (productCode || '').trim() || 'VETQ_MASTER_360'
-  if (code === 'VETQ_MASTER_360') return null
-  if (code === 'VETQ_U_START') return ['leukocytes', 'nitrite', 'blood', 'ph', 'specific-gravity']
-  if (code === 'VETQ_METABOLIC_CHECK') return ['glucose', 'ketone-bodies', 'ph', 'specific-gravity']
-  if (code === 'VETQ_RENAL_EXPRESS') return ['glucose', 'ketone-bodies', 'protein', 'microalbumin', 'ph', 'specific-gravity']
-  if (code === 'VETQ_RENAL_ADVANCED') {
-    return ['glucose', 'ketone-bodies', 'protein', 'microalbumin', 'creatine', 'calcium', 'magnesium', 'ph', 'specific-gravity']
-  }
-  if (code === 'VETQ_HEPATOSCREEN') return ['bilirubin', 'urobilinogen', 'ph', 'specific-gravity']
-  if (code === 'VETQ_GERIATRIC_CARE') {
-    return [
-      'glucose',
-      'ketone-bodies',
-      'protein',
-      'microalbumin',
-      'creatine',
-      'calcium',
-      'magnesium',
-      'bilirubin',
-      'urobilinogen',
-      'leukocytes',
-      'nitrite',
-      'blood',
-      'ph',
-      'specific-gravity',
-    ]
-  }
-  return null
-}
-
-function makeEmptyDraft(): NewReadingDraft {
+function makeEmptyDraft(panelProductCode?: string): NewReadingDraft {
   return {
     identification: {
       patientId: '',
       paymentLinkId: '',
-      panelProductCode: 'VETQ_MASTER_360',
+      panelProductCode: String(panelProductCode || '').trim(),
       collectionMethod: '',
       collectionAt: '',
       stripLot: '',
@@ -105,10 +74,58 @@ export default function NewReadingWizard() {
     ...makeEmptyDraft(),
   }))
 
-  const visibleKeys = useMemo(
-    () => visibleKeysForProductCode(draft.identification.panelProductCode || 'VETQ_MASTER_360'),
-    [draft.identification.panelProductCode]
-  )
+  const [defaultPanelProductCode, setDefaultPanelProductCode] = useState<string>('')
+  const [panelByCode, setPanelByCode] = useState<Map<string, { visibleKeys: string[] | null }>>(new Map())
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await fetch('/api/panels', { method: 'GET' })
+        const data = await res.json().catch(() => null)
+        if (!mounted) return
+        const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : []
+        const map = new Map<string, { visibleKeys: string[] | null }>()
+        let nextDefaultCode = ''
+        for (const p of raw) {
+          const code = String(p?.code || '').trim()
+          if (!code) continue
+          const keys = Array.isArray(p?.visibleKeys) ? (p.visibleKeys as any[]).map((k) => String(k || '').trim()).filter(Boolean) : null
+          const normalizedKeys = keys && keys.length ? keys : null
+          map.set(code, { visibleKeys: normalizedKeys })
+          if (!nextDefaultCode && normalizedKeys === null) nextDefaultCode = code
+          if (!nextDefaultCode) nextDefaultCode = code
+        }
+        setPanelByCode(map)
+        setDefaultPanelProductCode(nextDefaultCode)
+      } catch {
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!defaultPanelProductCode) return
+    setDraft((prev) => {
+      const current = String(prev.identification.panelProductCode || '').trim()
+      if (current) return prev
+      return {
+        ...prev,
+        identification: {
+          ...prev.identification,
+          panelProductCode: defaultPanelProductCode,
+        },
+      }
+    })
+  }, [defaultPanelProductCode])
+
+  const visibleKeys = useMemo(() => {
+    const code = (draft.identification.panelProductCode || '').trim() || defaultPanelProductCode
+    const panel = panelByCode.get(code)
+    return panel ? panel.visibleKeys : null
+  }, [defaultPanelProductCode, draft.identification.panelProductCode, panelByCode])
 
   const [patientPreview, setPatientPreview] = useState<{
     animalName: string
@@ -206,7 +223,7 @@ export default function NewReadingWizard() {
         const nextDraft = makeEmptyDraft()
         nextDraft.identification.patientId = String(r?.patient?.id || '')
         nextDraft.identification.paymentLinkId = String(r?.paymentLinkId || '')
-        nextDraft.identification.panelProductCode = String(r?.productCode || 'VETQ_MASTER_360')
+        nextDraft.identification.panelProductCode = String(r?.productCode || '')
         const cm = String(r?.identification?.collectionMethod || '').trim()
         nextDraft.identification.collectionMethod = cm === 'free_catch' || cm === 'cystocentesis' || cm === 'catheter' ? cm : ''
         nextDraft.identification.collectionAt = r?.identification?.collectionAt ? String(r.identification.collectionAt) : ''
@@ -311,7 +328,7 @@ export default function NewReadingWizard() {
         patientId,
         paymentLinkId: (draft.identification.paymentLinkId || '').trim() || undefined,
         wizardStep: step,
-        productCode: (draft.identification.panelProductCode || 'VETQ_MASTER_360').trim(),
+        productCode: String((draft.identification.panelProductCode || defaultPanelProductCode || '')).trim(),
         identification: {
           collectionMethod: String(draft.identification.collectionMethod || ''),
           collectionAt: String(draft.identification.collectionAt || ''),
@@ -346,7 +363,7 @@ export default function NewReadingWizard() {
       patientId,
       paymentLinkId: (draft.identification.paymentLinkId || '').trim() || undefined,
       wizardStep: step,
-      productCode: (draft.identification.panelProductCode || 'VETQ_MASTER_360').trim(),
+      productCode: String((draft.identification.panelProductCode || defaultPanelProductCode || '')).trim(),
       identification: {
         collectionMethod: String(draft.identification.collectionMethod || ''),
         collectionAt: String(draft.identification.collectionAt || ''),

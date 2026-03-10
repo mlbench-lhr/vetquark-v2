@@ -9,7 +9,7 @@ import type { Column } from "@/components/Table/page";
 import { DynamicTable } from "@/components/Table/page";
 import { Download, Eye } from "lucide-react";
 import { format } from "date-fns";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { downloadUrinalysisPdf, openUrinalysisPdf } from "@/utils/urinalysisPdf";
 
@@ -26,15 +26,9 @@ type AdminRecordRow = {
   paymentStatus: string | null;
 };
 
-function panelTitleForProductCode(productCode?: string | null) {
+function normalizePanelCode(productCode?: string | null) {
   const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_U_START") return "U-Start";
-  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
-  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
-  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
-  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
-  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
-  return "Master 360";
+  return code;
 }
 
 async function fetchAdminReadingDetail(readingId: string) {
@@ -50,8 +44,41 @@ async function fetchAdminReadingDetail(readingId: string) {
 export default function RecordsPage() {
   const [search, setSearch] = useState("");
   const [actionReadingId, setActionReadingId] = useState<string | null>(null);
+  const [panelTitleByCode, setPanelTitleByCode] = useState<Map<string, string>>(new Map());
 
   const queryParams = useMemo(() => ({ search }), [search]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/panels", { method: "GET" });
+        const data = await res.json().catch(() => null);
+        if (!mounted) return;
+        const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : [];
+        const map = new Map<string, string>();
+        for (const p of raw) {
+          const code = normalizePanelCode(String(p?.code || ""));
+          if (!code) continue;
+          const title = String(p?.title || "").trim();
+          map.set(code, title || code);
+        }
+        setPanelTitleByCode(map);
+      } catch {
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const panelTitleForCode = useCallback(
+    (productCode?: string | null) => {
+      const code = normalizePanelCode(productCode);
+      return panelTitleByCode.get(code) || code;
+    },
+    [panelTitleByCode]
+  );
 
   const LoadingSkeleton = () => (
     <div className="w-full space-y-2 animate-pulse">
@@ -140,7 +167,7 @@ export default function RecordsPage() {
                 {
                   header: "Panel",
                   accessor: "productCode",
-                  render: (item) => <span>{panelTitleForProductCode(String(item?.productCode ?? ""))}</span>,
+                  render: (item) => <span>{panelTitleForCode(String(item?.productCode ?? ""))}</span>,
                 },
                 {
                   header: "Signed",
@@ -197,4 +224,3 @@ export default function RecordsPage() {
     </BasicStructureWithName>
   );
 }
-

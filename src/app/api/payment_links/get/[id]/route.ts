@@ -10,20 +10,10 @@ import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer
 import { isPushEnabledForUser } from "@/lib/utils";
 import WalletTransaction from "@/lib/models/WalletTransaction";
 import PlatformSettings from "@/lib/models/PlatformSettings";
+import { getPanelTitle } from "@/lib/panels";
 
 function formatBRL(amount: number) {
   return `R$ ${amount.toFixed(2)}`;
-}
-
-function panelTitleForProductCode(productCode?: string | null) {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_U_START") return "U-Start";
-  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
-  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
-  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
-  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
-  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
-  return "Master 360";
 }
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> | { id: string } }) {
@@ -81,7 +71,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
           id: String(link._id),
           kind: String((link as any).kind || "reading_payment"),
           productCode: String((link as any).productCode || "VETQ_MASTER_360"),
-          panelTitle: panelTitleForProductCode(String((link as any).productCode || "VETQ_MASTER_360")),
+          panelTitle: await getPanelTitle(String((link as any).productCode || "VETQ_MASTER_360")),
           amount: link.amount,
           amountLabel: formatBRL(link.amount),
           platformFee: Number.isFinite(Number((link as any).platformFee)) ? Number((link as any).platformFee) : null,
@@ -140,7 +130,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
     const readingId = link.reading ? String(link.reading) : "";
     const kind = String((link as any).kind || "reading_payment");
-    const panelTitle = panelTitleForProductCode(String((link as any).productCode || "VETQ_MASTER_360"));
+    const panelTitle = await getPanelTitle(String((link as any).productCode || "VETQ_MASTER_360"));
     if (readingId && mongoose.Types.ObjectId.isValid(readingId)) {
       if (kind === "upgrade") {
         await Reading.updateOne(

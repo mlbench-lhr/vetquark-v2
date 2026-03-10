@@ -41,43 +41,12 @@ const INCREASING_COLOR = "#F59E0B";
 const NORMAL_COLOR = "#10B981";
 const DECREASING_COLOR = "#EF4444";
 
-const NORMALS: Record<string, { label: string; type: "range" | "exact" | "negative" | "lt" | "gt"; low?: number; high?: number; value?: number }> = {
-    "specific-gravity": { label: "1.015-1.030", type: "range", low: 1.015, high: 1.03 },
-    "ph": { label: "5.5-7.0", type: "range", low: 5.5, high: 7.0 },
-    "protein": { label: "0-15", type: "range", low: 0, high: 15 },
-    "glucose": { label: "Negative", type: "negative" },
-    "ketone-bodies": { label: "Negative", type: "negative" },
-    "bilirubin": { label: "Negative", type: "negative" },
-    "urobilinogen": { label: "0-1", type: "range", low: 0, high: 1 },
-    "nitrite": { label: "Negative", type: "negative" },
-    "ascorbic-acid": { label: "0", type: "exact", value: 0 },
-    "leukocytes": { label: "Negative", type: "negative" },
-    "blood": { label: "Negative", type: "negative" },
-    "microalbumin": { label: "< 0.03", type: "lt", value: 0.03 },
-    "creatine": { label: "0.9-26.5", type: "range", low: 0.9, high: 26.5 },
-    "calcium": { label: "0-2.5", type: "range", low: 0, high: 2.5 },
-    "magnesium": { label: "0-1.5", type: "range", low: 0, high: 1.5 },
-    "ammonium-chloride": { label: "0", type: "exact", value: 0 },
-};
-
-const LABEL_BY_KEY: Record<string, string> = {
-    "specific-gravity": "Specific Gravity",
-    "ph": "pH",
-    "protein": "Protein",
-    "glucose": "Glucose",
-    "ketone-bodies": "Ketone Bodies",
-    "bilirubin": "Bilirubin",
-    "urobilinogen": "Urobilinogen",
-    "nitrite": "Nitrite",
-    "ascorbic-acid": "Ascorbic Acid",
-    "leukocytes": "Leukocytes",
-    "blood": "Blood",
-    "microalbumin": "Microalbumin",
-    "creatine": "Creatine",
-    "calcium": "Calcium",
-    "magnesium": "Magnesium",
-    "ammonium-chloride": "Ammonium Chloride",
-};
+type NormalRule =
+    | { type: "range"; low: number; high: number }
+    | { type: "exact"; value: number }
+    | { type: "negative" }
+    | { type: "lt"; value: number }
+    | { type: "gt"; value: number };
 
 const PHYSICAL_KEYS = new Set<string>(["ph", "specific-gravity"]);
 const MICROSCOPIC_KEYS = new Set<string>(["leukocytes", "blood", "microalbumin", "creatine", "calcium", "magnesium", "ammonium-chloride"]);
@@ -89,8 +58,8 @@ function parseNumeric(valueLabel: string): number | undefined {
     return Number.isFinite(n) ? n : undefined;
 }
 
-function isNormal(key: string, valueLabel: string, numeric?: number): boolean {
-    const rule = NORMALS[key];
+function isNormal(ruleByKey: Record<string, NormalRule | undefined>, key: string, valueLabel: string, numeric?: number): boolean {
+    const rule = ruleByKey[key];
     if (!rule) return false;
     if (rule.type === "negative") {
         const v = String(valueLabel || "").toLowerCase();
@@ -99,36 +68,36 @@ function isNormal(key: string, valueLabel: string, numeric?: number): boolean {
     if (rule.type === "exact") {
         if (numeric == null) {
             const n = parseNumeric(valueLabel);
-            return n != null && Math.abs(n - (rule.value ?? 0)) < 1e-6;
+            return n != null && Math.abs(n - rule.value) < 1e-6;
         }
-        return Math.abs(numeric - (rule.value ?? 0)) < 1e-6;
+        return Math.abs(numeric - rule.value) < 1e-6;
     }
     if (rule.type === "lt") {
         const n = numeric ?? parseNumeric(valueLabel);
-        return n != null && n < (rule.value ?? Number.POSITIVE_INFINITY);
+        return n != null && n < rule.value;
     }
     if (rule.type === "gt") {
         const n = numeric ?? parseNumeric(valueLabel);
-        return n != null && n > (rule.value ?? Number.NEGATIVE_INFINITY);
+        return n != null && n > rule.value;
     }
     if (rule.type === "range") {
         const n = numeric ?? parseNumeric(valueLabel);
-        return n != null && n >= (rule.low ?? Number.NEGATIVE_INFINITY) && n <= (rule.high ?? Number.POSITIVE_INFINITY);
+        return n != null && n >= rule.low && n <= rule.high;
     }
     return false;
 }
 
-function classifyTrend(values: number[], key: string, lastLabel: string): TrendType {
+function classifyTrend(values: number[], key: string, lastLabel: string, normalRuleByKey: Record<string, NormalRule | undefined>): TrendType {
     if (values.length < 2) {
         const last = values.length ? values[values.length - 1] : undefined;
         if (last == null) return "normal";
-        return isNormal(key, lastLabel, last) ? "normal" : "increasing";
+        return isNormal(normalRuleByKey, key, lastLabel, last) ? "normal" : "increasing";
     }
     const prev = values[values.length - 2];
     const last = values[values.length - 1];
     if (last > prev) return "increasing";
     if (last < prev) return "decreasing";
-    return isNormal(key, lastLabel, last) ? "normal" : "increasing";
+    return isNormal(normalRuleByKey, key, lastLabel, last) ? "normal" : "increasing";
 }
 
 function trendColor(trend: TrendType): string {
@@ -223,11 +192,67 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
 const ProgressView = ({ patientId }: { patientId?: string }) => {
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<ReadingItem[]>([]);
-    const [seriesByKey, setSeriesByKey] = useState<Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>>({});
+    const [seriesByKey, setSeriesByKey] = useState<Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string; label: string }>>>({});
+    const [normalLabelByKey, setNormalLabelByKey] = useState<Record<string, string>>({});
+    const [normalRuleByKey, setNormalRuleByKey] = useState<Record<string, NormalRule | undefined>>({});
     const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
         from: undefined,
         to: undefined,
     });
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await fetch("/api/panels", { method: "GET" });
+                const data = await res.json().catch(() => null);
+                if (!mounted) return;
+                const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : [];
+                const labelNext: Record<string, string> = {};
+                const ruleNext: Record<string, NormalRule | undefined> = {};
+                for (const p of raw) {
+                    const ranges = Array.isArray(p?.referenceRanges) ? (p.referenceRanges as any[]) : [];
+                    for (const rr of ranges) {
+                        const key = String(rr?.key || "").trim();
+                        if (!key || labelNext[key] || ruleNext[key]) continue;
+                        const label = String(rr?.label || "").trim();
+                        const rule = rr?.rule;
+                        const type = String(rule?.type || "").trim();
+                        if (label) labelNext[key] = label;
+                        if (type === "negative") {
+                            ruleNext[key] = { type: "negative" };
+                            continue;
+                        }
+                        if (type === "range") {
+                            const low = Number(rule?.low);
+                            const high = Number(rule?.high);
+                            if (Number.isFinite(low) && Number.isFinite(high)) ruleNext[key] = { type: "range", low, high };
+                            continue;
+                        }
+                        if (type === "exact") {
+                            const value = Number(rule?.value);
+                            if (Number.isFinite(value)) ruleNext[key] = { type: "exact", value };
+                            continue;
+                        }
+                        if (type === "lt") {
+                            const value = Number(rule?.value);
+                            if (Number.isFinite(value)) ruleNext[key] = { type: "lt", value };
+                            continue;
+                        }
+                        if (type === "gt") {
+                            const value = Number(rule?.value);
+                            if (Number.isFinite(value)) ruleNext[key] = { type: "gt", value };
+                            continue;
+                        }
+                    }
+                }
+                setNormalLabelByKey(labelNext);
+                setNormalRuleByKey(ruleNext);
+            } catch {
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
 
     useEffect(() => {
         let mounted = true;
@@ -293,14 +318,14 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                     }
                 })
             );
-            const acc: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>> = {};
+            const acc: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string; label: string }>> = {};
             for (const chunk of chunks) {
                 if (!chunk) continue;
                 for (const r of chunk.results) {
                     const n = r.numericValue ?? parseNumeric(r.valueLabel);
                     if (n == null) continue;
                     const arr = acc[r.key] || [];
-                    arr.push({ date: chunk.date, value: n, valueLabel: r.valueLabel, unit: r.unit });
+                    arr.push({ date: chunk.date, value: n, valueLabel: r.valueLabel, unit: r.unit, label: r.label });
                     acc[r.key] = arr;
                 }
             }
@@ -334,11 +359,11 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             const values = series.map((s) => s.value);
             const last = series[series.length - 1];
             const prev = series.length > 1 ? series[series.length - 2] : undefined;
-            const normalLabel = NORMALS[key]?.label ?? "";
-            const trend = classifyTrend(values, key, last?.valueLabel || "");
+            const normalLabel = normalLabelByKey[key] ?? "";
+            const trend = classifyTrend(values, key, last?.valueLabel || "", normalRuleByKey);
             const changePct = prev && last ? Math.round(((last.value - prev.value) / Math.max(Math.abs(prev.value), 1e-9)) * 100) : 0;
             rows.push({
-                name: LABEL_BY_KEY[key] || key,
+                name: last?.label || key,
                 normal: normalLabel,
                 value: last ? (last.unit ? `${last.valueLabel} ${last.unit}` : last.valueLabel) : "-",
                 change: changePct,
@@ -350,7 +375,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             });
         }
         return rows;
-    }, [seriesByKey, dateRange.from, dateRange.to]);
+    }, [seriesByKey, dateRange.from, dateRange.to, normalLabelByKey, normalRuleByKey]);
 
     const chemicalParams: ParameterData[] = useMemo(() => {
         const rows: ParameterData[] = [];
@@ -367,11 +392,11 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             const values = series.map((s) => s.value);
             const last = series[series.length - 1];
             const prev = series.length > 1 ? series[series.length - 2] : undefined;
-            const normalLabel = NORMALS[key]?.label ?? "";
-            const trend = classifyTrend(values, key, last?.valueLabel || "");
+            const normalLabel = normalLabelByKey[key] ?? "";
+            const trend = classifyTrend(values, key, last?.valueLabel || "", normalRuleByKey);
             const changePct = prev && last ? Math.round(((last.value - prev.value) / Math.max(Math.abs(prev.value), 1e-9)) * 100) : 0;
             rows.push({
-                name: LABEL_BY_KEY[key] || key,
+                name: last?.label || key,
                 normal: normalLabel,
                 value: last ? (last.unit ? `${last.valueLabel} ${last.unit}` : last.valueLabel) : "-",
                 change: changePct,
@@ -383,7 +408,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             });
         }
         return rows;
-    }, [seriesByKey, dateRange.from, dateRange.to]);
+    }, [seriesByKey, dateRange.from, dateRange.to, normalLabelByKey, normalRuleByKey]);
 
     const microscopicParams: ParameterData[] = useMemo(() => {
         const rows: ParameterData[] = [];
@@ -399,11 +424,11 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             const values = series.map((s) => s.value);
             const last = series[series.length - 1];
             const prev = series.length > 1 ? series[series.length - 2] : undefined;
-            const normalLabel = NORMALS[key]?.label ?? "";
-            const trend = classifyTrend(values, key, last?.valueLabel || "");
+            const normalLabel = normalLabelByKey[key] ?? "";
+            const trend = classifyTrend(values, key, last?.valueLabel || "", normalRuleByKey);
             const changePct = prev && last ? Math.round(((last.value - prev.value) / Math.max(Math.abs(prev.value), 1e-9)) * 100) : 0;
             rows.push({
-                name: LABEL_BY_KEY[key] || key,
+                name: last?.label || key,
                 normal: normalLabel,
                 value: last ? (last.unit ? `${last.valueLabel} ${last.unit}` : last.valueLabel) : "-",
                 change: changePct,
@@ -415,7 +440,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             });
         }
         return rows;
-    }, [seriesByKey, dateRange.from, dateRange.to]);
+    }, [seriesByKey, dateRange.from, dateRange.to, normalLabelByKey, normalRuleByKey]);
 
     if (items.length < 1) {
         return (
@@ -532,6 +557,8 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                 patientId={patientId}
                 dateRange={dateRange}
                 onDateRangeChange={setDateRange}
+                normalLabelByKey={normalLabelByKey}
+                normalRuleByKey={normalRuleByKey}
             />
         </div>
     );
@@ -584,7 +611,21 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, onDateRangeChange }: { dataByParameter?: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string }>>; patientId?: string; dateRange?: { from: Date | undefined; to: Date | undefined }; onDateRangeChange?: (range: { from: Date | undefined; to: Date | undefined }) => void }) {
+export function ParameterProgress({
+    dataByParameter = {},
+    patientId,
+    dateRange,
+    onDateRangeChange,
+    normalLabelByKey = {},
+    normalRuleByKey = {},
+}: {
+    dataByParameter?: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string; label: string }>>;
+    patientId?: string;
+    dateRange?: { from: Date | undefined; to: Date | undefined };
+    onDateRangeChange?: (range: { from: Date | undefined; to: Date | undefined }) => void;
+    normalLabelByKey?: Record<string, string>;
+    normalRuleByKey?: Record<string, NormalRule | undefined>;
+}) {
     const [viewMode, setViewMode] = useState<ViewMode>("graph");
     const [selectedParameter, setSelectedParameter] = useState<string>("");
     const [tempRange, setTempRange] = useState<{ from: Date | undefined; to: Date | undefined }>(dateRange || { from: undefined, to: undefined });
@@ -592,8 +633,12 @@ export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, 
 
     const parameterOptions = useMemo(() => {
         const keys = Object.keys(dataByParameter || {});
-        return keys.map((k) => ({ key: k, name: LABEL_BY_KEY[k] || k, normalValue: NORMALS[k]?.label || "" }));
-    }, [dataByParameter]);
+        return keys.map((k) => {
+            const raw = (dataByParameter || {})[k] || [];
+            const last = raw.length ? raw[raw.length - 1] : undefined;
+            return { key: k, name: last?.label || k, normalValue: normalLabelByKey[k] || "" };
+        });
+    }, [dataByParameter, normalLabelByKey]);
 
     useEffect(() => {
         if (!selectedParameter && parameterOptions.length) {
@@ -617,20 +662,21 @@ export function ParameterProgress({ dataByParameter = {}, patientId, dateRange, 
             value: r.value,
             valueLabel: r.valueLabel,
         }));
+        const last = raw.length ? raw[raw.length - 1] : undefined;
         return {
-            name: LABEL_BY_KEY[selectedParameter] || selectedParameter,
-            normalValue: NORMALS[selectedParameter]?.label || "",
+            name: last?.label || selectedParameter,
+            normalValue: normalLabelByKey[selectedParameter] || "",
             data: series,
         };
-    }, [selectedParameter, dataByParameter, dateRange?.from, dateRange?.to]);
+    }, [selectedParameter, dataByParameter, dateRange?.from, dateRange?.to, normalLabelByKey]);
 
     const currentTrendColor = useMemo(() => {
         if (!selectedParameter) return INCREASING_COLOR;
         const raw = (dataByParameter || {})[selectedParameter] || [];
         const vals = raw.map((r) => r.value);
         const lastLabel = raw.length ? raw[raw.length - 1].valueLabel : "";
-        return trendColor(classifyTrend(vals, selectedParameter, lastLabel));
-    }, [selectedParameter, dataByParameter]);
+        return trendColor(classifyTrend(vals, selectedParameter, lastLabel, normalRuleByKey));
+    }, [selectedParameter, dataByParameter, normalRuleByKey]);
 
     const handleExport = () => {
         if (!currentParam) return;

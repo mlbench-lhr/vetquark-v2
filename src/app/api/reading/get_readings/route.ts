@@ -6,17 +6,7 @@ import User from "@/lib/models/User";
 import Patient from "@/lib/models/Patient";
 import Reading from "@/lib/models/Reading";
 import { parsePagination, toPaginationMeta } from "@/lib/utils";
-
-function panelTitleForProductCode(productCode?: string | null) {
-  const code = (productCode || "").trim() || "VETQ_MASTER_360";
-  if (code === "VETQ_U_START") return "U-Start";
-  if (code === "VETQ_METABOLIC_CHECK") return "Metabolic Check";
-  if (code === "VETQ_RENAL_EXPRESS") return "Renal Express";
-  if (code === "VETQ_RENAL_ADVANCED") return "Renal Advanced";
-  if (code === "VETQ_HEPATOSCREEN") return "HepatoScreen";
-  if (code === "VETQ_GERIATRIC_CARE") return "Geriatric Care";
-  return "Master 360";
-}
+import { getActivePanels, getPanelTitle, normalizePanelCode } from "@/lib/panels";
 
 function getUserIdFromRequest(req: NextRequest): { userId: string | null; error: NextResponse | null } {
   const headerId = req.headers.get("x-user-id");
@@ -174,11 +164,33 @@ export async function GET(req: NextRequest) {
         .lean(),
     ]);
 
-    const items = docs.map((r: any) => {
+    const panels = await getActivePanels();
+    const titleByCode = new Map<string, string>();
+    for (const p of panels) {
+      titleByCode.set(normalizePanelCode(p.code), String(p.title || "").trim());
+    }
+    const panelTitleForProductCode = async (productCode?: string | null) => {
+      const code = normalizePanelCode(productCode);
+      const title = titleByCode.get(code);
+      if (title) return title;
+      return await getPanelTitle(code);
+    };
+
+    const titlePromises = new Map<string, Promise<string>>();
+    const getTitleCached = (code: string) => {
+      const c = normalizePanelCode(code);
+      const existing = titlePromises.get(c);
+      if (existing) return existing;
+      const p = panelTitleForProductCode(c);
+      titlePromises.set(c, p);
+      return p;
+    };
+
+    const items = await Promise.all(docs.map(async (r: any) => {
       const paymentStatus = typeof r.paymentStatus === "string" ? r.paymentStatus : null;
       const isPaymentBlocking = paymentStatus === "pending" || paymentStatus === "expired";
       const productCode = typeof r.productCode === "string" ? String(r.productCode || "").trim() : "";
-      const normalizedProductCode = productCode || "VETQ_MASTER_360";
+      const normalizedProductCode = normalizePanelCode(productCode);
       const signedAt = r.signedAt ? (new Date(r.signedAt).toISOString?.() ?? String(r.signedAt)) : null;
       const wizardStepRaw = typeof r.wizardStep === "string" ? String(r.wizardStep || "").trim() : "";
       const wizardStep =
@@ -202,9 +214,9 @@ export async function GET(req: NextRequest) {
         paymentStatus,
         paymentLinkId: r.paymentLink ? String(r.paymentLink) : "",
         productCode: normalizedProductCode,
-        panelTitle: panelTitleForProductCode(normalizedProductCode),
+        panelTitle: await getTitleCached(normalizedProductCode),
       };
-    });
+    }));
 
     return NextResponse.json(
       { items, pagination: toPaginationMeta({ page, pageSize, total }) },
