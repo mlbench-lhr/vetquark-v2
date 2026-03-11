@@ -244,6 +244,7 @@ export default function ReportDetailsPage() {
 
   useEffect(() => {
     if (!readingId) return;
+    if (!isVeterinarian && !isGuardian) return;
     let mounted = true;
     (async () => {
       try {
@@ -252,6 +253,12 @@ export default function ReportDetailsPage() {
         const data = await res.json().catch(() => null);
         if (!mounted) return;
         if (res.status === 402) {
+          const paymentLinkId = String((data as any)?.paymentLinkId || "").trim();
+          if (isGuardian && paymentLinkId) {
+            setReading(null);
+            router.replace(`/Guardian/payment/${encodeURIComponent(paymentLinkId)}`);
+            return;
+          }
           const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Payment required";
           throw new Error(msg);
         }
@@ -271,7 +278,7 @@ export default function ReportDetailsPage() {
     return () => {
       mounted = false;
     };
-  }, [readingId]);
+  }, [isGuardian, isVeterinarian, readingId, router]);
 
   useEffect(() => {
     if (!isVeterinarian) return;

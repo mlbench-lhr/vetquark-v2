@@ -322,6 +322,18 @@ export default function NewReadingWizard() {
     if (!patientId) return
     if (draftId) return
     if (creatingDraftRef.current) return
+    if (step === 'identification') {
+      const i = draft.identification
+      const todayStr = new Date().toISOString().slice(0, 10)
+      const expiryStr = (i.stripExpiry || '').trim()
+      const expiryValid = !!expiryStr && expiryStr >= todayStr
+      const firstStepComplete =
+        !!(i.collectionMethod || '').trim() &&
+        !!(i.collectionAt || '').trim() &&
+        !!(i.stripLot || '').trim() &&
+        expiryValid
+      if (!firstStepComplete) return
+    }
     ; (async () => {
       creatingDraftRef.current = true
       const createdId = await saveDraftNow({
@@ -350,7 +362,7 @@ export default function NewReadingWizard() {
       const params = new URLSearchParams(searchParams.toString())
       params.set('draftId', createdId)
       params.delete('resume')
-      router.replace(`/Veterinarian/new-reading?${params.toString()}`)
+      // router.replace(`/Veterinarian/new-reading?${params.toString()}`)
     })()
   }, [draft.identification.patientId, draft.identification.paymentLinkId, draft.identification.panelProductCode, draft.report, draft.results, draft.timer, draftId, router, saveDraftNow, searchParams, signatureImageUrl, step])
 
@@ -520,6 +532,7 @@ export default function NewReadingWizard() {
       toast.success(t("reading.wizard.savedReading"))
       const nextId = String(data?.id || '').trim()
       if (nextId) setDraftId(nextId)
+      const destinationReadingId = nextId || draftId
       setDraft((prev) => ({
         ...prev,
         identification: { patientId: "", paymentLinkId: "", collectionMethod: "", collectionAt: "", stripLot: "", stripExpiry: "" },
@@ -531,7 +544,11 @@ export default function NewReadingWizard() {
       setSignatureImageUrl("")
       setStep("identification")
       setDraftId("")
-      router.push('/Veterinarian/history')
+      if (destinationReadingId) {
+        router.push(`/Veterinarian/history/detail/${encodeURIComponent(destinationReadingId)}`)
+      } else {
+        router.push('/Veterinarian/history')
+      }
     } catch {
       toast.error("Network error while saving reading")
     } finally {
