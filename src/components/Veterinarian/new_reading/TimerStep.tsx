@@ -53,25 +53,16 @@ type CapturedImage = {
 
 async function getBackCameraStream(): Promise<MediaStream> {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    return await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: 'environment' }, width: { ideal: 720 }, height: { ideal: 1280 } },
       audio: false,
     })
-    // Apply zoom out via track constraint (zoom: 1 = no zoom, <1 not supported, so use min zoom)
-    const track = stream.getVideoTracks()[0]
-    if (track) {
-      const capabilities = track.getCapabilities() as any
-      if (capabilities.zoom) {
-        await track.applyConstraints({ advanced: [{ zoom: capabilities.zoom.min } as any] })
-      }
-    }
-    return stream
   } catch {
   }
 
   try {
     return await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 720 }, height: { ideal: 1280 } },
       audio: false,
     })
   } catch {
@@ -84,7 +75,7 @@ async function getBackCameraStream(): Promise<MediaStream> {
     const preferred = videoInputs.find((d) => /back|rear|environment/i.test(d.label)) || videoInputs[videoInputs.length - 1]
     if (!preferred?.deviceId) throw new Error('Back camera not found.')
     return await navigator.mediaDevices.getUserMedia({
-      video: { deviceId: { exact: preferred.deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      video: { deviceId: { exact: preferred.deviceId }, width: { ideal: 720 }, height: { ideal: 1280 } },
       audio: false,
     })
   } finally {
