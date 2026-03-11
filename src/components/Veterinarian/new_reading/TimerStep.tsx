@@ -32,7 +32,7 @@ function buildDemoAnalysisResponse(times: string[]) {
         roi: { x1: 0, x2: 1, y1: 0, y2: 1 },
       },
       test_box_label: `T${testNum}`,
-      test_box_roi: { x1: 0, x2: 1, y1: 0, y2: 1 },
+      test_box_roi: { x1: 0, x2: 1, y1: 0, y2: 1 }
     }
   })
 
