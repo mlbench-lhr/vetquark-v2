@@ -94,6 +94,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const audioCtxRef = useRef<AudioContext | null>(null)
   const prevGrayRef = useRef<Uint8Array | null>(null)
   const analyzeAbortRef = useRef<AbortController | null>(null)
+  const analysisProgressTimerRef = useRef<number | null>(null)
 
   const [cameraError, setCameraError] = useState('')
   const [needsTap, setNeedsTap] = useState(false)
@@ -102,6 +103,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [secondsLeft, setSecondsLeft] = useState(() => Math.max(selectedSeconds, requiredTotalSeconds))
   const [running, setRunning] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
+  const [analysisProgress, setAnalysisProgress] = useState(0)
   const [analysisFailed, setAnalysisFailed] = useState(false)
   const [started, setStarted] = useState(false)
   const [qualityOk, setQualityOk] = useState(false)
@@ -138,6 +140,35 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (!analyzing) {
+      if (analysisProgressTimerRef.current != null) {
+        window.clearInterval(analysisProgressTimerRef.current)
+        analysisProgressTimerRef.current = null
+      }
+      return
+    }
+
+    setAnalysisProgress((p) => (p > 0 ? p : 6))
+    if (analysisProgressTimerRef.current != null) return
+
+    analysisProgressTimerRef.current = window.setInterval(() => {
+      setAnalysisProgress((p) => {
+        if (p >= 95) return p
+        const remaining = 95 - p
+        const step = Math.max(1, Math.round(remaining * 0.08))
+        return Math.min(95, p + step)
+      })
+    }, 200)
+
+    return () => {
+      if (analysisProgressTimerRef.current != null) {
+        window.clearInterval(analysisProgressTimerRef.current)
+        analysisProgressTimerRef.current = null
+      }
+    }
+  }, [analyzing])
 
   useEffect(() => {
     let cancelled = false
@@ -456,6 +487,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     try {
       setAnalysisFailed(false)
       setAnalyzing(true)
+      setAnalysisProgress(6)
       const payload = {
         images: images.map((img) => ({
           image: img.dataUrl.replace(/^data:image\/\w+;base64,/, ''),
@@ -502,6 +534,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         }
       })
 
+      setAnalysisProgress(100)
+      await new Promise((resolve) => setTimeout(resolve, 200))
       onAnalyzeAndProceed(mappedResults)
     } catch (e) {
       if ((e as any)?.name === 'AbortError') {
@@ -509,6 +543,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       }
       console.error(e)
       setAnalysisFailed(true)
+      setAnalysisProgress(0)
       toast.error(t('reading.timer.failedToAnalyzeImages'))
     } finally {
       setAnalyzing(false)
@@ -566,7 +601,10 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
                 </div>
 
                 <div className="mt-2 h-2 w-full rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full w-1/3 bg-white/60 animate-pulse" />
+                  <div
+                    className="h-full bg-white/60 transition-[width] duration-200 ease-linear"
+                    style={{ width: `${analysisProgress}%` }}
+                  />
                 </div>
               </div>
             </div>

@@ -242,7 +242,23 @@ export default function Home() {
     const [loadingReadings, setLoadingReadings] = useState(false);
     const [readings, setReadings] = useState<any[]>([]);
 
-    const latestReadingId = useMemo(() => String(readings?.[0]?.id || ""), [readings]);
+    const latestAccessibleReading = useMemo(() => {
+        return readings.find((r) => {
+            const paymentStatus = String(r?.paymentStatus || "");
+            return paymentStatus !== "pending" && paymentStatus !== "expired";
+        }) || null;
+    }, [readings]);
+
+    const latestReadingId = useMemo(
+        () => String(latestAccessibleReading?.id || readings?.[0]?.id || ""),
+        [latestAccessibleReading, readings],
+    );
+
+    const latestReadingListItem = useMemo(() => {
+        if (!latestReadingId) return null;
+        return readings.find((r) => String(r?.id || "") === latestReadingId) || null;
+    }, [latestReadingId, readings]);
+
     const [loadingLatestReading, setLoadingLatestReading] = useState(false);
     const [latestReading, setLatestReading] = useState<any | null>(null);
 
@@ -381,7 +397,7 @@ export default function Home() {
     }, [latestReadingId]);
 
     const currentHealth = useMemo(() => {
-        const dateRaw = String(latestReading?.signedAt || latestReading?.createdAt || readings?.[0]?.date || "");
+        const dateRaw = String(latestReading?.signedAt || latestReading?.createdAt || latestReadingListItem?.date || "");
         const all = Array.isArray(latestReading?.results) ? latestReading.results : [];
         const keys = visibleKeysForAccess(latestReading?.productCode, (latestReading as any)?.unlockedProductCodes);
         const results = keys ? all.filter((r: any) => keys.includes(String(r?.key || ""))) : all;
@@ -393,7 +409,7 @@ export default function Home() {
             lastTestDate: formatDateLabel(dateRaw),
             parameters: abnormal.length ? abnormal.slice(0, 4) : ["All parameters normal"],
         };
-    }, [latestReading, readings, visibleKeysForAccess]);
+    }, [latestReading, latestReadingListItem?.date, visibleKeysForAccess]);
 
     const trendItems = useMemo<TrendsProps["items"]>(() => {
         const readingId = String(latestReading?.id || "");
@@ -417,20 +433,35 @@ export default function Home() {
         });
     }, [latestReading, visibleKeysForAccess]);
 
-    const handleDownloadLatest = useCallback(async () => {
-        if (!latestReadingId) return;
+    const navigateToReading = useCallback((item: any) => {
+        if (!item?.id) return;
+        const paymentStatus = String(item.paymentStatus || "");
+        const paymentLinkId = String(item.paymentLinkId || "");
+        if ((paymentStatus === "pending" || paymentStatus === "expired") && paymentLinkId) {
+            router.push(`/Guardian/payment/${encodeURIComponent(paymentLinkId)}`);
+            return;
+        }
+        router.push(`/Guardian/history/detail/${encodeURIComponent(String(item.id))}`);
+    }, [router]);
+
+    const handleDownloadReading = useCallback(async (item: any) => {
+        if (!item?.id) return;
+        const paymentStatus = String(item.paymentStatus || "");
+        const paymentLinkId = String(item.paymentLinkId || "");
+        if ((paymentStatus === "pending" || paymentStatus === "expired") && paymentLinkId) {
+            router.push(`/Guardian/payment/${encodeURIComponent(paymentLinkId)}`);
+            return;
+        }
         try {
-            await downloadUrinalysisPdf({ readingId: latestReadingId, reading: latestReading });
+            await downloadUrinalysisPdf({ readingId: String(item.id) });
         } catch (e) {
-            const msg = e instanceof Error ? e.message : "Failed to download report";
             console.error(e);
         }
-    }, [latestReadingId, latestReading]);
+    }, [router]);
 
-    const handleDetailsLatest = useCallback(() => {
-        if (!latestReadingId) return;
-        router.push(`/Guardian/history/detail/${encodeURIComponent(latestReadingId)}`);
-    }, [latestReadingId, router]);
+    const recentReadings = useMemo(() => {
+        return (Array.isArray(readings) ? readings : []).slice(0, 4);
+    }, [readings]);
 
     return (
         <main className="min-h-scree bg-gray-5 p-">
@@ -444,15 +475,20 @@ export default function Home() {
                 <div className="bg-[#F5F6F6] w-[calc(100%+40px)] -ms-6 h-2 my-4"></div>
                 <Trends items={trendItems} loading={loadingLatestReading || loadingReadings} />
                 <div className="bg-[#F5F6F6] w-[calc(100%+40px)] -ms-6 h-2 my-4"></div>
-                {readings?.[0]?.id ? (
-                    <ReportCard
-                        title={panelTitleForCode(latestReading?.productCode)}
-                        date={formatDateLabel(String(readings?.[0]?.date || ""))}
-                        avatarUrl={String(readings?.[0]?.avatarSrc || "")}
-                        signed={readings?.[0]?.status === "signed"}
-                        onDownload={handleDownloadLatest}
-                        onDetails={handleDetailsLatest}
-                    />
+                {recentReadings.length ? (
+                    <div className="space-y-4">
+                        {recentReadings.map((it: any) => (
+                            <ReportCard
+                                key={String(it?.id || "")}
+                                title={String(it?.panelTitle || panelTitleForCode(it?.productCode))}
+                                date={formatDateLabel(String(it?.date || ""))}
+                                avatarUrl={String(it?.avatarSrc || "")}
+                                signed={String(it?.status || "") === "signed"}
+                                onDownload={() => handleDownloadReading(it)}
+                                onDetails={() => navigateToReading(it)}
+                            />
+                        ))}
+                    </div>
                 ) : (
                     <div className="text-sm text-gray-500">No reports found.</div>
                 )}
