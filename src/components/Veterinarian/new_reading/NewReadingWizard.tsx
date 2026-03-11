@@ -322,6 +322,18 @@ export default function NewReadingWizard() {
     if (!patientId) return
     if (draftId) return
     if (creatingDraftRef.current) return
+    if (step === 'identification') {
+      const i = draft.identification
+      const todayStr = new Date().toISOString().slice(0, 10)
+      const expiryStr = (i.stripExpiry || '').trim()
+      const expiryValid = !!expiryStr && expiryStr >= todayStr
+      const firstStepComplete =
+        !!(i.collectionMethod || '').trim() &&
+        !!(i.collectionAt || '').trim() &&
+        !!(i.stripLot || '').trim() &&
+        expiryValid
+      if (!firstStepComplete) return
+    }
     ; (async () => {
       creatingDraftRef.current = true
       const createdId = await saveDraftNow({
