@@ -76,7 +76,7 @@ async function normalizeCameraStream(stream: MediaStream) {
 async function getBackCameraStream(): Promise<MediaStream> {
   try {
     return await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: 'environment' }, width: { ideal: 720 }, height: { ideal: 1280 } },
+      video: { facingMode: { exact: 'environment' } },
       audio: false,
     })
   } catch {
@@ -84,7 +84,7 @@ async function getBackCameraStream(): Promise<MediaStream> {
 
   try {
     return await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 720 }, height: { ideal: 1280 } },
+      video: { facingMode: { ideal: 'environment' } },
       audio: false,
     })
   } catch {
@@ -94,10 +94,15 @@ async function getBackCameraStream(): Promise<MediaStream> {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices()
     const videoInputs = devices.filter((d) => d.kind === 'videoinput')
-    const preferred = videoInputs.find((d) => /back|rear|environment/i.test(d.label)) || videoInputs[videoInputs.length - 1]
+    const backCandidates = videoInputs.filter((d) => /back|rear|environment/i.test(d.label))
+    const candidates = backCandidates.length ? backCandidates : videoInputs
+    const preferred =
+      candidates.find((d) => /wide|ultra|1x|0\.5x/i.test(d.label) && !/tele|2x|3x/i.test(d.label)) ||
+      candidates.find((d) => !/tele|2x|3x/i.test(d.label)) ||
+      candidates[0]
     if (!preferred?.deviceId) throw new Error('Back camera not found.')
     return await navigator.mediaDevices.getUserMedia({
-      video: { deviceId: { exact: preferred.deviceId }, width: { ideal: 720 }, height: { ideal: 1280 } },
+      video: { deviceId: { exact: preferred.deviceId } },
       audio: false,
     })
   } finally {
