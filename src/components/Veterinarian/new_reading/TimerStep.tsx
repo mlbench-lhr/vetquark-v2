@@ -585,7 +585,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
             autoPlay
             playsInline
             muted
-            className={`h-full w-full object-contain transition ${analyzing ? 'opacity-70 blur-[1px] scale-[1.01]' : ''}`}
+            className={`h-full w-full object-cover transition ${analyzing ? 'opacity-70 blur-[1px] scale-[1.01]' : ''}`}
           />
           <canvas ref={canvasRef} className="hidden" />
 
