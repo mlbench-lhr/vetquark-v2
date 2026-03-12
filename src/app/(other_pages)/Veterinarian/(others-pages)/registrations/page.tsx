@@ -12,6 +12,59 @@ import { FallbackText } from "@/components/ui/fallback-text";
 
 type TabType = "patients" | "guardians";
 
+function formatPatientAge(args: {
+  dateOfBirth: unknown;
+  ageYears: unknown;
+  language: string;
+}): string {
+  const lang = args.language === "pt" ? "pt" : "en";
+  const dob = typeof args.dateOfBirth === "string" && args.dateOfBirth.trim()
+    ? new Date(args.dateOfBirth)
+    : null;
+
+  if (dob && Number.isFinite(dob.getTime())) {
+    const now = new Date();
+    let years = now.getFullYear() - dob.getFullYear();
+    let months = now.getMonth() - dob.getMonth();
+    let days = now.getDate() - dob.getDate();
+
+    if (days < 0) {
+      months -= 1;
+      const daysInPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+      days += daysInPrevMonth;
+    }
+    if (months < 0) {
+      months += 12;
+      years -= 1;
+    }
+
+    const unit = (type: "y" | "m" | "d", n: number) => {
+      if (lang === "pt") {
+        if (type === "y") return n === 1 ? "ano" : "anos";
+        if (type === "m") return n === 1 ? "mês" : "meses";
+        return n === 1 ? "dia" : "dias";
+      }
+      if (type === "y") return n === 1 ? "year" : "years";
+      if (type === "m") return n === 1 ? "month" : "months";
+      return n === 1 ? "day" : "days";
+    };
+
+    const parts: string[] = [];
+    if (years > 0) parts.push(`${years} ${unit("y", years)}`);
+    if (months > 0) parts.push(`${months} ${unit("m", months)}`);
+    if (days > 0 || parts.length === 0) parts.push(`${Math.max(0, days)} ${unit("d", Math.max(0, days))}`);
+    return parts.join(" ");
+  }
+
+  const y = typeof args.ageYears === "number" && Number.isFinite(args.ageYears) ? Math.max(0, args.ageYears) : null;
+  if (y !== null) {
+    const label = lang === "pt" ? (y === 1 ? "ano" : "anos") : (y === 1 ? "year" : "years");
+    return `${y} ${label}`;
+  }
+
+  return "";
+}
+
 interface Patient {
   id: string;
   name: string;
@@ -116,7 +169,7 @@ function RegistrationsListContent({
 }: RegistrationsListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>("patients");
   const [sortOpen, setSortOpen] = useState(false);
   const [patients, setPatients] = useState<Patient[]>(() => initialPatients ?? []);
@@ -172,8 +225,7 @@ function RegistrationsListContent({
           const gender = String(p.gender || p.sex || "");
           const avatarUrl = String(p.avatarUrl || p.image || p.photo || "");
           const createdAt = String(p.createdAt || "");
-          const ageYears = typeof p.ageYears === "number" ? p.ageYears : null;
-          const age = ageYears === null ? "" : `${ageYears} years`;
+          const age = formatPatientAge({ dateOfBirth: p.dateOfBirth, ageYears: p.ageYears, language: i18n.language });
           const lastExamDaysAgo = typeof p.lastExamDaysAgo === "number" ? p.lastExamDaysAgo : -1;
           return {
             id: String(p.id || p._id || ""),
@@ -206,7 +258,7 @@ function RegistrationsListContent({
     return () => {
       mounted = false;
     };
-  }, [patientsPage, searchParams]);
+  }, [patientsPage, searchParams, i18n.language]);
 
   useEffect(() => {
     let mounted = true;
