@@ -51,6 +51,28 @@ type CapturedImage = {
   capturedAt: string
 }
 
+async function normalizeCameraStream(stream: MediaStream) {
+  const [track] = stream.getVideoTracks()
+  if (!track) return
+  const anyTrack = track as any
+  if (typeof anyTrack.getCapabilities !== 'function' || typeof anyTrack.applyConstraints !== 'function') return
+
+  const caps = anyTrack.getCapabilities?.()
+  const advanced: any[] = []
+
+  if (caps?.zoom) {
+    const minZoom = typeof caps.zoom?.min === 'number' ? caps.zoom.min : 1
+    advanced.push({ zoom: minZoom })
+  }
+
+  if (Array.isArray(caps?.focusMode) && caps.focusMode.includes('continuous')) {
+    advanced.push({ focusMode: 'continuous' })
+  }
+
+  if (!advanced.length) return
+  await anyTrack.applyConstraints({ advanced })
+}
+
 async function getBackCameraStream(): Promise<MediaStream> {
   try {
     return await navigator.mediaDevices.getUserMedia({
@@ -189,6 +211,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           stream.getTracks().forEach((t) => t.stop())
           return
         }
+        await normalizeCameraStream(stream).catch(() => { })
 
         streamRef.current = stream
         const video = videoRef.current
@@ -562,7 +585,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
             autoPlay
             playsInline
             muted
-            className={`h-full w-full object-cover transition ${analyzing ? 'opacity-70 blur-[1px] scale-[1.01]' : ''}`}
+            className={`h-full w-full object-contain transition ${analyzing ? 'opacity-70 blur-[1px] scale-[1.01]' : ''}`}
           />
           <canvas ref={canvasRef} className="hidden" />
 
