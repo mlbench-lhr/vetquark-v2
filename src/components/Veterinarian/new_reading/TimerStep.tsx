@@ -118,6 +118,11 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const streamRef = useRef<MediaStream | null>(null)
   const capturedAtSetRef = useRef<Set<number>>(new Set())
   const alertedAtSetRef = useRef<Set<number>>(new Set())
+  const processedAtSetRef = useRef<Set<number>>(new Set())
+  const analysisChainRef = useRef<Promise<void>>(Promise.resolve())
+  const combinedNumericResultsRef = useRef<Record<number, number>>({})
+  const combinedMappedResultsRef = useRef<ReviewSelectionMap | null>(null)
+  const analysisErrorRef = useRef<unknown>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
   const prevGrayRef = useRef<Uint8Array | null>(null)
   const analyzeAbortRef = useRef<AbortController | null>(null)
@@ -147,8 +152,18 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     setImages([])
     capturedAtSetRef.current = new Set()
     alertedAtSetRef.current = new Set()
+    processedAtSetRef.current = new Set()
+    combinedNumericResultsRef.current = {}
+    combinedMappedResultsRef.current = null
+    analysisErrorRef.current = null
     setStarted(false)
     setAnalysisFailed(false)
+    setAnalysisProgress(0)
+    setAnalyzing(false)
+    const ctrl = analyzeAbortRef.current
+    analyzeAbortRef.current = null
+    if (ctrl) ctrl.abort()
+    analysisChainRef.current = Promise.resolve()
   }, [onChangeSelectedSeconds, selectedSeconds])
 
   useEffect(() => {
@@ -175,25 +190,6 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         analysisProgressTimerRef.current = null
       }
       return
-    }
-
-    setAnalysisProgress((p) => (p > 0 ? p : 6))
-    if (analysisProgressTimerRef.current != null) return
-
-    analysisProgressTimerRef.current = window.setInterval(() => {
-      setAnalysisProgress((p) => {
-        if (p >= 95) return p
-        const remaining = 95 - p
-        const step = Math.max(1, Math.round(remaining * 0.08))
-        return Math.min(95, p + step)
-      })
-    }, 200)
-
-    return () => {
-      if (analysisProgressTimerRef.current != null) {
-        window.clearInterval(analysisProgressTimerRef.current)
-        analysisProgressTimerRef.current = null
-      }
     }
   }, [analyzing])
 
@@ -351,6 +347,92 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     }
   }, [cameraReady, started])
 
+  function normalizeSingleResponse(raw: any, fallbackTime: string) {
+    if (raw && typeof raw === 'object' && Array.isArray(raw.results) && typeof raw.success === 'boolean') {
+      return raw
+    }
+    if (raw && typeof raw === 'object' && Array.isArray(raw.test_boxes)) {
+      return { success: true, results: [{ time: String(fallbackTime), test_boxes: raw.test_boxes }] }
+    }
+    if (raw && typeof raw === 'object' && raw.result && typeof raw.result === 'object' && Array.isArray(raw.result.test_boxes)) {
+      const time = raw.result.time == null ? fallbackTime : String(raw.result.time)
+      return { success: true, results: [{ time, test_boxes: raw.result.test_boxes }] }
+    }
+    throw new Error('Invalid response')
+  }
+
+  function buildMappedResultsFromNumeric(numericResults: Record<number, number>) {
+    const mappedResults: ReviewSelectionMap = {}
+    Object.entries(numericResults).forEach(([key, value]) => {
+      const index = parseInt(key) - 1
+      if (index >= 0 && index < RESULT_ROWS.length) {
+        const rowKey = RESULT_ROWS[index].key
+        mappedResults[rowKey] = value
+      }
+    })
+    return mappedResults
+  }
+
+  const processSingleFrame = useCallback(
+    async (frame: { atSeconds: number; time: string; image: string }) => {
+      if (processedAtSetRef.current.has(frame.atSeconds)) return
+
+      const controller = analyzeAbortRef.current || new AbortController()
+      analyzeAbortRef.current = controller
+
+      const res = await fetch('/api/strip/process_single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: frame.image, time: frame.time }),
+        signal: controller.signal,
+      })
+
+      if (!res.ok) {
+        throw new Error('Analysis failed')
+      }
+
+      const raw = await res.json()
+      if (raw?.success === false) {
+        throw new Error('Analysis failed')
+      }
+
+      const normalized = normalizeSingleResponse(raw, frame.time)
+      const partial = transformTestBoxes(normalized)
+      combinedNumericResultsRef.current = { ...combinedNumericResultsRef.current, ...partial }
+      processedAtSetRef.current.add(frame.atSeconds)
+      combinedMappedResultsRef.current = buildMappedResultsFromNumeric(combinedNumericResultsRef.current)
+
+      const done = processedAtSetRef.current.size
+      const total = autoCaptureAtSeconds.length || 1
+      const pct = Math.round((done / total) * 100)
+      setAnalysisProgress(pct)
+      if (pct >= 100) {
+        setAnalyzing(false)
+        analyzeAbortRef.current = null
+      }
+    },
+    [],
+  )
+
+  const enqueueFrameForProcessing = useCallback(
+    (frame: { atSeconds: number; time: string; image: string }) => {
+      if (processedAtSetRef.current.has(frame.atSeconds)) return
+      if (analysisErrorRef.current != null) return
+      setAnalysisFailed(false)
+      setAnalyzing(true)
+      analysisChainRef.current = analysisChainRef.current
+        .then(() => processSingleFrame(frame))
+        .catch((e) => {
+          analysisErrorRef.current = e
+          setAnalysisFailed(true)
+          setAnalyzing(false)
+          setAnalysisProgress(0)
+          analyzeAbortRef.current = null
+        })
+    },
+    [processSingleFrame],
+  )
+
   const captureImage = useCallback(
     (atSeconds: number) => {
       const video = videoRef.current
@@ -365,6 +447,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       ctx.drawImage(video, 0, 0)
       const dataUrl = canvas.toDataURL('image/jpeg')
+      const imageBase64 = dataUrl.replace(/^data:image\/\w+;base64,/, '')
+      enqueueFrameForProcessing({ atSeconds, time: String(atSeconds), image: imageBase64 })
 
       setImages((prev) => [
         ...prev,
@@ -375,7 +459,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         },
       ])
     },
-    [],
+    [enqueueFrameForProcessing],
   )
 
   const preAlertAtSeconds = useMemo(() => autoCaptureAtSeconds.map((s) => Math.max(0, s - 5)), [])
@@ -499,13 +583,23 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     setImages([])
     capturedAtSetRef.current = new Set()
     alertedAtSetRef.current = new Set()
+    processedAtSetRef.current = new Set()
+    combinedNumericResultsRef.current = {}
+    combinedMappedResultsRef.current = null
+    analysisErrorRef.current = null
+    setAnalysisProgress(0)
     prevGrayRef.current = null
+    const ctrl = analyzeAbortRef.current
+    analyzeAbortRef.current = null
+    if (ctrl) ctrl.abort()
+    analysisChainRef.current = Promise.resolve()
   }, [selectedSeconds])
 
   const handleCancelAnalyze = useCallback(() => {
     const ctrl = analyzeAbortRef.current
     analyzeAbortRef.current = null
     if (ctrl) ctrl.abort()
+    analysisErrorRef.current = new Error('Canceled')
     setAnalysisFailed(false)
     setAnalyzing(false)
     toast.info(t('reading.timer.analysisCanceled'))
@@ -514,84 +608,21 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const handleAnalyze = async () => {
     try {
       setAnalysisFailed(false)
-      setAnalyzing(true)
-      setAnalysisProgress(3)
-
-      const frames = images
-        .map((img) => ({
-          atSeconds: img.atSeconds,
-          time: String(img.atSeconds),
-          image: img.dataUrl.replace(/^data:image\/\w+;base64,/, ''),
-        }))
-        .sort((a, b) => a.atSeconds - b.atSeconds)
-
-      const times = frames.map((x) => x.time)
-
-      const normalizeSingleResponse = (raw: any, fallbackTime: string) => {
-        if (raw && typeof raw === 'object' && Array.isArray(raw.results) && typeof raw.success === 'boolean') {
-          return raw
-        }
-        if (raw && typeof raw === 'object' && Array.isArray(raw.test_boxes)) {
-          return { success: true, results: [{ time: String(fallbackTime), test_boxes: raw.test_boxes }] }
-        }
-        if (raw && typeof raw === 'object' && raw.result && typeof raw.result === 'object' && Array.isArray(raw.result.test_boxes)) {
-          const t = raw.result.time == null ? fallbackTime : String(raw.result.time)
-          return { success: true, results: [{ time: t, test_boxes: raw.result.test_boxes }] }
-        }
-        throw new Error('Invalid response')
+      if (analysisErrorRef.current != null) {
+        throw analysisErrorRef.current
       }
-
-      let numericResults: Record<number, number> = {}
-
       try {
-        const controller = new AbortController()
-        analyzeAbortRef.current = controller
-
-        const total = frames.length || 1
-        for (let i = 0; i < frames.length; i++) {
-          const frame = frames[i]
-          const res = await fetch('/api/strip/process_single', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: frame.image, time: frame.time }),
-            signal: controller.signal,
-          })
-
-          if (!res.ok) {
-            throw new Error('Analysis failed')
-          }
-
-          const raw = await res.json()
-          if (raw?.success === false) {
-            throw new Error('Analysis failed')
-          }
-
-          const normalized = normalizeSingleResponse(raw, frame.time)
-          const partial = transformTestBoxes(normalized)
-          numericResults = { ...numericResults, ...partial }
-
-          const pct = Math.round(((i + 1) / total) * 100)
-          setAnalysisProgress(pct)
-        }
+        await analysisChainRef.current
       } catch (e) {
         if ((e as any)?.name === 'AbortError') throw e
-        const data = buildDemoAnalysisResponse(times)
-        numericResults = transformTestBoxes(data)
-        setAnalysisProgress(100)
-      } finally {
-        analyzeAbortRef.current = null
+        throw e
       }
 
-      const mappedResults: ReviewSelectionMap = {}
-
-      Object.entries(numericResults).forEach(([key, value]) => {
-        const index = parseInt(key) - 1
-        if (index >= 0 && index < RESULT_ROWS.length) {
-          const rowKey = RESULT_ROWS[index].key
-          mappedResults[rowKey] = value
-        }
-      })
-
+      if (analysisErrorRef.current != null) {
+        throw analysisErrorRef.current
+      }
+      const mappedResults = combinedMappedResultsRef.current
+      if (!mappedResults) throw new Error('Analysis failed')
       await new Promise((resolve) => setTimeout(resolve, 200))
       onAnalyzeAndProceed(mappedResults)
     } catch (e) {
