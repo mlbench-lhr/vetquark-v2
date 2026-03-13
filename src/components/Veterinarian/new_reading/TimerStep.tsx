@@ -379,6 +379,9 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       const controller = analyzeAbortRef.current || new AbortController()
       analyzeAbortRef.current = controller
+      if (frame.atSeconds === requiredTotalSeconds) {
+        setAnalyzing(true)
+      }
 
       const res = await fetch('/api/strip/process_single', {
         method: 'POST',
@@ -419,18 +422,20 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       if (processedAtSetRef.current.has(frame.atSeconds)) return
       if (analysisErrorRef.current != null) return
       setAnalysisFailed(false)
-      setAnalyzing(true)
       analysisChainRef.current = analysisChainRef.current
         .then(() => processSingleFrame(frame))
         .catch((e) => {
+          const ctrl = analyzeAbortRef.current
+          analyzeAbortRef.current = null
+          if (ctrl) ctrl.abort()
           analysisErrorRef.current = e
           setAnalysisFailed(true)
           setAnalyzing(false)
           setAnalysisProgress(0)
-          analyzeAbortRef.current = null
+          toast.error(t('reading.timer.failedToAnalyzeImages'))
         })
     },
-    [processSingleFrame],
+    [processSingleFrame, t],
   )
 
   const captureImage = useCallback(
