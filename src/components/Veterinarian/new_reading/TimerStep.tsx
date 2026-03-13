@@ -515,42 +515,72 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     try {
       setAnalysisFailed(false)
       setAnalyzing(true)
-      setAnalysisProgress(6)
-      const payload = {
-        images: images.map((img) => ({
-          image: img.dataUrl.replace(/^data:image\/\w+;base64,/, ''),
-          time: String(img.atSeconds),
-        })),
-      }
-      const times = payload.images.map((x) => x.time)
+      setAnalysisProgress(3)
 
-      let data: any
+      const frames = images
+        .map((img) => ({
+          atSeconds: img.atSeconds,
+          time: String(img.atSeconds),
+          image: img.dataUrl.replace(/^data:image\/\w+;base64,/, ''),
+        }))
+        .sort((a, b) => a.atSeconds - b.atSeconds)
+
+      const times = frames.map((x) => x.time)
+
+      const normalizeSingleResponse = (raw: any, fallbackTime: string) => {
+        if (raw && typeof raw === 'object' && Array.isArray(raw.results) && typeof raw.success === 'boolean') {
+          return raw
+        }
+        if (raw && typeof raw === 'object' && Array.isArray(raw.test_boxes)) {
+          return { success: true, results: [{ time: String(fallbackTime), test_boxes: raw.test_boxes }] }
+        }
+        if (raw && typeof raw === 'object' && raw.result && typeof raw.result === 'object' && Array.isArray(raw.result.test_boxes)) {
+          const t = raw.result.time == null ? fallbackTime : String(raw.result.time)
+          return { success: true, results: [{ time: t, test_boxes: raw.result.test_boxes }] }
+        }
+        throw new Error('Invalid response')
+      }
+
+      let numericResults: Record<number, number> = {}
+
       try {
         const controller = new AbortController()
         analyzeAbortRef.current = controller
-        const res = await fetch('https://waqassultani-best-matching-backend.hf.space/process', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-        })
 
-        if (!res.ok) {
-          throw new Error('Analysis failed')
-        }
+        const total = frames.length || 1
+        for (let i = 0; i < frames.length; i++) {
+          const frame = frames[i]
+          const res = await fetch('/api/strip/process_single', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: frame.image, time: frame.time }),
+            signal: controller.signal,
+          })
 
-        data = await res.json()
-        if (data?.success === false) {
-          throw new Error('Analysis failed')
+          if (!res.ok) {
+            throw new Error('Analysis failed')
+          }
+
+          const raw = await res.json()
+          if (raw?.success === false) {
+            throw new Error('Analysis failed')
+          }
+
+          const normalized = normalizeSingleResponse(raw, frame.time)
+          const partial = transformTestBoxes(normalized)
+          numericResults = { ...numericResults, ...partial }
+
+          const pct = Math.round(((i + 1) / total) * 100)
+          setAnalysisProgress(pct)
         }
       } catch (e) {
         if ((e as any)?.name === 'AbortError') throw e
-        data = buildDemoAnalysisResponse(times)
+        const data = buildDemoAnalysisResponse(times)
+        numericResults = transformTestBoxes(data)
+        setAnalysisProgress(100)
       } finally {
         analyzeAbortRef.current = null
       }
-
-      const numericResults = transformTestBoxes(data)
 
       const mappedResults: ReviewSelectionMap = {}
 
@@ -562,7 +592,6 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         }
       })
 
-      setAnalysisProgress(100)
       await new Promise((resolve) => setTimeout(resolve, 200))
       onAnalyzeAndProceed(mappedResults)
     } catch (e) {
