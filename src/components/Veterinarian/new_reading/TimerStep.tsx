@@ -127,6 +127,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const prevGrayRef = useRef<Uint8Array | null>(null)
   const analyzeAbortRef = useRef<AbortController | null>(null)
   const analysisProgressTimerRef = useRef<number | null>(null)
+  const analysisSessionRef = useRef(0)
 
   const [cameraError, setCameraError] = useState('')
   const [needsTap, setNeedsTap] = useState(false)
@@ -143,6 +144,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [qualityIssue, setQualityIssue] = useState<'' | 'dark' | 'bright' | 'focus' | 'motion'>('')
 
   useEffect(() => {
+    analysisSessionRef.current += 1
     if (selectedSeconds < requiredTotalSeconds) {
       onChangeSelectedSeconds(requiredTotalSeconds)
       return
@@ -453,15 +455,18 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     (frame: { atSeconds: number; time: string; image: string }) => {
       if (processedAtSetRef.current.has(frame.atSeconds)) return
       if (analysisErrorRef.current != null) return
+      const session = analysisSessionRef.current
       setAnalysisFailed(false)
       analysisChainRef.current = analysisChainRef.current
         .then(() => processSingleFrame(frame))
         .catch((e) => {
+          if (session !== analysisSessionRef.current) return
           const ctrl = analyzeAbortRef.current
           analyzeAbortRef.current = null
           if (ctrl) ctrl.abort()
           analysisErrorRef.current = e
           setAnalysisFailed(true)
+          setRunning(false)
           setAnalyzing(false)
           setAnalysisProgress(0)
           toast.error(extractUserFacingErrorMessage(e) || t('reading.timer.failedToAnalyzeImages'))
@@ -668,6 +673,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       }
       console.error(e)
       setAnalysisFailed(true)
+      setRunning(false)
       setAnalysisProgress(0)
       toast.error(extractUserFacingErrorMessage(e) || t('reading.timer.failedToAnalyzeImages'))
     } finally {
@@ -762,8 +768,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       <div className="mt-4 flex items-center justify-between bg-[#F5F6F6] rounded-full pe-4">
         <button
           onClick={handlePrimaryClick}
-          disabled={!started && (!qualityOk || !cameraReady)}
-          className={`px-6 py-3 rounded-full font-medium ${!started && (!qualityOk || !cameraReady) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-primary text-white'}`}
+          disabled={analysisFailed || (!started && (!qualityOk || !cameraReady))}
+          className={`px-6 py-3 rounded-full font-medium ${analysisFailed || (!started && (!qualityOk || !cameraReady)) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-primary text-white'}`}
         >
           {primaryButtonLabel}
         </button>
