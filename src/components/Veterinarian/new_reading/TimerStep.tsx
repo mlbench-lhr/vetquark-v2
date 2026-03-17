@@ -373,6 +373,36 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     return mappedResults
   }
 
+  function extractApiErrorMessage(payload: any): string | null {
+    if (payload == null) return null
+    if (typeof payload === 'string') {
+      const s = payload.trim()
+      return s ? s.slice(0, 200) : null
+    }
+    if (typeof payload !== 'object') return null
+    const err = (payload as any)?.error
+    if (typeof err === 'string' && err.trim()) return err.trim()
+    const msg = (payload as any)?.message
+    if (typeof msg === 'string' && msg.trim()) return msg.trim()
+    return null
+  }
+
+  function extractUserFacingErrorMessage(e: unknown): string | null {
+    if (typeof e === 'string') {
+      const s = e.trim()
+      return s ? s : null
+    }
+    if (e instanceof Error) {
+      const s = String(e.message || '').trim()
+      return s ? s : null
+    }
+    if (e && typeof e === 'object') {
+      const msg = (e as any)?.message
+      if (typeof msg === 'string' && msg.trim()) return msg.trim()
+    }
+    return null
+  }
+
   const processSingleFrame = useCallback(
     async (frame: { atSeconds: number; time: string; image: string }) => {
       if (processedAtSetRef.current.has(frame.atSeconds)) return
@@ -390,13 +420,15 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         signal: controller.signal,
       })
 
+      const ct = String(res.headers.get('content-type') || '')
+      const raw = ct.includes('application/json') ? await res.json().catch(() => null) : await res.text().catch(() => '')
+
       if (!res.ok) {
-        throw new Error('Analysis failed')
+        throw new Error(extractApiErrorMessage(raw) || `HTTP ${res.status}`)
       }
 
-      const raw = await res.json()
       if (raw?.success === false) {
-        throw new Error('Analysis failed')
+        throw new Error(extractApiErrorMessage(raw) || 'Analysis failed')
       }
 
       const normalized = normalizeSingleResponse(raw, frame.time)
@@ -432,7 +464,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           setAnalysisFailed(true)
           setAnalyzing(false)
           setAnalysisProgress(0)
-          toast.error(t('reading.timer.failedToAnalyzeImages'))
+          toast.error(extractUserFacingErrorMessage(e) || t('reading.timer.failedToAnalyzeImages'))
         })
     },
     [processSingleFrame, t],
@@ -637,7 +669,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       console.error(e)
       setAnalysisFailed(true)
       setAnalysisProgress(0)
-      toast.error(t('reading.timer.failedToAnalyzeImages'))
+      toast.error(extractUserFacingErrorMessage(e) || t('reading.timer.failedToAnalyzeImages'))
     } finally {
       setAnalyzing(false)
     }
