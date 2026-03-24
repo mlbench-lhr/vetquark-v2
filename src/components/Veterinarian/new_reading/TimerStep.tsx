@@ -128,6 +128,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const analyzeAbortRef = useRef<AbortController | null>(null)
   const analysisProgressTimerRef = useRef<number | null>(null)
   const analysisSessionRef = useRef(0)
+  const finalFrameRef = useRef<{ atSeconds: number; time: string; image: string } | null>(null)
 
   const [cameraError, setCameraError] = useState('')
   const [needsTap, setNeedsTap] = useState(false)
@@ -158,6 +159,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     combinedNumericResultsRef.current = {}
     combinedMappedResultsRef.current = null
     analysisErrorRef.current = null
+    finalFrameRef.current = null
     setStarted(false)
     setAnalysisFailed(false)
     setAnalysisProgress(0)
@@ -490,7 +492,11 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       ctx.drawImage(video, 0, 0)
       const dataUrl = canvas.toDataURL('image/jpeg')
       const imageBase64 = dataUrl.replace(/^data:image\/\w+;base64,/, '')
-      enqueueFrameForProcessing({ atSeconds, time: String(atSeconds), image: imageBase64 })
+      if (atSeconds === requiredTotalSeconds) {
+        finalFrameRef.current = { atSeconds, time: String(atSeconds), image: imageBase64 }
+      } else {
+        enqueueFrameForProcessing({ atSeconds, time: String(atSeconds), image: imageBase64 })
+      }
 
       setImages((prev) => [
         ...prev,
@@ -629,6 +635,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     combinedNumericResultsRef.current = {}
     combinedMappedResultsRef.current = null
     analysisErrorRef.current = null
+    finalFrameRef.current = null
     setAnalysisProgress(0)
     prevGrayRef.current = null
     const ctrl = analyzeAbortRef.current
@@ -652,6 +659,11 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       setAnalysisFailed(false)
       if (analysisErrorRef.current != null) {
         throw analysisErrorRef.current
+      }
+      const finalFrame = finalFrameRef.current
+      if (finalFrame && !processedAtSetRef.current.has(finalFrame.atSeconds)) {
+        setAnalyzing(true)
+        enqueueFrameForProcessing(finalFrame)
       }
       try {
         await analysisChainRef.current
@@ -699,7 +711,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
           {cameraReady && (
             <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
-              <div className="w-12 h-[90%] rounded-xl border-2 border-dashed border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
+              <div className="w-12 h-[90%] rounded-xl ms-16 border-2 border-dashed border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
             </div>
           )}
 

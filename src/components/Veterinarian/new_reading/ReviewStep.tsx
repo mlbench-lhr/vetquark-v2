@@ -72,6 +72,7 @@ type DotOption = {
   topSubLabel?: string
   bottomLabel?: string
   color: string
+  showStain?: boolean
 }
 
 type ResultRowConfig = {
@@ -117,9 +118,9 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     unit: 'µmol/L',
     defaultIndex: 2,
     options: [
-      { topLabel: '3.3', color: '#FBE8D4' },
+      { topLabel: 'normal', color: '#FBE8D4' },
       { topLabel: '16', color: '#F8D5CA' },
-      { topLabel: '33++', color: '#F6CECE' },
+      { topLabel: '33+', color: '#F6CECE' },
       { topLabel: '66++', color: '#F3BAC3' },
       { topLabel: '131+++', color: '#EE9FA4' },
     ],
@@ -163,8 +164,8 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     defaultIndex: 2,
     options: [
       { topLabel: 'Neg', color: '#F9CD8A' },
-      { topLabel: '0', color: '#CFC69D' },
-      { topLabel: '10', color: '#B0B99B' },
+      { topLabel: '10', color: '#CFC69D', bottomLabel: "Non-hemolyzed", showStain: true },
+      { topLabel: '10', color: '#B0B99B', bottomLabel: "Hemolyzed" },
       { topLabel: '25', color: '#708E85' },
       { topLabel: '80', color: '#5C8075' },
       { topLabel: '200', color: '#336F73' },
@@ -209,6 +210,7 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     options: [
       { topLabel: 'Neg', color: '#FAE0C7' },
       { topLabel: '0.5', bottomLabel: "Trace", color: '#F5C7BD' },
+      { topLabel: '1.5', bottomLabel: "Small", color: '#E9B0B0' },
       { topLabel: '4.0', bottomLabel: "Moderate", color: '#DC99A2' },
       { topLabel: '8.0', bottomLabel: "High", color: '#C9728E' },
       { topLabel: '16', color: '#861459' },
@@ -222,9 +224,9 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     defaultIndex: 1,
     options: [
       { topLabel: 'Neg', color: 'white' },
-      { topLabel: '17', color: '#F8DFEC' },
-      { topLabel: '50', color: '#EFAFCE' },
-      { topLabel: '100', color: '#E780AF' },
+      { topLabel: '17', color: '#F8DFEC', bottomLabel: "Small" },
+      { topLabel: '50', color: '#EFAFCE', bottomLabel: "Moderate" },
+      { topLabel: '100', color: '#E780AF', bottomLabel: "Large" },
     ],
   },
   {
@@ -292,10 +294,10 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     options: [
       { topLabel: '0', topSubLabel: '0', color: '#0077AB' },
       { topLabel: '1.5', topSubLabel: "0.625", color: '#4378A8' },
-      { topLabel: '6.0', topSubLabel: "1.25", color: '#45669B' },
-      { topLabel: '3.0', topSubLabel: "2.5", color: '#78578D' },
-      { topLabel: '15', topSubLabel: "5", color: '#A85288' },
-      { topLabel: '15', topSubLabel: "10", color: '#B6558A' },
+      { topLabel: '3.0', topSubLabel: "1.25", color: '#78578D' },
+      { topLabel: '6.0', topSubLabel: "2.5", color: '#45669B' },
+      { topLabel: '12', topSubLabel: "5", color: '#A85288' },
+      { topLabel: '24', topSubLabel: "10", color: '#B6558A' },
     ],
   },
   {
@@ -306,13 +308,13 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     subUnit: 'g/L',
     defaultIndex: 0,
     options: [
-      { topLabel: '0', topSubLabel: '0', color: '#FFF' },
-      { topLabel: '50', topSubLabel: '0.5', color: '#EEE' },
-      { topLabel: '100', topSubLabel: '1.0', color: '#DDD' },
-      { topLabel: '150', topSubLabel: '1.5', color: '#CCC' },
-      { topLabel: '200', topSubLabel: '2.0', color: '#BBB' },
-      { topLabel: '250', topSubLabel: '2.5', color: '#AAA' },
-      { topLabel: '300', topSubLabel: '3.0', color: '#999' },
+      { topLabel: '0', topSubLabel: '0', color: '#FFF8F2' },
+      { topLabel: '50', topSubLabel: '0.5', color: '#F2E2D5' },
+      { topLabel: '100', topSubLabel: '1.0', color: '#E4C7B0' },
+      { topLabel: '150', topSubLabel: '1.5', color: '#D6AA8A' },
+      { topLabel: '200', topSubLabel: '2.0', color: '#C78E65' },
+      { topLabel: '250', topSubLabel: '2.5', color: '#A96E4E' },
+      { topLabel: '300', topSubLabel: '3.0', color: '#7B4F35' },
     ],
   },
 ]
@@ -432,6 +434,21 @@ function ResultRow({
                     {t('reading.review.uniformPinkNote')}
                   </div>
                 }
+                {
+                  opt.showStain &&
+                  <div
+                    className='w-full h-full rounded-full'
+                    style={{
+                      backgroundImage: `
+                        radial-gradient(#7B4F35 2px, transparent 2px),
+                        radial-gradient(#A96E4E 1.5px, transparent 1.5px)
+                      `,
+                      backgroundSize: '12px 12px, 18px 18px',
+                      backgroundPosition: '2px 2px, 6px 6px',
+                      opacity: 0.4
+                    }}
+                  />
+                }
                 {active && (
                   opt.topLabel === "Positive" ? (
                     <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-white flex items-center justify-center shadow-md">
@@ -482,51 +499,51 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
   }, [visibleKeys])
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      try {
-        const res = await fetch('/api/panels', { method: 'GET' })
-        const data = await res.json().catch(() => null)
-        if (!mounted) return
-        const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : []
-        const next: Record<string, NormalRule | undefined> = {}
-        for (const p of raw) {
-          const ranges = Array.isArray(p?.referenceRanges) ? (p.referenceRanges as any[]) : []
-          for (const rr of ranges) {
-            const key = String(rr?.key || '').trim()
-            if (!key || next[key]) continue
-            const rule = rr?.rule
-            const type = String(rule?.type || '').trim()
-            if (type === 'negative') {
-              next[key] = { type: 'negative' }
-              continue
-            }
-            if (type === 'range') {
-              const low = Number(rule?.low)
-              const high = Number(rule?.high)
-              if (Number.isFinite(low) && Number.isFinite(high)) next[key] = { type: 'range', low, high }
-              continue
-            }
-            if (type === 'exact') {
-              const value = Number(rule?.value)
-              if (Number.isFinite(value)) next[key] = { type: 'exact', value }
-              continue
-            }
-            if (type === 'lt') {
-              const value = Number(rule?.value)
-              if (Number.isFinite(value)) next[key] = { type: 'lt', value }
-              continue
-            }
-            if (type === 'gt') {
-              const value = Number(rule?.value)
-              if (Number.isFinite(value)) next[key] = { type: 'gt', value }
-              continue
+      ; (async () => {
+        try {
+          const res = await fetch('/api/panels', { method: 'GET' })
+          const data = await res.json().catch(() => null)
+          if (!mounted) return
+          const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : []
+          const next: Record<string, NormalRule | undefined> = {}
+          for (const p of raw) {
+            const ranges = Array.isArray(p?.referenceRanges) ? (p.referenceRanges as any[]) : []
+            for (const rr of ranges) {
+              const key = String(rr?.key || '').trim()
+              if (!key || next[key]) continue
+              const rule = rr?.rule
+              const type = String(rule?.type || '').trim()
+              if (type === 'negative') {
+                next[key] = { type: 'negative' }
+                continue
+              }
+              if (type === 'range') {
+                const low = Number(rule?.low)
+                const high = Number(rule?.high)
+                if (Number.isFinite(low) && Number.isFinite(high)) next[key] = { type: 'range', low, high }
+                continue
+              }
+              if (type === 'exact') {
+                const value = Number(rule?.value)
+                if (Number.isFinite(value)) next[key] = { type: 'exact', value }
+                continue
+              }
+              if (type === 'lt') {
+                const value = Number(rule?.value)
+                if (Number.isFinite(value)) next[key] = { type: 'lt', value }
+                continue
+              }
+              if (type === 'gt') {
+                const value = Number(rule?.value)
+                if (Number.isFinite(value)) next[key] = { type: 'gt', value }
+                continue
+              }
             }
           }
+          setNormalRuleByKey(next)
+        } catch {
         }
-        setNormalRuleByKey(next)
-      } catch {
-      }
-    })()
+      })()
     return () => {
       mounted = false
     }

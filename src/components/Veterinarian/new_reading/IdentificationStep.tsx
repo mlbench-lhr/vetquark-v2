@@ -412,7 +412,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
                 Tap to select a panel type, you can only select one at a time
               </div>
             </div>
-            <div className="max-h-[70vh] overflow-auto px-4 py-3">
+            <div className="max-h-[70vh] overflow-auto px-4 pt-3 pb-18">
               <div className="space-y-3 pb-4">
                 {(panels.length ? panels : [selectedPanel]).map((p) => {
                   const selected = p.code === selectedPanelCode
