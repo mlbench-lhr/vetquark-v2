@@ -711,7 +711,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
           {cameraReady && (
             <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
-              <div className="w-12 h-[90%] rounded-xl border-2 border-dashed border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
+              <div className="w-12 h-[90%] rounded-xl ms-16 border-2 border-dashed border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
             </div>
           )}
 
