@@ -21,6 +21,7 @@ export default function EditProfileCard() {
     const fullName = profile?.fullName ?? "";
     const email = profile?.email ?? "";
     const phone = profile?.phone ?? "";
+    const veterinarianCode = profile?.veterinarianCode ?? "";
     const profileImageUrl = profile?.profileImageUrl ?? "";
     const fallbackAvatarUrl = "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png";
 
@@ -31,6 +32,7 @@ export default function EditProfileCard() {
         if (!initial) return "";
         return initial.startsWith("+") ? initial : `+${initial}`;
     });
+    const [localVetCode, setLocalVetCode] = React.useState(veterinarianCode);
     const [localProfileImageUrl, setLocalProfileImageUrl] = React.useState(profileImageUrl);
     const [saving, setSaving] = React.useState(false);
     const [uploadingAvatar, setUploadingAvatar] = React.useState(false);
@@ -42,6 +44,7 @@ export default function EditProfileCard() {
         const initial = String(phone || "").replace(/\s+/gu, "");
         setLocalPhone(!initial ? "" : initial.startsWith("+") ? initial : `+${initial}`);
         setLocalProfileImageUrl(profileImageUrl);
+        setLocalVetCode(veterinarianCode);
     }, [email, fullName, phone, profileImageUrl]);
 
     const parsedPhone = localPhone ? parsePhoneNumberFromString(localPhone) : undefined;
@@ -151,6 +154,30 @@ export default function EditProfileCard() {
         }
     };
 
+    const handleRegenerateCode = async () => {
+        try {
+            setSaving(true);
+            const res = await fetch("/api/user/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ regenerateVeterinarianCode: true }),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                toast.error(typeof json?.error === "string" ? json.error : "Failed to regenerate code");
+                return;
+            }
+            if (json?.profile) {
+                dispatch(setProfile(json.profile));
+                setLocalVetCode(json.profile.veterinarianCode || "");
+            }
+            toast.success("Code regenerated");
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <div className="bg-background min-h-screen flex flex-col px-">
             <Header title={t("menu.edit")} />
@@ -214,6 +241,22 @@ export default function EditProfileCard() {
                         defaultCountry="br"
                         containerClassName="w-full"
                     />
+                </div>
+                <div>
+                    <Label className="block text-gray-900 font-medium mb-2">Veterinarian Unique Code</Label>
+                    <div className="flex gap-2">
+                        <Input
+                            value={localVetCode}
+                            readOnly
+                            className="w-full h-12 px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-800 placeholder:text-gray-400 md:text-base"
+                        />
+                        <Button type="button" onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success("Copied"); }}>
+                            Copy
+                        </Button>
+                        <Button type="button" onClick={handleRegenerateCode} disabled={saving}>
+                            Regenerate
+                        </Button>
+                    </div>
                 </div>
             </div>
 

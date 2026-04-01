@@ -7,6 +7,7 @@ export type UserProfile = {
   fullName: string;
   email: string;
   phone?: string;
+  veterinarianCode?: string;
   taxId?: string;
   dateOfBirth?: string;
   address?: string;

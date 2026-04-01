@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
 
       const [guardianUser, patientCount] = await Promise.all([
         User.findById(guardianId)
-          .select("_id role fullName email phone taxId dateOfBirth address country city state postalCode profileImageUrl")
+          .select("_id role fullName email phone taxId dateOfBirth address country city state postalCode profileImageUrl primaryVeterinarian")
           .lean(),
         Patient.countDocuments({ veterinarian: veterinarianId, guardian: guardianId }),
       ]);
@@ -82,7 +82,8 @@ export async function GET(req: NextRequest) {
       if (!guardianUser || guardianUser.role !== "Guardian") {
         return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
       }
-      if (!patientCount) {
+      const primaryOk = String((guardianUser as any).primaryVeterinarian || "") === String(veterinarianId);
+      if (!patientCount && !primaryOk) {
         return NextResponse.json({ error: "Guardian not found" }, { status: 404 });
       }
 
@@ -215,13 +216,40 @@ export async function GET(req: NextRequest) {
     });
 
     const agg = await Patient.aggregate(pipeline);
-    const meta = agg?.[0]?.metadata?.[0] ?? null;
-    const total = typeof meta?.total === "number" ? meta.total : 0;
-    const items = Array.isArray(agg?.[0]?.items) ? agg[0].items : [];
-
+    const itemsA = Array.isArray(agg?.[0]?.items) ? agg[0].items : [];
+    const setIds = new Set(itemsA.map((it: any) => String(it._id)));
+    const guardiansByPrimary = await User.find({ role: "Guardian", primaryVeterinarian: veterinarianId })
+      .select("_id fullName taxId profileImageUrl")
+      .lean();
+    const itemsB = guardiansByPrimary
+      .filter((g: any) => {
+        if (!g?._id) return false;
+        const id = String(g._id);
+        return !setIds.has(id);
+      })
+      .map((g: any) => ({
+        _id: g._id,
+        patientCount: 0,
+        name: g.fullName ?? "N/A",
+        idNumber: g.taxId ?? "",
+        avatarUrl: g.profileImageUrl ?? "",
+      }));
+    let merged = [...itemsA, ...itemsB];
+    if (q) {
+      const qRegex = new RegExp(escapeRegex(q), "i");
+      merged = merged.filter((it: any) => qRegex.test(String(it.name || "")) || qRegex.test(String(it.idNumber || "")));
+    }
+    merged.sort((a: any, b: any) => {
+      const aName = String(a.name || "");
+      const bName = String(b.name || "");
+      if (sort === "recent") return 0;
+      return aName.localeCompare(bName, undefined, { sensitivity: "base" });
+    });
+    const total = merged.length;
+    const paged = merged.slice(skip, skip + limit);
     return NextResponse.json(
       {
-        items: items.map((it: any) => ({
+        items: paged.map((it: any) => ({
           id: String(it._id),
           name: it.name ?? "N/A",
           idNumber: it.idNumber ?? "",
