@@ -95,7 +95,7 @@ export default function AddPatientGuardian() {
         try {
             setLoading(true);
             const res = await fetch(
-                `/api/guardians/get-guardians?q=${encodeURIComponent(q)}&page=${pageToFetch}&pageSize=${pageSize}&includeAll=1`
+                `/api/guardians/get-guardians?q=${encodeURIComponent(q)}&page=${pageToFetch}&pageSize=${pageSize}`
             );
             const data = await res.json();
             if (res.ok) {
@@ -129,9 +129,10 @@ export default function AddPatientGuardian() {
     );
 
     const getInviteLink = () => {
-        if (inviteUrl) return inviteUrl;
-        if (typeof window !== 'undefined') return `${window.location.origin}/signup?profile=tutor`;
-        return '/signup?profile=tutor';
+        const code = profile?.veterinarianCode || '';
+        const base = typeof window !== 'undefined' ? `${window.location.origin}/signup` : '/signup';
+        const url = `${base}?profile=tutor${code ? `&vetCode=${encodeURIComponent(code)}` : ''}`;
+        return url;
     };
 
     const handleInviteGuardian = async () => {

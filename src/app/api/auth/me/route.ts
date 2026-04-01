@@ -8,6 +8,7 @@ type LeanUser = {
   fullName?: unknown;
   email?: unknown;
   phone?: unknown;
+  veterinarianCode?: unknown;
   taxId?: unknown;
   dateOfBirth?: unknown;
   address?: unknown;
@@ -23,6 +24,7 @@ type LeanUser = {
   acceptTerms?: unknown;
   profileType?: unknown;
   role?: unknown;
+  primaryVeterinarian?: unknown;
   clinicLogoUrl?: unknown;
   tradeName?: unknown;
   cnpjIe?: unknown;
@@ -57,6 +59,8 @@ function toSafeProfile(user: LeanUser) {
     fullName: typeof user.fullName === "string" ? user.fullName : "",
     email: typeof user.email === "string" ? user.email : "",
     phone: typeof user.phone === "string" ? user.phone : undefined,
+    veterinarianCode: typeof user.veterinarianCode === "string" ? user.veterinarianCode : undefined,
+    primaryVeterinarian: user.primaryVeterinarian ? String(user.primaryVeterinarian as any) : undefined,
     taxId: typeof user.taxId === "string" ? user.taxId : undefined,
     dateOfBirth: typeof user.dateOfBirth === "string" ? user.dateOfBirth : undefined,
     address: typeof user.address === "string" ? user.address : undefined,
@@ -122,9 +126,20 @@ export async function GET(req: NextRequest) {
   }
 
   await connectMongo();
-  const user = await User.findById(userId).lean();
+  let user = await User.findById(userId).lean();
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+  if ((user as any).role === "Veterinarian" && !(user as any).veterinarianCode) {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (;;) {
+      code = Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+      const exists = await User.findOne({ veterinarianCode: code }).select("_id").lean();
+      if (!exists?._id) break;
+    }
+    await User.updateOne({ _id: userId }, { $set: { veterinarianCode: code } });
+    user = await User.findById(userId).lean();
   }
 
   return NextResponse.json({ profile: toSafeProfile(user as unknown as LeanUser) }, { status: 200 });

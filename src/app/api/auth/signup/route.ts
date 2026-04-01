@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
       mode,
       otp,
       verificationId,
+      veterinarianCode,
     } = body || {};
 
     const emailLower = email ? String(email).toLowerCase() : "";
@@ -215,6 +216,15 @@ export async function POST(req: NextRequest) {
     }
 
     if (mode === 'vet_create_guardian') {
+      const vetIdHeader = String(req.headers.get("x-user-id") || "").trim();
+      if (!vetIdHeader) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      await connectMongo();
+      const vetUser = await User.findById(vetIdHeader).select("_id role").lean();
+      if (!vetUser || (vetUser as any).role !== "Veterinarian") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
       if (!fullName || !email) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
       }
@@ -304,6 +314,7 @@ export async function POST(req: NextRequest) {
         profileType: 'Guardian',
         role: 'Guardian',
         emailVerified: false,
+        primaryVeterinarian: (vetUser as any)._id,
       };
 
       const created = await User.create(doc);
@@ -478,6 +489,16 @@ export async function POST(req: NextRequest) {
         if (age < 10) {
           return NextResponse.json({ error: "Guardian must be at least 10 years old" }, { status: 400 });
         }
+        const codeRaw = typeof veterinarianCode === "string" ? veterinarianCode.trim() : "";
+        if (!codeRaw) {
+          return NextResponse.json({ error: "Veterinarian Code is required" }, { status: 400 });
+        }
+        await connectMongo();
+        const vet = await User.findOne({ role: "Veterinarian", veterinarianCode: codeRaw }).select("_id").lean();
+        if (!vet?._id) {
+          return NextResponse.json({ error: "Invalid Veterinarian Code" }, { status: 400 });
+        }
+        await User.updateOne({ email: emailLower }, { $set: { primaryVeterinarian: (vet as any)._id } });
       }
       {
         const cc = String(country || "").trim();
@@ -499,7 +520,7 @@ export async function POST(req: NextRequest) {
           }
         }
       }
-      const update: Partial<IUser> = {
+    const update: Partial<IUser> = {
         fullName,
         taxId,
         dateOfBirth,
@@ -523,7 +544,10 @@ export async function POST(req: NextRequest) {
         reportFooter,
       };
       if (normalizedPhone !== undefined) update.phone = normalizedPhone;
-      const updated = await User.findOneAndUpdate({ email: emailLower }, update, { new: true }).lean();
+    if (normalizedProfile === "Guardian") {
+      // primaryVeterinarian already set above after code validation
+    }
+    const updated = await User.findOneAndUpdate({ email: emailLower }, update, { new: true }).lean();
       if (!updated?._id) {
         return NextResponse.json({ error: "Failed to complete profile" }, { status: 500 });
       }

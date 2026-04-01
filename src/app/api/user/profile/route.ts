@@ -8,6 +8,7 @@ type LeanUser = {
   fullName?: unknown;
   email?: unknown;
   phone?: unknown;
+  veterinarianCode?: unknown;
   taxId?: unknown;
   dateOfBirth?: unknown;
   address?: unknown;
@@ -23,6 +24,7 @@ type LeanUser = {
   acceptTerms?: unknown;
   profileType?: unknown;
   role?: unknown;
+  primaryVeterinarian?: unknown;
   clinicLogoUrl?: unknown;
   tradeName?: unknown;
   cnpjIe?: unknown;
@@ -57,6 +59,8 @@ function toSafeProfile(user: LeanUser) {
     fullName: typeof user.fullName === "string" ? user.fullName : "",
     email: typeof user.email === "string" ? user.email : "",
     phone: typeof user.phone === "string" ? user.phone : undefined,
+    veterinarianCode: typeof user.veterinarianCode === "string" ? user.veterinarianCode : undefined,
+    primaryVeterinarian: user.primaryVeterinarian ? String(user.primaryVeterinarian as any) : undefined,
     taxId: typeof user.taxId === "string" ? user.taxId : undefined,
     dateOfBirth: typeof user.dateOfBirth === "string" ? user.dateOfBirth : undefined,
     address: typeof user.address === "string" ? user.address : undefined,
@@ -120,6 +124,25 @@ export async function PATCH(req: NextRequest) {
 
     const $set: Record<string, any> = {};
     const $unset: Record<string, any> = {};
+
+    if (body?.regenerateVeterinarianCode === true || body?.ensureVeterinarianCode === true) {
+      await connectMongo();
+      const current = await User.findById(userId).select("_id role veterinarianCode").lean();
+      if (!current) return NextResponse.json({ error: "User not found" }, { status: 404 });
+      if (current.role !== "Veterinarian") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (body?.regenerateVeterinarianCode === true || !current.veterinarianCode) {
+        const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let code = "";
+        for (;;) {
+          code = Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+          const exists = await User.findOne({ veterinarianCode: code }).select("_id").lean();
+          if (!exists?._id) break;
+        }
+        await User.updateOne({ _id: userId }, { $set: { veterinarianCode: code } });
+      }
+      const updated = await User.findById(userId).lean();
+      return NextResponse.json({ profile: toSafeProfile(updated as unknown as LeanUser) }, { status: 200 });
+    }
 
     const fullName = asTrimmedString(body?.fullName);
     if (fullName !== null) $set.fullName = fullName;

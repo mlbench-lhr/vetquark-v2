@@ -8,6 +8,8 @@ export interface IUser {
   email: string;
   phone?: string;
   passwordHash: string;
+  veterinarianCode?: string;
+  primaryVeterinarian?: Schema.Types.ObjectId;
   taxId?: string;
   dateOfBirth?: string;
   address?: string;
@@ -67,6 +69,8 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true, index: true },
     phone: { type: String },
     passwordHash: { type: String, required: true },
+    veterinarianCode: { type: String, unique: true, sparse: true, index: true },
+    primaryVeterinarian: { type: Schema.Types.ObjectId, ref: "User", index: true },
     taxId: { type: String },
     dateOfBirth: { type: String },
     address: { type: String },

@@ -40,6 +40,7 @@ type SignUpFormData = {
   cnpjIe: string;
   reportHeaderAddress: string;
   reportFooter: string;
+  veterinarianCode: string;
 };
 
 const getEmptyFormData = (): SignUpFormData => ({
@@ -66,6 +67,7 @@ const getEmptyFormData = (): SignUpFormData => ({
   cnpjIe: "",
   reportHeaderAddress: "",
   reportFooter: "",
+  veterinarianCode: "",
 });
 
 export default function SignUpForm() {
@@ -235,6 +237,11 @@ export default function SignUpForm() {
   const [loadingStates, setLoadingStates] = useState(false);
   const [cityOptions, setCityOptions] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
+
+  React.useEffect(() => {
+    const v = String(searchParams.get("vetCode") || "").trim();
+    if (v) setFormData((prev) => ({ ...prev, veterinarianCode: v }));
+  }, [searchParams]);
 
   React.useEffect(() => {
     const country = String(formData.country || "").trim();
@@ -454,6 +461,10 @@ export default function SignUpForm() {
           toast.error("Guardian must be at least 10 years old");
           return;
         }
+        if (!String(formData.veterinarianCode || "").trim()) {
+          toast.error("Veterinarian Code is required");
+          return;
+        }
       }
       const basePayload = {
         mode: "complete" as const,
@@ -485,7 +496,7 @@ export default function SignUpForm() {
           reportHeaderAddress: formData.reportHeaderAddress,
           reportFooter: formData.reportFooter,
         }
-        : basePayload;
+        : { ...basePayload, veterinarianCode: formData.veterinarianCode };
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1027,6 +1038,23 @@ export default function SignUpForm() {
                 )}
               </div>
 
+              <div>
+                {profileType === "tutor" && (
+                  <div className="mb-4">
+                    <label className="block text-gray-900 text-sm mb-2">
+                      Veterinarian Code <span className="text-gray-500">{t("auth.optional")}</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="veterinarianCode"
+                      placeholder="Enter the Veterinarian Unique Code"
+                      value={formData.veterinarianCode}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
+                    />
+                  </div>
+                )}
+              </div>
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
                   {t("auth.postalCode")}
