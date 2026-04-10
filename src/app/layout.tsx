@@ -42,7 +42,7 @@ export default function RootLayout({
 
   return (
 
-    <html lang="en">
+    <html lang="pt-BR">
       <body className={`${outfit.className} `} suppressHydrationWarning>
         <ReduxProvider>
           <I18nProvider>

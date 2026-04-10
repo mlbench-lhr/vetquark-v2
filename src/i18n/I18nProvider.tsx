@@ -36,7 +36,7 @@ export default function I18nProvider({ children }: { children: React.ReactNode }
     const persisted = readPersistedLanguage();
     if (persisted) return persisted;
     if (profileLanguage && isAppLanguage(profileLanguage)) return profileLanguage;
-    return getNavigatorLanguage();
+    return "pt";
   }, [profileLanguage]);
 
   const hydratedRef = useRef(false);
