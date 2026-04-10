@@ -830,16 +830,6 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       <div className="mt-6 space-y-3">
           <button
-            onClick={handleRetry}
-            disabled={analyzing}
-            className={`w-full py-4 rounded-full font-medium ${!analyzing
-              ? 'bg-primary text-white'
-              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              }`}
-          >
-            {t('reading.timer.retry')}
-          </button>
-          <button
             onClick={handleAnalyze}
             disabled={!captureProgress.allDone || analyzing}
             className={`w-full py-4 rounded-full font-medium ${captureProgress.allDone && !analyzing
@@ -852,6 +842,18 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
           {t('common.back')}
         </button>
+        {(captureProgress.allDone || analysisFailed) && (
+          <button
+            onClick={handleRetry}
+            disabled={analyzing}
+            className={`w-full py-4 rounded-full font-medium ${!analyzing
+              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            {t('reading.timer.retry')}
+          </button>
+        )}
       </div>
     </div>
   )
