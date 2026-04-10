@@ -14,7 +14,7 @@ const resources = {
     translation: {
       common: {
         english: "English",
-        portuguese: "Portuguese",
+        portuguese: "Portuguese (Brazil)",
         user: "User",
         save: "Save",
         saveChanges: "Save Changes",
@@ -819,7 +819,7 @@ const resources = {
     translation: {
       common: {
         english: "Inglês",
-        portuguese: "Português",
+        portuguese: "Português (Brasil)",
         user: "Utilizador",
         save: "Guardar",
         saveChanges: "Guardar alterações",
@@ -1611,11 +1611,11 @@ if (!i18n.isInitialized) {
     typeof window !== "undefined"
       ? (window.localStorage.getItem("ui_language_v1") || "").trim()
       : "";
-  const initialLang = saved === "pt" || saved === "en" ? saved : "en";
+  const initialLang = saved === "pt" || saved === "en" ? saved : "pt";
   i18n.use(initReactI18next).init({
     resources: resources as any,
     lng: initialLang,
-    fallbackLng: "en",
+    fallbackLng: "pt",
     interpolation: { escapeValue: false },
     returnNull: false,
   });
