@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { UserContext } from "@/context/authContext";
 import { buildRequestBody } from "@/utils/apiWrapper";
 import Button from "../ui/button/Button";
+import { useTranslation } from "react-i18next";
 interface Notification {
   id: string;
   user_id: string;
@@ -24,6 +25,7 @@ export default function NotificationDropdown() {
   const [loading, setLoading] = useState(true)
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user, session_id } = useContext(UserContext);
+  const { t } = useTranslation();
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -50,13 +52,13 @@ export default function NotificationDropdown() {
     const months = Math.floor(days / 30);
     const years = Math.floor(days / 365);
 
-    if (seconds < 60) return `${seconds} sec${seconds !== 1 ? "s" : ""} ago`;
-    if (minutes < 60) return `${minutes} min${minutes !== 1 ? "s" : ""} ago`;
-    if (hours < 24) return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
-    if (days < 7) return `${days} day${days !== 1 ? "s" : ""} ago`;
-    if (weeks < 5) return `${weeks} week${weeks !== 1 ? "s" : ""} ago`;
-    if (months < 12) return `${months} month${months !== 1 ? "s" : ""} ago`;
-    return `${years} year${years !== 1 ? "s" : ""} ago`;
+    if (seconds < 60) return t("notifications.timeAgo.seconds", { count: seconds });
+    if (minutes < 60) return t("notifications.timeAgo.minutes", { count: minutes });
+    if (hours < 24) return t("notifications.timeAgo.hours", { count: hours });
+    if (days < 7) return t("notifications.timeAgo.days", { count: days });
+    if (weeks < 5) return t("notifications.timeAgo.weeks", { count: weeks });
+    if (months < 12) return t("notifications.timeAgo.months", { count: months });
+    return t("notifications.timeAgo.years", { count: years });
   }
 
 
@@ -103,7 +105,7 @@ export default function NotificationDropdown() {
       setLoading(false)
     }
   };
-  
+
 
   const markAsRead = async (id: string[]) => {
     const payload = buildRequestBody({
@@ -123,7 +125,7 @@ export default function NotificationDropdown() {
       });
 
       const result = await response.json();
-      const resData= result.data
+      const resData = result.data
 
       if (!response.ok || resData.status === false) {
         throw new Error(resData?.message || result.error)
@@ -173,7 +175,7 @@ export default function NotificationDropdown() {
       >
         <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 ">
           <h5 className="text-lg font-semibold text-gray-800 ">
-            Notification
+            {t("notifications.title")}
           </h5>
           <button
             onClick={toggleDropdown}
@@ -221,7 +223,7 @@ export default function NotificationDropdown() {
                   <span className="relative block w-8 h-8 rounded-full z-1 max-w-10">
                     <Image
                       src={notification.profile_image_url}
-                      alt="User"
+                      alt={t("profile.altProfile")}
                       width={32}
                       height={32}
                       className="rounded-full h-full w-full object-cover"
@@ -250,7 +252,7 @@ export default function NotificationDropdown() {
           onClick={() => markAsRead(notifications.map(n => n.id))}
           className="outline block px-4 py-2 mt-3 text-sm font-medium text-center text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100    "
         >
-          Mark all as read
+          {t("notifications.markAllAsRead")}
         </button>
       </Dropdown>
     </div>

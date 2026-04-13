@@ -93,7 +93,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       }
 
       onClose();
-      
+
       if (user) {
         onUpdateUser({
           id: user.id,
@@ -124,7 +124,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   width={80}
                   height={80}
                   src={profileImage}
-                  alt="Profile"
+                  alt={t("profile.altProfile")}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -139,7 +139,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 width={20}
                 height={20}
                 src="/images/edit.svg"
-                alt="Edit"
+                alt={t("profile.altEdit")}
                 className="w-full h-full"
               />
             </label>
@@ -162,7 +162,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               type="text"
               value={firstName}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
-              placeholder="Enter First Name"
+              placeholder={t("profile.enterFirstName")}
               required
               disabled={loading}
               className="w-full px-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -177,7 +177,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               type="text"
               value={lastName}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
-              placeholder="Enter Last Name"
+              placeholder={t("profile.enterLastName")}
               required
               disabled={loading}
               className="w-full px-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -192,7 +192,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               type="email"
               value={email}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-              placeholder="Enter Email Address"
+              placeholder={t("profile.enterEmail")}
               required
               disabled={loading}
               className="w-full px-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"

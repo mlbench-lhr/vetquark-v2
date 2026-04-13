@@ -3,6 +3,7 @@ import { Modal } from "../ui/modal";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
+import { useTranslation } from "react-i18next";
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const [oldPassword, setOldPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const { t } = useTranslation();
 
   const resetForm = () => {
     setOldPassword("");
@@ -47,16 +49,16 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
   const validatePasswords = (): string | null => {
     if (!oldPassword.trim()) {
-      return "Old password is required";
+      return t("auth.oldPasswordRequired");
     }
     if (!newPassword.trim()) {
-      return "New password is required";
+      return t("auth.newPasswordRequired");
     }
     if (!confirmPassword.trim()) {
-      return "Please confirm your new password";
+      return t("auth.confirmPasswordRequired");
     }
     if (newPassword !== confirmPassword) {
-      return "Passwords do not match";
+      return t("security.passwordsDoNotMatch");
     }
     return null;
   };
@@ -94,7 +96,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         throw new Error(result.error || "Failed to change password");
       }
 
-      onSuccess("Password changed successfully");
+      onSuccess(t("security.passwordChanged"));
       handleClose();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -109,19 +111,19 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       <form onSubmit={handleSubmit} className="w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">{t("security.changePasswordTitle")}</h2>
         </div>
 
         {/* Form Fields */}
         <div className="space-y-6">
           {/* Old Password Field */}
           <div>
-            <Label>Old Password</Label>
+            <Label>{t("security.oldPassword")}</Label>
             <div className="relative">
               <Input
                 name="oldPassword"
                 type={showOldPassword ? "text" : "password"}
-                placeholder="Enter your current password"
+                placeholder={t("security.enterCurrentPasswordPlaceholder")}
                 value={oldPassword}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOldPassword(e.target.value)}
                 required
@@ -147,12 +149,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
           {/* New Password Field */}
           <div>
-            <Label>New Password</Label>
+            <Label>{t("security.newPassword")}</Label>
             <div className="relative">
               <Input
                 name="newPassword"
                 type={showNewPassword ? "text" : "password"}
-                placeholder="Enter your new password"
+                placeholder={t("security.enterNewPasswordPlaceholder")}
                 value={newPassword}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
                 required
@@ -178,12 +180,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
           {/* Confirm Password Field */}
           <div>
-            <Label>Confirm New Password</Label>
+            <Label>{t("security.confirmNewPasswordLabel")}</Label>
             <div className="relative">
               <Input
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm your new password"
+                placeholder={t("security.confirmNewPasswordPlaceholder2")}
                 value={confirmPassword}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
                 required
@@ -213,7 +215,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
             disabled={loading}
             className="w-full bg-blue-600 text-white py-4 rounded-full font-medium hover:bg-blue-700 transition-colors mt-8 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {loading ? "Changing Password..." : "Change Password"}
+            {loading ? t("security.changingPassword") : t("security.changePassword")}
           </button>
         </div>
       </form>

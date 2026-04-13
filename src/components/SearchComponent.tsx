@@ -1,12 +1,13 @@
 import { Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { useTranslation } from "react-i18next";
 
 export const SearchComponent = ({
   searchQuery,
   onChangeFunc,
   width = " w-full sm:w-[325px] ",
-  placeholder = "Search...",
+  placeholder,
   searchButton = false,
   onClickAction,
 }: {
@@ -17,6 +18,8 @@ export const SearchComponent = ({
   searchButton?: boolean;
   onClickAction?: any;
 }) => {
+  const { t } = useTranslation();
+  const finalPlaceholder = placeholder ?? t("search.placeholder");
   return (
     <div
       className={`${width} ${searchButton ? "ps-3 rounded-[10px] h-[55px]" : "ps-2 rounded-[10px] h-[44px]"
@@ -30,7 +33,7 @@ export const SearchComponent = ({
         }}
         className={`w-full ${searchButton ? "h-[53px]!" : "h-[44px]!"
           } border-none absolute top-0 left-0 ps-8 md:ps-10`}
-        placeholder={placeholder}
+        placeholder={finalPlaceholder}
       />
       {searchButton && onClickAction && (
         <Button
@@ -39,7 +42,7 @@ export const SearchComponent = ({
           disabled={!searchQuery?.trim()}
           onClick={onClickAction}
         >
-          Search
+          {t("search.button")}
         </Button>
       )}
     </div>
