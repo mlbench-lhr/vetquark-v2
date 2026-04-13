@@ -158,8 +158,9 @@ export async function POST(req: NextRequest) {
           },
         }
       );
+      const userLang = user.preferredLanguage === "pt" ? "pt" : "en";
       try {
-        await sendTwoFactorEmail(String(user.email), otp);
+        await sendTwoFactorEmail(String(user.email), otp, userLang);
       } catch {
       }
       return NextResponse.json({ twoFactorRequired: true }, { status: 200 });

@@ -45,8 +45,9 @@ export async function POST(req: NextRequest) {
       }
     );
 
+    const userLang = user.preferredLanguage === "pt" ? "pt" : "en";
     try {
-      await sendVerificationEmail(email, otp);
+      await sendVerificationEmail(email, otp, userLang);
     } catch (e) {
       return NextResponse.json({ message: "OTP generated, email send failed" }, { status: 202 });
     }

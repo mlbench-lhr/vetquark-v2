@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
       );
 
       try {
-        await sendVerificationEmail(emailLower, code);
+        await sendVerificationEmail(emailLower, code, "pt");
       } catch {
         return NextResponse.json({ message: "OTP generated, email send failed" }, { status: 202 });
       }
@@ -348,8 +348,9 @@ export async function POST(req: NextRequest) {
       const baseUrl = req.nextUrl.origin;
       const verificationLink = `${baseUrl}/signin?verifyGuardian=${encodeURIComponent(nextVerificationId)}&email=${encodeURIComponent(emailLower)}`;
 
+      const guardianLang = created?.preferredLanguage === "pt" ? "pt" : "en";
       try {
-        await sendGuardianInviteEmail(emailLower, emailLower, tempPassword, verificationLink);
+        await sendGuardianInviteEmail(emailLower, emailLower, tempPassword, verificationLink, guardianLang);
       } catch {
         return NextResponse.json({ id: String(created._id), message: 'Guardian created; invite email failed' }, { status: 202 });
       }
@@ -454,7 +455,7 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        await sendVerificationEmail(emailLower, otp);
+        await sendVerificationEmail(emailLower, otp, "pt");
       } catch {
         return NextResponse.json({ id: String(created?._id ?? ""), message: "OTP generated, email send failed" }, { status: 202 });
       }

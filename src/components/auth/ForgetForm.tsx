@@ -134,7 +134,7 @@ export default function ForgetForm() {
 
         try {
             if (token.length !== 5) {
-                toast.error("Please enter the 5-digit code");
+                toast.error(t("auth.enterOtpCode"));
                 return;
             }
 

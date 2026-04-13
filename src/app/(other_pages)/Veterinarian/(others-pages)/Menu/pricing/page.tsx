@@ -5,8 +5,10 @@ import Header from "@/components/common/header";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 export default function BasePriceCard() {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const profile = useAppSelector((s) => s.userProfile.profile);
 
@@ -120,7 +122,7 @@ export default function BasePriceCard() {
                 return;
             }
             if (json?.profile) dispatch(setProfile(json.profile));
-            toast.success("Saved changes");
+            toast.success(t("common.savedChanges"));
         } finally {
             setSaving(false);
         }

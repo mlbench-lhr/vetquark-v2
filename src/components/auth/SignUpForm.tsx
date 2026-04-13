@@ -288,14 +288,14 @@ export default function SignUpForm() {
     const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
     if (!CLOUD_NAME || !API_KEY) {
-      toast.error("Cloudinary is not configured");
+      toast.error(t("common.cloudinaryNotConfigured"));
       return;
     }
 
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File too large (max 10MB)");
+      toast.error(t("common.fileTooLarge"));
       return;
     }
 
@@ -305,7 +305,7 @@ export default function SignUpForm() {
       const signJson = await signRes.json();
 
       if (!signRes.ok) {
-        toast.error("Failed to prepare upload");
+        toast.error(t("common.failedToPrepareUpload"));
         console.error("Cloudinary signature error:", signJson);
         return;
       }
@@ -324,7 +324,7 @@ export default function SignUpForm() {
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error("Upload failed");
+        toast.error(t("common.uploadFailed"));
         console.error("Cloudinary upload failed:", json);
         return;
       }
@@ -333,7 +333,7 @@ export default function SignUpForm() {
         setFormData((prev) => ({ ...prev, clinicLogoUrl: url }));
       }
     } catch (err) {
-      toast.error("Upload failed");
+      toast.error(t("common.uploadFailed"));
       console.error("Cloudinary upload error:", err);
     } finally {
       setUploadingClinicLogo(false);
@@ -420,10 +420,10 @@ export default function SignUpForm() {
         console.error('Resend error:', data.error || data);
         return;
       }
-      toast.success(data.message ?? 'OTP resent');
+      toast.success(data.message ?? t("auth.codeResent"));
       setCountdown(RESEND_COOLDOWN_SECONDS);
     } catch (err) {
-      toast.error('Network error while resending OTP');
+      toast.error(t("auth.networkErrorResendingOtp"));
       console.error('Resend network error:', err);
     }
   };
@@ -443,7 +443,7 @@ export default function SignUpForm() {
         }
         const dob = new Date(dateOfBirthStr);
         if (!Number.isFinite(dob.getTime())) {
-          toast.error("Invalid date of birth");
+          toast.error(t("auth.invalidDateOfBirth"));
           return;
         }
         {
@@ -458,11 +458,11 @@ export default function SignUpForm() {
         const m = today.getMonth() - dob.getMonth();
         if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
         if (age < 10) {
-          toast.error("Guardian must be at least 10 years old");
+          toast.error(t("auth.guardianMinAge"));
           return;
         }
         if (!String(formData.veterinarianCode || "").trim()) {
-          toast.error("Veterinarian Code is required");
+          toast.error(t("auth.veterinarianCodeRequired"));
           return;
         }
       }
@@ -474,7 +474,7 @@ export default function SignUpForm() {
         taxId: formData.taxId,
         dateOfBirth: formData.dateOfBirth,
         address: formData.address,
-            country: formData.country,
+        country: formData.country,
         city: formData.city,
         state: formData.state,
         postalCode: formData.postalCode,
@@ -504,11 +504,11 @@ export default function SignUpForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(typeof data.error === 'string' ? data.error : 'Signup failed');
+        toast.error(typeof data.error === 'string' ? data.error : t("auth.signupFailed"));
         console.error("Signup error:", data.error || data);
         return;
       }
-      toast.success("Account created");
+      toast.success(t("auth.accountCreated"));
       const id = (data?.id ? String(data.id) : "").trim();
       const homeHref = profileType === "veterinarian" ? "/Veterinarian/home" : "/Guardian/home";
       try {
@@ -545,7 +545,7 @@ export default function SignUpForm() {
     e.preventDefault();
     const code = otp.join("");
     if (code.length !== 5) {
-      toast.error("Please enter the 5-digit code");
+      toast.error(t("auth.enterOtpCode"));
       return;
     }
     try {
@@ -557,11 +557,11 @@ export default function SignUpForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(typeof data.error === 'string' ? data.error : 'Verification failed');
+        toast.error(typeof data.error === 'string' ? data.error : t("auth.verificationFailed"));
         console.error("Verify error:", data.error || data);
         return;
       }
-      toast.success(data.message ?? "Email verified");
+      toast.success(data.message ?? t("auth.emailVerified"));
       handleNext();
     } finally {
       setSubmitting(false);
@@ -581,24 +581,24 @@ export default function SignUpForm() {
     passwordInput.setCustomValidity("");
     confirmInput.setCustomValidity("");
     if (whitespaceRe.test(passwordInput.value)) {
-      passwordInput.setCustomValidity("Password must not contain spaces");
+      passwordInput.setCustomValidity(t("auth.passwordNoSpaces"));
       passwordInput.reportValidity();
       return;
     }
     if (whitespaceRe.test(confirmInput.value)) {
-      confirmInput.setCustomValidity("Confirm password must not contain spaces");
+      confirmInput.setCustomValidity(t("auth.confirmPasswordNoSpaces"));
       confirmInput.reportValidity();
       return;
     }
     if (passwordInput.value !== confirmInput.value) {
-      confirmInput.setCustomValidity("Passwords do not match");
+      confirmInput.setCustomValidity(t("auth.passwordsDoNotMatch"));
       confirmInput.reportValidity();
       return;
     }
 
     const parsedPhone = parsePhoneNumberFromString(String(formData.phone || "").trim());
     if (!parsedPhone?.isValid()) {
-      toast.error("Please enter a valid phone number");
+      toast.error(t("auth.invalidPhoneNumber"));
       return;
     }
     const normalizedPhone = parsedPhone.number;
@@ -619,11 +619,11 @@ export default function SignUpForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(typeof data.error === 'string' ? data.error : 'Failed to start signup');
+        toast.error(typeof data.error === 'string' ? data.error : t("auth.failedToStartSignup"));
         console.error("Step 2 signup error:", data.error || data);
         return;
       }
-      toast.success(data.message ?? "OTP sent to your email");
+      toast.success(data.message ?? t("auth.otpSentToEmail"));
       setCountdown(RESEND_COOLDOWN_SECONDS);
       handleNext();
     } finally {
@@ -912,7 +912,7 @@ export default function SignUpForm() {
                 <input
                   type="number"
                   name="taxId"
-                  placeholder="i.e AB374892928"
+                  placeholder={t("auth.egTaxId")}
                   value={formData.taxId}
                   onChange={handleInputChange}
                   required
@@ -1047,7 +1047,7 @@ export default function SignUpForm() {
                     <input
                       type="text"
                       name="veterinarianCode"
-                      placeholder="Enter the Veterinarian Unique Code"
+                      placeholder={t("auth.enterVeterinarianUniqueCode")}
                       value={formData.veterinarianCode}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
@@ -1203,7 +1203,7 @@ export default function SignUpForm() {
                 <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
                   {formData.clinicLogoUrl ? (
                     <div className="flex flex-col items-center gap-3">
-                      <Image width={200} height={200} src={formData.clinicLogoUrl} alt="Clinic logo" className="w-32 h-32 object-contain rounded-lg bg-white" />
+                      <Image width={200} height={200} src={formData.clinicLogoUrl} alt={t("auth.clinicLogoAlt")} className="w-32 h-32 object-contain rounded-lg bg-white" />
                       <label className="inline-block">
                         <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
                         <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? t("auth.uploading") : t("auth.changeLogo")}</span>

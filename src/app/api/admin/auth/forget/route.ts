@@ -34,8 +34,9 @@ export async function POST(req: NextRequest) {
       }
     );
 
+    const adminLang = (admin as any)?.preferredLanguage === "pt" ? "pt" : "en";
     try {
-      await sendResetEmail(normalizedEmail, otp);
+      await sendResetEmail(normalizedEmail, otp, adminLang);
     } catch {
       return NextResponse.json({ message: "Reset code generated, but email sending failed" }, { status: 202 });
     }

@@ -335,7 +335,7 @@ export default function SignInForm() {
         toast.error(typeof data?.error === "string" ? data.error : t("auth.loginFailed"));
         return;
       }
-      toast.success(data?.message ?? "Code resent");
+      toast.success(data?.message ?? t("auth.codeResent"));
     } finally {
       setResending(false);
     }

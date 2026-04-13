@@ -3,27 +3,30 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 type Props = {
-  mode?: "page" | "modal";
-  title?: string;
-  codeLength?: number;
-  initialTimer?: number;
-  onSubmit?: (code: string) => void;
-  onResend?: () => void;
-  onClose?: () => void;
+    mode?: "page" | "modal";
+    title?: string;
+    codeLength?: number;
+    initialTimer?: number;
+    onSubmit?: (code: string) => void;
+    onResend?: () => void;
+    onClose?: () => void;
 };
 
 export default function EmailVerification({
-  mode = "page",
-  title = "Email verification",
-  codeLength = 6,
-  initialTimer = 30,
-  onSubmit,
-  onResend,
-  onClose,
+    mode = "page",
+    title,
+    codeLength = 6,
+    initialTimer = 30,
+    onSubmit,
+    onResend,
+    onClose,
 }: Props) {
     const router = useRouter();
+    const { t } = useTranslation();
+    const displayTitle = title ?? t("auth.emailVerificationTitle");
     const [step, setStep] = useState<"code" | "success">("code");
     const [code, setCode] = useState(Array.from({ length: codeLength }, () => ""));
     const [timer, setTimer] = useState(initialTimer);
@@ -90,11 +93,11 @@ export default function EmailVerification({
                             <ArrowLeft size={24} />
                         </button>
                     ) : null}
-                    <h1 className={mode === "modal" ? "text-2xl font-bold text-primary" : "text-3xl font-bold text-primary"}>{title}</h1>
+                    <h1 className={mode === "modal" ? "text-2xl font-bold text-primary" : "text-3xl font-bold text-primary"}>{displayTitle}</h1>
                 </div>
 
                 <p className={mode === "modal" ? "text-gray-700 text-sm mb-10" : "text-gray-700 text-lg mb-12"}>
-                    Email successfully verified!
+                    {t("auth.emailVerifiedSuccess")}
                 </p>
 
                 <div className={mode === "modal" ? "flex justify-center items-center my-12" : "flex justify-center items-center my-20"}>
@@ -127,7 +130,7 @@ export default function EmailVerification({
                     }}
                     className={mode === "modal" ? "w-full py-3 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-sm mt-auto" : "w-full py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg mt-auto"}
                 >
-                    Continue
+                    {t("auth.continue")}
                 </button>
 
 
@@ -143,13 +146,13 @@ export default function EmailVerification({
                         <ArrowLeft size={24} />
                     </button>
                 ) : null}
-                <h1 className={mode === "modal" ? "text-2xl font-bold text-primary" : "text-3xl font-bold text-primary"}>{title}</h1>
+                <h1 className={mode === "modal" ? "text-2xl font-bold text-primary" : "text-3xl font-bold text-primary"}>{displayTitle}</h1>
             </div>
 
             <p className={mode === "modal" ? "text-gray-700 text-sm mb-6" : "text-gray-700 text-lg mb-8"}>
-                We sent a code to your email.
+                {t("auth.codeSentToEmail")}
                 <br />
-                Enter it below to activate your account.
+                {t("auth.enterCodeToActivate")}
             </p>
 
             <div className={mode === "modal" ? "flex justify-center gap-x-2 gap-y-3 mb-6" : "flex justify-center gap-x-3 gap-y-4 mb-8"}>
@@ -169,17 +172,17 @@ export default function EmailVerification({
             </div>
 
             <div className={mode === "modal" ? "text-center mb-6" : "text-center mb-8"}>
-                <p className={mode === "modal" ? "text-primary font-semibold mb-2 text-sm" : "text-primary font-semibold mb-2"}>Didn&apos;t receive the code?</p>
+                <p className={mode === "modal" ? "text-primary font-semibold mb-2 text-sm" : "text-primary font-semibold mb-2"}>{t("auth.didntReceiveCode")}</p>
                 {timer > 0 ? (
                     <p className={mode === "modal" ? "text-gray-500 text-sm" : "text-gray-500"}>
-                        Request a new code in {formatTime(timer)}.
+                        {t("auth.requestNewCodeIn", { time: formatTime(timer) })}
                     </p>
                 ) : (
                     <button
                         onClick={handleRequestNewCode}
                         className={mode === "modal" ? "text-gray-600 underline hover:text-gray-800 text-sm" : "text-gray-600 underline hover:text-gray-800"}
                     >
-                        Request a new code
+                        {t("auth.requestNewCode")}
                     </button>
                 )}
             </div>
@@ -189,7 +192,7 @@ export default function EmailVerification({
                 disabled={code.some((digit) => !digit)}
                 className={mode === "modal" ? "w-full py-3 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed mt-auto" : "w-full py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg disabled:bg-gray-400 disabled:cursor-not-allowed mt-auto"}
             >
-                Continue
+                {t("auth.continue")}
             </button>
         </div>
     );

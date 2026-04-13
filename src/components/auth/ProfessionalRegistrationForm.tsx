@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 const brazilianStateOptions = [
   { value: "AC", text: "Acre" },
@@ -36,6 +37,7 @@ const brazilianStateOptions = [
 
 export default function ProfessionalRegistration() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     CRMV: "",
     CRMV_State: "",
@@ -77,7 +79,7 @@ export default function ProfessionalRegistration() {
         <input
           type="text"
           name="CRMV"
-          placeholder="CRMV *"
+          placeholder={`${t("auth.crmv")} *`}
           required
           value={formData.CRMV}
           onChange={handleInputChange}
@@ -107,7 +109,7 @@ export default function ProfessionalRegistration() {
         <input
           type="text"
           name="MAPA"
-          placeholder="Registration with MAPA (optional)"
+          placeholder={`${t("auth.mapaRegistration")} ${t("auth.optional")}`}
           value={formData.MAPA}
           onChange={handleInputChange}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
@@ -120,7 +122,7 @@ export default function ProfessionalRegistration() {
             <input
               type="text"
               name="clinic_service"
-              placeholder="Clinic service / pet shop"
+              placeholder={t("auth.clinicPetShopService")}
               value={formData.clinic_service}
               onChange={handleInputChange}
               className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
@@ -128,7 +130,7 @@ export default function ProfessionalRegistration() {
             <input
               type="text"
               name="home_care"
-              placeholder="Home care"
+              placeholder={t("auth.homeCare")}
               value={formData.home_care}
               onChange={handleInputChange}
               className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
@@ -136,7 +138,7 @@ export default function ProfessionalRegistration() {
             <input
               type="text"
               name="clinic_management"
-              placeholder="Clinic/pet shop management (owner or technical manager)"
+              placeholder={t("auth.clinicPetShopManagement")}
               value={formData.clinic_management}
               onChange={handleInputChange}
               className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
@@ -144,7 +146,7 @@ export default function ProfessionalRegistration() {
             <input
               type="text"
               name="other"
-              placeholder="Other form of operation"
+              placeholder={t("auth.other")}
               value={formData.other}
               onChange={handleInputChange}
               className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"

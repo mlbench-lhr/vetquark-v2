@@ -98,9 +98,9 @@ export default function SecurityPage() {
                     return;
                   }
                   setTwoFactorEnabled(next);
-                  toast.success(next ? "Two-factor enabled" : "Two-factor disabled");
+                  toast.success(next ? t("security.twoFactorEnabled") : t("security.twoFactorDisabled"));
                 } catch {
-                  toast.error("Network error updating 2FA");
+                  toast.error(t("security.networkErrorUpdating2fa"));
                 }
               }}
               className="h-10 px-6 rounded-full bg-[#4A7BF7] text-white text-[14px] font-medium"

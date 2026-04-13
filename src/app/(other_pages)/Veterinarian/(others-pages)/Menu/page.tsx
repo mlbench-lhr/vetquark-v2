@@ -55,7 +55,7 @@ export default function MenuPage() {
         setCurrency(currency === "BRL" ? "R$" : currency);
         setBalance(balanceNumber.toFixed(2));
       } catch {
-        toast.error("Network error");
+        toast.error(t("common.networkError"));
       } finally {
         if (mounted) setWalletLoading(false);
       }

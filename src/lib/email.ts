@@ -4,6 +4,83 @@ function escape(v: string) {
   return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+export type Lang = "en" | "pt";
+
+const emailTranslations = {
+  en: {
+    defaultFooter: "If you didn't request this, please ignore this email.",
+    verificationCodeSubject: "Your verification code",
+    verificationCodeTitle: "Verification Code",
+    verificationCodeDesc: "Enter this code to verify your email",
+    codeExpiresIn: "This code expires in 10 minutes",
+    resetPasswordSubject: "Reset your password",
+    resetPasswordTitle: "Password Reset",
+    resetPasswordDesc: "Enter this code to reset your password",
+    welcomeSubject: "Welcome to VetQuark",
+    welcomeTitle: "Welcome",
+    welcomeDesc: "Your Guardian account has been created",
+    loginEmail: "Login Email",
+    tempPassword: "Temporary Password",
+    changePasswordHint: "Please log in and change your password from your profile settings",
+    guardianInviteSubject: "Verify your VetQuark account and log in",
+    verifyAccountTitle: "Verify Your Account",
+    verifyAccountDesc: "Your Guardian account has been created",
+    verifyAndLoginButton: "Verify and Log In",
+    verifyUrlHint: "To verify your email and access your account, use the button below",
+    urlFallbackHint: "If the button doesn't work, copy this URL:",
+    twoFactorSubject: "Your 2FA login code",
+    twoFactorTitle: "Two-Factor Code",
+    twoFactorDesc: "Enter this code to complete login",
+    feedbackSubject: "New App Feedback",
+    feedbackTitle: "New App Feedback",
+    feedbackDesc: "A new feedback has been submitted",
+    fromLabel: "From",
+    anonymous: "Anonymous",
+    unknown: "unknown",
+    userIdLabel: "User ID",
+    appVersionLabel: "App Version",
+    messageLabel: "Message",
+  },
+  pt: {
+    defaultFooter: "Se não solicitou isto, ignore este e-mail.",
+    verificationCodeSubject: "O seu código de verificação",
+    verificationCodeTitle: "Código de Verificação",
+    verificationCodeDesc: "Introduza este código para verificar o seu e-mail",
+    codeExpiresIn: "Este código expira em 10 minutos",
+    resetPasswordSubject: "Redefinir a sua palavra-passe",
+    resetPasswordTitle: "Redefinição de Palavra-passe",
+    resetPasswordDesc: "Introduza este código para redefinir a sua palavra-passe",
+    welcomeSubject: "Bem-vindo ao VetQuark",
+    welcomeTitle: "Bem-vindo",
+    welcomeDesc: "A sua conta de Tutor foi criada",
+    loginEmail: "E-mail de login",
+    tempPassword: "Palavra-passe temporária",
+    changePasswordHint: "Por favor, inicie sessão e altere a sua palavra-passe nas definições do perfil",
+    guardianInviteSubject: "Verifique a sua conta VetQuark e inicie sessão",
+    verifyAccountTitle: "Verifique a Sua Conta",
+    verifyAccountDesc: "A sua conta de Tutor foi criada",
+    verifyAndLoginButton: "Verificar e Iniciar Sessão",
+    verifyUrlHint: "Para verificar o seu e-mail e aceder à sua conta, utilize o botão abaixo",
+    urlFallbackHint: "Se o botão não funcionar, copie este URL:",
+    twoFactorSubject: "O seu código de login 2FA",
+    twoFactorTitle: "Código de Dois Fatores",
+    twoFactorDesc: "Introduza este código para concluir o login",
+    feedbackSubject: "Novo Feedback da Aplicação",
+    feedbackTitle: "Novo Feedback da Aplicação",
+    feedbackDesc: "Um novo feedback foi submetido",
+    fromLabel: "De",
+    anonymous: "Anónimo",
+    unknown: "desconhecido",
+    userIdLabel: "ID de Utilizador",
+    appVersionLabel: "Versão da Aplicação",
+    messageLabel: "Mensagem",
+  },
+};
+
+function t(key: keyof typeof emailTranslations.en, lang: Lang = "en") {
+  return emailTranslations[lang][key] || emailTranslations.en[key];
+}
+
 function renderEmailHTML(opts: {
   title: string;
   description?: string;
@@ -74,7 +151,7 @@ function renderEmailHTML(opts: {
 </html>`;
 }
 
-export async function sendVerificationEmail(to: string, otp: string) {
+export async function sendVerificationEmail(to: string, otp: string, lang: Lang = "en") {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
   const user = process.env.SMTP_USER;
@@ -94,17 +171,17 @@ export async function sendVerificationEmail(to: string, otp: string) {
     auth: { user, pass },
   });
 
-  const subject = "Your verification code";
+  const subject = t("verificationCodeSubject", lang);
   const html = renderEmailHTML({
-    title: "Verification Code",
-    description: "Enter this code to verify your email",
+    title: t("verificationCodeTitle", lang),
+    description: t("verificationCodeDesc", lang),
     contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
       <div style="font-family:SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:28px;line-height:36px;font-weight:700;color:#3F78D8;letter-spacing:0.3em;">${escape(
         otp
       )}</div>
     </div>
-    <div style="font-size:12px;line-height:18px;color:#667085;">This code expires in 10 minutes</div>`,
-    footer: "If you didn't request this code, please ignore this email.",
+    <div style="font-size:12px;line-height:18px;color:#667085;">${t("codeExpiresIn", lang)}</div>`,
+    footer: t("defaultFooter", lang),
   });
 
   const info = await transporter.sendMail({
@@ -112,13 +189,13 @@ export async function sendVerificationEmail(to: string, otp: string) {
     to,
     subject,
     html,
-    text: `Your verification code is ${otp}. It expires in 10 minutes.`,
+    text: `${t("verificationCodeTitle", lang)}: ${otp}. ${t("codeExpiresIn", lang)}.`,
   });
 
   return info;
 }
 
-export async function sendResetEmail(to: string, otp: string) {
+export async function sendResetEmail(to: string, otp: string, lang: Lang = "en") {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
   const user = process.env.SMTP_USER;
@@ -138,16 +215,16 @@ export async function sendResetEmail(to: string, otp: string) {
     auth: { user, pass },
   });
 
-  const subject = "Reset your password";
+  const subject = t("resetPasswordSubject", lang);
   const html = renderEmailHTML({
-    title: "Password Reset",
-    description: "Enter this code to reset your password",
+    title: t("resetPasswordTitle", lang),
+    description: t("resetPasswordDesc", lang),
     contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
       <div style="font-family:SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:28px;line-height:36px;font-weight:700;color:#3F78D8;letter-spacing:0.3em;">${escape(
         otp
       )}</div>
     </div>
-    <div style="font-size:12px;line-height:18px;color:#667085;">This code expires in 10 minutes</div>`,
+    <div style="font-size:12px;line-height:18px;color:#667085;">${t("codeExpiresIn", lang)}</div>`,
   });
 
   const info = await transporter.sendMail({
@@ -155,13 +232,13 @@ export async function sendResetEmail(to: string, otp: string) {
     to,
     subject,
     html,
-    text: `Your password reset code is ${otp}. It expires in 10 minutes.`,
+    text: `${t("resetPasswordTitle", lang)}: ${otp}. ${t("codeExpiresIn", lang)}.`,
   });
 
   return info;
 }
 
-export async function sendWelcomeEmail(to: string, email: string, tempPassword: string) {
+export async function sendWelcomeEmail(to: string, email: string, tempPassword: string, lang: Lang = "en") {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
   const user = process.env.SMTP_USER;
@@ -181,21 +258,21 @@ export async function sendWelcomeEmail(to: string, email: string, tempPassword: 
     auth: { user, pass },
   });
 
-  const subject = "Welcome to VetQuark";
+  const subject = t("welcomeSubject", lang);
   const html = renderEmailHTML({
-    title: "Welcome",
-    description: "Your Guardian account has been created",
+    title: t("welcomeTitle", lang),
+    description: t("welcomeDesc", lang),
     contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
-      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Login Email</div>
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">${t("loginEmail", lang)}</div>
       <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
         email
       )}</div>
-      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Temporary Password</div>
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">${t("tempPassword", lang)}</div>
       <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;">${escape(
         tempPassword
       )}</div>
     </div>
-    <div style="font-size:12px;line-height:18px;color:#667085;">Please log in and change your password from your profile settings</div>`,
+    <div style="font-size:12px;line-height:18px;color:#667085;">${t("changePasswordHint", lang)}</div>`,
   });
 
   const info = await transporter.sendMail({
@@ -203,7 +280,7 @@ export async function sendWelcomeEmail(to: string, email: string, tempPassword: 
     to,
     subject,
     html,
-    text: `Your account has been created. Email: ${email}, Temporary password: ${tempPassword}. Please change your password after login.`,
+    text: `${t("welcomeDesc", lang)}. ${t("loginEmail", lang)}: ${email}, ${t("tempPassword", lang)}: ${tempPassword}. ${t("changePasswordHint", lang)}.`,
   });
 
   return info;
@@ -213,7 +290,8 @@ export async function sendGuardianInviteEmail(
   to: string,
   email: string,
   tempPassword: string,
-  verificationLink: string
+  verificationLink: string,
+  lang: Lang = "en"
 ) {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
@@ -234,25 +312,25 @@ export async function sendGuardianInviteEmail(
     auth: { user, pass },
   });
 
-  const subject = "Verify your VetQuark account and log in";
+  const subject = t("guardianInviteSubject", lang);
   const html = renderEmailHTML({
-    title: "Verify Your Account",
-    description: "Your Guardian account has been created",
+    title: t("verifyAccountTitle", lang),
+    description: t("verifyAccountDesc", lang),
     contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
-      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Login Email</div>
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">${t("loginEmail", lang)}</div>
       <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
         email
       )}</div>
-      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Temporary Password</div>
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">${t("tempPassword", lang)}</div>
       <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;">${escape(
         tempPassword
       )}</div>
     </div>
-    <div style="font-size:12px;line-height:18px;color:#667085;margin-bottom:16px;">To verify your email and access your account, use the button below</div>
-    <div style="font-size:12px;line-height:18px;color:#667085;">If the button doesn't work, copy this URL: ${escape(
+    <div style="font-size:12px;line-height:18px;color:#667085;margin-bottom:16px;">${t("verifyUrlHint", lang)}</div>
+    <div style="font-size:12px;line-height:18px;color:#667085;">${t("urlFallbackHint", lang)} ${escape(
       verificationLink
     )}</div>`,
-    action: { label: "Verify and Log In", url: verificationLink },
+    action: { label: t("verifyAndLoginButton", lang), url: verificationLink },
   });
 
   const info = await transporter.sendMail({
@@ -260,13 +338,13 @@ export async function sendGuardianInviteEmail(
     to,
     subject,
     html,
-    text: `Your Guardian account has been created.\nEmail: ${email}\nTemporary password: ${tempPassword}\nVerify and log in: ${verificationLink}`,
+    text: `${t("verifyAccountDesc", lang)}.\n${t("loginEmail", lang)}: ${email}\n${t("tempPassword", lang)}: ${tempPassword}\n${t("verifyAndLoginButton", lang)}: ${verificationLink}`,
   });
 
   return info;
 }
 
-export async function sendTwoFactorEmail(to: string, otp: string) {
+export async function sendTwoFactorEmail(to: string, otp: string, lang: Lang = "en") {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
   const user = process.env.SMTP_USER;
@@ -286,16 +364,16 @@ export async function sendTwoFactorEmail(to: string, otp: string) {
     auth: { user, pass },
   });
 
-  const subject = "Your 2FA login code";
+  const subject = t("twoFactorSubject", lang);
   const html = renderEmailHTML({
-    title: "Two-Factor Code",
-    description: "Enter this code to complete login",
+    title: t("twoFactorTitle", lang),
+    description: t("twoFactorDesc", lang),
     contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
       <div style="font-family:SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:28px;line-height:36px;font-weight:700;color:#3F78D8;letter-spacing:0.3em;">${escape(
         otp
       )}</div>
     </div>
-    <div style="font-size:12px;line-height:18px;color:#667085;">This code expires in 10 minutes</div>`,
+    <div style="font-size:12px;line-height:18px;color:#667085;">${t("codeExpiresIn", lang)}</div>`,
   });
 
   const info = await transporter.sendMail({
@@ -303,7 +381,7 @@ export async function sendTwoFactorEmail(to: string, otp: string) {
     to,
     subject,
     html,
-    text: `Your two-factor login code is ${otp}. It expires in 10 minutes.`,
+    text: `${t("twoFactorTitle", lang)}: ${otp}. ${t("codeExpiresIn", lang)}.`,
   });
 
   return info;
@@ -312,7 +390,8 @@ export async function sendTwoFactorEmail(to: string, otp: string) {
 export async function sendFeedbackEmail(
   to: string,
   message: string,
-  meta?: { fromEmail?: string; fromName?: string; userId?: string; appVersion?: string }
+  meta?: { fromEmail?: string; fromName?: string; userId?: string; appVersion?: string },
+  lang: Lang = "en"
 ) {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || "587", 10);
@@ -335,18 +414,18 @@ export async function sendFeedbackEmail(
     auth: { user, pass },
   });
 
-  const subject = "New App Feedback";
+  const subject = t("feedbackSubject", lang);
   const html = renderEmailHTML({
-    title: "New App Feedback",
-    description: "A new feedback has been submitted",
+    title: t("feedbackTitle", lang),
+    description: t("feedbackDesc", lang),
     contentHtml: `<div style="background-color:#f2f4f7;border-radius:12px;padding:24px 16px;margin-bottom:24px;">
-      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">From</div>
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">${t("fromLabel", lang)}</div>
       <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
-        meta?.fromName || "Anonymous"
-      )} (${escape(meta?.fromEmail || "unknown")})</div>
+        meta?.fromName || t("anonymous", lang)
+      )} (${escape(meta?.fromEmail || t("unknown", lang))})</div>
       ${
         meta?.userId
-          ? `<div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">User ID</div>
+          ? `<div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">${t("userIdLabel", lang)}</div>
              <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
                meta.userId
              )}</div>`
@@ -354,13 +433,13 @@ export async function sendFeedbackEmail(
       }
       ${
         meta?.appVersion
-          ? `<div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">App Version</div>
+          ? `<div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">${t("appVersionLabel", lang)}</div>
              <div style="font-size:16px;line-height:24px;font-weight:600;color:#101828;margin-bottom:16px;">${escape(
                meta.appVersion
              )}</div>`
           : ""
       }
-      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">Message</div>
+      <div style="font-size:14px;line-height:20px;color:#667085;margin-bottom:8px;">${t("messageLabel", lang)}</div>
       <pre style="white-space:pre-wrap;font-family:inherit;margin:0;color:#101828;">${escape(
         message
       )}</pre>
@@ -372,7 +451,7 @@ export async function sendFeedbackEmail(
     to,
     subject,
     html,
-    text: `From: ${meta?.fromName || "Anonymous"} (${meta?.fromEmail || "unknown"})\n${meta?.userId ? `User ID: ${meta.userId}\n` : ""}${meta?.appVersion ? `App Version: ${meta.appVersion}\n` : ""}\nMessage:\n${message}`,
+    text: `${t("fromLabel", lang)}: ${meta?.fromName || t("anonymous", lang)} (${meta?.fromEmail || t("unknown", lang)})\n${meta?.userId ? `${t("userIdLabel", lang)}: ${meta.userId}\n` : ""}${meta?.appVersion ? `${t("appVersionLabel", lang)}: ${meta.appVersion}\n` : ""}\n${t("messageLabel", lang)}:\n${message}`,
     ...(meta?.fromEmail ? { replyTo: meta.fromEmail } : {}),
   });
 

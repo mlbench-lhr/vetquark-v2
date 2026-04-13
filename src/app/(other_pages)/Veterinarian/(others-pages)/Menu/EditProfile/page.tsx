@@ -60,14 +60,14 @@ export default function EditProfileCard() {
         const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
         const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
         if (!CLOUD_NAME || !API_KEY) {
-            toast.error("Cloudinary is not configured");
+            toast.error(t("common.cloudinaryNotConfigured"));
             return;
         }
 
         const file = e.target.files?.[0];
         if (!file) return;
         if (file.size > 10 * 1024 * 1024) {
-            toast.error("File too large (max 10MB)");
+            toast.error(t("common.fileTooLarge"));
             e.target.value = "";
             return;
         }
@@ -77,7 +77,7 @@ export default function EditProfileCard() {
             const signRes = await fetch(`/api/cloudinary/upload?folder=profile_pictures`);
             const signJson = await signRes.json();
             if (!signRes.ok) {
-                toast.error("Failed to prepare upload");
+                toast.error(t("common.failedToPrepareUpload"));
                 return;
             }
             const { timestamp, signature } = signJson;
@@ -95,7 +95,7 @@ export default function EditProfileCard() {
             });
             const json = await res.json();
             if (!res.ok) {
-                toast.error("Upload failed");
+                toast.error(t("common.uploadFailed"));
                 return;
             }
             const url = json.secure_url || json.url;
@@ -117,10 +117,10 @@ export default function EditProfileCard() {
                     return;
                 }
                 if (saveJson?.profile) dispatch(setProfile(saveJson.profile));
-                toast.success("Profile picture updated");
+                toast.success(t("common.profilePictureUpdated"));
             }
         } catch {
-            toast.error("Upload failed");
+            toast.error(t("common.uploadFailed"));
         } finally {
             setUploadingAvatar(false);
             e.target.value = "";
@@ -148,7 +148,7 @@ export default function EditProfileCard() {
                 return;
             }
             if (json?.profile) dispatch(setProfile(json.profile));
-            toast.success("Saved changes");
+            toast.success(t("common.savedChanges"));
         } finally {
             setSaving(false);
         }
@@ -172,7 +172,7 @@ export default function EditProfileCard() {
                 dispatch(setProfile(json.profile));
                 setLocalVetCode(json.profile.veterinarianCode || "");
             }
-            toast.success("Code regenerated");
+            toast.success(t("auth.codeRegenerated"));
         } finally {
             setSaving(false);
         }
@@ -250,8 +250,8 @@ export default function EditProfileCard() {
                             readOnly
                             className="w-full h-12 px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-800 placeholder:text-gray-400 md:text-base"
                         />
-                        <Button type="button" onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success("Copied"); }}>
-                            Copy
+                        <Button type="button" onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success(t("common.copied")); }}>
+                            {t("common.copy")}
                         </Button>
                         <Button type="button" onClick={handleRegenerateCode} disabled={saving}>
                             Regenerate

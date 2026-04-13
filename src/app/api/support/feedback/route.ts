@@ -14,12 +14,13 @@ export async function POST(req: NextRequest) {
       process.env.SUPPORT_EMAIL ||
       "mlbenchdev@gmail.com";
 
+    const lang = body?.lang === "pt" ? "pt" : "en";
     await sendFeedbackEmail(to, message, {
       fromEmail: typeof body?.fromEmail === "string" ? body.fromEmail : undefined,
       fromName: typeof body?.fromName === "string" ? body.fromName : undefined,
       userId: typeof body?.userId === "string" ? body.userId : undefined,
       appVersion: typeof body?.appVersion === "string" ? body.appVersion : undefined,
-    });
+    }, lang);
 
     return NextResponse.json({ message: "Feedback sent" }, { status: 200 });
   } catch {
