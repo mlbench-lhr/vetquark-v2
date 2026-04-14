@@ -6,6 +6,7 @@ import PhoneInput from "@/components/form/group-input/PhoneInput";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { toast } from "react-toastify";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 const brazilianStateOptions = [
     { value: "AC", text: "Acre" },
@@ -63,6 +64,7 @@ type Props = {
 
 const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
     const router = useRouter()
+    const { t } = useTranslation();
     const [step, setStep] = useState<StoreStep>('store');
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [cart, setCart] = useState<Record<string, number>>({});
@@ -84,13 +86,13 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         total: number;
         address: Address;
     } | null>(null);
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardHolderName, setCardHolderName] = useState("");
-  const [cardHolderDocument, setCardHolderDocument] = useState("");
-  const [cardExpMonth, setCardExpMonth] = useState("");
-  const [cardExpYear, setCardExpYear] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-  const [payingWithCard, setPayingWithCard] = useState(false);
+    const [cardNumber, setCardNumber] = useState("");
+    const [cardHolderName, setCardHolderName] = useState("");
+    const [cardHolderDocument, setCardHolderDocument] = useState("");
+    const [cardExpMonth, setCardExpMonth] = useState("");
+    const [cardExpYear, setCardExpYear] = useState("");
+    const [cardCvv, setCardCvv] = useState("");
+    const [payingWithCard, setPayingWithCard] = useState(false);
 
     const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0] ?? null;
 
@@ -132,7 +134,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
     const handleProceedToPurchase = async () => {
         if (step === "cart") {
             if (cartQuantity <= 0) {
-                toast.error("Your cart is empty");
+                toast.error(t("auth.store.cartEmpty"));
                 return;
             }
             setStep("checkout");
@@ -142,7 +144,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         if (step === "checkout") {
             if (placingOrder) return;
             if (cartQuantity <= 0) {
-                toast.error("Your cart is empty");
+                toast.error(t("auth.store.cartEmpty"));
                 setStep("store");
                 return;
             }
@@ -166,7 +168,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                 });
                 const data = await res.json().catch(() => null);
                 if (!res.ok) {
-                    const msg = data?.error || "Failed to create order";
+                    const msg = data?.error || t("auth.store.failedToCreateOrder");
                     toast.error(msg);
                     return;
                 }
@@ -180,7 +182,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                 });
                 setCart({});
                 setStep("success");
-                toast.success("Order created");
+                toast.success(t("auth.store.orderCreated"));
                 if (onUpdated) onUpdated();
             } finally {
                 setPlacingOrder(false);
@@ -190,7 +192,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
     const handleViewCart = () => {
         if (cartQuantity <= 0) {
-            toast.error("Your cart is empty");
+            toast.error(t("auth.store.cartEmpty"));
             return;
         }
         setStep('cart');
@@ -231,80 +233,80 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         setLastOrder(null);
         onClose && onClose();
     };
-  
-  async function tokenizeCard() {
-    const appId = String(process.env.NEXT_PUBLIC_PAGARME_PUBLIC_KEY || "pk_test_Z9KybVbULjhmry87").trim();
-    if (!appId) {
-      toast.error("Missing public key");
-      return null;
+
+    async function tokenizeCard() {
+        const appId = String(process.env.NEXT_PUBLIC_PAGARME_PUBLIC_KEY || "pk_test_Z9KybVbULjhmry87").trim();
+        if (!appId) {
+            toast.error(t("auth.store.missingPublicKey"));
+            return null;
+        }
+        const url = `https://api.pagar.me/core/v5/tokens?appId=${encodeURIComponent(appId)}`;
+        const payload = {
+            card: {
+                number: cardNumber.replace(/\s+/g, ""),
+                holder_name: cardHolderName,
+                holder_document: cardHolderDocument.replace(/\D/g, "") || undefined,
+                exp_month: Number(cardExpMonth || 0),
+                exp_year: Number(cardExpYear || 0),
+                cvv: cardCvv,
+            },
+            type: "card",
+        };
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { accept: "application/json", "content-type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+            const msg =
+                (typeof data?.message === "string" && data.message) ||
+                (Array.isArray(data?.errors) && typeof data.errors?.[0]?.message === "string" && data.errors[0].message) ||
+                t("auth.store.failedToTokenizeCard");
+            toast.error(msg);
+            return null;
+        }
+        const token = typeof data?.id === "string" ? data.id : "";
+        if (!token) {
+            toast.error(t("auth.store.tokenizationFailed"));
+            return null;
+        }
+        return token;
     }
-    const url = `https://api.pagar.me/core/v5/tokens?appId=${encodeURIComponent(appId)}`;
-    const payload = {
-      card: {
-        number: cardNumber.replace(/\s+/g, ""),
-        holder_name: cardHolderName,
-        holder_document: cardHolderDocument.replace(/\D/g, "") || undefined,
-        exp_month: Number(cardExpMonth || 0),
-        exp_year: Number(cardExpYear || 0),
-        cvv: cardCvv,
-      },
-      type: "card",
-    };
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { accept: "application/json", "content-type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      const msg =
-        (typeof data?.message === "string" && data.message) ||
-        (Array.isArray(data?.errors) && typeof data.errors?.[0]?.message === "string" && data.errors[0].message) ||
-        "Failed to tokenize card";
-      toast.error(msg);
-      return null;
+
+    async function payStoreOrderWithCard() {
+        if (!lastOrder || payingWithCard) return;
+        if (!cardNumber || !cardHolderName || !cardExpMonth || !cardExpYear || !cardCvv) {
+            toast.error(t("auth.store.fillAllCardFields"));
+            return;
+        }
+        try {
+            setPayingWithCard(true);
+            const token = await tokenizeCard();
+            if (!token) return;
+            const res = await fetch("/api/store/payments/create", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ orderId: lastOrder.id, cardToken: token }),
+            });
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                const msg =
+                    (typeof data?.message === "string" && data.message) ||
+                    (Array.isArray(data?.details?.errors) && typeof data.details?.errors?.[0]?.message === "string" && data.details.errors[0].message) ||
+                    (typeof data?.error === "string" && data.error) ||
+                    t("auth.store.paymentFailed");
+                toast.error(msg);
+                return;
+            }
+            toast.success(t("auth.store.paymentCompleted"));
+            router.push("/Veterinarian/store/orders");
+        } catch {
+            toast.error(t("auth.store.networkError"));
+        } finally {
+            setPayingWithCard(false);
+        }
     }
-    const token = typeof data?.id === "string" ? data.id : "";
-    if (!token) {
-      toast.error("Tokenization failed");
-      return null;
-    }
-    return token;
-  }
-  
-  async function payStoreOrderWithCard() {
-    if (!lastOrder || payingWithCard) return;
-    if (!cardNumber || !cardHolderName || !cardExpMonth || !cardExpYear || !cardCvv) {
-      toast.error("Fill all card fields");
-      return;
-    }
-    try {
-      setPayingWithCard(true);
-      const token = await tokenizeCard();
-      if (!token) return;
-      const res = await fetch("/api/store/payments/create", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ orderId: lastOrder.id, cardToken: token }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        const msg =
-          (typeof data?.message === "string" && data.message) ||
-          (Array.isArray(data?.details?.errors) && typeof data.details?.errors?.[0]?.message === "string" && data.details.errors[0].message) ||
-          (typeof data?.error === "string" && data.error) ||
-          "Payment failed";
-        toast.error(msg);
-        return;
-      }
-      toast.success("Payment completed");
-      router.push("/Veterinarian/store/orders");
-    } catch {
-      toast.error("Network error");
-    } finally {
-      setPayingWithCard(false);
-    }
-  }
 
     const handleSaveNewAddress = () => {
         const label = newAddressForm.label.trim();
@@ -315,13 +317,13 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         const postalCode = newAddressForm.postalCode.trim();
 
         if (!label || !phoneRaw || !addressLine || !city || !state || !postalCode) {
-            toast.error("Please fill all address fields");
+            toast.error(t("auth.store.fillAllAddressFields"));
             return;
         }
 
         const phone = parsePhoneNumberFromString(phoneRaw, "BR");
         if (!phone || !phone.isValid()) {
-            toast.error("Please enter a valid phone number");
+            toast.error(t("auth.store.invalidPhoneNumber"));
             return;
         }
 
@@ -341,7 +343,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                 });
                 const data = await res.json().catch(() => null);
                 if (!res.ok) {
-                    toast.error(data?.error || "Failed to add address");
+                    toast.error(data?.error || t("auth.store.failedToAddAddress"));
                     return;
                 }
                 const created = data?.address as Address | undefined;
@@ -358,9 +360,9 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                     postalCode: "",
                 });
                 setStep("checkout");
-                toast.success("Address added");
+                toast.success(t("auth.store.addressAdded"));
             } catch {
-                toast.error("Failed to add address");
+                toast.error(t("auth.store.failedToAddAddress"));
             }
         })();
     };
@@ -386,7 +388,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                     }));
                     setProducts(mapped);
                 } else {
-                    toast.error(prodData?.error || "Failed to load products");
+                    toast.error(prodData?.error || t("auth.store.failedToLoadProducts"));
                     setProducts([]);
                 }
                 if (addrRes.ok && Array.isArray(addrData?.addresses)) {
@@ -396,12 +398,12 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                         setSelectedAddressId(mapped[0].id);
                     }
                 } else {
-                    toast.error(addrData?.error || "Failed to load addresses");
+                    toast.error(addrData?.error || t("auth.store.failedToLoadAddresses"));
                     setAddresses([]);
                 }
             } catch {
                 if (!mounted) return;
-                toast.error("Failed to load store data");
+                toast.error(t("auth.store.failedToLoadStoreData"));
                 setProducts([]);
                 setAddresses([]);
             }
@@ -454,7 +456,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                         <div className="flex-1 relative mx-2">
                             <input
                                 type="text"
-                                placeholder="Search for an item"
+                                placeholder={t("auth.store.searchPlaceholder")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full px-4 py-3 pl-12  rounded-xl focus:outline-none focus:border-primary bg-gray-100"
@@ -483,7 +485,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 <input
                                     value={newAddressForm.label}
                                     onChange={(e) => setNewAddressForm((p) => ({ ...p, label: e.target.value }))}
-                                    placeholder="e.g. My Clinic"
+                                    placeholder={t("auth.store.addressLabelPlaceholder")}
                                     className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
                                 />
                             </div>
@@ -511,7 +513,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 <input
                                     value={newAddressForm.address}
                                     onChange={(e) => setNewAddressForm((p) => ({ ...p, address: e.target.value }))}
-                                    placeholder="Enter your address"
+                                    placeholder={t("auth.store.addressPlaceholder")}
                                     className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
                                 />
                             </div>
@@ -523,7 +525,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 <input
                                     value={newAddressForm.city}
                                     onChange={(e) => setNewAddressForm((p) => ({ ...p, city: e.target.value }))}
-                                    placeholder="Enter your city name"
+                                    placeholder={t("auth.store.cityPlaceholder")}
                                     className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
                                 />
                             </div>
@@ -556,7 +558,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                     type="number"
                                     value={newAddressForm.postalCode}
                                     onChange={(e) => setNewAddressForm((p) => ({ ...p, postalCode: e.target.value }))}
-                                    placeholder="Enter postal code i.e 27492"
+                                    placeholder={t("auth.store.postalCodePlaceholder")}
                                     className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
                                 />
                             </div>
@@ -640,7 +642,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                     return (
                                                         <div key={product.id} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
                                                             <div className="w-[80px] h-full rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                                <Image src={product.image} height={100} width={84} className="w-[80px] h-[84px]" alt=""/>
+                                                                <Image src={product.image} height={100} width={84} className="w-[80px] h-[84px]" alt="" />
                                                             </div>
 
                                                             <div className="flex-1 text-xs">
@@ -678,9 +680,9 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                             ) : (
                                                 cartItems.map((item) => (
                                                     <div key={item.product.id} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
-                                                            <div className="w-[80px] h-full rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                                <Image src={item.product.image} height={100} width={84} className="w-[80px] h-[84px]" alt=""/>
-                                                            </div>
+                                                        <div className="w-[80px] h-full rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                            <Image src={item.product.image} height={100} width={84} className="w-[80px] h-[84px]" alt="" />
+                                                        </div>
 
                                                         <div className="flex-1 text-xs">
                                                             <h3 className="font-semibold text-gray-800">{item.product.name}</h3>
@@ -748,68 +750,68 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                     <div className="text-sm text-gray-500">{lastOrder.address.location}</div>
                                                 </div>
                                                 <OrderSummary items={lastOrder.items} />
-                        <div className="px-4 pt-3">
-                          <div className="text-sm font-semibold text-gray-900">Pay with card</div>
-                          <div className="mt-2 space-y-3">
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              placeholder="Card number"
-                              value={cardNumber}
-                              onChange={(e) => setCardNumber(e.target.value)}
-                              className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Card holder name"
-                              value={cardHolderName}
-                              onChange={(e) => setCardHolderName(e.target.value)}
-                              className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                            />
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              placeholder="CPF/CNPJ (optional)"
-                              value={cardHolderDocument}
-                              onChange={(e) => setCardHolderDocument(e.target.value)}
-                              className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                            />
-                            <div className="flex gap-3">
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                placeholder="MM"
-                                value={cardExpMonth}
-                                onChange={(e) => setCardExpMonth(e.target.value)}
-                                className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                              />
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                placeholder="YY or YYYY"
-                                value={cardExpYear}
-                                onChange={(e) => setCardExpYear(e.target.value)}
-                                className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                              />
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                placeholder="CVV"
-                                value={cardCvv}
-                                onChange={(e) => setCardCvv(e.target.value)}
-                                className="h-12 w-24 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              disabled={payingWithCard || !lastOrder?.id}
-                              onClick={payStoreOrderWithCard}
-                              className="h-[48px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:opacity-60"
-                            >
-                              {payingWithCard ? "Processing..." : "Pay with Card"}
-                            </button>
-                          </div>
-                        </div>
+                                                <div className="px-4 pt-3">
+                                                    <div className="text-sm font-semibold text-gray-900">Pay with card</div>
+                                                    <div className="mt-2 space-y-3">
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            placeholder="Card number"
+                                                            value={cardNumber}
+                                                            onChange={(e) => setCardNumber(e.target.value)}
+                                                            className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Card holder name"
+                                                            value={cardHolderName}
+                                                            onChange={(e) => setCardHolderName(e.target.value)}
+                                                            className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            placeholder="CPF/CNPJ (optional)"
+                                                            value={cardHolderDocument}
+                                                            onChange={(e) => setCardHolderDocument(e.target.value)}
+                                                            className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                                                        />
+                                                        <div className="flex gap-3">
+                                                            <input
+                                                                type="text"
+                                                                inputMode="numeric"
+                                                                placeholder="MM"
+                                                                value={cardExpMonth}
+                                                                onChange={(e) => setCardExpMonth(e.target.value)}
+                                                                className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                inputMode="numeric"
+                                                                placeholder="YY or YYYY"
+                                                                value={cardExpYear}
+                                                                onChange={(e) => setCardExpYear(e.target.value)}
+                                                                className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                inputMode="numeric"
+                                                                placeholder="CVV"
+                                                                value={cardCvv}
+                                                                onChange={(e) => setCardCvv(e.target.value)}
+                                                                className="h-12 w-24 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            disabled={payingWithCard || !lastOrder?.id}
+                                                            onClick={payStoreOrderWithCard}
+                                                            className="h-[48px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:opacity-60"
+                                                        >
+                                                            {payingWithCard ? "Processing..." : "Pay with Card"}
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         ) : null}
                                     </div>

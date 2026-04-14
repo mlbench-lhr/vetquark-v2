@@ -70,7 +70,7 @@ export default function ProfessionalRegistration() {
         <button className="mr-4 text-gray-600 hover:text-gray-800 bg-gray-100 p-2 rounded-full" onClick={() => router.back()}>
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-2xl font-bold text-primary">Professional registration</h1>
+        <h1 className="text-2xl font-bold text-primary">{t('auth.professionalRegistration')}</h1>
       </div>
 
       {/* Form Content */}
@@ -95,7 +95,7 @@ export default function ProfessionalRegistration() {
             required
             className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-500 appearance-none pr-12"
           >
-            <option value="">CRMV State *</option>
+            <option value="">{t('auth.crmvState')} *</option>
             {brazilianStateOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.text}
@@ -117,7 +117,7 @@ export default function ProfessionalRegistration() {
 
         {/* How do you operate? */}
         <div className="mt-6">
-          <h3 className="text-primary font-bold text-xl mb-4">How do you operate?</h3>
+          <h3 className="text-primary font-bold text-xl mb-4">{t('auth.howDoYouOperate')}</h3>
           <div className="space-y-3">
             <input
               type="text"
@@ -156,7 +156,7 @@ export default function ProfessionalRegistration() {
 
         {/* Areas of expertise */}
         <div className="mt-6">
-          <h3 className="text-primary font-bold text-xl mb-4">Areas of expertise</h3>
+          <h3 className="text-primary font-bold text-xl mb-4">{t('auth.areasOfExpertise')}</h3>
           <div className="relative">
             <select
               name="Acupuncture"
@@ -164,10 +164,10 @@ export default function ProfessionalRegistration() {
               onChange={handleInputChange}
               className="w-full px-4 py-4 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-500 appearance-none pr-12"
             >
-              <option value="">Acupuncture</option>
-              <option value="basic">Basic</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
+              <option value="">{t('auth.acupuncture')}</option>
+              <option value="basic">{t('auth.basic')}</option>
+              <option value="intermediate">{t('auth.intermediate')}</option>
+              <option value="advanced">{t('auth.advanced')}</option>
             </select>
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
           </div>
@@ -178,7 +178,7 @@ export default function ProfessionalRegistration() {
           onClick={handleSubmit}
           className="w-full mt-8 py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg"
         >
-          Continue
+          {t('common.continue')}
         </button>
       </div>
     </div>

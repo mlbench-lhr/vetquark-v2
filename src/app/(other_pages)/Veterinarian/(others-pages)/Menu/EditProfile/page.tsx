@@ -113,7 +113,7 @@ export default function EditProfileCard() {
                 const saveJson = await saveRes.json().catch(() => ({}));
                 if (!saveRes.ok) {
                     setLocalProfileImageUrl(previousUrl);
-                    toast.error(typeof saveJson?.error === "string" ? saveJson.error : "Failed to save profile picture");
+                    toast.error(typeof saveJson?.error === "string" ? saveJson.error : t("menu.failedToSaveProfilePicture"));
                     return;
                 }
                 if (saveJson?.profile) dispatch(setProfile(saveJson.profile));
@@ -144,7 +144,7 @@ export default function EditProfileCard() {
             });
             const json = await res.json().catch(() => ({}));
             if (!res.ok) {
-                toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+                toast.error(typeof json?.error === "string" ? json.error : t("menu.failedToSaveChanges"));
                 return;
             }
             if (json?.profile) dispatch(setProfile(json.profile));
@@ -165,7 +165,7 @@ export default function EditProfileCard() {
             });
             const json = await res.json().catch(() => ({}));
             if (!res.ok) {
-                toast.error(typeof json?.error === "string" ? json.error : "Failed to regenerate code");
+                toast.error(typeof json?.error === "string" ? json.error : t("menu.failedToRegenerateCode"));
                 return;
             }
             if (json?.profile) {
@@ -189,7 +189,7 @@ export default function EditProfileCard() {
                             width={200}
                             height={200}
                             src={avatarUrl}
-                            alt="Profile"
+                            alt={t("profile.profile")}
                             className="w-full h-full object-cover"
                         />
                     </div>
@@ -214,7 +214,7 @@ export default function EditProfileCard() {
             {/* Form Fields */}
             <div className="flex-1 space-y-5">
                 <div>
-                    <Label className="block text-gray-900 font-medium mb-2">Full Name</Label>
+                    <Label className="block text-gray-900 font-medium mb-2">{t("menu.fullName")}</Label>
                     <Input
                         value={localFullName}
                         onChange={(e) => setLocalFullName(e.target.value)}
@@ -223,7 +223,7 @@ export default function EditProfileCard() {
                 </div>
 
                 <div>
-                    <Label className="block text-gray-900 font-medium mb-2">Email</Label>
+                    <Label className="block text-gray-900 font-medium mb-2">{t("menu.email")}</Label>
                     <Input
                         type="email"
                         value={localEmail}
@@ -233,7 +233,7 @@ export default function EditProfileCard() {
                 </div>
 
                 <div>
-                    <Label className="block text-gray-900 font-medium mb-2">Phone Number</Label>
+                    <Label className="block text-gray-900 font-medium mb-2">{t("menu.phoneNumber")}</Label>
                     <PhoneInput
                         name="phone"
                         value={localPhone}
@@ -243,18 +243,18 @@ export default function EditProfileCard() {
                     />
                 </div>
                 <div>
-                    <Label className="block text-gray-900 font-medium mb-2">Veterinarian Unique Code</Label>
+                    <Label className="block text-gray-900 font-medium mb-2">{t("menu.veterinarianUniqueCode")}</Label>
                     <div className="flex gap-2">
                         <Input
                             value={localVetCode}
                             readOnly
                             className="w-full h-12 px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-800 placeholder:text-gray-400 md:text-base"
                         />
-                        <Button type="button" onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success(t("common.copied")); }}>
-                            {t("common.copy")}
+                        <Button type="button" onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success(t("menu.copied")); }}>
+                            {t("menu.copy")}
                         </Button>
                         <Button type="button" onClick={handleRegenerateCode} disabled={saving}>
-                            Regenerate
+                            {t("menu.regenerate")}
                         </Button>
                     </div>
                 </div>
@@ -267,7 +267,7 @@ export default function EditProfileCard() {
                     disabled={saving}
                     className="w-full h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-base"
                 >
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? t("menu.saving") : t("menu.saveChanges")}
                 </Button>
             </div>
         </div>

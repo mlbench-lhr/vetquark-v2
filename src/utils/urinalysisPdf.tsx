@@ -108,8 +108,8 @@ async function fetchPanels() {
     const keys = Array.isArray(p?.visibleKeys) ? (p.visibleKeys as any[]).map((k) => String(k || "").trim()).filter(Boolean) : null;
     const referenceRanges = Array.isArray(p?.referenceRanges)
       ? (p.referenceRanges as any[])
-          .map((rr) => ({ key: String(rr?.key || "").trim(), label: String(rr?.label || "").trim() }))
-          .filter((rr) => rr.key && rr.label)
+        .map((rr) => ({ key: String(rr?.key || "").trim(), label: String(rr?.label || "").trim() }))
+        .filter((rr) => rr.key && rr.label)
       : [];
     out.push({ code, title, visibleKeys: keys && keys.length ? keys : null, referenceRanges });
   }
@@ -132,12 +132,12 @@ async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId:
   const accessKeys = visibleKeysByCode.some((k) => k === null)
     ? null
     : (() => {
-        const set = new Set<string>();
-        for (const keys of visibleKeysByCode) {
-          if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
-        }
-        return [...set];
-      })();
+      const set = new Set<string>();
+      for (const keys of visibleKeysByCode) {
+        if (Array.isArray(keys)) keys.forEach((k) => set.add(k));
+      }
+      return [...set];
+    })();
   const referenceLabelByKey = new Map<string, string>();
   for (const c of codesForAccess) {
     const ranges = panelByCode.get(c)?.referenceRanges ?? [];
@@ -222,7 +222,7 @@ async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId:
   const crmvLabel =
     r.veterinarian.crmvState && r.veterinarian.crmv ? `CRMV-${r.veterinarian.crmvState} ${r.veterinarian.crmv}` : "";
   const generatedAt = formatDateTimeLabel(r.signedAt || r.createdAt || null);
-  const appLogoUrl = `${window.location.origin}/blueLogo.png`;
+  const appLogoUrl = `${window.location.origin}/Logos VetQuark-03.png`;
   const signatureUrl = String(r.signatureImageUrl || "").trim();
 
   const valueWithUnit = (it: ReadingResult) => {

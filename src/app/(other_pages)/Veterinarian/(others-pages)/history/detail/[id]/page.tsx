@@ -105,18 +105,18 @@ function formatDateTimeLabel(value: string | null) {
   return `${date}, ${time}`;
 }
 
-function formatCollectionMethod(value: string | null | undefined) {
+function formatCollectionMethod(value: string | null | undefined, t: (key: string) => string) {
   const v = (value || "").trim().toLowerCase();
   if (!v) return "";
-  if (v === "free_catch") return "Free catch";
-  if (v === "cystocentesis") return "Cystocentesis";
-  if (v === "catheter") return "Catheter";
+  if (v === "free_catch") return t("history.collectionMethods.freeCatch");
+  if (v === "cystocentesis") return t("history.collectionMethods.cystocentesis");
+  if (v === "catheter") return t("history.collectionMethods.catheter");
   return value || "";
 }
 
-function asReportText(value: string | null | undefined) {
+function asReportText(value: string | null | undefined, t: (key: string) => string) {
   const s = typeof value === "string" ? value.trim() : "";
-  return s ? s : "N/A";
+  return s ? s : t("history.notAvailable");
 }
 
 async function shareReadingReport(title: string) {
@@ -259,16 +259,16 @@ export default function ReportDetailsPage() {
             router.replace(`/Guardian/payment/${encodeURIComponent(paymentLinkId)}`);
             return;
           }
-          const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Payment required";
+          const msg = typeof (data as any)?.error === "string" ? (data as any).error : t("history.paymentRequired");
           throw new Error(msg);
         }
         if (!res.ok) {
-          const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load report";
+          const msg = typeof (data as any)?.error === "string" ? (data as any).error : t("history.failedToLoadReport");
           throw new Error(msg);
         }
         setReading((data as any)?.reading ?? null);
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "Failed to load report";
+        const msg = e instanceof Error ? e.message : t("history.failedToLoadReport");
         toast.error(msg);
         setReading(null);
       } finally {
@@ -314,25 +314,25 @@ export default function ReportDetailsPage() {
     try {
       await downloadUrinalysisPdf({ readingId, reading });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to download report";
+      const msg = e instanceof Error ? e.message : t("history.failedToDownloadReport");
       toast.error(msg);
     }
-  }, [reading, readingId]);
+  }, [reading, readingId, t]);
 
   const handleShare = useCallback(async () => {
     if (!readingId) return;
     try {
-      await shareReadingReport(`${panelTitleForCode(reading?.productCode)} Report`);
-      toast.success("Report link ready");
+      await shareReadingReport(`${panelTitleForCode(reading?.productCode)} ${t("history.reportTitleSuffix")}`);
+      toast.success(t("history.reportLinkReady"));
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Share failed";
+      const msg = e instanceof Error ? e.message : t("history.shareFailed");
       if (typeof msg === "string" && msg.startsWith("http")) {
-        toast.info("Copy link: " + msg);
+        toast.info(t("history.copyLinkPrefix") + msg);
         return;
       }
       // toast.error(msg);
     }
-  }, [reading?.productCode, readingId]);
+  }, [reading?.productCode, readingId, t]);
 
   const currentProductCode = useMemo(() => String(reading?.productCode || "VETQ_MASTER_360"), [reading?.productCode]);
   const unlockedProductCodes = useMemo(
@@ -389,25 +389,25 @@ export default function ReportDetailsPage() {
       });
       const json = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(typeof (json as any)?.error === "string" ? (json as any).error : "Failed to send invite");
+        toast.error(typeof (json as any)?.error === "string" ? (json as any).error : t("history.failedToSendInvite"));
         return;
       }
-      toast.success("Invite sent");
+      toast.success(t("history.inviteSent"));
       setUpgradeOpen(false);
       setUpgradeProductCode("");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to send invite");
+      toast.error(e instanceof Error ? e.message : t("history.failedToSendInvite"));
     } finally {
       setSendingUpgrade(false);
     }
-  }, [readingId, sendingUpgrade, upgradeProductCode]);
+  }, [readingId, sendingUpgrade, upgradeProductCode, t]);
 
   return (
     <div className="min-h-[100dvh w-full bg-white">
       <div className="mx-auto w-full pb-6">
         <div className="flex items-center justify-between px-">
           <button
-            aria-label="Back"
+            aria-label={t("history.back")}
             className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
             onClick={() => router.back()}
           >
@@ -417,7 +417,7 @@ export default function ReportDetailsPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              aria-label="Download report (PDF)"
+              aria-label={t("history.downloadPdfAria")}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#EBF2FF]"
               onClick={handleDownloadPdf}
             >
@@ -427,7 +427,7 @@ export default function ReportDetailsPage() {
             </button>
             <button
               type="button"
-              aria-label="Share report"
+              aria-label={t("history.shareAria")}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F3FFEB]"
               onClick={handleShare}
             >
@@ -438,7 +438,7 @@ export default function ReportDetailsPage() {
             {isVeterinarian ? (
               <button
                 type="button"
-                aria-label="Invite to upgrade"
+                aria-label={t("history.inviteToUpgrade")}
                 className="inline-flex h-9 items-center justify-center rounded-full bg-[#EBF2FF] px-3 text-[13px] font-medium text-[#3F78D8]"
                 onClick={() => {
                   setUpgradeOpen(true);
@@ -446,7 +446,7 @@ export default function ReportDetailsPage() {
                 }}
                 disabled={!reading || accessKeys === null}
               >
-                Invite To Upgrade
+                {t("history.inviteToUpgrade")}
               </button>
             ) : null}
           </div>
@@ -508,18 +508,18 @@ export default function ReportDetailsPage() {
               <h1 className="text-[18px] font-medium">{t("history.veterinaryReport")}</h1>
               <h2 className="text-[14px] font-normal">{t("reading.report.summaryInterpretation")}</h2>
               <p className="text-[14px] font-normal text-black/60">
-                {reading.report?.summaryAndInterpretation || reading.timer?.analysis?.summary || "N/A"}
+                {reading.report?.summaryAndInterpretation || reading.timer?.analysis?.summary || t("history.notAvailable")}
               </p>
               <p className="text-[14px] font-normal">
                 {t("reading.report.disclaimerNote")}
               </p>
               <span className="text-[14px] font-normal mt-3">{t("reading.report.otherInformation")}</span>
               <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">
-                {reading.report?.otherInformation || "N/A"}
+                {reading.report?.otherInformation || t("history.notAvailable")}
               </div>
               <span className="text-[14px] font-normal mt-3">{t("reading.report.veterinarianNotes")}</span>
               <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">
-                {reading.report?.veterinarianNotes || "N/A"}
+                {reading.report?.veterinarianNotes || t("history.notAvailable")}
               </div>
               {reading.signatureImageUrl ? (
                 <div className="w-full mt-4">
@@ -542,8 +542,8 @@ export default function ReportDetailsPage() {
               <h1 className="text-[18px] font-medium">{reading.veterinarian.fullName}</h1>
               <h2 className="text-[14px] font-normal">
                 {reading.veterinarian.crmvState && reading.veterinarian.crmv
-                  ? `CRMV-${reading.veterinarian.crmvState} ${reading.veterinarian.crmv}`
-                  : "CRMV"}
+                  ? `${t("history.crmvLabel")}-${reading.veterinarian.crmvState} ${reading.veterinarian.crmv}`
+                  : t("history.crmvLabel")}
               </h2>
               <p className="text-[14px] font-normal text-black/60">
                 {generatedAtLabel ? `${t("reading.report.generatedOnPrefix")} ${generatedAtLabel}` : ""}
@@ -566,8 +566,8 @@ export default function ReportDetailsPage() {
           />
           <div className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 shadow-xl">
             <div className="text-center">
-              <div className="text-[16px] font-semibold text-[#111827]">Invite To Upgrade</div>
-              <div className="mt-1 text-[13px] text-[#6B7280]">Tap to select a panel type & invite the guardian</div>
+              <div className="text-[16px] font-semibold text-[#111827]">{t("history.inviteToUpgrade")}</div>
+              <div className="mt-1 text-[13px] text-[#6B7280]">{t("history.inviteToUpgradeDesc")}</div>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -609,7 +609,7 @@ export default function ReportDetailsPage() {
               onClick={handleSendUpgradeInvite}
               disabled={!upgradeProductCode || sendingUpgrade}
             >
-              {sendingUpgrade ? "Sending..." : "Send Invite"}
+              {sendingUpgrade ? t("history.sending") : t("history.sendInvite")}
             </button>
           </div>
         </div>

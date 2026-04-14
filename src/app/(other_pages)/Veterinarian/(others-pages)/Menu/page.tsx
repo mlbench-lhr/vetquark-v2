@@ -47,7 +47,7 @@ export default function MenuPage() {
         const data = await res.json().catch(() => null);
         if (!mounted) return;
         if (!res.ok) {
-          toast.error(typeof data?.error === "string" ? data.error : "Failed to load wallet");
+          toast.error(typeof data?.error === "string" ? data.error : t("wallet.failedToLoad"));
           return;
         }
         const currency = String(data?.currency || "BRL");
@@ -218,7 +218,7 @@ export default function MenuPage() {
 
       {/* Footer */}
       <div className="py-6 text-center">
-        <p className="text-xs text-muted-foreground">© 2026 VetQuark</p>
+        <p className="text-xs text-muted-foreground">{t("common.copyright")}</p>
       </div>
     </div>
   );

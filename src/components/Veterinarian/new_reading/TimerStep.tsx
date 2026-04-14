@@ -745,8 +745,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
                 <div className="mt-2 h-2 w-full rounded-full bg-white/10 overflow-hidden">
                   <div
-                    className="h-full bg-white/60 transition-[width] duration-200 ease-linear"
-                    style={{ width: `${analysisProgress}%` }}
+                    className={`h-full bg-white/60 transition-[width] duration-200 ease-linear ${analysisProgress === 0 ? 'animate-progress' : ''}`}
+                    style={{ width: `${analysisProgress === 0 ? '30%' : analysisProgress}%` }}
                   />
                 </div>
               </div>
@@ -829,16 +829,16 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       </div>
 
       <div className="mt-6 space-y-3">
-          <button
-            onClick={handleAnalyze}
-            disabled={!captureProgress.allDone || analyzing}
-            className={`w-full py-4 rounded-full font-medium ${captureProgress.allDone && !analyzing
-              ? 'bg-primary text-white'
-              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              }`}
-          >
-            {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
-          </button>
+        <button
+          onClick={handleAnalyze}
+          disabled={!captureProgress.allDone || analyzing}
+          className={`w-full py-4 rounded-full font-medium ${captureProgress.allDone && !analyzing
+            ? 'bg-primary text-white'
+            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+            }`}
+        >
+          {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
+        </button>
         <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
           {t('common.back')}
         </button>

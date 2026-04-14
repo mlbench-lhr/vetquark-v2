@@ -213,7 +213,7 @@ function RegistrationsListContent({
         const data = await res.json().catch(() => null);
         if (!mounted) return;
         if (!res.ok) {
-          const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load patients";
+          const msg = typeof (data as any)?.error === "string" ? (data as any).error : t("registrations.failedToLoadPatients");
           throw new Error(msg);
         }
 
@@ -244,7 +244,7 @@ function RegistrationsListContent({
         setPatientsTotalPages(Number((data as any)?.pagination?.totalPages || 0));
         setPatientsTotalCount(Number((data as any)?.pagination?.total || 0));
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "Failed to load patients";
+        const msg = e instanceof Error ? e.message : t("registrations.failedToLoadPatients");
         toast.error(msg);
         if (mounted) {
           setPatients([]);
@@ -272,7 +272,7 @@ function RegistrationsListContent({
         const data = await res.json().catch(() => null);
         if (!mounted) return;
         if (!res.ok) {
-          const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load guardians";
+          const msg = typeof (data as any)?.error === "string" ? (data as any).error : t("registrations.failedToLoadGuardians");
           throw new Error(msg);
         }
 
@@ -288,7 +288,7 @@ function RegistrationsListContent({
         setGuardiansTotalPages(Number((data as any)?.pagination?.totalPages || 0));
         setGuardiansTotalCount(Number((data as any)?.pagination?.total || 0));
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "Failed to load guardians";
+        const msg = e instanceof Error ? e.message : t("registrations.failedToLoadGuardians");
         toast.error(msg);
         if (mounted) {
           setGuardians([]);
@@ -453,7 +453,7 @@ function RegistrationsListContent({
                         <rect x="1" y="1" width="5" height="6" rx="1" fill="white" />
                         <rect x="7" y="1" width="5" height="6" rx="1" fill="white" />
                       </svg>
-                      Start Urinalysis
+                      {t("registrations.startUrinalysis")}
                     </Button>
                     <Button
                       variant="default"
@@ -462,7 +462,7 @@ function RegistrationsListContent({
                       className="text-black rounded-full hover:bg-[#F5F6F6] h-9 px-4 text-sm font-normal bg-[#F5F6F6]"
                     >
                       <History className="h-4 w-4 mr-1.5" />
-                      History
+                      {t("registrations.history")}
                     </Button>
                   </div>
                 </div>
@@ -502,7 +502,7 @@ function RegistrationsListContent({
                       </Avatar>
                       <div>
                         <h3 className="font-semibold text-foreground text-[15px]">{guardian.name}</h3>
-                        <p className="text-sm text-black/70">ID: {guardian.idNumber}</p>
+                        <p className="text-sm text-black/70">{t("registrations.idLabel")}: {guardian.idNumber}</p>
                       </div>
                     </div>
                     <Link
@@ -559,7 +559,7 @@ function RegistrationsListContent({
             className="rounded-full h-11 px-6 bg-primary gap-2 fixed bottom-[90px] right-4 z-10 hover:bg-primary/90 text-primary-foreground font-medium shadow-md"
           >
             <Plus className="h-4 w-4 mr-2" />
-            {activeTab === "patients" ? "Add New Patient" : "Add Guardian"}
+            {activeTab === "patients" ? t("registrations.addNewPatientButton") : t("registrations.addGuardianButton")}
           </Button>
         </div>
       </div>
@@ -579,13 +579,13 @@ function RegistrationsListContent({
             <div className="mx-auto h-[5px] w-[44px] rounded-full bg-[#E5E7EB]" />
             <div className="relative mt-4 flex items-center justify-center px-4">
               <div className="text-[18px] font-semibold leading-[22px] text-[#111827]">
-                Sort By
+                {t("registrations.sortBy")}
               </div>
               <button
                 type="button"
                 onClick={() => setSortOpen(false)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-transparent"
-                aria-label="Close"
+                aria-label={t("common.close")}
               >
                 <X className="h-5 w-5 text-[#9AA4AF]" />
               </button>
@@ -593,10 +593,10 @@ function RegistrationsListContent({
 
             <div className="mt-4 space-y-3 px-4">
               {[
-                { id: "name_az", label: "Name (A-Z)" },
-                { id: "age_lh", label: "Age (Low To High)" },
-                { id: "age_hl", label: "Age (High To Low)" },
-                { id: "recent", label: "Recently Added" },
+                { id: "name_az", label: t("registrations.sortNameAZ") },
+                { id: "age_lh", label: t("registrations.sortAgeLowHigh") },
+                { id: "age_hl", label: t("registrations.sortAgeHighLow") },
+                { id: "recent", label: t("registrations.sortRecentlyAdded") },
               ].map((opt) => {
                 const active = sort === opt.id;
                 return (
@@ -641,7 +641,7 @@ function RegistrationsListContent({
                 onClick={() => setSortOpen(false)}
                 className="h-[54px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
               >
-                Select
+                {t("registrations.select")}
               </button>
             </div>
           </div>

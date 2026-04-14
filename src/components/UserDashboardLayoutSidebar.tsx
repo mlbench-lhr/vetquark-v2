@@ -95,7 +95,7 @@ export function Sidebar() {
                 />
               ) : (
                 <Image
-                  src={"/blueLogo.svg"}
+                  src={"/Logos VetQuark-03.png"}
                   alt=""
                   width={59}
                   height={32}
@@ -161,7 +161,7 @@ export function Sidebar() {
                   />
                 ) : (
                   <Image
-                    src={"/blueLogo.svg"}
+                    src={"/Logos VetQuark-03.png"}
                     alt=""
                     width={140}
                     height={32}

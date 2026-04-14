@@ -10,6 +10,7 @@ import { User, User2 } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import Pusher from 'pusher-js';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
   userName?: string;
@@ -17,9 +18,10 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
+  const { t } = useTranslation();
   const { isOpen, openModal, closeModal } = useModal();
   const profile = useAppSelector((s: RootState) => s.userProfile.profile);
-  const resolvedName = profile?.fullName || userName || 'User';
+  const resolvedName = profile?.fullName || userName || t('common.user');
   const userId = profile?.id || '';
   const [unreadCount, setUnreadCount] = useState(0);
   const [walletBalance, setWalletBalance] = useState<string>(balance || "R$ 0.00");
@@ -100,7 +102,7 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
               width={58}
               height={58}
               src={profile.profileImageUrl}
-              alt="Profile"
+              alt={t('common.profile')}
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
@@ -110,16 +112,16 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
           )}
         </Link>
         <div>
-          <p className="text-sm text-gray-500">Welcome,</p>
+          <p className="text-sm text-gray-500">{t('dashboard.welcome')}</p>
           <h1 className="text-sm font-semibold text-gray-800">{resolvedName}</h1>
         </div>
       </div>
       <div className="flex items-center gap-3" >
         <div className="bg-gray-100 flex flex-col text-sm py-0.5 pl-2 pr-4 rounded-lg cursor-pointe"
-          // onClick={() => openModal()}
-          >
+        // onClick={() => openModal()}
+        >
           <span className="text-tertiary text-xs">
-            Balance
+            {t('dashboard.balance')}
           </span>
           <span className="py-1 text-primary font-bold text-center">
             {walletBalance}
@@ -131,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
           <span className="text-white text-sm">
             <Image
               src={"/images/home/bell.svg"}
-              alt="Bell icon"
+              alt={t('common.notifications')}
               width={24}
               height={24}
             />

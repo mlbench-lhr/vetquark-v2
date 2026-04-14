@@ -45,26 +45,26 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
 
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      try {
-        const res = await fetch('/api/panels', { method: 'GET' })
-        const data = await res.json().catch(() => null)
-        if (!mounted) return
-        const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : []
-        const next = raw
-          .map((p) => ({
-            code: String(p?.code || '').trim(),
-            title: String(p?.title || '').trim(),
-            description: String(p?.description || '').trim(),
-            params: String(p?.params || '').trim(),
-            sortOrder: Number.isFinite(Number(p?.sortOrder)) ? Number(p.sortOrder) : 0,
-          }))
-          .filter((p) => p.code)
-          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || a.title.localeCompare(b.title))
-        setPanels(next)
-      } catch {
-      }
-    })()
+      ; (async () => {
+        try {
+          const res = await fetch('/api/panels', { method: 'GET' })
+          const data = await res.json().catch(() => null)
+          if (!mounted) return
+          const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : []
+          const next = raw
+            .map((p) => ({
+              code: String(p?.code || '').trim(),
+              title: String(p?.title || '').trim(),
+              description: String(p?.description || '').trim(),
+              params: String(p?.params || '').trim(),
+              sortOrder: Number.isFinite(Number(p?.sortOrder)) ? Number(p.sortOrder) : 0,
+            }))
+            .filter((p) => p.code)
+            .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || a.title.localeCompare(b.title))
+          setPanels(next)
+        } catch {
+        }
+      })()
     return () => {
       mounted = false
     }
@@ -237,7 +237,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
         </div>
 
         <div>
-          <div className="text-sm text-gray-900 mb-2">Panel Type</div>
+          <div className="text-sm text-gray-900 mb-2">{t("reading.identification.panelType")}</div>
           <button
             type="button"
             onClick={() => setPanelPickerOpen(true)}
@@ -407,9 +407,9 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
           />
           <div className="absolute inset-x-0 bottom-0 rounded-t-[22px] bg-white shadow-xl">
             <div className="px-5 py-4 border-b border-gray-100">
-              <div className="text-[18px] font-semibold text-gray-900">Panel Type</div>
+              <div className="text-[18px] font-semibold text-gray-900">{t("reading.identification.panelType")}</div>
               <div className="mt-1 text-[13px] leading-[16px] text-[#9AA4AF]">
-                Tap to select a panel type, you can only select one at a time
+                {t("reading.identification.panelTypeDesc")}
               </div>
             </div>
             <div className="max-h-[70vh] overflow-auto px-4 pt-3 pb-18">

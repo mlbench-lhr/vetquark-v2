@@ -12,6 +12,7 @@ import Input from "../form/input/InputField";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import { Dialog, DialogContent, DialogTrigger } from "./dialog";
 import Swal from "sweetalert2";
+import { useTranslation } from "react-i18next";
 
 async function signOutUser() {
   try {
@@ -34,6 +35,7 @@ export function AdminChangePasswordDialog({
 }: {
   triggerComponent?: React.ReactNode | React.ComponentType<any>;
 }) {
+  const { t } = useTranslation();
   const TriggerComponent = triggerComponent;
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -59,11 +61,11 @@ export function AdminChangePasswordDialog({
   };
 
   const validate = () => {
-    if (!oldPassword.trim()) return "Old password is required";
-    if (!newPassword.trim()) return "New password is required";
-    if (!confirmPassword.trim()) return "Please confirm your new password";
-    if (newPassword !== confirmPassword) return "Passwords do not match";
-    if (newPassword.length < 8) return "New password must be at least 8 characters";
+    if (!oldPassword.trim()) return t("auth.oldPasswordRequired");
+    if (!newPassword.trim()) return t("auth.newPasswordRequired");
+    if (!confirmPassword.trim()) return t("auth.confirmPasswordRequired");
+    if (newPassword !== confirmPassword) return t("auth.passwordsDoNotMatch");
+    if (newPassword.length < 8) return t("auth.passwordMinLength");
     return null;
   };
 
@@ -71,7 +73,7 @@ export function AdminChangePasswordDialog({
     e.preventDefault();
     const error = validate();
     if (error) {
-      await (swal as any)({ title: "Error", text: error, icon: "error" });
+      await (swal as any)({ title: t("common.error"), text: error, icon: "error" });
       return;
     }
 
@@ -85,14 +87,14 @@ export function AdminChangePasswordDialog({
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const msg = typeof (payload as any)?.error === "string" ? (payload as any).error : "Failed to change password";
-        await (swal as any)({ title: "Error", text: msg, icon: "error" });
+        const msg = typeof (payload as any)?.error === "string" ? (payload as any).error : t("auth.failedToChangePassword");
+        await (swal as any)({ title: t("common.error"), text: msg, icon: "error" });
         return;
       }
-      await (swal as any)({ title: "Success", text: "Password changed successfully", icon: "success" });
+      await (swal as any)({ title: t("common.success"), text: t("auth.passwordChangedSuccessfully"), icon: "success" });
       closeModal();
     } catch {
-      await (swal as any)({ title: "Error", text: "Network error", icon: "error" });
+      await (swal as any)({ title: t("common.error"), text: t("auth.networkError"), icon: "error" });
     } finally {
       setLoading(false);
     }
@@ -120,7 +122,7 @@ export function AdminChangePasswordDialog({
           ) : (
             <div className="flex gap-1 items-center justify-start">
               <LockKeyhole size={15} strokeWidth={2} color="#3F78D8" />
-              <span className="block px-2 py-2 text-sm">Change Password</span>
+              <span className="block px-2 py-2 text-sm">{t('auth.changePassword')}</span>
             </div>
           )}
         </span>
@@ -128,17 +130,17 @@ export function AdminChangePasswordDialog({
       <DialogContent className="max-w-[500px] p-6 lg:p-10">
         <form onSubmit={handleSubmit} className="w-full">
           <div className="text-center mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">{t('auth.changePassword')}</h2>
           </div>
 
           <div className="space-y-6">
             <div>
-              <Label>Old Password</Label>
+              <Label>{t('auth.oldPassword')}</Label>
               <div className="relative">
                 <Input
                   name="oldPassword"
                   type={showOldPassword ? "text" : "password"}
-                  placeholder="Enter your current password"
+                  placeholder={t('auth.enterCurrentPassword')}
                   value={oldPassword}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOldPassword(e.target.value)}
                   required
@@ -163,12 +165,12 @@ export function AdminChangePasswordDialog({
             </div>
 
             <div>
-              <Label>New Password</Label>
+              <Label>{t('auth.newPassword')}</Label>
               <div className="relative">
                 <Input
                   name="newPassword"
                   type={showNewPassword ? "text" : "password"}
-                  placeholder="Enter your new password"
+                  placeholder={t('auth.enterNewPassword')}
                   value={newPassword}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
                   required
@@ -193,12 +195,12 @@ export function AdminChangePasswordDialog({
             </div>
 
             <div>
-              <Label>Confirm New Password</Label>
+              <Label>{t('auth.confirmNewPassword')}</Label>
               <div className="relative">
                 <Input
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your new password"
+                  placeholder={t('auth.confirmYourNewPassword')}
                   value={confirmPassword}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
                   required
@@ -227,7 +229,7 @@ export function AdminChangePasswordDialog({
               disabled={loading}
               className="w-full bg-blue-600 text-white py-4 rounded-full font-medium hover:bg-blue-700 transition-colors mt-8 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {loading ? "Changing Password..." : "Change Password"}
+              {loading ? t('auth.changingPassword') : t('auth.changePassword')}
             </button>
           </div>
         </form>
@@ -243,6 +245,7 @@ export default function LogoutDialog({
   adminStyle?: boolean;
   triggerComponent?: React.ReactNode | React.ComponentType<any>;
 }) {
+  const { t } = useTranslation();
   const TriggerComponent = triggerComponent;
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -266,14 +269,14 @@ export default function LogoutDialog({
 
   const handleAdminLogout = async () => {
     const result = await Swal.fire({
-      title: "Logout",
-      text: "Are you sure you want to logout?",
+      title: t('auth.logout'),
+      text: t('auth.logoutConfirmMessage'),
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#B32053",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Logout",
-      cancelButtonText: "Cancel",
+      confirmButtonText: t('auth.logout'),
+      cancelButtonText: t('common.cancel'),
     });
 
     if (!result.isConfirmed) return;
@@ -315,7 +318,7 @@ export default function LogoutDialog({
         ) : (
           <div className="flex gap-1 items-center justify-start">
             <LogOut size={15} strokeWidth={2} color="#3F78D8" />
-            <span className="block px-2 py-2 text-sm">Logout</span>
+            <span className="block px-2 py-2 text-sm">{t('auth.logout')}</span>
           </div>
         )}
       </span>
@@ -327,18 +330,18 @@ export default function LogoutDialog({
           className="max-w-lg rounded-[16px] p-[24px] sm:p-[40px]"
         >
           <div className="flex flex-col justify-start items-center gap-[8px]">
-            <div className="text-center w-full heading-text-style-4">Logout</div>
+            <div className="text-center w-full heading-text-style-4">{t('auth.logout')}</div>
             <div className="mt-2 plan-text-style-3 text-center">
-              Are you sure you want to logout this account?
+              {t('auth.logoutAccountConfirm')}
             </div>
 
             <div className="mt-6 w-full">
               <div className="w-full grid grid-cols-2 gap-2">
                 <Button variant="outline" className="col-span-1" onClick={() => setOpen(false)}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button className="col-span-1" onClick={handleConfirm}>
-                  Logout
+                  {t('auth.logout')}
                 </Button>
               </div>
             </div>

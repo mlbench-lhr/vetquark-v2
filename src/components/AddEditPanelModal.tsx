@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type PanelRuleType = "range" | "exact" | "negative" | "lt" | "gt";
 
@@ -69,6 +70,7 @@ function isValidPanelCode(code: string) {
 }
 
 export default function AddEditPanelModal({ open, onOpenChange, initialPanel, onSaved }: Props) {
+  const { t } = useTranslation();
   const isEdit = Boolean(initialPanel?.id);
 
   const initial = useMemo(
@@ -196,23 +198,23 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
     const commissionPriceBRL = form.commissionPriceBRL.trim() === "" ? null : Number(form.commissionPriceBRL);
 
     if (!isEdit && !isValidPanelCode(code)) {
-      toast.error("Invalid code (use VETQ_ prefix)");
+      toast.error(t("auth.store.codePrefixError"));
       return;
     }
     if (!title) {
-      toast.error("Title is required");
+      toast.error(t("auth.store.panelTitleRequired"));
       return;
     }
     if (!Number.isFinite(sortOrderN)) {
-      toast.error("Invalid sort order");
+      toast.error(t("auth.store.invalidSortOrder"));
       return;
     }
     if (!Number.isFinite(suggestedPriceBRL) || suggestedPriceBRL < 0) {
-      toast.error("Invalid suggested price");
+      toast.error(t("auth.store.invalidSuggestedPrice"));
       return;
     }
     if (commissionPriceBRL !== null && (!Number.isFinite(commissionPriceBRL) || commissionPriceBRL < 0)) {
-      toast.error("Invalid commission price");
+      toast.error(t("auth.store.invalidCommissionPrice"));
       return;
     }
 
@@ -269,14 +271,14 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to save panel");
+        toast.error(typeof (data as any)?.error === "string" ? (data as any).error : t("auth.store.failedToSavePanel"));
         return;
       }
-      toast.success(isEdit ? "Panel updated" : "Panel created");
+      toast.success(isEdit ? t("auth.store.panelUpdated") : t("auth.store.panelCreated"));
       onSaved?.();
       onOpenChange(false);
     } catch {
-      toast.error("Network error");
+      toast.error(t("auth.store.networkError"));
     } finally {
       setSaving(false);
     }
@@ -286,13 +288,13 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-[95%] overflow-auto max-h-[95vh] md:max-w-[960px]">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Panel" : "Add New Panel"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("auth.store.editPanel") : t("auth.store.addPanel")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="panel-code">Code</Label>
+              <Label htmlFor="panel-code">{t("auth.store.panelCode")}</Label>
               <Input
                 id="panel-code"
                 value={form.code}
@@ -303,7 +305,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="panel-title">Title</Label>
+              <Label htmlFor="panel-title">{t("auth.store.panelName")}</Label>
               <Input
                 id="panel-title"
                 value={form.title}
@@ -316,7 +318,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="panel-subtitle">Subtitle</Label>
+              <Label htmlFor="panel-subtitle">{t("auth.store.panelSubtitle")}</Label>
               <Input
                 id="panel-subtitle"
                 value={form.subtitle}
@@ -326,7 +328,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="panel-params">Params</Label>
+              <Label htmlFor="panel-params">{t("auth.store.panelParams")}</Label>
               <Input
                 id="panel-params"
                 value={form.params}
@@ -338,7 +340,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="panel-description">Description</Label>
+            <Label htmlFor="panel-description">{t("auth.store.panelDescription")}</Label>
             <textarea
               id="panel-description"
               value={form.description}
@@ -351,7 +353,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="panel-suggested">Suggested Price (BRL)</Label>
+              <Label htmlFor="panel-suggested">{t("auth.store.suggestedPrice")}</Label>
               <Input
                 id="panel-suggested"
                 type="number"
@@ -364,7 +366,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="panel-commission">Commission Price (BRL)</Label>
+              <Label htmlFor="panel-commission">{t("auth.store.commissionPrice")}</Label>
               <Input
                 id="panel-commission"
                 type="number"
@@ -378,7 +380,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="panel-sort">Sort Order</Label>
+              <Label htmlFor="panel-sort">{t("common.sortOrder")}</Label>
               <Input
                 id="panel-sort"
                 type="number"
@@ -393,7 +395,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Parameters</Label>
+              <Label>{t("auth.store.panelParams")}</Label>
               <div className="rounded-md border border-input px-3 py-2">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {PARAMETER_OPTIONS.map((opt) => {
@@ -421,19 +423,19 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                   })}
                 </div>
                 <div className="mt-2 text-[12px] text-gray-500">
-                  Leave all unchecked to include all parameters (Master 360).
+                  {t("auth.store.master360Hint")}
                 </div>
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{t("auth.store.panelStatus")}</Label>
               <Select value={form.status} onValueChange={(v) => setForm((p) => ({ ...p, status: v }))} disabled={saving || loadingDetails}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t("common.selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="active">{t("auth.store.active")}</SelectItem>
+                  <SelectItem value="inactive">{t("auth.store.inactive")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -441,10 +443,10 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
 
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="text-sm font-medium text-gray-900">Reference Ranges</div>
+              <div className="text-sm font-medium text-gray-900">{t("auth.store.referenceRanges")}</div>
               <Button type="button" variant="outline" size="sm" onClick={handleAddRange} disabled={saving || loadingDetails}>
                 <Plus size={16} />
-                Add Range
+                {t("auth.store.addRange")}
               </Button>
             </div>
 
@@ -456,14 +458,14 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                     <div key={idx} className="rounded-lg border border-gray-200 p-3">
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                         <div className="md:col-span-3 space-y-1.5">
-                          <Label>Key</Label>
+                          <Label>{t("auth.store.key")}</Label>
                           <Select
                             value={rr.key}
                             onValueChange={(v) => handleUpdateRange(idx, { key: v })}
                             disabled={saving || loadingDetails}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select parameter" />
+                              <SelectValue placeholder={t("auth.store.selectParameter")} />
                             </SelectTrigger>
                             <SelectContent>
                               {PARAMETER_OPTIONS.map((opt) => (
@@ -475,7 +477,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                           </Select>
                         </div>
                         <div className="md:col-span-3 space-y-1.5">
-                          <Label>Label</Label>
+                          <Label>{t("auth.store.label")}</Label>
                           <Input
                             value={rr.label}
                             onChange={(e) => handleUpdateRange(idx, { label: e.target.value })}
@@ -483,7 +485,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                           />
                         </div>
                         <div className="md:col-span-2 space-y-1.5">
-                          <Label>Rule</Label>
+                          <Label>{t("auth.store.rule")}</Label>
                           <Select
                             value={type}
                             onValueChange={(v) => {
@@ -498,11 +500,11 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="range">Range</SelectItem>
-                              <SelectItem value="exact">Exact</SelectItem>
-                              <SelectItem value="negative">Negative</SelectItem>
-                              <SelectItem value="lt">Less than</SelectItem>
-                              <SelectItem value="gt">Greater than</SelectItem>
+                              <SelectItem value="range">{t("auth.store.range")}</SelectItem>
+                              <SelectItem value="exact">{t("auth.store.exact")}</SelectItem>
+                              <SelectItem value="negative">{t("auth.store.negative")}</SelectItem>
+                              <SelectItem value="lt">{t("auth.store.lessThan")}</SelectItem>
+                              <SelectItem value="gt">{t("auth.store.greaterThan")}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -510,7 +512,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                         {type === "range" ? (
                           <>
                             <div className="md:col-span-2 space-y-1.5">
-                              <Label>Low</Label>
+                              <Label>{t("auth.store.low")}</Label>
                               <Input
                                 type="number"
                                 inputMode="decimal"
@@ -520,7 +522,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                               />
                             </div>
                             <div className="md:col-span-2 space-y-1.5">
-                              <Label>High</Label>
+                              <Label>{t("auth.store.high")}</Label>
                               <Input
                                 type="number"
                                 inputMode="decimal"
@@ -534,7 +536,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                           <div className="md:col-span-4" />
                         ) : (
                           <div className="md:col-span-4 space-y-1.5">
-                            <Label>Value</Label>
+                            <Label>{t("auth.store.value")}</Label>
                             <Input
                               type="number"
                               inputMode="decimal"
@@ -551,8 +553,8 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                             className="inline-flex items-center justify-center text-black/60"
                             onClick={() => handleRemoveRange(idx)}
                             disabled={saving || loadingDetails}
-                            aria-label="Remove"
-                            title="Remove"
+                            aria-label={t("auth.store.remove")}
+                            title={t("auth.store.remove")}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -563,16 +565,16 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                 })}
               </div>
             ) : (
-              <div className="text-sm text-gray-500">No reference ranges yet.</div>
+              <div className="text-sm text-gray-500">{t("auth.store.noReferenceRanges")}</div>
             )}
           </div>
 
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={() => handleClose(false)} disabled={saving || loadingDetails}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={saving || loadingDetails}>
-              {saving ? "Saving..." : isEdit ? "Update Panel" : "Create Panel"}
+              {saving ? t("common.saving") : (isEdit ? t("auth.store.savePanel") : t("auth.store.addPanel"))}
             </Button>
           </DialogFooter>
         </form>

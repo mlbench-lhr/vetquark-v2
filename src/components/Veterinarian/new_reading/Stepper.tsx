@@ -3,19 +3,27 @@
 import React from 'react'
 import { CreditCard, FileText, Timer, User } from 'lucide-react'
 import { NewReadingStep } from './types'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   active: NewReadingStep
 }
 
-const steps: Array<{ key: NewReadingStep; label: string; Icon: React.ElementType }> = [
-  { key: 'identification', label: 'Identification', Icon: User },
-  { key: 'timer', label: 'Timer', Icon: Timer },
-  { key: 'review', label: 'Review', Icon: CreditCard },
-  { key: 'report', label: 'Report', Icon: FileText },
-]
+const stepIcons: Record<NewReadingStep, React.ElementType> = {
+  identification: User,
+  timer: Timer,
+  review: CreditCard,
+  report: FileText,
+}
 
 export default function Stepper({ active }: Props) {
+  const { t } = useTranslation()
+  const steps: Array<{ key: NewReadingStep; label: string; Icon: React.ElementType }> = [
+    { key: 'identification', label: t('reading.steps.identification'), Icon: stepIcons.identification },
+    { key: 'timer', label: t('reading.steps.timer'), Icon: stepIcons.timer },
+    { key: 'review', label: t('reading.steps.review'), Icon: stepIcons.review },
+    { key: 'report', label: t('reading.steps.report'), Icon: stepIcons.report },
+  ]
   const activeIndex = steps.findIndex((s) => s.key === active)
 
   return (

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type ProductValue = {
   id?: string;
@@ -27,6 +28,7 @@ type Props = {
 };
 
 export default function AddEditProductModal({ open, onOpenChange, initialProduct, onSaved }: Props) {
+  const { t } = useTranslation();
   const isEdit = Boolean(initialProduct?.id);
 
   const initial = useMemo(
@@ -59,14 +61,14 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
     const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
     if (!CLOUD_NAME || !API_KEY) {
-      toast.error("Cloudinary is not configured");
+      toast.error(t("common.cloudinaryNotConfigured"));
       return;
     }
 
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("File too large (max 2MB)");
+      toast.error(t("common.fileTooLarge2MB"));
       e.target.value = "";
       return;
     }
@@ -76,13 +78,13 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
       const signRes = await fetch(`/api/cloudinary/upload?folder=store_products`);
       const signJson = await signRes.json().catch(() => null);
       if (!signRes.ok) {
-        toast.error("Failed to prepare upload");
+        toast.error(t("common.failedToPrepareUpload"));
         return;
       }
       const timestamp = String((signJson as any)?.timestamp || "");
       const signature = String((signJson as any)?.signature || "");
       if (!timestamp || !signature) {
-        toast.error("Failed to prepare upload");
+        toast.error(t("common.failedToPrepareUpload"));
         return;
       }
 
@@ -96,13 +98,13 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: data });
       const json = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error("Upload failed");
+        toast.error(t("common.uploadFailed"));
         return;
       }
       const url = String((json as any)?.secure_url || (json as any)?.url || "");
       if (url) setForm((p) => ({ ...p, image: url }));
     } catch {
-      toast.error("Upload failed");
+      toast.error(t("common.uploadFailed"));
     } finally {
       setUploadingImage(false);
       e.target.value = "";
@@ -122,15 +124,15 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
     const stockNumber = Number(form.stock);
 
     if (!name) {
-      toast.error("Name is required");
+      toast.error(t("auth.store.productNameRequired"));
       return;
     }
     if (!Number.isFinite(priceNumber) || priceNumber < 0) {
-      toast.error("Invalid price");
+      toast.error(t("auth.store.invalidPrice"));
       return;
     }
     if (!Number.isFinite(stockNumber) || Math.trunc(stockNumber) < 0) {
-      toast.error("Invalid stock");
+      toast.error(t("auth.store.invalidStock"));
       return;
     }
 
@@ -156,14 +158,14 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to save product");
+        toast.error(typeof (data as any)?.error === "string" ? (data as any).error : t("auth.store.failedToSaveProduct"));
         return;
       }
-      toast.success(isEdit ? "Product updated" : "Product created");
+      toast.success(isEdit ? t("auth.store.productUpdated") : t("auth.store.productCreated"));
       onSaved?.();
       onOpenChange(false);
     } catch {
-      toast.error("Network error");
+      toast.error(t("auth.store.networkError"));
     } finally {
       setSaving(false);
     }
@@ -173,7 +175,7 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-[95%] overflow-auto max-h-[95vh] md:max-w-[720px]">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Product" : "Add New Product"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("auth.store.editProduct") : t("auth.store.addProduct")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -185,20 +187,20 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
                   <div className="flex flex-col items-center gap-3">
                     <Image
                       src={form.image}
-                      alt="Product image"
+                      alt={t("auth.store.productImageAlt")}
                       width={260}
                       height={180}
                       className="h-[160px] w-[260px] rounded-lg object-cover"
                     />
-                    <div className="text-sm text-gray-600">{uploadingImage ? "Uploading..." : "Click to change product image"}</div>
+                    <div className="text-sm text-gray-600">{uploadingImage ? t("common.uploading") : t("auth.store.changeProductImage")}</div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-700">
                       <Upload size={18} />
                     </div>
-                    <div className="text-sm font-medium text-gray-800">{uploadingImage ? "Uploading..." : "Click to upload product image"}</div>
-                    <div className="text-xs text-gray-500">SVG, PNG, JPG or GIF (max. 2MB)</div>
+                    <div className="text-sm font-medium text-gray-800">{uploadingImage ? t("common.uploading") : t("auth.store.uploadProductImage")}</div>
+                    <div className="text-xs text-gray-500">{t("auth.store.imageFormats")}</div>
                   </div>
                 )}
               </div>
@@ -206,23 +208,23 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="product-name">Product Name</Label>
+            <Label htmlFor="product-name">{t("auth.store.productNameLabel")}</Label>
             <Input
               id="product-name"
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-              placeholder="e.g. Rabies Vaccine (10ml)"
+              placeholder={t("auth.store.productNamePlaceholder")}
               disabled={saving || uploadingImage}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="product-description">Description</Label>
+            <Label htmlFor="product-description">{t("auth.store.productDescriptionLabel")}</Label>
             <textarea
               id="product-description"
               value={form.description}
               onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-              placeholder="Write a short description..."
+              placeholder={t("auth.store.productDescriptionPlaceholder")}
               disabled={saving || uploadingImage}
               className="min-h-[110px] w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
@@ -230,7 +232,7 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="product-price">Unit Price</Label>
+              <Label htmlFor="product-price">{t("auth.store.productPrice")}</Label>
               <Input
                 id="product-price"
                 type="number"
@@ -245,7 +247,7 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="product-stock">Stock Quantity</Label>
+              <Label htmlFor="product-stock">{t("auth.store.productStock")}</Label>
               <Input
                 id="product-stock"
                 type="number"
@@ -260,14 +262,14 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label>Status</Label>
+              <Label>{t("auth.store.productStatus")}</Label>
               <Select value={form.status} onValueChange={(v) => setForm((p) => ({ ...p, status: v }))} disabled={saving || uploadingImage}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t("common.selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="active">{t("auth.store.active")}</SelectItem>
+                  <SelectItem value="inactive">{t("auth.store.inactive")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -275,10 +277,10 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
 
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={() => handleClose(false)} disabled={saving || uploadingImage}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={saving || uploadingImage}>
-              {saving ? "Saving..." : isEdit ? "Update Product" : "Create Product"}
+              {saving ? t("common.saving") : (isEdit ? t("auth.store.saveProduct") : t("auth.store.addProduct"))}
             </Button>
           </DialogFooter>
         </form>

@@ -5,6 +5,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import { FallbackText } from "@/components/ui/fallback-text";
 import { Skeleton, ListItemSkeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
@@ -27,7 +28,8 @@ type ReportHistoryItem = {
 };
 
 function StatusPill({ status }: { status: ReportStatus }) {
-  const label = status === "signed" ? "Signed" : "Pending";
+  const { t } = useTranslation();
+  const label = status === "signed" ? t("history.signed") : t("history.pending");
   return (
     <span className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-3 py-1.5 text-[13px] font-medium text-[#3F78D8]">
       <Check className="h-4 w-4" />
@@ -49,6 +51,7 @@ function ReportCard({
   item: ReportHistoryItem;
   onDownloadPdf: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-[16px] bg-white px-4 py-3 shadow-[0_1px_0_0_rgba(0,0,0,0.03)]">
       <div className="flex items-center justify-between gap-3">
@@ -77,7 +80,7 @@ function ReportCard({
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17" fill="none">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M0 1.66364C0 1.22241 0.175276 0.79926 0.487268 0.487268C0.79926 0.175276 1.22241 0 1.66364 0L10.7659 0L14.4182 3.65224V14.9727C14.4182 15.414 14.2429 15.8371 13.9309 16.1491C13.6189 16.4611 13.1958 16.6364 12.7545 16.6364H1.66364C1.22241 16.6364 0.79926 16.4611 0.487268 16.1491C0.175276 15.8371 0 15.414 0 14.9727V1.66364ZM2.77273 6.65455H1.10909V12.2H2.21818V9.98182H2.77273C3.21395 9.98182 3.6371 9.80655 3.9491 9.49455C4.26109 9.18256 4.43636 8.75941 4.43636 8.31818C4.43636 7.87696 4.26109 7.45381 3.9491 7.14181C3.6371 6.82982 3.21395 6.65455 2.77273 6.65455ZM7.20909 6.65455H5.54546V12.2H7.20909C7.65032 12.2 8.07347 12.0247 8.38546 11.7127C8.69745 11.4007 8.87273 10.9776 8.87273 10.5364V8.31818C8.87273 7.87696 8.69745 7.45381 8.38546 7.14181C8.07347 6.82982 7.65032 6.65455 7.20909 6.65455ZM9.98182 12.2V6.65455H13.3091V7.76364H11.0909V8.87273H12.2V9.98182H11.0909V12.2H9.98182Z" fill="white" />
             </svg>
-            Download
+            {t("history.download")}
           </button>
         </div>
         {item.status === "pending" ? (
@@ -86,14 +89,14 @@ function ReportCard({
             disabled
             className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-[#9CA3AF] cursor-not-allowed"
           >
-            Details
+            {t("history.details")}
           </button>
         ) : (
           <Link
             href={`/Guardian/history/detail/${item.id}`}
             className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-[#3F78D8]"
           >
-            Details
+            {t("history.details")}
           </Link>
         )}
       </div>
@@ -110,6 +113,7 @@ export default function Page() {
 }
 
 function PageContent() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const initialPetId = useMemo(() => (searchParams.get("petId") || "").trim(), [searchParams]);
 
@@ -128,18 +132,19 @@ function PageContent() {
         const data = await res.json().catch(() => null);
         if (!mounted) return;
         if (!res.ok) {
-          throw new Error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load pets");
+          const msg = typeof (data as any)?.error === "string" ? (data as any).error : t("history.failedToLoadPets");
+          throw new Error(msg);
         }
         const items = Array.isArray((data as any)?.items) ? (data as any).items : [];
         const mapped = items.map((p: any) => ({
           id: String(p.id || p._id || ""),
-          name: String(p.name || p.animalName || "N/A"),
+          name: String(p.name || p.animalName || t("history.notAvailable")),
           avatarSrc: String(p.image || p.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
         }));
         setPets(mapped);
         setActivePetId((prev) => prev || initialPetId || mapped[0]?.id || "");
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Failed to load pets");
+        toast.error(e instanceof Error ? e.message : t("history.failedToLoadPets"));
         setPets([]);
       } finally {
         if (mounted) setLoadingPets(false);
@@ -148,7 +153,7 @@ function PageContent() {
     return () => {
       mounted = false;
     };
-  }, [initialPetId]);
+  }, [initialPetId, t]);
 
   useEffect(() => {
     let mounted = true;
@@ -163,20 +168,21 @@ function PageContent() {
         const data = await res.json().catch(() => null);
         if (!mounted) return;
         if (!res.ok) {
-          throw new Error(typeof (data as any)?.error === "string" ? (data as any).error : "Failed to load reports");
+          const msg = typeof (data as any)?.error === "string" ? (data as any).error : t("history.failedToLoadReports");
+          throw new Error(msg);
         }
         const items = Array.isArray((data as any)?.items) ? (data as any).items : [];
         setReports(
           items.map((r: any) => ({
             id: String(r.id || r._id || ""),
-            title: String(r.panelTitle || "Urinalysis Report"),
+            title: String(r.panelTitle || t("history.urinalysisReport")),
             dateLabel: formatDateLabel(String(r.date || "")),
             status: r.status === "signed" ? "signed" : "pending",
             avatarSrc: String(r.avatarSrc || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"),
           }))
         );
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Failed to load reports");
+        toast.error(e instanceof Error ? e.message : t("history.failedToLoadReports"));
         setReports([]);
       } finally {
         if (mounted) setLoadingReports(false);
@@ -185,25 +191,25 @@ function PageContent() {
     return () => {
       mounted = false;
     };
-  }, [activePetId]);
+  }, [activePetId, t]);
 
   const handleDownloadPdf = useCallback(async (id: string) => {
     try {
       await downloadUrinalysisPdf({ readingId: id });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Download failed");
+      toast.error(e instanceof Error ? e.message : t("history.downloadFailed"));
     }
-  }, []);
+  }, [t]);
 
   return (
     <div className="h-[100dvh w-full bg-white">
       <div className="mx-auto w-full h-full pb-6 -[calc(env(safe-area-inset-top)+20px)]">
         <div className="px-">
           <h1 className="text-[22px] font-semibold leading-[28px] text-[#111827]">
-            Examination History
+            {t("history.examinationHistory")}
           </h1>
           <p className="mt-1 text-[15px] leading-[20px] text-[#9CA3AF]">
-            View your recent report details for pets
+            {t("history.viewRecentReportDetails")}
           </p>
         </div>
 
@@ -221,7 +227,7 @@ function PageContent() {
               ))}
             </>
           ) : pets.length === 0 ? (
-            <FallbackText>No pets found.</FallbackText>
+            <FallbackText>{t("history.noPetsFound")}</FallbackText>
           ) : pets.map((pet) => {
             const active = pet.id === activePetId;
             return (
@@ -252,7 +258,7 @@ function PageContent() {
               <ListItemSkeleton />
             </>
           ) : reports.length === 0 ? (
-            <FallbackText>No reports found.</FallbackText>
+            <FallbackText>{t("history.noReportsFound")}</FallbackText>
           ) : (
             reports.map((item) => (
               <ReportCard

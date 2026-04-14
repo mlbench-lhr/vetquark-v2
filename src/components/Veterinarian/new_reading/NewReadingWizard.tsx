@@ -79,28 +79,28 @@ export default function NewReadingWizard() {
 
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      try {
-        const res = await fetch('/api/panels', { method: 'GET' })
-        const data = await res.json().catch(() => null)
-        if (!mounted) return
-        const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : []
-        const map = new Map<string, { visibleKeys: string[] | null }>()
-        let nextDefaultCode = ''
-        for (const p of raw) {
-          const code = String(p?.code || '').trim()
-          if (!code) continue
-          const keys = Array.isArray(p?.visibleKeys) ? (p.visibleKeys as any[]).map((k) => String(k || '').trim()).filter(Boolean) : null
-          const normalizedKeys = keys && keys.length ? keys : null
-          map.set(code, { visibleKeys: normalizedKeys })
-          if (!nextDefaultCode && normalizedKeys === null) nextDefaultCode = code
-          if (!nextDefaultCode) nextDefaultCode = code
+      ; (async () => {
+        try {
+          const res = await fetch('/api/panels', { method: 'GET' })
+          const data = await res.json().catch(() => null)
+          if (!mounted) return
+          const raw = Array.isArray((data as any)?.panels) ? ((data as any).panels as any[]) : []
+          const map = new Map<string, { visibleKeys: string[] | null }>()
+          let nextDefaultCode = ''
+          for (const p of raw) {
+            const code = String(p?.code || '').trim()
+            if (!code) continue
+            const keys = Array.isArray(p?.visibleKeys) ? (p.visibleKeys as any[]).map((k) => String(k || '').trim()).filter(Boolean) : null
+            const normalizedKeys = keys && keys.length ? keys : null
+            map.set(code, { visibleKeys: normalizedKeys })
+            if (!nextDefaultCode && normalizedKeys === null) nextDefaultCode = code
+            if (!nextDefaultCode) nextDefaultCode = code
+          }
+          setPanelByCode(map)
+          setDefaultPanelProductCode(nextDefaultCode)
+        } catch {
         }
-        setPanelByCode(map)
-        setDefaultPanelProductCode(nextDefaultCode)
-      } catch {
-      }
-    })()
+      })()
     return () => {
       mounted = false
     }
@@ -212,41 +212,41 @@ export default function NewReadingWizard() {
   useEffect(() => {
     if (!draftIdFromQuery) return
     let mounted = true
-    ; (async () => {
-      try {
-        const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(draftIdFromQuery)}`, { method: 'GET' })
-        const data = await res.json().catch(() => null)
-        if (!mounted) return
-        if (!res.ok) return
-        const r = data?.reading
-        if (!r) return
-        const nextDraft = makeEmptyDraft()
-        nextDraft.identification.patientId = String(r?.patient?.id || '')
-        nextDraft.identification.paymentLinkId = String(r?.paymentLinkId || '')
-        nextDraft.identification.panelProductCode = String(r?.productCode || '')
-        const cm = String(r?.identification?.collectionMethod || '').trim()
-        nextDraft.identification.collectionMethod = cm === 'free_catch' || cm === 'cystocentesis' || cm === 'catheter' ? cm : ''
-        nextDraft.identification.collectionAt = r?.identification?.collectionAt ? String(r.identification.collectionAt) : ''
-        nextDraft.identification.stripLot = String(r?.identification?.stripLot || '')
-        nextDraft.identification.stripExpiry = r?.identification?.stripExpiry ? String(r.identification.stripExpiry) : ''
-        nextDraft.timer.selectedSeconds = Number(r?.timer?.selectedSeconds || 120)
-        nextDraft.timer.analyzedAt = r?.timer?.analyzedAt ? String(r.timer.analyzedAt) : ''
-        nextDraft.timer.analysis = r?.timer?.analysis ?? null
-        nextDraft.results = Array.isArray(r?.results) ? r.results : []
-        nextDraft.report = r?.report ?? nextDraft.report
-        setDraft(nextDraft)
-        setSignatureImageUrl(typeof r?.signatureImageUrl === 'string' ? r.signatureImageUrl : '')
-        const ws = String(r?.wizardStep || '').trim()
-        const storedStep =
-          ws === 'identification' || ws === 'timer' || ws === 'review' || ws === 'report'
-            ? (ws as NewReadingStep)
-            : inferFirstIncompleteStep(nextDraft, typeof r?.signatureImageUrl === 'string' ? r.signatureImageUrl : '')
-        if (!(stepFromQuery === 'identification' || stepFromQuery === 'timer' || stepFromQuery === 'review' || stepFromQuery === 'report')) {
-          setStep(storedStep)
+      ; (async () => {
+        try {
+          const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(draftIdFromQuery)}`, { method: 'GET' })
+          const data = await res.json().catch(() => null)
+          if (!mounted) return
+          if (!res.ok) return
+          const r = data?.reading
+          if (!r) return
+          const nextDraft = makeEmptyDraft()
+          nextDraft.identification.patientId = String(r?.patient?.id || '')
+          nextDraft.identification.paymentLinkId = String(r?.paymentLinkId || '')
+          nextDraft.identification.panelProductCode = String(r?.productCode || '')
+          const cm = String(r?.identification?.collectionMethod || '').trim()
+          nextDraft.identification.collectionMethod = cm === 'free_catch' || cm === 'cystocentesis' || cm === 'catheter' ? cm : ''
+          nextDraft.identification.collectionAt = r?.identification?.collectionAt ? String(r.identification.collectionAt) : ''
+          nextDraft.identification.stripLot = String(r?.identification?.stripLot || '')
+          nextDraft.identification.stripExpiry = r?.identification?.stripExpiry ? String(r.identification.stripExpiry) : ''
+          nextDraft.timer.selectedSeconds = Number(r?.timer?.selectedSeconds || 120)
+          nextDraft.timer.analyzedAt = r?.timer?.analyzedAt ? String(r.timer.analyzedAt) : ''
+          nextDraft.timer.analysis = r?.timer?.analysis ?? null
+          nextDraft.results = Array.isArray(r?.results) ? r.results : []
+          nextDraft.report = r?.report ?? nextDraft.report
+          setDraft(nextDraft)
+          setSignatureImageUrl(typeof r?.signatureImageUrl === 'string' ? r.signatureImageUrl : '')
+          const ws = String(r?.wizardStep || '').trim()
+          const storedStep =
+            ws === 'identification' || ws === 'timer' || ws === 'review' || ws === 'report'
+              ? (ws as NewReadingStep)
+              : inferFirstIncompleteStep(nextDraft, typeof r?.signatureImageUrl === 'string' ? r.signatureImageUrl : '')
+          if (!(stepFromQuery === 'identification' || stepFromQuery === 'timer' || stepFromQuery === 'review' || stepFromQuery === 'report')) {
+            setStep(storedStep)
+          }
+        } catch {
         }
-      } catch {
-      }
-    })()
+      })()
     return () => {
       mounted = false
     }
@@ -550,7 +550,7 @@ export default function NewReadingWizard() {
         router.push('/Veterinarian/history')
       }
     } catch {
-      toast.error("Network error while saving reading")
+      toast.error(t("reading.wizard.networkErrorSavingReading"))
     } finally {
       setSubmitting(false)
     }

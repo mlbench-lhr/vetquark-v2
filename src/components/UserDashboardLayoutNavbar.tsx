@@ -84,7 +84,7 @@ export function Navbar() {
         <div className="h-fit flex items-center justify-between w-full">
           <div className="flex items-center gap-4 justify-between w-full">
             <Image
-              src={"/blueLogo.svg"}
+              src={"/Logos VetQuark-03.png"}
               alt=""
               width={59}
               height={32}
