@@ -1,6 +1,7 @@
 'use client';
 
 import { User2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { CurrentHealthProps, HeaderProps, Pet, PetSelectorProps, TrendsProps } from './types';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
@@ -17,6 +18,7 @@ function normalizePanelCode(value?: string | null) {
 }
 
 function Header({ name }: HeaderProps) {
+    const { t } = useTranslation();
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     const userId = profile?.id || '';
     const [unreadCount, setUnreadCount] = useState(0);
@@ -79,7 +81,7 @@ function Header({ name }: HeaderProps) {
                             width={58}
                             height={58}
                             src={profile.profileImageUrl}
-                            alt="Profile"
+                            alt={t('profile.profile')}
                             className="w-12 h-12 rounded-full object-cover"
                         />
                     ) : (
@@ -89,7 +91,7 @@ function Header({ name }: HeaderProps) {
                     )}
                 </Link>
                 <div>
-                    <p className="text-sm text-gray-500">Welcome,</p>
+                    <p className="text-sm text-gray-500">{t('guardianHome.welcome')}</p>
                     <h1 className="text-sm font-semibold text-gray-800">{name}</h1>
                 </div>
             </div>
@@ -98,7 +100,7 @@ function Header({ name }: HeaderProps) {
                 <span className="text-white text-sm">
                     <Image
                         src={"/images/home/bell.svg"}
-                        alt="Bell icon"
+                        alt={t('notifications.bellIcon')}
                         width={24}
                         height={24}
                     />
@@ -110,12 +112,13 @@ function Header({ name }: HeaderProps) {
 }
 
 function PetSelector({ pets, activePetId, onSelect, loading }: PetSelectorProps) {
+    const { t } = useTranslation();
     return (
         <div className="flex gap-3 mb-6 justify-start items-center overflow-auto">
             {loading ? (
-                <div className="text-sm text-gray-500">Loading pets...</div>
+                <div className="text-sm text-gray-500">{t('guardianHome.loadingPets')}</div>
             ) : pets.length === 0 ? (
-                <div className="text-sm text-gray-500">No pets found.</div>
+                <div className="text-sm text-gray-500">{t('guardianHome.noPetsFound')}</div>
             ) : (
                 pets.map((pet) => {
                     const active = pet.id === activePetId;
@@ -147,13 +150,14 @@ function PetSelector({ pets, activePetId, onSelect, loading }: PetSelectorProps)
 }
 
 function CurrentHealth({ lastTestDate, parameters }: CurrentHealthProps) {
+    const { t } = useTranslation();
     return (
         <div className="rounded-3xl p-3 mb-6 bg-[#F5F6F6]">
-            <h2 className="text-gray-900 font-medium text-xl mb-1">Current Health</h2>
-            <p className="text-gray-500 text-sm mb-3 font-normal">Last test conducted on {lastTestDate}</p>
+            <h2 className="text-gray-900 font-medium text-xl mb-1">{t('guardianHome.currentHealth')}</h2>
+            <p className="text-gray-500 text-sm mb-3 font-normal">{t('guardianHome.lastTestConductedOn', { date: lastTestDate })}</p>
 
             <div className="">
-                <p className="text-foreground font-medium text-base mb-1">Parameters to watch out for</p>
+                <p className="text-foreground font-medium text-base mb-1">{t('guardianHome.parametersToWatch')}</p>
                 <div className="flex flex-wrap gap-2">
                     {parameters.map((param, index) => (
                         <span
@@ -169,16 +173,17 @@ function CurrentHealth({ lastTestDate, parameters }: CurrentHealthProps) {
     );
 }
 function Trends({ items, loading }: TrendsProps) {
+    const { t } = useTranslation();
     return (
         <div className="p- mb-6">
-            <h2 className="text-gray-900 font-semibold text-xl mb-1">Trends</h2>
-            <p className="text-gray-500 text-sm mb-2">The evolution of some parameters.</p>
+            <h2 className="text-gray-900 font-semibold text-xl mb-1">{t('guardianHome.trends')}</h2>
+            <p className="text-gray-500 text-sm mb-2">{t('guardianHome.trendsDescription')}</p>
 
             <div className="space-y-">
                 {loading ? (
-                    <div className="text-sm text-gray-500">Loading trends...</div>
+                    <div className="text-sm text-gray-500">{t('guardianHome.loadingTrends')}</div>
                 ) : items.length === 0 ? (
-                    <div className="text-sm text-gray-500">No trends found.</div>
+                    <div className="text-sm text-gray-500">{t('guardianHome.noTrendsFound')}</div>
                 ) : (
                     items.map((item) => (
                         <ReportCardDetail key={item.id} item={item} />

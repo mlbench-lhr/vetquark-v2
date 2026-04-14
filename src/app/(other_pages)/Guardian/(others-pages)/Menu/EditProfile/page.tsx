@@ -57,14 +57,14 @@ export default function EditProfileCard() {
         const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
         const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
         if (!CLOUD_NAME || !API_KEY) {
-            toast.error("Cloudinary is not configured");
+            toast.error(t("menu.cloudinaryNotConfigured"));
             return;
         }
 
         const file = e.target.files?.[0];
         if (!file) return;
         if (file.size > 10 * 1024 * 1024) {
-            toast.error("File too large (max 10MB)");
+            toast.error(t("menu.fileTooLarge"));
             e.target.value = "";
             return;
         }
@@ -74,7 +74,7 @@ export default function EditProfileCard() {
             const signRes = await fetch(`/api/cloudinary/upload?folder=profile_pictures`);
             const signJson = await signRes.json();
             if (!signRes.ok) {
-                toast.error("Failed to prepare upload");
+                toast.error(t("menu.failedToPrepareUpload"));
                 return;
             }
             const { timestamp, signature } = signJson;
@@ -92,7 +92,7 @@ export default function EditProfileCard() {
             });
             const json = await res.json();
             if (!res.ok) {
-                toast.error("Upload failed");
+                toast.error(t("menu.uploadFailed"));
                 return;
             }
             const url = json.secure_url || json.url;
@@ -110,14 +110,14 @@ export default function EditProfileCard() {
                 const saveJson = await saveRes.json().catch(() => ({}));
                 if (!saveRes.ok) {
                     setLocalProfileImageUrl(previousUrl);
-                    toast.error(typeof saveJson?.error === "string" ? saveJson.error : "Failed to save profile picture");
+                    toast.error(typeof saveJson?.error === "string" ? saveJson.error : t("menu.failedToSaveProfilePicture"));
                     return;
                 }
                 if (saveJson?.profile) dispatch(setProfile(saveJson.profile));
-                toast.success("Profile picture updated");
+                toast.success(t("menu.profilePictureUpdated"));
             }
         } catch {
-            toast.error("Upload failed");
+            toast.error(t("menu.uploadFailed"));
         } finally {
             setUploadingAvatar(false);
             e.target.value = "";
@@ -141,11 +141,11 @@ export default function EditProfileCard() {
             });
             const json = await res.json().catch(() => ({}));
             if (!res.ok) {
-                toast.error(typeof json?.error === "string" ? json.error : "Failed to save changes");
+                toast.error(typeof json?.error === "string" ? json.error : t("menu.failedToSaveChanges"));
                 return;
             }
             if (json?.profile) dispatch(setProfile(json.profile));
-            toast.success("Saved changes");
+            toast.success(t("menu.savedChanges"));
         } finally {
             setSaving(false);
         }
@@ -159,10 +159,10 @@ export default function EditProfileCard() {
                 <div className="relative">
                     <div className="w-28 h-28 rounded-full overflow-hidden ring-2 ring-muted">
                         <Image
-                            width={200} 
+                            width={200}
                             height={200}
                             src={avatarUrl}
-                            alt="Profile"
+                            alt={t('profile.profile')}
                             className="w-full h-full object-cover"
                         />
                     </div>
@@ -188,7 +188,7 @@ export default function EditProfileCard() {
             <div className="flex-1 space-y-5">
                 <div>
                     <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
-                        Full Name
+                        {t('menu.fullName')}
                     </Label>
                     <Input
                         value={localFullName}
@@ -199,7 +199,7 @@ export default function EditProfileCard() {
 
                 <div>
                     <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
-                        Email
+                        {t('menu.email')}
                     </Label>
                     <Input
                         type="email"
@@ -211,7 +211,7 @@ export default function EditProfileCard() {
 
                 <div>
                     <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
-                        Phone Number
+                        {t('menu.phoneNumber')}
                     </Label>
                     <PhoneInput
                         name="phone"
@@ -232,7 +232,7 @@ export default function EditProfileCard() {
                     disabled={saving}
                     className="w-full h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-base"
                 >
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? t('menu.saving') : t('menu.saveChanges')}
                 </Button>
             </div>
         </div>
