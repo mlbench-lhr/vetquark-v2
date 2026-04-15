@@ -66,8 +66,9 @@ function homeForRole(role: unknown) {
 
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const isAuthSignup = pathname === "/api/auth/signup";
   if (
-    pathname.startsWith("/api/auth") ||
+    (pathname.startsWith("/api/auth") && !isAuthSignup) ||
     pathname.startsWith("/api/admin/auth") ||
     pathname.includes("cloudinary") ||
     (pathname === "/api/platform/settings" || pathname === "/api/platform/settings/")
@@ -162,6 +163,9 @@ export default async function proxy(req: NextRequest) {
 
   if (!token || !secret) {
     if (isApi) {
+      if (isAuthSignup) {
+        return NextResponse.next();
+      }
       return NextResponse.json({ error: !secret ? "Server auth misconfigured" : "Unauthorized" }, { status: !secret ? 500 : 401 });
     }
     return NextResponse.redirect(new URL("/signin", req.nextUrl.origin));
@@ -171,6 +175,9 @@ export default async function proxy(req: NextRequest) {
   const userId = payload?.sub;
   if (!userId) {
     if (isApi) {
+      if (isAuthSignup) {
+        return NextResponse.next();
+      }
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     return NextResponse.redirect(new URL("/signin", req.nextUrl.origin));
