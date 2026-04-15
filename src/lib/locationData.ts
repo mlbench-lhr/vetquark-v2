@@ -361,15 +361,6 @@ export function getCountryCities(country: string, stateValue?: string, stateName
   const normalizedCountry = String(country || "").trim();
   const byCountry = CITIES_BY_COUNTRY_STATE[normalizedCountry] || {};
 
-  if (normalizedCountry === "Brazil") {
-    const orderedStateCodes = (STATES_BY_COUNTRY.Brazil || []).map((s) => s.value);
-    const ordered = orderedStateCodes.flatMap((code) => byCountry[code] || []);
-    const extras = Object.entries(byCountry)
-      .filter(([key]) => !orderedStateCodes.includes(key))
-      .flatMap(([, value]) => value);
-    return uniqueStrings([...ordered, ...extras]);
-  }
-
   const listByCode = stateValue ? (byCountry[String(stateValue).trim()] || []) : [];
   const listByName = stateName ? (byCountry[String(stateName).trim()] || []) : [];
   return uniqueStrings([...listByCode, ...listByName]);

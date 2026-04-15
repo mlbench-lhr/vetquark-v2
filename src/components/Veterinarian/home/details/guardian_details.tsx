@@ -71,12 +71,12 @@ const GuardianProfilePage: React.FC = () => {
         setPets(
           petsRes.ok && Array.isArray(petsJson.items)
             ? (petsJson.items as any[]).map((p) => ({
-                id: String(p.id || p._id || ""),
-                name: String(p.name || p.animalName || ""),
-                image: String(p.image || p.photo || ""),
-                species: String(p.species || ""),
-                breed: String(p.breed || ""),
-              }))
+              id: String(p.id || p._id || ""),
+              name: String(p.name || p.animalName || ""),
+              image: String(p.image || p.photo || ""),
+              species: String(p.species || ""),
+              breed: String(p.breed || ""),
+            }))
             : [],
         );
         if (readingsRes.ok && readingsJson && Array.isArray(readingsJson.items) && readingsJson.items.length > 0) {
@@ -92,16 +92,16 @@ const GuardianProfilePage: React.FC = () => {
             let label = "";
             if (diffMs < hour) {
               const mins = Math.max(1, Math.floor(diffMs / minute));
-              label = `Last Exam: ${mins} minute${mins > 1 ? "s" : ""} ago`;
+              label = `${t('home.lastExam')}: ${mins} ${mins > 1 ? t('home.timeAgo.minutes') : t('home.timeAgo.minute')} ${t('home.timeAgo.ago')}`;
             } else if (diffMs < day) {
               const hrs = Math.floor(diffMs / hour);
-              label = `Last Exam: ${hrs} hour${hrs > 1 ? "s" : ""} ago`;
+              label = `${t('home.lastExam')}: ${hrs} ${hrs > 1 ? t('home.timeAgo.hours') : t('home.timeAgo.hour')} ${t('home.timeAgo.ago')}`;
             } else if (diffMs < week) {
               const days = Math.floor(diffMs / day);
-              label = `Last Exam: ${days} day${days > 1 ? "s" : ""} ago`;
+              label = `${t('home.lastExam')}: ${days} ${days > 1 ? t('home.timeAgo.days') : t('home.timeAgo.day')} ${t('home.timeAgo.ago')}`;
             } else {
               const weeks = Math.floor(diffMs / week);
-              label = `Last Exam: ${weeks} week${weeks > 1 ? "s" : ""} ago`;
+              label = `${t('home.lastExam')}: ${weeks} ${weeks > 1 ? t('home.timeAgo.weeks') : t('home.timeAgo.week')} ${t('home.timeAgo.ago')}`;
             }
             setLastExamLabel(label);
           } else {

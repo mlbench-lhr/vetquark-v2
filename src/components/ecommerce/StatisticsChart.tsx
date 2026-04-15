@@ -2,6 +2,7 @@
 import React from "react";
 // import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
+import { useTranslation } from "react-i18next";
 import ChartTab from "../common/ChartTab";
 import dynamic from "next/dynamic";
 
@@ -11,6 +12,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 export default function StatisticsChart() {
+  const { t } = useTranslation();
   const options: ApexOptions = {
     legend: {
       show: false, // Hide legend
@@ -111,11 +113,11 @@ export default function StatisticsChart() {
 
   const series = [
     {
-      name: "Sales",
+      name: t("common.orders"),
       data: [180, 190, 170, 160, 175, 165, 170, 205, 230, 210, 240, 235],
     },
     {
-      name: "Revenue",
+      name: t("common.revenue"),
       data: [40, 30, 50, 40, 55, 40, 70, 100, 110, 120, 150, 140],
     },
   ];
@@ -124,10 +126,10 @@ export default function StatisticsChart() {
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
         <div className="w-full">
           <h3 className="text-lg font-semibold text-gray-800 ">
-            Statistics
+            {t("common.statistics")}
           </h3>
           <p className="mt-1 text-gray-500 text-theme-sm ">
-            Target you’ve set for each month
+            {t("common.salesPerformance")}
           </p>
         </div>
         <div className="flex items-start w-full gap-3 sm:justify-end">

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { useTranslation } from "react-i18next";
 import ComponentCard from '../../common/ComponentCard';
 import Label from '../Label';
 import Input from '../input/InputField';
@@ -8,6 +9,7 @@ import { ChevronDownIcon, EyeCloseIcon, EyeIcon, TimeIcon } from '../../../icons
 import DatePicker from '@/components/form/date-picker';
 
 export default function DefaultInputs() {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const options = [
     { value: "marketing", label: "Marketing" },
@@ -18,36 +20,36 @@ export default function DefaultInputs() {
     console.log("Selected value:", value);
   };
   return (
-    <ComponentCard title="Default Inputs">
+    <ComponentCard title={t("common.defaultInputs")}>
       <div className="space-y-6">
         <div>
-          <Label>Input</Label>
+          <Label>{t("common.input")}</Label>
           <Input type="text" />
         </div>
         <div>
-          <Label>Input with Placeholder</Label>
-          <Input type="text" placeholder="info@gmail.com" />
+          <Label>{t("common.inputWithPlaceholder")}</Label>
+          <Input type="text" placeholder={t("common.email")} />
         </div>
         <div>
-          <Label>Select Input</Label>
+          <Label>{t("common.selectInput")}</Label>
           <div className="relative">
             <Select
-            options={options}
-            placeholder="Select an option"
-            onChange={handleSelectChange}
-            className=""
-          />
-             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 ">
-              <ChevronDownIcon/>
+              options={options}
+              placeholder={t("common.selectOption")}
+              onChange={handleSelectChange}
+              className=""
+            />
+            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 ">
+              <ChevronDownIcon />
             </span>
           </div>
         </div>
         <div>
-          <Label>Password Input</Label>
+          <Label>{t("common.passwordInput")}</Label>
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
+              placeholder={t("common.enterYourPassword")}
             />
             <button
               onClick={() => setShowPassword(!showPassword)}
@@ -65,8 +67,8 @@ export default function DefaultInputs() {
         <div>
           <DatePicker
             id="date-picker"
-            label="Date Picker Input"
-            placeholder="Select a date"
+            label={t("common.datePickerInput")}
+            placeholder={t("common.selectDate")}
             onChange={(dates, currentDateString) => {
               // Handle your logic
               console.log({ dates, currentDateString });
@@ -75,7 +77,7 @@ export default function DefaultInputs() {
         </div>
 
         <div>
-          <Label htmlFor="tm">Time Picker Input</Label>
+          <Label htmlFor="tm">{t("common.timePickerInput")}</Label>
           <div className="relative">
             <Input
               type="time"

@@ -104,7 +104,7 @@ export default function AddPatientGuardian() {
                 setGuardians((data.items || []).map((u: any) => ({
                     id: String(u.id),
                     name: u.name,
-                    owner: u.idNumber ? `National ID: ${u.idNumber}` : 'National ID: N/A',
+                    owner: u.idNumber ? `${t('profile.nationalId')}: ${u.idNumber}` : `${t('profile.nationalId')}: ${t('guardianHome.notAvailable')}`,
                     image: u.avatarUrl,
                     taxId: String(u.idNumber || '').trim(),
                 })));
@@ -214,7 +214,7 @@ export default function AddPatientGuardian() {
                         <div className="w-10 h-10 bg-[#EBF2FF] rounded-full flex items-center justify-center">
                             <Image
                                 src={"/images/new_patient/user-active.svg"}
-                                alt="User icon"
+                                alt={t('newPatient.guardianIconAlt')}
                                 width={24}
                                 height={24}
                             />
@@ -227,7 +227,7 @@ export default function AddPatientGuardian() {
                         <div className="w-10 h-10 bg-[#F5F6F6] rounded-full flex items-center justify-center">
                             <Image
                                 src={"/images/new_patient/paw.svg"}
-                                alt="User icon"
+                                alt={t('newPatient.patientIconAlt')}
                                 width={24}
                                 height={24}
                             />

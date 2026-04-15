@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 type Option = { value: string; text: string };
 
@@ -21,13 +22,14 @@ export default function DropdownSelect({
   options,
   value,
   onChange,
-  placeholder = "Select an option",
+  placeholder,
   disabled = false,
   className = "",
   placement = "down",
   name,
   required,
 }: DropdownSelectProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const selectedLabel = options.find((o) => o.value === value)?.text;
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -69,7 +71,7 @@ export default function DropdownSelect({
           onClick={() => !disabled && setOpen((v) => !v)}
           className={`w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none ${value ? "text-gray-800" : "text-gray-400"} pr-12 text-left ${className}`}
         >
-          {selectedLabel || placeholder}
+          {selectedLabel || placeholder || t("common.selectOption")}
         </button>
         <svg
           className="absolute right-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none"
@@ -93,9 +95,8 @@ export default function DropdownSelect({
                       onChange(opt.value);
                       setOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 hover:bg-primary/5 ${
-                      value === opt.value ? "bg-primary/10 text-gray-900" : "text-gray-800"
-                    }`}
+                    className={`w-full text-left px-3 py-2 hover:bg-primary/5 ${value === opt.value ? "bg-primary/10 text-gray-900" : "text-gray-800"
+                      }`}
                   >
                     {opt.text}
                   </button>

@@ -97,17 +97,10 @@ const PatientProfilePage: React.FC = () => {
         months += 12;
         years -= 1;
       }
-      const lang = i18n.language === "pt" ? "pt" : "en";
       const unit = (type: "y" | "m" | "d", n: number) => {
-        if (lang === "pt") {
-          if (type === "y") return n === 1 ? "ano" : "anos";
-          if (type === "m") return n === 1 ? "mês" : "meses";
-          return n === 1 ? "dia" : "dias";
-        } else {
-          if (type === "y") return n === 1 ? "year" : "years";
-          if (type === "m") return n === 1 ? "month" : "months";
-          return n === 1 ? "day" : "days";
-        }
+        if (type === "y") return n === 1 ? t('home.ageUnits.year') : t('home.ageUnits.years');
+        if (type === "m") return n === 1 ? t('home.ageUnits.month') : t('home.ageUnits.months');
+        return n === 1 ? t('home.ageUnits.day') : t('home.ageUnits.days');
       };
       const parts: string[] = [];
       if (years > 0) parts.push(`${years} ${unit("y", years)}`);
@@ -116,8 +109,7 @@ const PatientProfilePage: React.FC = () => {
       ageText = parts.join(" ");
     } else if (typeof patient?.ageYears === "number") {
       const y = Math.max(0, Number(patient.ageYears) || 0);
-      const lang = i18n.language === "pt" ? "pt" : "en";
-      const label = lang === "pt" ? (y === 1 ? "ano" : "anos") : (y === 1 ? "year" : "years");
+      const label = y === 1 ? t('home.ageUnits.year') : t('home.ageUnits.years');
       ageText = `${y} ${label}`;
     }
 

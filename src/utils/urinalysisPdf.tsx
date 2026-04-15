@@ -116,7 +116,7 @@ async function fetchPanels() {
   return out;
 }
 
-async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
+export async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
   const r = (reading || (await fetchReadingDetail(readingId))) as ReadingDetail | null;
   if (!r) throw new Error("Report not found");
   const panels = await fetchPanels().catch(() => [] as PanelMeta[]);
@@ -377,7 +377,7 @@ async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId:
   const blob = await pdf(buildDocument()).toBlob();
   const url = URL.createObjectURL(blob);
   const fileName = `urinalysis-report-${r.id}.pdf`;
-  return { url, fileName };
+  return { url, fileName, blob };
 }
 
 export async function downloadUrinalysisPdf({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {

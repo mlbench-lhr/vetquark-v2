@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import ComponentCard from "../../common/ComponentCard";
 import Label from "../Label";
 import Input from "../input/InputField";
@@ -7,15 +8,16 @@ import { EnvelopeIcon } from "../../../icons";
 import PhoneInput from "../group-input/PhoneInput";
 
 export default function InputGroup() {
+  const { t } = useTranslation();
   const [phone, setPhone] = React.useState("");
   return (
-    <ComponentCard title="Input Group">
+    <ComponentCard title={t("common.inputGroup")}>
       <div className="space-y-6">
         <div>
-          <Label>Email</Label>
+          <Label>{t("common.emailLabel")}</Label>
           <div className="relative">
             <Input
-              placeholder="info@gmail.com"
+              placeholder={t("common.email")}
               type="text"
               className="pl-[62px]"
             />
@@ -25,9 +27,9 @@ export default function InputGroup() {
           </div>
         </div>
         <div>
-          <Label>Phone</Label>
+          <Label>{t("common.phoneLabel")}</Label>
           <PhoneInput
-            placeholder="+1 (555) 000-0000"
+            placeholder={t("common.phonePlaceholder")}
             defaultCountry="us"
             value={phone}
             onChange={(next) => {

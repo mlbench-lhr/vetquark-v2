@@ -8,11 +8,13 @@ import { buildRequestBody } from "@/utils/apiWrapper";
 import { ClipLoader } from "react-spinners";
 import { useModal } from "@/hooks/useModal";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import { EditProfileModal } from "./EditProfileModal";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 
 
 export default function UserDropdown() {
+  const { t } = useTranslation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const {
     isOpen: isEditProfileOpen,
@@ -108,7 +110,7 @@ export default function UserDropdown() {
             width={44}
             height={44}
             src={user?.profile_image_url?.trim() || "/images/default_image.svg"}
-            alt="User"
+            alt={t("common.user")}
             className="w-full h-full object-cover"
           />
         </span>
@@ -160,7 +162,7 @@ export default function UserDropdown() {
                 width={24}
                 height={24}
               />
-              Edit profile
+              {t("common.editProfile")}
             </DropdownItem>
           </li>
           <li>
@@ -174,7 +176,7 @@ export default function UserDropdown() {
                 width={24}
                 height={24}
               />
-              Change Password
+              {t("common.changePassword")}
             </DropdownItem>
           </li>
 
@@ -198,7 +200,7 @@ export default function UserDropdown() {
               fill=""
             />
           </svg>
-          Sign out
+          {t("common.signOut")}
           {loading && (
             <div className="fixed inset-0 z-50 flex justify-center items-center  bg-opacity-60">
               <ClipLoader color="#ffffff" size={50} />

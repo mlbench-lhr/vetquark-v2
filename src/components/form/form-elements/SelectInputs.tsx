@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import ComponentCard from "../../common/ComponentCard";
 import Label from "../Label";
 import Select from "../Select";
@@ -7,6 +8,7 @@ import MultiSelect from "../MultiSelect";
 import { ChevronDownIcon } from "@/icons";
 
 export default function SelectInputs() {
+  const { t } = useTranslation();
   const options = [
     { value: "marketing", label: "Marketing" },
     { value: "template", label: "Template" },
@@ -28,31 +30,31 @@ export default function SelectInputs() {
   ];
 
   return (
-    <ComponentCard title="Select Inputs">
+    <ComponentCard title={t("common.selectInputs")}>
       <div className="space-y-6">
         <div>
-          <Label>Select Input</Label>
-         <div className="relative">
-           <Select
-            options={options}
-            placeholder="Select Option"
-            onChange={handleSelectChange}
-            className=""
-          />
-          <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 ">
-              <ChevronDownIcon/>
+          <Label>{t("common.selectInput")}</Label>
+          <div className="relative">
+            <Select
+              options={options}
+              placeholder={t("common.selectOption")}
+              onChange={handleSelectChange}
+              className=""
+            />
+            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 ">
+              <ChevronDownIcon />
             </span>
-         </div>
+          </div>
         </div>
         <div className="relative">
           <MultiSelect
-            label="Multiple Select Options"
+            label={t("common.multipleSelectOptions")}
             options={multiOptions}
             defaultSelected={["1", "3"]}
             onChange={(values) => setSelectedValues(values)}
           />
           <p className="sr-only">
-            Selected Values: {selectedValues.join(", ")}
+            {t("common.selectedValues")}: {selectedValues.join(", ")}
           </p>
         </div>
       </div>

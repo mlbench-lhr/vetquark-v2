@@ -1,11 +1,13 @@
 import Link from "next/link";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface BreadcrumbProps {
   pageTitle: string;
 }
 
 const PageBreadcrumb: React.FC<BreadcrumbProps> = ({ pageTitle }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
       <h2
@@ -21,7 +23,7 @@ const PageBreadcrumb: React.FC<BreadcrumbProps> = ({ pageTitle }) => {
               className="inline-flex items-center gap-1.5 text-sm text-gray-500 "
               href="/"
             >
-              Home
+              {t("common.home")}
               <svg
                 className="stroke-current"
                 width="17"

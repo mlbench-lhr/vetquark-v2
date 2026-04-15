@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
-import { downloadUrinalysisPdf } from "@/utils/urinalysisPdf";
+import { createUrinalysisPdfObjectUrl, downloadUrinalysisPdf } from "@/utils/urinalysisPdf";
 import { useAppSelector } from "@/store/hooks";
 import type { RootState } from "@/store/store";
 
@@ -117,20 +117,6 @@ function formatCollectionMethod(value: string | null | undefined, t: (key: strin
 function asReportText(value: string | null | undefined, t: (key: string) => string) {
   const s = typeof value === "string" ? value.trim() : "";
   return s ? s : t("history.notAvailable");
-}
-
-async function shareReadingReport(title: string) {
-  const url = window.location.href;
-  const navAny = navigator as any;
-  if (typeof navAny?.share === "function") {
-    await navAny.share({ title, url });
-    return;
-  }
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(url);
-    return;
-  }
-  throw new Error(url);
 }
 
 export default function ReportDetailsPage() {
@@ -322,17 +308,37 @@ export default function ReportDetailsPage() {
   const handleShare = useCallback(async () => {
     if (!readingId) return;
     try {
-      await shareReadingReport(`${panelTitleForCode(reading?.productCode)} ${t("history.reportTitleSuffix")}`);
+      const { url, fileName, blob } = await createUrinalysisPdfObjectUrl({ readingId, reading });
+      const navAny = navigator as any;
+      try {
+        const file = new File([blob], fileName, { type: "application/pdf" });
+        if (navAny?.share && navAny?.canShare && navAny.canShare({ files: [file] })) {
+          await navAny.share({
+            title: `${panelTitleForCode(reading?.productCode)} ${t("history.reportTitleSuffix")}`,
+            files: [file],
+          });
+          URL.revokeObjectURL(url);
+          toast.success(t("history.reportLinkReady"));
+          return;
+        }
+      } catch {
+      }
+      const opened = window.open(url, "_blank", "noopener,noreferrer");
+      if (!opened) {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
       toast.success(t("history.reportLinkReady"));
     } catch (e) {
       const msg = e instanceof Error ? e.message : t("history.shareFailed");
-      if (typeof msg === "string" && msg.startsWith("http")) {
-        toast.info(t("history.copyLinkPrefix") + msg);
-        return;
-      }
-      // toast.error(msg);
+      toast.error(msg);
     }
-  }, [reading?.productCode, readingId, t]);
+  }, [panelTitleForCode, reading, readingId, t]);
 
   const currentProductCode = useMemo(() => String(reading?.productCode || "VETQ_MASTER_360"), [reading?.productCode]);
   const unlockedProductCodes = useMemo(

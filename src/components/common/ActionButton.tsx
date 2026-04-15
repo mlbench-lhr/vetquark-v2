@@ -1,10 +1,12 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 export default function ActionButton({ link }: { link: string }) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleClick = () => {
     const currentParams = new URLSearchParams(searchParams);
@@ -24,7 +26,7 @@ export default function ActionButton({ link }: { link: string }) {
       onClick={handleClick}
       className="text-blue-600 hover:underline"
     >
-      View Details
+      {t("common.viewDetails")}
     </button>
   );
 }

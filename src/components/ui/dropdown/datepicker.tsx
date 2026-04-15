@@ -17,6 +17,7 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
     const [viewMode, setViewMode] = useState<ViewMode>('days');
     const [yearRangeStart, setYearRangeStart] = useState(Math.floor(new Date().getFullYear() / 12) * 12);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [inputValue, setInputValue] = useState(value || "");
 
     const months = [
         'January', 'February', 'March', 'April', 'May', 'June',
@@ -45,6 +46,10 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        setInputValue(value || "");
+    }, [value]);
+
     const getDaysInMonth = (month: number, year: number) => {
         return new Date(year, month + 1, 0).getDate();
     };
@@ -72,7 +77,9 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
     const handleDateClick = (day: number) => {
         const selectedDate = new Date(currentYear, currentMonth, day);
         if (selectedDate <= today) {
-            onChange(formatDate(selectedDate));
+            const formatted = formatDate(selectedDate);
+            setInputValue(formatted);
+            onChange(formatted);
             setIsOpen(false);
             setViewMode('days');
         }
@@ -120,13 +127,16 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
     };
 
     const handleClear = () => {
+        setInputValue('');
         onChange('');
         setIsOpen(false);
         setViewMode('days');
     };
 
     const handleToday = () => {
-        onChange(formatDate(today));
+        const formatted = formatDate(today);
+        setInputValue(formatted);
+        onChange(formatted);
         setIsOpen(false);
         setViewMode('days');
     };
@@ -297,6 +307,22 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
         return false;
     };
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const next = e.target.value;
+        setInputValue(next);
+        if (!next) {
+            onChange('');
+            return;
+        }
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(next)) {
+            const parsed = parseDate(next);
+            if (!parsed || parsed > today) return;
+            const formatted = formatDate(parsed);
+            setInputValue(formatted);
+            onChange(formatted);
+        }
+    };
+
     return (
         <div className="w-full" ref={dropdownRef}>
             {label && (
@@ -307,11 +333,11 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
             <div className="relative">
                 <input
                     type="text"
-                    value={value}
-                    readOnly
+                    value={inputValue}
+                    onChange={handleInputChange}
                     onClick={() => setIsOpen(!isOpen)}
                     placeholder={placeholder}
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 pr-12 cursor-pointer"
+                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 pr-12"
                 />
                 <Calendar
                     color='#3F78D8'

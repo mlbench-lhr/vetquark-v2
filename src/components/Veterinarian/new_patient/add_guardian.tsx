@@ -218,7 +218,7 @@ export default function GuardianRegistration() {
                 const json = await res.json().catch(() => null);
                 if (!mounted) return;
                 if (!res.ok || !json?.item) {
-                    toast.error(typeof json?.error === "string" ? json.error : "Failed to load guardian");
+                    toast.error(typeof json?.error === "string" ? json.error : t('newPatient.guardian.failedToLoadGuardian'));
                     return;
                 }
                 const item = json.item as any;
@@ -297,7 +297,7 @@ export default function GuardianRegistration() {
         })();
     }, [formData.country, formData.state, stateOptions]);
 
-    
+
 
     const handleSubmit = async () => {
         try {
@@ -361,7 +361,7 @@ export default function GuardianRegistration() {
             {
                 const dob = new Date(dateOfBirth);
                 if (!Number.isFinite(dob.getTime())) {
-                    toast.error('Invalid date of birth');
+                    toast.error(t('newPatient.guardian.invalidDateOfBirth'));
                     return;
                 }
                 {
@@ -376,7 +376,7 @@ export default function GuardianRegistration() {
                 const m = today.getMonth() - dob.getMonth();
                 if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
                 if (age < 10) {
-                    toast.error('Guardian must be at least 10 years old');
+                    toast.error(t('newPatient.guardian.guardianMinAgeError'));
                     return;
                 }
             }
@@ -618,7 +618,7 @@ export default function GuardianRegistration() {
                                     disabled={isEditing}
                                     className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                                 />
-                                
+
                             </div>
                         </div>
                     </div>
@@ -763,7 +763,7 @@ export default function GuardianRegistration() {
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900">{t('auth.emailVerification')}</h3>
                         <p className="text-sm text-gray-600 mt-1">
-                            A verification link has been sent to the guardian. You can select them once they verify their account.
+                            {t('newPatient.guardian.verificationLinkSent')}
                         </p>
                     </div>
                     <button type="button" onClick={() => { closeSuccess(); router.back(); }} className="p-2 rounded-lg hover:bg-gray-100">

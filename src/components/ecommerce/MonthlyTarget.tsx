@@ -1,6 +1,7 @@
 "use client";
 // import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
+import { useTranslation } from "react-i18next";
 
 import dynamic from "next/dynamic";
 import { Dropdown } from "../ui/dropdown/Dropdown";
@@ -13,6 +14,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 export default function MonthlyTarget() {
+  const { t } = useTranslation();
   const series = [75.55];
   const options: ApexOptions = {
     colors: ["#465FFF"],
@@ -59,7 +61,7 @@ export default function MonthlyTarget() {
     stroke: {
       lineCap: "round",
     },
-    labels: ["Progress"],
+    labels: [t("common.progress")],
   };
 
   const [isOpen, setIsOpen] = useState(false);
@@ -78,10 +80,10 @@ export default function MonthlyTarget() {
         <div className="flex justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 ">
-              Monthly Target
+              {t("common.monthlyTarget")}
             </h3>
             <p className="mt-1 font-normal text-gray-500 text-theme-sm ">
-              Target you’ve set for each month
+              {t("common.monthlyTargetDesc")}
             </p>
           </div>
           <div className="relative inline-block">
@@ -98,14 +100,14 @@ export default function MonthlyTarget() {
                 onItemClick={closeDropdown}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700  "
               >
-                View More
+                {t("common.viewMore")}
               </DropdownItem>
               <DropdownItem
                 tag="a"
                 onItemClick={closeDropdown}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700  "
               >
-                Delete
+                {t("common.delete")}
               </DropdownItem>
             </Dropdown>
           </div>
@@ -125,15 +127,14 @@ export default function MonthlyTarget() {
           </span>
         </div>
         <p className="mx-auto mt-10 w-full max-w-[380px] text-center text-sm text-gray-500 sm:text-base">
-          You earn $3287 today, it&apos;s higher than last month. Keep up your
-          good work!
+          {t("common.earningsText")}
         </p>
       </div>
 
       <div className="flex items-center justify-center gap-5 px-6 py-3.5 sm:gap-8 sm:py-5">
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs  sm:text-sm">
-            Target
+            {t("common.target")}
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800  sm:text-lg">
             $20K
@@ -158,7 +159,7 @@ export default function MonthlyTarget() {
 
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs  sm:text-sm">
-            Revenue
+            {t("common.revenue")}
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800  sm:text-lg">
             $20K
@@ -183,7 +184,7 @@ export default function MonthlyTarget() {
 
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs  sm:text-sm">
-            Today
+            {t("common.today")}
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800  sm:text-lg">
             $20K

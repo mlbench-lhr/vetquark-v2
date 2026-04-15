@@ -1,13 +1,21 @@
+"use client";
+
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
+
+interface NoDataComponentProps {
+  text?: string;
+  actionComponent?: React.ReactNode | React.ComponentType<any>;
+}
 
 export const NoDataComponent = ({
-  text = "No Data Found",
+  text,
   actionComponent,
-}: {
-  text: string;
-  actionComponent?: React.ReactNode | React.ComponentType<any>;
-}) => {
+}: NoDataComponentProps) => {
+  const { t } = useTranslation();
+  const displayText = text ?? t("common.noDataFound");
   const ActionComponent = actionComponent;
+
   return (
     <div
       className={`leading-tight text-xs md:text-base text-black/70 font-medium flex flex-col justify-center items-center gap-2`}
@@ -19,7 +27,7 @@ export const NoDataComponent = ({
         alt="no-data"
         className="w-[120px] h-[120px] md:h-[220px] md:w-[220px] object-contain"
       /> */}
-      {text}
+      {displayText}
       {ActionComponent &&
         (typeof ActionComponent === "function" ? (
           <ActionComponent />

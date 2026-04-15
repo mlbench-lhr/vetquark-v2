@@ -467,14 +467,14 @@ export default function AddPatientMultiStep() {
         <div className="flex items-center justify-between bg-gray-100 p-2 rounded-[12px]">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={linkedGuardian?.imageUrl || ''} alt={linkedGuardian?.fullName || 'Guardian'} />
+              <AvatarImage src={linkedGuardian?.imageUrl || ''} alt={linkedGuardian?.fullName || t('auth.guardian')} />
               <AvatarFallback>
                 {(linkedGuardian?.fullName || 'G').slice(0, 1).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium text-gray-900">{linkedGuardian?.fullName ?? 'N/A'}</p>
-              <p className="text-xs text-tertiary">{t('profile.nationalId')}: {linkedGuardian?.taxId || 'N/A'}</p>
+              <p className="font-medium text-gray-900">{linkedGuardian?.fullName ?? t('guardianHome.notAvailable')}</p>
+              <p className="text-xs text-tertiary">{t('profile.nationalId')}: {linkedGuardian?.taxId || t('guardianHome.notAvailable')}</p>
             </div>
           </div>
           {!patientId && (
@@ -520,7 +520,7 @@ export default function AddPatientMultiStep() {
                   <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p- text-center">
                     {formData.photo ? (
                       <div className="flex w-full h-[200px] flex-col relative items-center gap-3">
-                        <Image width={200} height={200} src={formData.photo} alt="Patient" className="w-full h-full object-contain rounded-lg bg-white" />
+                        <Image width={200} height={200} src={formData.photo} alt={t('common.patient')} className="w-full h-full object-contain rounded-lg bg-white" />
                         <label className="inline-block absolute -top-2 -right-2">
                           <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                           {uploadingPhoto ? <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer"> {t('auth.uploading')}
@@ -644,18 +644,18 @@ export default function AddPatientMultiStep() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.ageYearsLabel') || 'Age (years)'}</label>
+                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.ageYearsLabel')}</label>
                     <input
                       type="number"
                       min={0}
                       max={40}
-                      placeholder={t('newPatient.patientForm.ageYearsPlaceholder') || 'e.g., 3'}
+                      placeholder={t('newPatient.patientForm.ageYearsPlaceholder')}
                       value={formData.ageYears}
                       onChange={(e) => handleChange('ageYears', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <p className="mt-1 text-xs text-gray-500">
-                      {t('newPatient.patientForm.ageYearsHint') || 'If date of birth is unknown, enter age.'}
+                      {t('newPatient.patientForm.ageYearsHint')}
                     </p>
                   </div>
                 </div>
@@ -873,15 +873,15 @@ export default function AddPatientMultiStep() {
       </div>
       <Modal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} className="max-w-md rounded-2xl p-6">
         <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-900">{t('common.unsavedChanges') || 'Unsaved changes'}</h3>
-          <p className="mt-2 text-sm text-gray-600">{t('common.unsavedChangesDesc') || 'You have unsaved changes. Do you want to discard them?'}</p>
+          <h3 className="text-lg font-semibold text-gray-900">{t('common.unsavedChanges')}</h3>
+          <p className="mt-2 text-sm text-gray-600">{t('common.unsavedChangesDesc')}</p>
           <div className="mt-4 flex items-center gap-3">
             <button
               type="button"
               className="flex-1 px-4 py-2 rounded-full bg-gray-100 text-gray-800"
               onClick={() => setConfirmOpen(false)}
             >
-              {t('common.keepEditing') || 'Keep editing'}
+              {t('common.keepEditing')}
             </button>
             <button
               type="button"
@@ -892,7 +892,7 @@ export default function AddPatientMultiStep() {
                 router.back();
               }}
             >
-              {t('common.discardChanges') || 'Discard changes'}
+              {t('common.discardChanges')}
             </button>
           </div>
         </div>

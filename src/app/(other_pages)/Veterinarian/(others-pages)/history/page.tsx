@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
-import { downloadUrinalysisPdf } from "@/utils/urinalysisPdf";
+import { createUrinalysisPdfObjectUrl, downloadUrinalysisPdf } from "@/utils/urinalysisPdf";
 
 type ReportStatus = "signed" | "pending";
 
@@ -119,20 +119,6 @@ function formatDateLabel(value: string) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleDateString("en-GB");
-}
-
-async function shareReadingReport(readingId: string, title: string) {
-  const url = `${window.location.origin}/Veterinarian/history/detail/${readingId}`;
-  const navAny = navigator as any;
-  if (typeof navAny?.share === "function") {
-    await navAny.share({ title, url });
-    return;
-  }
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(url);
-    return;
-  }
-  throw new Error(url);
 }
 
 function getStatusPillKind(item: Pick<ReportHistoryItem, "isSigned" | "paymentStatus">): StatusPillKind {
@@ -275,15 +261,35 @@ function PageContent() {
 
   const handleShare = useCallback(async (id: string) => {
     try {
-      await shareReadingReport(id, t("history.urinalysisReport"));
-      toast.success(t("common.reportLinkReady"));
+      const { url, fileName, blob } = await createUrinalysisPdfObjectUrl({ readingId: id });
+      const navAny = navigator as any;
+      try {
+        const file = new File([blob], fileName, { type: "application/pdf" });
+        if (navAny?.share && navAny?.canShare && navAny.canShare({ files: [file] })) {
+          await navAny.share({
+            title: t("history.urinalysisReport") as string,
+            files: [file],
+          });
+          URL.revokeObjectURL(url);
+          toast.success(t("common.reportLinkReady"));
+          return;
+        }
+      } catch {
+      }
+      const opened = window.open(url, "_blank", "noopener,noreferrer");
+      if (!opened) {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      toast.success(t("history.reportLinkReady"));
     } catch (e) {
       const msg = e instanceof Error ? e.message : (t("common.shareFailed") as string);
-      if (typeof msg === "string" && msg.startsWith("http")) {
-        toast.info(String(t("common.copyLinkPrefix")) + msg);
-        return;
-      }
-      // toast.error(msg);
+      toast.error(msg);
     }
   }, [t]);
 
