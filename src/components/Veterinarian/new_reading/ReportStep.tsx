@@ -137,7 +137,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
       <div className="mt-6 rounded-3xl border border-gray-200 overflow-hidden bg-white p-4">
         <div className="flex justify-center mb-2">
           <Image
-            src="/images/logo/logo.svg"
+            src="/Logos VetQuark-03.png"
             alt="VetQuark"
             width={120}
             height={40}
