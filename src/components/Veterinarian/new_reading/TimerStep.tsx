@@ -780,8 +780,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       <div className="mt-4 flex items-center justify-between bg-[#F5F6F6] rounded-full pe-4">
         <button
           onClick={handlePrimaryClick}
-          disabled={analysisFailed || (!started && (!qualityOk || !cameraReady))}
-          className={`px-6 py-3 rounded-full font-medium ${analysisFailed || (!started && (!qualityOk || !cameraReady)) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-primary text-white'}`}
+          disabled={analysisFailed || (!started && !cameraReady)}
+          className={`px-6 py-3 rounded-full font-medium ${analysisFailed || (!started && !cameraReady) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-primary text-white'}`}
         >
           {primaryButtonLabel}
         </button>
