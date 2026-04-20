@@ -1,6 +1,7 @@
 'use client'
 
 import { Document, Image as PdfImage, Page as PDFPage, StyleSheet, Text, View, pdf } from "@react-pdf/renderer";
+import i18n from "@/i18n/i18n";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -72,25 +73,28 @@ function formatDateTimeLabel(value: string | null) {
   return `${date}, ${time}`;
 }
 
-function formatCollectionMethod(value: string | null | undefined) {
+function formatCollectionMethod(value: string | null | undefined, t?: (key: string) => string) {
+  const translate = t || ((key: string) => i18n.t(key));
   const v = (value || "").trim().toLowerCase();
   if (!v) return "";
-  if (v === "free_catch") return "Free catch";
-  if (v === "cystocentesis") return "Cystocentesis";
-  if (v === "catheter") return "Catheter";
+  if (v === "free_catch") return translate("reading.pdf.freeCatch");
+  if (v === "cystocentesis") return translate("reading.pdf.cystocentesis");
+  if (v === "catheter") return translate("reading.pdf.catheter");
   return value || "";
 }
 
-function asReportText(value: string | null | undefined) {
+function asReportText(value: string | null | undefined, t?: (key: string) => string) {
+  const translate = t || ((key: string) => i18n.t(key));
   const s = typeof value === "string" ? value.trim() : "";
-  return s ? s : "N/A";
+  return s ? s : translate("reading.pdf.notAvailable");
 }
 
-async function fetchReadingDetail(readingId: string) {
+async function fetchReadingDetail(readingId: string, t?: (key: string) => string) {
+  const translate = t || ((key: string) => i18n.t(key));
   const res = await fetch(`/api/reading/get_reading/${encodeURIComponent(readingId)}`);
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    const msg = typeof (data as any)?.error === "string" ? (data as any).error : "Failed to download report";
+    const msg = typeof (data as any)?.error === "string" ? (data as any).error : translate("reading.pdf.failedToDownloadReport");
     throw new Error(msg);
   }
   return ((data as any)?.reading ?? null) as ReadingDetail | null;
@@ -116,9 +120,10 @@ async function fetchPanels() {
   return out;
 }
 
-export async function createUrinalysisPdfObjectUrl({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
+export async function createUrinalysisPdfObjectUrl({ readingId, reading, t }: { readingId: string; reading?: ReadingDetail | null; t?: (key: string) => string }) {
+  const translate = t || ((key: string) => i18n.t(key));
   const r = (reading || (await fetchReadingDetail(readingId))) as ReadingDetail | null;
-  if (!r) throw new Error("Report not found");
+  if (!r) throw new Error(translate("reading.pdf.reportNotFound"));
   const panels = await fetchPanels().catch(() => [] as PanelMeta[]);
   const panelByCode = new Map<string, PanelMeta>();
   for (const p of panels) panelByCode.set(normalizePanelCode(p.code), p);
@@ -254,62 +259,62 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading }: { rea
           <View style={reportStyles.divider} />
         </View>
 
-        <Text style={reportStyles.sectionTitle}>{`${panelTitle} Report`}</Text>
+        <Text style={reportStyles.sectionTitle}>{`${panelTitle} ${translate("reading.pdf.results")}`}</Text>
         <View style={reportStyles.metaGrid}>
           <View style={reportStyles.metaCol}>
             <View style={reportStyles.metaRow}>
-              <Text style={reportStyles.metaKey}>Report ID</Text>
+              <Text style={reportStyles.metaKey}>{translate("reading.pdf.reportId")}</Text>
               <Text style={reportStyles.metaValue}>{asReportText(r.id)}</Text>
             </View>
             <View style={reportStyles.metaRow}>
-              <Text style={reportStyles.metaKey}>Generated</Text>
+              <Text style={reportStyles.metaKey}>{translate("reading.pdf.generated")}</Text>
               <Text style={reportStyles.metaValue}>{asReportText(generatedAt)}</Text>
             </View>
             <View style={reportStyles.metaRow}>
-              <Text style={reportStyles.metaKey}>Patient</Text>
+              <Text style={reportStyles.metaKey}>{translate("reading.pdf.patient")}</Text>
               <Text style={reportStyles.metaValue}>{asReportText(r.patient?.name)}</Text>
             </View>
             <View style={reportStyles.metaRow}>
-              <Text style={reportStyles.metaKey}>Guardian</Text>
+              <Text style={reportStyles.metaKey}>{translate("reading.pdf.guardian")}</Text>
               <Text style={reportStyles.metaValue}>{asReportText(r.guardian?.fullName)}</Text>
             </View>
           </View>
           <View style={reportStyles.metaCol}>
             <View style={reportStyles.metaRow}>
-              <Text style={reportStyles.metaKey}>Collection</Text>
+              <Text style={reportStyles.metaKey}>{translate("reading.pdf.collection")}</Text>
               <Text style={reportStyles.metaValue}>
                 {asReportText(formatCollectionMethod(r.identification?.collectionMethod))}
               </Text>
             </View>
             <View style={reportStyles.metaRow}>
-              <Text style={reportStyles.metaKey}>Collected At</Text>
+              <Text style={reportStyles.metaKey}>{translate("reading.pdf.collectedAt")}</Text>
               <Text style={reportStyles.metaValue}>{asReportText(r.identification?.collectionAt || "")}</Text>
             </View>
             <View style={reportStyles.metaRow}>
-              <Text style={reportStyles.metaKey}>Strip Lot</Text>
+              <Text style={reportStyles.metaKey}>{translate("reading.pdf.stripLot")}</Text>
               <Text style={reportStyles.metaValue}>{asReportText(r.identification?.stripLot || "")}</Text>
             </View>
             <View style={reportStyles.metaRow}>
-              <Text style={reportStyles.metaKey}>Strip Expiry</Text>
+              <Text style={reportStyles.metaKey}>{translate("reading.pdf.stripExpiry")}</Text>
               <Text style={reportStyles.metaValue}>{asReportText(r.identification?.stripExpiry || "")}</Text>
             </View>
           </View>
         </View>
 
-        <Text style={reportStyles.sectionTitle}>Results</Text>
+        <Text style={reportStyles.sectionTitle}>{translate("reading.pdf.results")}</Text>
         <View style={reportStyles.resultsTable}>
           <View style={reportStyles.tableHeaderRow}>
             <View style={reportStyles.colName}>
-              <Text style={reportStyles.tableHeaderText}>Test</Text>
+              <Text style={reportStyles.tableHeaderText}>{translate("reading.pdf.test")}</Text>
             </View>
             <View style={reportStyles.colValue}>
-              <Text style={reportStyles.tableHeaderText}>Result</Text>
+              <Text style={reportStyles.tableHeaderText}>{translate("reading.pdf.result")}</Text>
             </View>
             <View style={reportStyles.colRange}>
-              <Text style={reportStyles.tableHeaderText}>Reference</Text>
+              <Text style={reportStyles.tableHeaderText}>{translate("reading.pdf.reference")}</Text>
             </View>
             <View style={reportStyles.colStatus}>
-              <Text style={[reportStyles.tableHeaderText, { textAlign: "right" }]}>Status</Text>
+              <Text style={[reportStyles.tableHeaderText, { textAlign: "right" }]}>{translate("reading.pdf.status")}</Text>
             </View>
           </View>
           {[...physical, ...chemical, ...microscopic].map((it, idx, arr) => (
@@ -330,24 +335,24 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading }: { rea
                     it.status === "Normal" ? reportStyles.tableCellStatusNormal : reportStyles.tableCellStatusAbnormal,
                   ]}
                 >
-                  {it.status === "Normal" ? "Normal" : "Abnormal"}
+                  {it.status === "Normal" ? translate("reading.pdf.normal") : translate("reading.pdf.abnormal")}
                 </Text>
               </View>
             </View>
           ))}
         </View>
 
-        <Text style={reportStyles.sectionTitle}>Remarks</Text>
+        <Text style={reportStyles.sectionTitle}>{translate("reading.pdf.remarks")}</Text>
         <View>
           <Text style={reportStyles.blockText}>{asReportText(r.report?.summaryAndInterpretation || r.timer?.analysis?.summary || "")}</Text>
         </View>
 
-        <Text style={reportStyles.sectionTitle}>Additional Information</Text>
+        <Text style={reportStyles.sectionTitle}>{translate("reading.pdf.additionalInformation")}</Text>
         <View>
           <Text style={reportStyles.blockText}>{asReportText(r.report?.otherInformation || "")}</Text>
         </View>
 
-        <Text style={reportStyles.sectionTitle}>Veterinarian Notes</Text>
+        <Text style={reportStyles.sectionTitle}>{translate("reading.pdf.veterinarianNotes")}</Text>
         <View>
           <Text style={reportStyles.blockText}>{asReportText(r.report?.veterinarianNotes || "")}</Text>
         </View>
@@ -355,17 +360,17 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading }: { rea
         <View fixed style={reportStyles.signatureArea}>
           <View style={reportStyles.signatureRow}>
             <View>
-              <Text style={reportStyles.signatureLabel}>Veterinarian</Text>
+              <Text style={reportStyles.signatureLabel}>{translate("reading.pdf.veterinarian")}</Text>
               <Text style={reportStyles.signatureName}>{asReportText(r.veterinarian.fullName)}</Text>
               {crmvLabel ? <Text style={reportStyles.signatureCrmv}>{crmvLabel}</Text> : null}
-              {generatedAt ? <Text style={reportStyles.signatureCrmv}>Signed at {generatedAt}</Text> : null}
+              {generatedAt ? <Text style={reportStyles.signatureCrmv}>{translate("reading.pdf.signedAt")} {generatedAt}</Text> : null}
             </View>
             <View>
-              <Text style={[reportStyles.signatureLabel, { textAlign: "right" }]}>Signature</Text>
+              <Text style={[reportStyles.signatureLabel, { textAlign: "right" }]}>{translate("reading.pdf.signature")}</Text>
               {signatureUrl ? (
                 <PdfImage src={{ uri: signatureUrl }} style={reportStyles.signatureImage} />
               ) : (
-                <Text style={[reportStyles.signatureCrmv, { textAlign: "right" }]}>N/A</Text>
+                <Text style={[reportStyles.signatureCrmv, { textAlign: "right" }]}>{translate("reading.pdf.notAvailable")}</Text>
               )}
             </View>
           </View>
@@ -380,8 +385,8 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading }: { rea
   return { url, fileName, blob };
 }
 
-export async function downloadUrinalysisPdf({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
-  const { url, fileName } = await createUrinalysisPdfObjectUrl({ readingId, reading });
+export async function downloadUrinalysisPdf({ readingId, reading, t }: { readingId: string; reading?: ReadingDetail | null; t?: (key: string) => string }) {
+  const { url, fileName } = await createUrinalysisPdfObjectUrl({ readingId, reading, t });
   const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
@@ -391,8 +396,8 @@ export async function downloadUrinalysisPdf({ readingId, reading }: { readingId:
   URL.revokeObjectURL(url);
 }
 
-export async function openUrinalysisPdf({ readingId, reading }: { readingId: string; reading?: ReadingDetail | null }) {
-  const { url } = await createUrinalysisPdfObjectUrl({ readingId, reading });
+export async function openUrinalysisPdf({ readingId, reading, t }: { readingId: string; reading?: ReadingDetail | null; t?: (key: string) => string }) {
+  const { url } = await createUrinalysisPdfObjectUrl({ readingId, reading, t });
   const opened = window.open(url, "_blank", "noopener,noreferrer");
   if (!opened) {
     window.location.assign(url);

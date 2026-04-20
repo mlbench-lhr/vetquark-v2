@@ -35,7 +35,7 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
     () =>
       panels.find((p) => p.code === selectedPanelCode) ?? {
         code: selectedPanelCode,
-        title: selectedPanelCode,
+        title: "",
         description: "",
         params: "",
         sortOrder: 0,
