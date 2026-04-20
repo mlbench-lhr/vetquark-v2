@@ -2,8 +2,18 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import SignaturePad from 'signature_pad'
+import Image from 'next/image'
 import { ReportDraft } from './types'
 import { useTranslation } from 'react-i18next'
+
+type VeterinarianInfo = {
+  fullName?: string
+  crmv?: string
+  crmvState?: string
+  clinicLogoUrl?: string
+  tradeName?: string
+  reportHeaderAddress?: string
+}
 
 type Props = {
   patientPreview: {
@@ -20,9 +30,10 @@ type Props = {
   signatureImageUrl?: string
   onChangeSignatureUrl?: (url: string) => void
   submitting?: boolean
+  veterinarian?: VeterinarianInfo
 }
 
-export default function ReportStep({ patientPreview, collectionAt, report, onChangeReport, onBack, onComplete, signatureImageUrl = "", onChangeSignatureUrl, submitting }: Props) {
+export default function ReportStep({ patientPreview, collectionAt, report, onChangeReport, onBack, onComplete, signatureImageUrl = "", onChangeSignatureUrl, submitting, veterinarian }: Props) {
   const { t } = useTranslation()
   const patientName = patientPreview?.animalName || '—'
   const breed = patientPreview?.breed || '—'
@@ -50,7 +61,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
       } catch {
       }
     }
-    ; (pad as any).onEnd = handleEnd
+      ; (pad as any).onEnd = handleEnd
     try {
       if (typeof window !== 'undefined' && !signatureImageUrl) {
         const saved = window.localStorage.getItem(SIGNATURE_STORAGE_KEY)
@@ -124,9 +135,21 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
       <p className="text-sm text-tertiary">{t('reading.report.desc')}</p>
 
       <div className="mt-6 rounded-3xl border border-gray-200 overflow-hidden bg-white p-4">
-        <div className="text-center font-bold text-gray-900 text-lg">XEILXTE</div>
-        <div className="text-center text-sm text-gray-700">{t('reading.report.labName')}</div>
-        <div className="text-center text-xs text-gray-500 mt-1">{t('reading.report.labAddress')}</div>
+        <div className="flex justify-center mb-2">
+          <Image
+            src="/images/logo/logo.svg"
+            alt="VetQuark"
+            width={120}
+            height={40}
+            className="h-10 w-auto"
+          />
+        </div>
+        <div className="text-center text-sm text-gray-700 font-medium">
+          {veterinarian?.tradeName || veterinarian?.fullName || t('reading.report.labName')}
+        </div>
+        <div className="text-center text-xs text-gray-500 mt-1">
+          {veterinarian?.reportHeaderAddress || t('reading.report.labAddress')}
+        </div>
 
         <div className="mt-4 border-t border-gray-200 pt-3 text-sm space-y-1">
           <div><span className="font-semibold">{t('reading.report.patientLabel')}:</span> {patientName}</div>
@@ -218,9 +241,15 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
         />
       </div>
       <div className="bg-[#F5F6F6] w-[100vw] -ms-4 h-2 my-4"></div>
-      <div className="w-full bg-red-30 flex justify-start items-center flex-col gap-0 px-4">
-        <h1 className="text-[18px] font-medium">Dr. Vet</h1>
-        <h2 className="text-[14px] font-normal">CRMV-SP 12345</h2>
+      <div className="w-full flex justify-start items-center flex-col gap-0 px-4">
+        <h1 className="text-[18px] font-medium">{veterinarian?.fullName || 'Dr. Vet'}</h1>
+        <h2 className="text-[14px] font-normal">
+          {veterinarian?.crmvState && veterinarian?.crmv
+            ? `CRMV-${veterinarian.crmvState} ${veterinarian.crmv}`
+            : veterinarian?.crmv
+              ? `CRMV ${veterinarian.crmv}`
+              : 'CRMV'}
+        </h2>
         <p className="text-[14px] font-normal text-black/60">{t('reading.report.generatedOnPrefix')} {new Date().toLocaleString()}</p>
       </div>
       <div className="mt-6 space-y-3">

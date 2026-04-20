@@ -620,6 +620,14 @@ export default function NewReadingWizard() {
           signatureImageUrl={signatureImageUrl}
           onChangeSignatureUrl={setSignatureImageUrl}
           submitting={submitting}
+          veterinarian={profile ? {
+            fullName: profile.fullName,
+            crmv: profile.crmv,
+            crmvState: profile.crmvState,
+            clinicLogoUrl: profile.clinicLogoUrl,
+            tradeName: profile.tradeName,
+            reportHeaderAddress: profile.reportHeaderAddress,
+          } : undefined}
         />
       )}
     </div>
