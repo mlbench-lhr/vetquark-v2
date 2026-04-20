@@ -1,13 +1,11 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Calendar, ChevronLeft, Plus, X } from 'lucide-react';
+import { Calendar, ChevronLeft, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PhoneInput from '@/components/form/group-input/PhoneInput';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { toast } from 'react-toastify';
-import { Modal } from '@/components/ui/modal';
-import { useModal } from '@/hooks/useModal';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
@@ -126,7 +124,6 @@ export default function GuardianRegistration() {
     const guardianId = (searchParams.get('guardianId') || '').trim() || null;
     const isEditing = !!guardianId;
     const dobRef = useRef<HTMLInputElement | null>(null);
-    const { isOpen: successOpen, openModal: openSuccess, closeModal: closeSuccess } = useModal();
     const [formData, setFormData] = useState<FormData>({
         fullName: '',
         taxId: '',
@@ -467,8 +464,8 @@ export default function GuardianRegistration() {
                 toast.error(typeof result?.error === "string" ? result.error : t('newPatient.guardian.failedToCreateGuardian'));
                 return;
             }
-            toast.success(t('auth.emailVerification'));
-            openSuccess();
+            toast.success(t('newPatient.guardian.guardianCreatedSuccess'));
+            router.back();
         } catch (e) {
             toast.error(isEditing ? t('newPatient.guardian.networkErrorUpdatingGuardian') : t('newPatient.guardian.networkErrorCreatingGuardian'));
             console.error(isEditing ? 'Error updating guardian:' : 'Error creating guardian:', e);
@@ -758,28 +755,6 @@ export default function GuardianRegistration() {
                 </div>
             </div>
 
-            <Modal isOpen={successOpen && !isEditing} onClose={() => { closeSuccess(); router.back(); }} className="max-w-[420px] mx-4 p-6">
-                <div className="flex items-start justify-between gap-4">
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{t('auth.emailVerification')}</h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                            {t('newPatient.guardian.verificationLinkSent')}
-                        </p>
-                    </div>
-                    <button type="button" onClick={() => { closeSuccess(); router.back(); }} className="p-2 rounded-lg hover:bg-gray-100">
-                        <X className="w-5 h-5 text-gray-700" />
-                    </button>
-                </div>
-                <div className="mt-5">
-                    <button
-                        type="button"
-                        onClick={() => { closeSuccess(); router.back(); }}
-                        className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg"
-                    >
-                        {t('common.back')}
-                    </button>
-                </div>
-            </Modal>
         </div>
     );
 }

@@ -38,24 +38,45 @@ type Props = {
   onSaved?: () => void;
 };
 
-const PARAMETER_OPTIONS: Array<{ key: string; title: string }> = [
-  { key: "specific-gravity", title: "Specific gravity" },
-  { key: "ph", title: "pH" },
-  { key: "protein", title: "Protein" },
-  { key: "glucose", title: "Glucose" },
-  { key: "ketone-bodies", title: "Ketone bodies" },
-  { key: "bilirubin", title: "Bilirubin" },
-  { key: "urobilinogen", title: "Urobilinogen" },
-  { key: "nitrite", title: "Nitrite" },
-  { key: "ascorbic-acid", title: "Ascorbic acid" },
-  { key: "leukocytes", title: "Leukocytes" },
-  { key: "blood", title: "Blood" },
-  { key: "microalbumin", title: "Microalbumin" },
-  { key: "creatine", title: "Creatine" },
-  { key: "calcium", title: "Calcium" },
-  { key: "magnesium", title: "Magnesium" },
-  { key: "ammonium-chloride", title: "Ammonium chloride" },
-];
+const PARAMETER_OPTION_KEYS = [
+  "specific-gravity",
+  "ph",
+  "protein",
+  "glucose",
+  "ketone-bodies",
+  "bilirubin",
+  "urobilinogen",
+  "nitrite",
+  "ascorbic-acid",
+  "leukocytes",
+  "blood",
+  "microalbumin",
+  "creatine",
+  "calcium",
+  "magnesium",
+  "ammonium-chloride",
+] as const;
+
+type ParameterKey = typeof PARAMETER_OPTION_KEYS[number];
+
+const PARAMETER_LABELS: Record<ParameterKey, string> = {
+  "specific-gravity": "reading.specificGravity",
+  "ph": "reading.ph",
+  "protein": "reading.protein",
+  "glucose": "reading.glucose",
+  "ketone-bodies": "reading.ketoneBodies",
+  "bilirubin": "reading.bilirubin",
+  "urobilinogen": "reading.urobilinogen",
+  "nitrite": "reading.nitrite",
+  "ascorbic-acid": "reading.ascorbicAcid",
+  "leukocytes": "reading.leukocytes",
+  "blood": "reading.blood",
+  "microalbumin": "reading.microalbumin",
+  "creatine": "reading.creatine",
+  "calcium": "reading.calcium",
+  "magnesium": "reading.magnesium",
+  "ammonium-chloride": "reading.ammoniumChloride",
+};
 
 function normalizePanelCode(value: unknown) {
   return String(value || "")
@@ -299,7 +320,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                 id="panel-code"
                 value={form.code}
                 onChange={(e) => setForm((p) => ({ ...p, code: e.target.value }))}
-                placeholder="VETQ_MASTER_360"
+                placeholder={t("auth.store.panelCodePlaceholder")}
                 disabled={saving || loadingDetails || isEdit}
               />
             </div>
@@ -310,7 +331,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                 id="panel-title"
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                placeholder="Master 360"
+                placeholder={t("auth.store.panelNamePlaceholder")}
                 disabled={saving || loadingDetails}
               />
             </div>
@@ -333,7 +354,7 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                 id="panel-params"
                 value={form.params}
                 onChange={(e) => setForm((p) => ({ ...p, params: e.target.value }))}
-                placeholder="LEU, NIT, BLD, PH, SG"
+                placeholder={t("auth.store.panelParamsPlaceholder")}
                 disabled={saving || loadingDetails}
               />
             </div>
@@ -398,10 +419,10 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
               <Label>{t("auth.store.panelParams")}</Label>
               <div className="rounded-md border border-input px-3 py-2">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {PARAMETER_OPTIONS.map((opt) => {
-                    const checked = Array.isArray(form.visibleKeys) ? form.visibleKeys.includes(opt.key) : false;
+                  {PARAMETER_OPTION_KEYS.map((key) => {
+                    const checked = Array.isArray(form.visibleKeys) ? form.visibleKeys.includes(key) : false;
                     return (
-                      <label key={opt.key} className="flex items-center gap-2 text-sm text-gray-900">
+                      <label key={key} className="flex items-center gap-2 text-sm text-gray-900">
                         <input
                           type="checkbox"
                           checked={checked}
@@ -410,14 +431,14 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                             setForm((p) => {
                               const prevKeys = Array.isArray((p as any).visibleKeys) ? ((p as any).visibleKeys as string[]) : [];
                               const set = new Set(prevKeys);
-                              if (nextChecked) set.add(opt.key);
-                              else set.delete(opt.key);
+                              if (nextChecked) set.add(key);
+                              else set.delete(key);
                               return { ...p, visibleKeys: [...set] };
                             });
                           }}
                           disabled={saving || loadingDetails}
                         />
-                        <span>{opt.title}</span>
+                        <span>{t(PARAMETER_LABELS[key])}</span>
                       </label>
                     );
                   })}
@@ -468,9 +489,9 @@ export default function AddEditPanelModal({ open, onOpenChange, initialPanel, on
                               <SelectValue placeholder={t("auth.store.selectParameter")} />
                             </SelectTrigger>
                             <SelectContent>
-                              {PARAMETER_OPTIONS.map((opt) => (
-                                <SelectItem key={opt.key} value={opt.key}>
-                                  {opt.title}
+                              {PARAMETER_OPTION_KEYS.map((key) => (
+                                <SelectItem key={key} value={key}>
+                                  {t(PARAMETER_LABELS[key])}
                                 </SelectItem>
                               ))}
                             </SelectContent>

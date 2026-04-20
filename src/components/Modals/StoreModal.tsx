@@ -423,16 +423,16 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                     </button>
                     <h1 className="text-base font-medium text-gray-900">
                         {step === "store"
-                            ? "Store"
+                            ? t("auth.store.store")
                             : step === "cart"
-                                ? "Cart"
+                                ? t("auth.store.cart")
                                 : step === "checkout"
-                                    ? "Checkout"
+                                    ? t("auth.store.checkout")
                                     : step === "success"
-                                        ? "Order Confirmed"
+                                        ? t("auth.store.orderConfirmed")
                                         : step === "change-address"
-                                            ? "Change Address"
-                                            : "Add New Address"}
+                                            ? t("auth.store.changeAddress")
+                                            : t("auth.store.addNewAddress")}
                     </h1>
                     {
                         step === "store" ?
@@ -472,7 +472,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                             </svg>
                         </div> :
                         step === "cart" ?
-                            <div className="font-semibold text-base mx-2 mt-4">Review your items before payment
+                            <div className="font-semibold text-base mx-2 mt-4">{t("auth.store.reviewItems")}
                             </div> : null
                 }
                 {step === "add-address" ? (
@@ -480,7 +480,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                         <div className="space-y-5">
                             <div>
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    Address Label
+                                    {t("auth.store.addressLabel")}
                                 </div>
                                 <input
                                     value={newAddressForm.label}
@@ -492,7 +492,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
                             <div>
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    Phone Number
+                                    {t("auth.store.phoneNumber")}
                                 </div>
                                 <PhoneInput
                                     name="phone"
@@ -508,7 +508,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
                             <div>
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    Address
+                                    {t("auth.store.address")}
                                 </div>
                                 <input
                                     value={newAddressForm.address}
@@ -520,7 +520,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
                             <div>
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    City
+                                    {t("auth.store.city")}
                                 </div>
                                 <input
                                     value={newAddressForm.city}
@@ -532,7 +532,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
                             <div>
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    State
+                                    {t("auth.store.state")}
                                 </div>
                                 <select
                                     value={newAddressForm.state}
@@ -540,7 +540,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                     className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
                                 >
                                     <option value="" disabled>
-                                        Select a state
+                                        {t("auth.store.selectState")}
                                     </option>
                                     {brazilianStateOptions.map((opt) => (
                                         <option key={opt.value} value={opt.value}>
@@ -552,7 +552,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
                             <div>
                                 <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    Postal Code
+                                    {t("auth.store.postalCode")}
                                 </div>
                                 <input
                                     type="number"
@@ -568,7 +568,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                             onClick={handleSaveNewAddress}
                             className="w-full bg-primary text-white mt-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
                         >
-                            Save
+                            {t("auth.store.save")}
                         </button>
                     </div>
                 ) : step === "change-address" ? (
@@ -618,7 +618,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                 className="w-full h-[56px] rounded-full bg-[#4A7BF7] text-white text-[16px] font-medium flex items-center justify-center gap-2"
                             >
                                 <Plus className="w-5 h-5" />
-                                Add New Address
+                                {t("auth.store.addNewAddress")}
                             </button>
                         </div>
                     </div>
@@ -634,7 +634,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                         <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
                                             {filteredProducts.length === 0 ? (
                                                 <div className="py-10 text-center text-sm text-gray-500">
-                                                    No items found
+                                                    {t("auth.store.noItemsFound")}
                                                 </div>
                                             ) : (
                                                 filteredProducts.map((product) => {
@@ -652,14 +652,14 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                                     <p className="text-base font-bold text-gray-800">R$ {product.price.toFixed(2)}</p>
                                                                     <div className="flex items-center gap-2">
                                                                         {qtyInCart > 0 ? (
-                                                                            <span className="text-xs text-gray-500">{qtyInCart} in cart</span>
+                                                                            <span className="text-xs text-gray-500">{qtyInCart} {t("auth.store.inCart")}</span>
                                                                         ) : null}
                                                                         <button
                                                                             onClick={() => addToCart(product.id)}
                                                                             className="h-8 px-3 rounded-full bg-primary text-white text-xs font-semibold hover:bg-blue-700 transition flex items-center gap-1"
                                                                         >
                                                                             <Plus className="w-4 h-4" />
-                                                                            Add
+                                                                            {t("auth.store.add")}
                                                                         </button>
                                                                     </div>
                                                                 </div>
@@ -675,7 +675,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                         <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
                                             {cartItems.length === 0 ? (
                                                 <div className="py-10 text-center text-sm text-gray-500">
-                                                    Your cart is empty
+                                                    {t("auth.store.cartEmpty")}
                                                 </div>
                                             ) : (
                                                 cartItems.map((item) => (
@@ -725,22 +725,22 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                             </>
                                         ) : (
                                             <div className="px-4">
-                                                <div className="text-sm text-gray-500 mb-3">Add a delivery address to continue.</div>
+                                                <div className="text-sm text-gray-500 mb-3">{t("auth.store.addADeliveryAddress")}</div>
                                                 <button
                                                     type="button"
                                                     onClick={() => setStep("add-address")}
                                                     className="h-10 px-4 rounded-full bg-primary text-white text-sm font-semibold hover:bg-blue-700 transition"
                                                 >
-                                                    Add Address
+                                                    {t("auth.store.addAddress")}
                                                 </button>
                                             </div>
                                         )}
                                     </div>
                                 ) : (
                                     <div className='h-[70vh] px-4 py-6 overflow-y-auto'>
-                                        <div className="text-lg font-semibold text-gray-900">Order placed</div>
+                                        <div className="text-lg font-semibold text-gray-900">{t("auth.store.orderPlaced")}</div>
                                         {lastOrder ? (
-                                            <div className="mt-1 text-sm text-gray-500">Order ID: {lastOrder.id}</div>
+                                            <div className="mt-1 text-sm text-gray-500">{t("auth.store.orderId")}: {lastOrder.id}</div>
                                         ) : null}
                                         {lastOrder ? (
                                             <div className="mt-4 rounded-2xl bg-white border border-gray-100">
@@ -751,19 +751,19 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                 </div>
                                                 <OrderSummary items={lastOrder.items} />
                                                 <div className="px-4 pt-3">
-                                                    <div className="text-sm font-semibold text-gray-900">Pay with card</div>
+                                                    <div className="text-sm font-semibold text-gray-900">{t("auth.store.payWithCard")}</div>
                                                     <div className="mt-2 space-y-3">
                                                         <input
                                                             type="text"
                                                             inputMode="numeric"
-                                                            placeholder="Card number"
+                                                            placeholder={t("auth.store.cardNumber")}
                                                             value={cardNumber}
                                                             onChange={(e) => setCardNumber(e.target.value)}
                                                             className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
                                                         />
                                                         <input
                                                             type="text"
-                                                            placeholder="Card holder name"
+                                                            placeholder={t("auth.store.cardHolderName")}
                                                             value={cardHolderName}
                                                             onChange={(e) => setCardHolderName(e.target.value)}
                                                             className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
@@ -771,7 +771,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                         <input
                                                             type="text"
                                                             inputMode="numeric"
-                                                            placeholder="CPF/CNPJ (optional)"
+                                                            placeholder={t("auth.store.cardDocument")}
                                                             value={cardHolderDocument}
                                                             onChange={(e) => setCardHolderDocument(e.target.value)}
                                                             className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
@@ -780,7 +780,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                             <input
                                                                 type="text"
                                                                 inputMode="numeric"
-                                                                placeholder="MM"
+                                                                placeholder={t("auth.store.expiryMonth")}
                                                                 value={cardExpMonth}
                                                                 onChange={(e) => setCardExpMonth(e.target.value)}
                                                                 className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
@@ -788,7 +788,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                             <input
                                                                 type="text"
                                                                 inputMode="numeric"
-                                                                placeholder="YY or YYYY"
+                                                                placeholder={t("auth.store.expiryYear")}
                                                                 value={cardExpYear}
                                                                 onChange={(e) => setCardExpYear(e.target.value)}
                                                                 className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
@@ -796,7 +796,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                             <input
                                                                 type="text"
                                                                 inputMode="numeric"
-                                                                placeholder="CVV"
+                                                                placeholder={t("auth.store.cvv")}
                                                                 value={cardCvv}
                                                                 onChange={(e) => setCardCvv(e.target.value)}
                                                                 className="h-12 w-24 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
@@ -808,7 +808,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                             onClick={payStoreOrderWithCard}
                                                             className="h-[48px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:opacity-60"
                                                         >
-                                                            {payingWithCard ? "Processing..." : "Pay with Card"}
+                                                            {payingWithCard ? t("auth.store.processing") : t("auth.store.payWithCard")}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -826,7 +826,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                 onClick={handleViewOrders}
                                                 className="w-full bg-[#F5F6F6] text-black py-2 rounded-full font-semibold px-3 flex items-center justify-center hover:bg-gray-200 transition"
                                             >
-                                                View My Orders
+                                                {t("auth.store.viewMyOrders")}
                                             </button>
                                             <button
                                                 type="button"
@@ -840,14 +840,14 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                 <span className='text-base text-primary h-6 w-6 rounded-full bg-white flex justify-center items-center'>
                                                     {cartQuantity}
                                                 </span>
-                                                View Your Cart
+                                                {t("auth.store.viewYourCart")}
                                                 <span className='text-sm font-bold text-white'>R$ {cartTotal.toFixed(2)}</span>
                                             </button>
                                         </>
                                     ) : step === "cart" ? (
                                         <>
                                             <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-500">Total Amount</span>
+                                                <span className="text-gray-500">{t("auth.store.totalAmount")}</span>
                                                 <span className="font-bold text-gray-800">R$ {cartTotal.toFixed(2)}</span>
                                             </div>
                                             <button
@@ -858,13 +858,13 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                     cartQuantity <= 0 ? "opacity-50 pointer-events-none" : "",
                                                 ].join(" ")}
                                             >
-                                                Proceed to checkout
+                                                {t("auth.store.proceedToCheckout")}
                                             </button>
                                         </>
                                     ) : step === "checkout" ? (
                                         <>
                                             <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-500">Total Amount</span>
+                                                <span className="text-gray-500">{t("auth.store.totalAmount")}</span>
                                                 <span className="font-bold text-gray-800">R$ {cartTotal.toFixed(2)}</span>
                                             </div>
                                             <button
@@ -875,7 +875,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                     placingOrder || cartQuantity <= 0 || !selectedAddress ? "opacity-50 pointer-events-none" : "",
                                                 ].join(" ")}
                                             >
-                                                {placingOrder ? "Placing order..." : "Place order"}
+                                                {placingOrder ? t("auth.store.placingOrder") : t("auth.store.placeOrder")}
                                             </button>
                                         </>
                                     ) : (
@@ -883,10 +883,9 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                             onClick={handleClose}
                                             className="w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition"
                                         >
-                                            Done
+                                            {t("auth.store.done")}
                                         </button>
-                                    )
-                                }
+                                    )}
                             </div>
                         </div>
                     </div>
@@ -918,19 +917,20 @@ interface DeliveryAddressProps {
 }
 
 const DeliveryAddress = ({ address, onChangeAddress, onAddNewAddress }: DeliveryAddressProps) => {
+    const { t } = useTranslation();
     return (
         <div className="px-4 py-5">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-primary" fill="hsl(var(--primary))" />
-                    <span className="text-base font-semibold text-foreground">Delivery Address</span>
+                    <span className="text-base font-semibold text-foreground">{t("auth.store.deliveryAddress")}</span>
                 </div>
                 <button
                     onClick={onChangeAddress}
                     className="text-primary text-base font-medium"
                 >
-                    Change
+                    {t("auth.store.change")}
                 </button>
             </div>
 
@@ -947,7 +947,7 @@ const DeliveryAddress = ({ address, onChangeAddress, onAddNewAddress }: Delivery
                     onClick={onAddNewAddress}
                     className="text-primary text-base font-medium"
                 >
-                    + Add New Address
+                    + {t("auth.store.addNewAddress")}
                 </button>
             </div>
         </div>
@@ -965,12 +965,13 @@ interface OrderSummaryProps {
 }
 
 const OrderSummary = ({ items }: OrderSummaryProps) => {
+    const { t } = useTranslation();
     return (
         <div className="px-4 py-5">
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
                 <Ticket className="w-5 h-5 text-primary" />
-                <span className="text-base font-semibold text-foreground">Order Summary</span>
+                <span className="text-base font-semibold text-foreground">{t("auth.store.orderSummary")}</span>
             </div>
 
             {/* Items List */}

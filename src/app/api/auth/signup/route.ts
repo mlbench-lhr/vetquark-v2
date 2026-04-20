@@ -4,7 +4,7 @@ import crypto from "crypto";
 import connectMongo from "@/lib/mongodb";
 import User, { IUser } from "@/lib/models/User";
 import VetGuardianEmailVerification from "@/lib/models/VetGuardianEmailVerification";
-import { sendVerificationEmail, sendWelcomeEmail, sendGuardianInviteEmail } from "@/lib/email";
+import { sendVerificationEmail, sendWelcomeEmail } from "@/lib/email";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { STATES_BY_COUNTRY, getCountryCities } from "@/lib/locationData";
 
@@ -313,87 +313,16 @@ export async function POST(req: NextRequest) {
         acceptTerms: true,
         profileType: 'Guardian',
         role: 'Guardian',
-        emailVerified: false,
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
         primaryVeterinarian: (vetUser as any)._id,
       };
 
       const created = await User.create(doc);
 
-      const now = Date.now();
-      const nextVerificationId = crypto.randomUUID();
-      const otpPlaceholder = String(crypto.randomInt(10000, 100000));
-      const linkExpiresMs = 7 * 24 * 60 * 60 * 1000;
-      const cleanupMs = 15 * 24 * 60 * 60 * 1000;
-      await VetGuardianEmailVerification.findOneAndUpdate(
-        { email: emailLower },
-        {
-          $set: {
-            email: emailLower,
-            otpHash: sha256Hex(otpPlaceholder),
-            otpExpiresAt: new Date(now + linkExpiresMs),
-            otpAttempts: 0,
-            otpLastSentAt: new Date(now),
-            verifiedExpiresAt: new Date(now + linkExpiresMs),
-            verificationId: nextVerificationId,
-            cleanupAt: new Date(now + cleanupMs),
-          },
-          $unset: {
-            verifiedAt: "",
-            consumedAt: "",
-          },
-        },
-        { upsert: true, new: true }
-      );
-
-      const baseUrl = req.nextUrl.origin;
-      const verificationLink = `${baseUrl}/signin?verifyGuardian=${encodeURIComponent(nextVerificationId)}&email=${encodeURIComponent(emailLower)}`;
-
-      const guardianLang = created?.preferredLanguage === "pt" ? "pt" : "en";
-      try {
-        await sendGuardianInviteEmail(emailLower, emailLower, tempPassword, verificationLink, guardianLang);
-      } catch {
-        return NextResponse.json({ id: String(created._id), message: 'Guardian created; invite email failed' }, { status: 202 });
-      }
-
-      return NextResponse.json({ id: String(created._id), message: 'Guardian created; verification link sent' }, { status: 201 });
+      return NextResponse.json({ id: String(created._id), message: 'Guardian created successfully' }, { status: 201 });
     }
 
-    if (mode === "guardian_verify_link") {
-      if (!emailLower) {
-        return NextResponse.json({ error: "Email is required" }, { status: 400 });
-      }
-      if (!verificationId || typeof verificationId !== "string") {
-        return NextResponse.json({ error: "Invalid verification token" }, { status: 400 });
-      }
-
-      const record = await VetGuardianEmailVerification.findOne({ email: emailLower, verificationId }).lean();
-      if (!record) {
-        return NextResponse.json({ error: "Verification not found" }, { status: 404 });
-      }
-      if (record.consumedAt) {
-        return NextResponse.json({ error: "Verification already used" }, { status: 409 });
-      }
-      const expiresAtMs = record.verifiedExpiresAt ? new Date(record.verifiedExpiresAt).getTime() : 0;
-      if (expiresAtMs && Date.now() > expiresAtMs) {
-        return NextResponse.json({ error: "Verification expired" }, { status: 410 });
-      }
-
-      const user = await User.findOneAndUpdate(
-        { email: emailLower },
-        { $set: { emailVerified: true, emailVerifiedAt: new Date() } },
-        { new: true }
-      ).lean();
-      if (!user?._id) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
-
-      await VetGuardianEmailVerification.updateOne(
-        { _id: record._id },
-        { $set: { verifiedAt: new Date(), consumedAt: new Date() } }
-      );
-
-      return NextResponse.json({ message: "Email verified" }, { status: 200 });
-    }
 
     if (mode === "init") {
       if (!fullName || !email || !password) {

@@ -9,6 +9,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface ParameterData {
     name: string;
@@ -105,6 +106,7 @@ function trendColor(trend: TrendType): string {
 }
 
 const ParameterRow = ({ param }: { param: ParameterData }) => {
+    const { t } = useTranslation();
     const getChangeColor = () => {
         if (!param.change && !param.sparkColor) return "text-muted-foreground";
         if (param.sparkColor === NORMAL_COLOR) return "text-emerald-500";
@@ -166,7 +168,7 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
         <div className="flex items-center py-3 border-b border-border/50 last:border-b-0">
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">{param.name}</p>
-                <p className="text-xs text-muted-foreground">Normal: {param.normal}</p>
+                <p className="text-xs text-muted-foreground">{t("reading.progress.normalColon")} {param.normal}</p>
             </div>
             <div className="flex items-center gap-3">
 
@@ -190,6 +192,7 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
 };
 
 const ProgressView = ({ patientId }: { patientId?: string }) => {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<ReadingItem[]>([]);
     const [seriesByKey, setSeriesByKey] = useState<Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string; label: string }>>>({});
@@ -444,7 +447,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
 
     if (items.length < 1) {
         return (
-            <div className="text-[14px] text-gray-500 px-4">No progress yet.</div>
+            <div className="text-[14px] text-gray-500 px-4">{t("reading.progress.noProgressYet")}</div>
         )
     }
     return (
@@ -452,8 +455,8 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-lg font-semibold text-foreground">Overall Progress</h2>
-                    <p className="text-xs text-muted-foreground">{lastExamDateLabel ? `Last test: ${lastExamDateLabel}` : ""}</p>
+                    <h2 className="text-lg font-semibold text-foreground">{t("reading.progress.overallProgress")}</h2>
+                    <p className="text-xs text-muted-foreground">{lastExamDateLabel ? `${t("reading.progress.lastTest")} ${lastExamDateLabel}` : ""}</p>
                 </div>
                 {patientId ? (
                     <Link
@@ -461,7 +464,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                         className="flex items-center gap-1 text-sm text-primary font-medium"
                     >
                         <Clock className="w-4 h-4" />
-                        View History
+                        {t("reading.progress.viewHistory")}
                     </Link>
                 ) : null}
             </div>
@@ -473,25 +476,25 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                         <TrendingUp className="w-5 h-5   mb-1" />
                         <p className="text-xl font-bold">{chemicalParams.filter((p) => p.sparkColor === NORMAL_COLOR).length + physicalParams.filter((p) => p.sparkColor === NORMAL_COLOR).length + microscopicParams.filter((p) => p.sparkColor === NORMAL_COLOR).length}</p>
                     </div>
-                    <p className="text-xs ">Normal</p>
+                    <p className="text-xs ">{t("reading.progress.normal")}</p>
                 </div>
                 <div className="bg-amber-50 rounded-xl h-[65px] flex flex-col justify-center items-start w-full text-amber-500 px-3 text-center">
                     <div className="flex justify-between w-full">
                         <TrendingDown className="w-5 h-5   mb-1" />
                         <p className="text-xl font-bold">{chemicalParams.filter((p) => p.sparkColor === INCREASING_COLOR).length + physicalParams.filter((p) => p.sparkColor === INCREASING_COLOR).length + microscopicParams.filter((p) => p.sparkColor === INCREASING_COLOR).length}</p>
                     </div>
-                    <p className="text-xs ">Increasing</p>
+                    <p className="text-xs ">{t("reading.progress.increasing")}</p>
                 </div>
                 <div className="bg-red-50 rounded-xl h-[65px] flex flex-col justify-center items-start w-full text-red-500 px-3 text-center">
                     <div className="flex justify-between w-full">
                         <Clock className="w-5 h-5   mb-1" />
                         <p className="text-xl font-bold">{chemicalParams.filter((p) => p.sparkColor === DECREASING_COLOR).length + physicalParams.filter((p) => p.sparkColor === DECREASING_COLOR).length + microscopicParams.filter((p) => p.sparkColor === DECREASING_COLOR).length}</p>
                     </div>
-                    <p className="text-xs ">Decreasing</p>
+                    <p className="text-xs ">{t("reading.progress.decreasing")}</p>
                 </div>
             </div>
 
-            <p className="text-xs text-muted-foreground text-start">Expand & view each parameter type</p>
+            <p className="text-xs text-muted-foreground text-start">{t("reading.progress.expandViewEachParameter")}</p>
 
             {/* Collapsible Sections */}
             <Accordion type="multiple" defaultValue={["physical", "chemical", "microscopic"]} className="space-y-3">
@@ -504,7 +507,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                                     <path d="M9.99125 18.3171C11.537 18.3171 13.0194 17.7031 14.1124 16.6101C15.2054 15.517 15.8194 14.0347 15.8194 12.489C15.8194 10.8237 14.9869 9.24182 13.3216 7.90967C11.6564 6.57753 10.4076 4.57929 9.99125 2.4978C9.57496 4.57929 8.32606 6.57753 6.66087 7.90967C4.99569 9.24182 4.16309 10.8237 4.16309 12.489C4.16309 14.0347 4.77712 15.517 5.87012 16.6101C6.96311 17.7031 8.44553 18.3171 9.99125 18.3171Z" fill="white" />
                                 </svg>
                             </div>
-                            <span className="font-semibold text-foreground">Physical Parameters</span>
+                            <span className="font-semibold text-foreground">{t("reading.progress.physicalParameters")}</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-3">
@@ -523,7 +526,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                                     <path d="M11.6564 1.66528V6.66085C11.6563 6.94018 11.7265 7.21504 11.8604 7.46015L16.448 15.8527C16.5867 16.1064 16.6571 16.3917 16.6521 16.6807C16.6471 16.9698 16.5669 17.2525 16.4195 17.5012C16.2721 17.7499 16.0625 17.9559 15.8113 18.099C15.56 18.242 15.2759 18.3173 14.9868 18.3172H4.99566C4.70656 18.3173 4.42242 18.242 4.17121 18.099C3.91999 17.9559 3.71036 17.7499 3.56291 17.5012C3.41548 17.2525 3.33531 16.9698 3.33033 16.6807C3.32534 16.3917 3.39569 16.1064 3.53445 15.8527L8.12205 7.46015C8.256 7.21504 8.32615 6.94018 8.32603 6.66085V1.66528" fill="white" />
                                 </svg>
                             </div>
-                            <span className="font-semibold text-foreground">Chemical Parameters</span>
+                            <span className="font-semibold text-foreground">{t("reading.progress.chemicalParameters")}</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-3">
@@ -542,7 +545,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
                                     <path d="M3.33055 11.6564C3.17299 11.657 3.01852 11.6128 2.88507 11.529C2.75163 11.4453 2.64469 11.3253 2.57668 11.1832C2.50867 11.041 2.48238 10.8826 2.50087 10.7261C2.51935 10.5696 2.58187 10.4216 2.68112 10.2993L10.9238 1.8068C10.9856 1.73543 11.0699 1.6872 11.1627 1.67003C11.2556 1.65286 11.3515 1.66776 11.4348 1.7123C11.5181 1.75683 11.5837 1.82836 11.621 1.91512C11.6582 2.00189 11.6649 2.09874 11.6398 2.18979L10.0412 7.20201C9.99413 7.32817 9.9783 7.46388 9.99514 7.5975C10.0119 7.73112 10.061 7.85867 10.1379 7.96919C10.2148 8.07971 10.3175 8.16992 10.4369 8.23207C10.5565 8.29421 10.6892 8.32645 10.8239 8.32602H16.6521C16.8096 8.32548 16.9642 8.36966 17.0976 8.45342C17.231 8.53719 17.338 8.65709 17.406 8.79922C17.4739 8.94134 17.5002 9.09984 17.4817 9.25631C17.4632 9.41278 17.4008 9.56079 17.3015 9.68315L9.0588 18.1756C8.99697 18.2469 8.91272 18.2952 8.81987 18.3124C8.72701 18.3295 8.63109 18.3146 8.54782 18.2701C8.46455 18.2256 8.39891 18.1541 8.36164 18.0673C8.32439 17.9806 8.31773 17.8837 8.34277 17.7926L9.94135 12.7804C9.98849 12.6542 10.0043 12.5186 9.98749 12.3849C9.97065 12.2513 9.92166 12.1238 9.8447 12.0132C9.76774 11.9027 9.66513 11.8125 9.54565 11.7503C9.42616 11.6881 9.29339 11.656 9.15872 11.6564H3.33055Z" fill="white" />
                                 </svg>
                             </div>
-                            <span className="font-semibold text-foreground">Microscopic Parameters</span>
+                            <span className="font-semibold text-foreground">{t("reading.progress.microscopicParameters")}</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-3">
@@ -626,6 +629,7 @@ export function ParameterProgress({
     normalLabelByKey?: Record<string, string>;
     normalRuleByKey?: Record<string, NormalRule | undefined>;
 }) {
+    const { t } = useTranslation();
     const [viewMode, setViewMode] = useState<ViewMode>("graph");
     const [selectedParameter, setSelectedParameter] = useState<string>("");
     const [tempRange, setTempRange] = useState<{ from: Date | undefined; to: Date | undefined }>(dateRange || { from: undefined, to: undefined });
@@ -703,10 +707,10 @@ export function ParameterProgress({
             <div className="flex items-start justify-between mb-6">
                 <div>
                     <h2 className="text-base font-semibold text-card-foreground">
-                        Parameter Progress
+                        {t("reading.progress.parameterProgress")}
                     </h2>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                        Track test results over time
+                        {t("reading.progress.trackTestResults")}
                     </p>
                 </div>
 
@@ -719,7 +723,7 @@ export function ParameterProgress({
                             : "text-muted-foreground hover:text-card-foreground"
                             }`}
                     >
-                        Graph
+                        {t("reading.progress.graph")}
                     </button>
                     <button
                         onClick={() => setViewMode("table")}
@@ -728,7 +732,7 @@ export function ParameterProgress({
                             : "text-muted-foreground hover:text-card-foreground"
                             }`}
                     >
-                        Table
+                        {t("reading.progress.table")}
                     </button>
                 </div>
             </div>
@@ -758,7 +762,7 @@ export function ParameterProgress({
                                         dateRange.to,
                                         "d MMM yyyy"
                                     )}`
-                                    : "Select dates"}
+                                    : t("reading.progress.selectDates")}
                             </span>
                             <Calendar
                                 color='#3F78D8'
@@ -780,14 +784,14 @@ export function ParameterProgress({
                                 className="bg-secondary border-0 rounded-md shadow-none"
                                 onClick={() => { setPickerOpen(false); }}
                             >
-                                Cancel
+                                {t("reading.progress.cancel")}
                             </Button>
                             <Button
                                 className="rounded-md"
                                 disabled={!tempRange.from || !tempRange.to}
                                 onClick={() => { if (tempRange?.from && tempRange?.to && tempRange && onDateRangeChange) { onDateRangeChange(tempRange); setPickerOpen(false); } }}
                             >
-                                Apply
+                                {t("reading.progress.apply")}
                             </Button>
                         </div>
                     </PopoverContent>
@@ -801,12 +805,12 @@ export function ParameterProgress({
                         {currentParam?.name || ""}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                        Normal: {currentParam?.normalValue || ""}
+                        {t("reading.progress.normalColon")} {currentParam?.normalValue || ""}
                     </p>
                 </div>
                 <Button onClick={handleExport} variant="outline" className="bg-[#F5F6F6] border-0 shadow-none rounded-full gap-2 ">
                     <Download className="h-4 w-4 text-primary" />
-                    Export
+                    {t("reading.progress.export")}
                 </Button>
             </div>
 
@@ -851,8 +855,8 @@ export function ParameterProgress({
             ) : (
                 <div className="overflow-hidden">
                     <div className="flex justify-between text-sm text-muted-foreground border-b border-border pb-3 mb-1">
-                        <span>Month</span>
-                        <span>Value</span>
+                        <span>{t("reading.progress.month")}</span>
+                        <span>{t("reading.progress.value")}</span>
                     </div>
                     <div className="divide-y divide-border">
                         {(currentParam?.data || []).map((item) => (

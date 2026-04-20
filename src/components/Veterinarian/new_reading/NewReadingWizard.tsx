@@ -322,48 +322,39 @@ export default function NewReadingWizard() {
     if (!patientId) return
     if (draftId) return
     if (creatingDraftRef.current) return
-    if (step === 'identification') {
-      const i = draft.identification
-      const todayStr = new Date().toISOString().slice(0, 10)
-      const expiryStr = (i.stripExpiry || '').trim()
-      const expiryValid = !!expiryStr && expiryStr >= todayStr
-      const firstStepComplete =
-        !!(i.collectionMethod || '').trim() &&
-        !!(i.collectionAt || '').trim() &&
-        !!(i.stripLot || '').trim() &&
-        expiryValid
-      if (!firstStepComplete) return
-    }
-    ; (async () => {
-      creatingDraftRef.current = true
-      const createdId = await saveDraftNow({
-        patientId,
-        paymentLinkId: (draft.identification.paymentLinkId || '').trim() || undefined,
-        wizardStep: step,
-        productCode: String((draft.identification.panelProductCode || defaultPanelProductCode || '')).trim(),
-        identification: {
-          collectionMethod: String(draft.identification.collectionMethod || ''),
-          collectionAt: String(draft.identification.collectionAt || ''),
-          stripLot: String(draft.identification.stripLot || ''),
-          stripExpiry: String(draft.identification.stripExpiry || ''),
-        },
-        timer: {
-          selectedSeconds: Number(draft.timer.selectedSeconds || 120),
-          analyzedAt: String(draft.timer.analyzedAt || ''),
-          analysis: draft.timer.analysis,
-        },
-        results: Array.isArray(draft.results) ? draft.results : [],
-        report: draft.report,
-        signatureImageUrl: String(signatureImageUrl || ''),
-      })
-      creatingDraftRef.current = false
-      if (!createdId) return
-      setDraftId(createdId)
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('draftId', createdId)
-      params.delete('resume')
-      // router.replace(`/Veterinarian/new-reading?${params.toString()}`)
-    })()
+    // Do not save draft if still on step 1 (identification)
+    // Only start saving from step 2 (timer) onwards
+    if (step === 'identification') return
+      ; (async () => {
+        creatingDraftRef.current = true
+        const createdId = await saveDraftNow({
+          patientId,
+          paymentLinkId: (draft.identification.paymentLinkId || '').trim() || undefined,
+          wizardStep: step,
+          productCode: String((draft.identification.panelProductCode || defaultPanelProductCode || '')).trim(),
+          identification: {
+            collectionMethod: String(draft.identification.collectionMethod || ''),
+            collectionAt: String(draft.identification.collectionAt || ''),
+            stripLot: String(draft.identification.stripLot || ''),
+            stripExpiry: String(draft.identification.stripExpiry || ''),
+          },
+          timer: {
+            selectedSeconds: Number(draft.timer.selectedSeconds || 120),
+            analyzedAt: String(draft.timer.analyzedAt || ''),
+            analysis: draft.timer.analysis,
+          },
+          results: Array.isArray(draft.results) ? draft.results : [],
+          report: draft.report,
+          signatureImageUrl: String(signatureImageUrl || ''),
+        })
+        creatingDraftRef.current = false
+        if (!createdId) return
+        setDraftId(createdId)
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('draftId', createdId)
+        params.delete('resume')
+        // router.replace(`/Veterinarian/new-reading?${params.toString()}`)
+      })()
   }, [draft.identification.patientId, draft.identification.paymentLinkId, draft.identification.panelProductCode, draft.report, draft.results, draft.timer, draftId, router, saveDraftNow, searchParams, signatureImageUrl, step])
 
   useEffect(() => {

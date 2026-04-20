@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export const config = {
   matcher: [
     "/api/:path*",
+    "/Guardian/:path*",
+    "/guardian/:path*",
     "/((?!api|_next/static|_next/image|favicon.ico|images|fonts|robots.txt|sitemap.xml|manifest.json|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map)$).*)",
   ],
 };
@@ -66,6 +68,12 @@ function homeForRole(role: unknown) {
 
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Block all Guardian routes - redirect to signin
+  if (pathname.startsWith('/Guardian') || pathname.startsWith('/guardian')) {
+    return NextResponse.redirect(new URL('/signin', req.nextUrl.origin));
+  }
+
   const isAuthSignup = pathname === "/api/auth/signup";
   if (
     (pathname.startsWith("/api/auth") && !isAuthSignup) ||

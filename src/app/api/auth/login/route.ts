@@ -124,6 +124,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email not verified" }, { status: 403 });
     }
 
+    // Block Guardians from logging in - the guardian module is disabled
+    if (user.role === "Guardian") {
+      return NextResponse.json(
+        { error: "Guardian access is disabled. Please contact your veterinarian." },
+        { status: 403 }
+      );
+    }
+
     const requestedRole = normalizeRole(role ?? profileType);
     if (requestedRole && user.role !== requestedRole) {
       return NextResponse.json(

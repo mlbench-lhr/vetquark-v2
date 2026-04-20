@@ -241,7 +241,7 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
                 step="0.01"
                 value={form.price}
                 onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
-                placeholder="0.00"
+                placeholder={t("auth.store.pricePlaceholder")}
                 disabled={saving || uploadingImage}
               />
             </div>
@@ -256,7 +256,7 @@ export default function AddEditProductModal({ open, onOpenChange, initialProduct
                 step="1"
                 value={form.stock}
                 onChange={(e) => setForm((p) => ({ ...p, stock: e.target.value }))}
-                placeholder="0"
+                placeholder={t("auth.store.stockPlaceholder")}
                 disabled={saving || uploadingImage}
               />
             </div>

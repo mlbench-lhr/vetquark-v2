@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { STATES_BY_COUNTRY, getCountryCities } from "@/lib/locationData";
 import Image from "next/image";
 
-type ProfileType = "veterinarian" | "tutor";
+type ProfileType = "veterinarian";
 
 type SignUpFormData = {
   fullName: string;
@@ -75,14 +75,8 @@ export default function SignUpForm() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const initialProfileType = (() => {
-    const raw = String(searchParams.get("profile") || searchParams.get("type") || "").toLowerCase().trim();
-    if (raw === "guardian" || raw === "tutor") return "tutor" as const;
-    if (raw === "vet" || raw === "veterinarian") return "veterinarian" as const;
-    return "veterinarian" as const;
-  })();
-  const [step, setStep] = useState(() => (initialProfileType === "tutor" ? 2 : 1));
-  const [profileType, setProfileType] = useState<ProfileType>(() => initialProfileType);
+  const [step, setStep] = useState(1);
+  const [profileType] = useState<ProfileType>("veterinarian");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", ""]);
@@ -206,7 +200,7 @@ export default function SignUpForm() {
 
   const [formData, setFormData] = useState<SignUpFormData>(() => getEmptyFormData());
 
-  const finalStep = profileType === "veterinarian" ? 6 : 4;
+  const finalStep = 6;
 
   const resetInnerFormFields = () => {
     setFormData(getEmptyFormData());
@@ -435,37 +429,6 @@ export default function SignUpForm() {
     }
     try {
       setSubmitting(true);
-      if (profileType === "tutor") {
-        const dateOfBirthStr = String(formData.dateOfBirth || "").trim();
-        if (!dateOfBirthStr) {
-          toast.error(t("auth.dateOfBirthRequired"));
-          return;
-        }
-        const dob = new Date(dateOfBirthStr);
-        if (!Number.isFinite(dob.getTime())) {
-          toast.error(t("auth.invalidDateOfBirth"));
-          return;
-        }
-        {
-          const todayIso = new Date().toISOString().slice(0, 10);
-          if (dateOfBirthStr >= todayIso) {
-            toast.error(t("auth.dateOfBirthMustBePast"));
-            return;
-          }
-        }
-        const today = new Date();
-        let age = today.getFullYear() - dob.getFullYear();
-        const m = today.getMonth() - dob.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-        if (age < 10) {
-          toast.error(t("auth.guardianMinAge"));
-          return;
-        }
-        if (!String(formData.veterinarianCode || "").trim()) {
-          toast.error(t("auth.veterinarianCodeRequired"));
-          return;
-        }
-      }
       const basePayload = {
         mode: "complete" as const,
         fullName: formData.fullName,
@@ -481,22 +444,20 @@ export default function SignUpForm() {
         operateHow: formData.operateHow,
         expertise: formData.expertise,
         acceptTerms: formData.acceptTerms,
-        profileType,
-        role: profileType,
+        profileType: "veterinarian" as const,
+        role: "veterinarian" as const,
       };
-      const payload = profileType === "veterinarian"
-        ? {
-          ...basePayload,
-          crmv: formData.crmv,
-          crmvState: formData.crmvState,
-          mapaRegistration: formData.mapaRegistration,
-          clinicLogoUrl: formData.clinicLogoUrl || undefined,
-          tradeName: formData.tradeName,
-          cnpjIe: formData.cnpjIe || undefined,
-          reportHeaderAddress: formData.reportHeaderAddress,
-          reportFooter: formData.reportFooter,
-        }
-        : { ...basePayload, veterinarianCode: formData.veterinarianCode };
+      const payload = {
+        ...basePayload,
+        crmv: formData.crmv,
+        crmvState: formData.crmvState,
+        mapaRegistration: formData.mapaRegistration,
+        clinicLogoUrl: formData.clinicLogoUrl || undefined,
+        tradeName: formData.tradeName,
+        cnpjIe: formData.cnpjIe || undefined,
+        reportHeaderAddress: formData.reportHeaderAddress,
+        reportFooter: formData.reportFooter,
+      };
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -510,12 +471,12 @@ export default function SignUpForm() {
       }
       toast.success(t("auth.accountCreated"));
       const id = (data?.id ? String(data.id) : "").trim();
-      const homeHref = profileType === "veterinarian" ? "/Veterinarian/home" : "/Guardian/home";
+      const homeHref = "/Veterinarian/home";
       try {
         const loginRes = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: formData.email, password: formData.password, role: profileType }),
+          body: JSON.stringify({ email: formData.email, password: formData.password, role: "veterinarian" }),
           credentials: "include",
         });
         const loginData = await loginRes.json().catch(() => null);
@@ -530,7 +491,7 @@ export default function SignUpForm() {
         return;
       }
       router.push(
-        `/upload-profile-picture?userId=${encodeURIComponent(id)}&profileType=${encodeURIComponent(profileType)}`
+        `/upload-profile-picture?userId=${encodeURIComponent(id)}&profileType=veterinarian`
       );
     } finally {
       setSubmitting(false);
@@ -634,74 +595,6 @@ export default function SignUpForm() {
   const renderStepContent = () => {
     switch (step) {
       case 1:
-        return (
-          <div className="pt-8">
-            <h1 className="text-2xl font-medium text-gray-900">
-              {t("auth.selectAccountType")}
-            </h1>
-            <p className="text-sm text-tertiary ">
-              {t("auth.chooseAccountType")}
-            </p>
-
-            <div className="space-y-3 mt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  if (profileType === "veterinarian") return;
-                  resetInnerFormFields();
-                  setProfileType("veterinarian");
-                }}
-                className={`w-full p-4 transition-all flex items-center justify-between ${profileType === "veterinarian"
-                  ? "bg-[#EBF2FF] text-primary rounded-full"
-                  : "bg-gray-50 text-gray-700 rounded-2xl"
-                  }`}
-              >
-                <div className="flex items-center gap-3">
-                  {profileType === 'veterinarian' ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path d="M6.65289 6.79678C7.49169 6.65278 8.11449 5.88958 8.20809 4.97878C8.30529 4.04998 8.52129 0.320381 7.12089 0.557981C3.48849 1.17358 3.74409 7.28998 6.65289 6.79678ZM11.4301 6.79678C14.3389 7.28998 14.5945 1.17358 10.9621 0.557981C9.56169 0.320381 9.77769 4.04998 9.87489 4.97878C9.96849 5.89318 10.5913 6.65638 11.4301 6.79678ZM5.15889 9.68038C5.15889 9.19438 4.98609 8.75518 4.70529 8.43478C4.24809 7.83358 2.78649 6.62398 2.43009 6.93358C1.68129 7.58518 1.70649 9.18358 2.15649 10.3464C2.38689 10.9944 2.94849 11.448 3.60009 11.448C4.46049 11.448 5.15889 10.656 5.15889 9.68038ZM15.6493 6.93358C15.2929 6.62398 13.8313 7.83718 13.3741 8.43478C13.0969 8.75518 12.9205 9.19438 12.9205 9.68038C12.9205 10.656 13.6189 11.448 14.4793 11.448C15.1345 11.448 15.6925 10.9944 15.9229 10.3464C16.3729 9.18358 16.3981 7.58518 15.6493 6.93358ZM12.7189 12.4344C11.3941 11.7756 11.4373 10.5048 11.1349 9.34558C10.8973 8.42038 10.0477 7.73638 9.03969 7.73638C8.05329 7.73638 7.21809 8.39158 6.95889 9.28798C6.63849 10.3968 6.82929 11.6892 5.38929 12.4272C4.21929 12.8088 3.74409 13.3668 3.74409 14.6844C3.74409 15.7536 4.66209 16.902 5.85009 17.0424C7.17489 17.2404 8.20449 16.9812 9.04329 16.506C9.87849 16.9812 10.9117 17.244 12.2365 17.0424C13.4209 16.8984 14.3425 15.7572 14.3425 14.6844C14.3425 13.338 13.8961 12.8376 12.7225 12.4344H12.7189ZM11.1565 14.0436H9.78489L9.78849 15.4836H8.29089L8.29449 14.0436H6.84009V12.6036H8.29809L8.29449 11.1636H9.79209V12.6036H11.1637V14.0436H11.1565Z" fill="#3F78D8" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path d="M6.65289 6.79678C7.49169 6.65278 8.11449 5.88958 8.20809 4.97878C8.30529 4.04998 8.52129 0.320381 7.12089 0.557981C3.48849 1.17358 3.74409 7.28998 6.65289 6.79678ZM11.4301 6.79678C14.3389 7.28998 14.5945 1.17358 10.9621 0.557981C9.56169 0.320381 9.77769 4.04998 9.87489 4.97878C9.96849 5.89318 10.5913 6.65638 11.4301 6.79678ZM5.15889 9.68038C5.15889 9.19438 4.98609 8.75518 4.70529 8.43478C4.24809 7.83358 2.78649 6.62398 2.43009 6.93358C1.68129 7.58518 1.70649 9.18358 2.15649 10.3464C2.38689 10.9944 2.94849 11.448 3.60009 11.448C4.46049 11.448 5.15889 10.656 5.15889 9.68038ZM15.6493 6.93358C15.2929 6.62398 13.8313 7.83718 13.3741 8.43478C13.0969 8.75518 12.9205 9.19438 12.9205 9.68038C12.9205 10.656 13.6189 11.448 14.4793 11.448C15.1345 11.448 15.6925 10.9944 15.9229 10.3464C16.3729 9.18358 16.3981 7.58518 15.6493 6.93358ZM12.7189 12.4344C11.3941 11.7756 11.4373 10.5048 11.1349 9.34558C10.8973 8.42038 10.0477 7.73638 9.03969 7.73638C8.05329 7.73638 7.21809 8.39158 6.95889 9.28798C6.63849 10.3968 6.82929 11.6892 5.38929 12.4272C4.21929 12.8088 3.74409 13.3668 3.74409 14.6844C3.74409 15.7536 4.66209 16.902 5.85009 17.0424C7.17489 17.2404 8.20449 16.9812 9.04329 16.506C9.87849 16.9812 10.9117 17.244 12.2365 17.0424C13.4209 16.8984 14.3425 15.7572 14.3425 14.6844C14.3425 13.338 13.8961 12.8376 12.7225 12.4344H12.7189ZM11.1565 14.0436H9.78489L9.78849 15.4836H8.29089L8.29449 14.0436H6.84009V12.6036H8.29809L8.29449 11.1636H9.79209V12.6036H11.1637V14.0436H11.1565Z" fill="black" />
-                    </svg>
-                  )}
-                  <span className="font-medium">{t("auth.veterinarian")}</span>
-                </div>
-                {profileType === "veterinarian" && (
-                  <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
-                    <Check size={16} className="text-white" />
-                  </div>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (profileType === "tutor") return;
-                  resetInnerFormFields();
-                  setProfileType("tutor");
-                }}
-                className={`w-full p-4 transition-all flex items-center justify-between ${profileType === "tutor"
-                  ? "bg-[#EBF2FF] text-primary rounded-full"
-                  : "bg-gray-50 text-gray-700 rounded-2xl"
-                  }`}
-              >
-                <div className="flex items-center gap-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path d="M9 9C7.9 9 6.95833 8.60833 6.175 7.825C5.39167 7.04167 5 6.1 5 5C5 3.9 5.39167 2.95833 6.175 2.175C6.95833 1.39167 7.9 1 9 1C10.1 1 11.0417 1.39167 11.825 2.175C12.6083 2.95833 13 3.9 13 5C13 6.1 12.6083 7.04167 11.825 7.825C11.0417 8.60833 10.1 9 9 9ZM1 15V14.2C1 13.6333 1.146 13.1127 1.438 12.638C1.73 12.1633 2.11733 11.8007 2.6 11.55C3.63333 11.0333 4.68333 10.646 5.75 10.388C6.81667 10.13 7.9 10.0007 9 10C10.1 9.99933 11.1833 10.1287 12.25 10.388C13.3167 10.6473 14.3667 11.0347 15.4 11.55C15.8833 11.8 16.271 12.1627 16.563 12.638C16.855 13.1133 17.0007 13.634 17 14.2V15C17 15.55 16.8043 16.021 16.413 16.413C16.0217 16.805 15.5507 17.0007 15 17H3C2.45 17 1.97933 16.8043 1.588 16.413C1.19667 16.0217 1.00067 15.5507 1 15Z" fill={profileType === 'tutor' ? "#3F78D8" : "#2B2B2B"} />
-                  </svg>                  <span className="font-medium">{t("auth.guardian")}</span>
-                </div>
-                {profileType === "tutor" && (
-                  <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
-                    <Check size={16} className="text-white" />
-                  </div>
-                )}
-              </button>
-            </div>
-          </div>
-        );
-
       case 2:
 
         return (
@@ -907,7 +800,7 @@ export default function SignUpForm() {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
-                  {profileType === "tutor" ? t("auth.enterNationalId") : t("auth.taxId")}
+                  {t("auth.taxId")}
                 </label>
                 <input
                   type="number"
@@ -931,7 +824,7 @@ export default function SignUpForm() {
                     value={formData.dateOfBirth}
                     onChange={handleInputChange}
                     required
-                    max={(profileType === "tutor" ? new Date(new Date().setFullYear(new Date().getFullYear() - 10)) : new Date()).toISOString().slice(0, 10)}
+                    max={new Date().toISOString().slice(0, 10)}
                     className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12 [&::-webkit-calendar-picker-indicator]:opacity-0"
                     style={{ colorScheme: 'light' }}
                   />
@@ -1038,23 +931,6 @@ export default function SignUpForm() {
                 )}
               </div>
 
-              <div>
-                {profileType === "tutor" && (
-                  <div className="mb-4">
-                    <label className="block text-gray-900 text-sm mb-2">
-                      Veterinarian Code <span className="text-gray-500">{t("auth.optional")}</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="veterinarianCode"
-                      placeholder={t("auth.enterVeterinarianUniqueCode")}
-                      value={formData.veterinarianCode}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
-                    />
-                  </div>
-                )}
-              </div>
               <div>
                 <label className="block text-gray-900 text-sm mb-2">
                   {t("auth.postalCode")}
@@ -1299,7 +1175,7 @@ export default function SignUpForm() {
           {step === 1 && t("auth.createAccount")}
           {step === 2 && t("auth.personalDetails")}
           {step === 3 && ""}
-          {step === 4 && (profileType === "tutor" ? t("auth.idAddressInfo") : t("auth.taxAddressInfo"))}
+          {step === 4 && t("auth.taxAddressInfo")}
           {step === 5 && t("auth.professionalRegistration")}
           {step === 6 && t("auth.clinicReports")}
         </h2>

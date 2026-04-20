@@ -206,13 +206,13 @@ import { Modal } from "@/components/ui/modal";
 import EmailVerification from "@/components/auth/EmailVerification";
 import Link from 'next/link';
 
-type ProfileType = 'veterinarian' | 'guardian';
+type ProfileType = 'veterinarian';
 
 export default function SignInForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const [profile, setProfileType] = useState<ProfileType>('veterinarian');
+  const [profile] = useState<ProfileType>('veterinarian');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const searchParams = useSearchParams();
@@ -250,9 +250,7 @@ export default function SignInForm() {
         dispatch(setUserProfile(data.profile));
       }
       toast.success(t("auth.loggedInSuccessfully"));
-      const role = data?.profile?.role ?? data?.role;
-      if (role === 'Veterinarian') router.push('/Veterinarian/home');
-      else router.push('/Guardian/home');
+      router.push('/Veterinarian/home');
     } catch (err) {
       toast.error(t("auth.networkErrorDuringLogin"));
       console.error('Login network error:', err);
@@ -261,35 +259,6 @@ export default function SignInForm() {
     }
   };
 
-  useEffect(() => {
-    const token = (searchParams.get("verifyGuardian") || "").trim();
-    const emailParam = (searchParams.get("email") || "").trim().toLowerCase();
-    if (!token || !emailParam) return;
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await fetch("/api/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode: "guardian_verify_link", email: emailParam, verificationId: token }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!mounted) return;
-        if (!res.ok) {
-          toast.error(typeof data?.error === "string" ? data.error : t("auth.verificationFailed"));
-          return;
-        }
-        toast.success(t("auth.emailVerified"));
-        router.replace("/signin");
-      } catch {
-        if (!mounted) return;
-        toast.error(t("auth.networkErrorVerifyingOtp"));
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [router, searchParams, t]);
 
   const verify2FA = async (code: string) => {
     if (code.length !== 5) {
@@ -314,9 +283,7 @@ export default function SignInForm() {
       }
       toast.success(t("auth.loggedInSuccessfully"));
       setTwoFARequired(false);
-      const role = data?.profile?.role ?? data?.role;
-      if (role === 'Veterinarian') router.push('/Veterinarian/home');
-      else router.push('/Guardian/home');
+      router.push('/Veterinarian/home');
     } finally {
       setVerifying(false);
     }
@@ -377,58 +344,6 @@ export default function SignInForm() {
           <p className="text-tertiary">
             {t("auth.accountTypePrompt")}
           </p>
-        </div>
-
-        {/* Profile Selection */}
-        <div className="flex gap-3 mb-8 text-sm">
-          <button
-            type="button"
-            onClick={() => {
-              if (profile === "veterinarian") {
-                return
-              }
-              setShowPassword(false)
-              setPassword("")
-              setEmail("")
-              setProfileType('veterinarian')
-            }}
-            className={`flex-1 py-3 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 font-medium whitespace-nowrap ${profile === 'veterinarian'
-              ? 'bg-[#EBF2FF] text-primary'
-              : 'bg-gray-50 text-gray-700 hover:bg-gray-200'
-              }`}
-          >
-            {profile === 'veterinarian' ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M6.65289 6.79678C7.49169 6.65278 8.11449 5.88958 8.20809 4.97878C8.30529 4.04998 8.52129 0.320381 7.12089 0.557981C3.48849 1.17358 3.74409 7.28998 6.65289 6.79678ZM11.4301 6.79678C14.3389 7.28998 14.5945 1.17358 10.9621 0.557981C9.56169 0.320381 9.77769 4.04998 9.87489 4.97878C9.96849 5.89318 10.5913 6.65638 11.4301 6.79678ZM5.15889 9.68038C5.15889 9.19438 4.98609 8.75518 4.70529 8.43478C4.24809 7.83358 2.78649 6.62398 2.43009 6.93358C1.68129 7.58518 1.70649 9.18358 2.15649 10.3464C2.38689 10.9944 2.94849 11.448 3.60009 11.448C4.46049 11.448 5.15889 10.656 5.15889 9.68038ZM15.6493 6.93358C15.2929 6.62398 13.8313 7.83718 13.3741 8.43478C13.0969 8.75518 12.9205 9.19438 12.9205 9.68038C12.9205 10.656 13.6189 11.448 14.4793 11.448C15.1345 11.448 15.6925 10.9944 15.9229 10.3464C16.3729 9.18358 16.3981 7.58518 15.6493 6.93358ZM12.7189 12.4344C11.3941 11.7756 11.4373 10.5048 11.1349 9.34558C10.8973 8.42038 10.0477 7.73638 9.03969 7.73638C8.05329 7.73638 7.21809 8.39158 6.95889 9.28798C6.63849 10.3968 6.82929 11.6892 5.38929 12.4272C4.21929 12.8088 3.74409 13.3668 3.74409 14.6844C3.74409 15.7536 4.66209 16.902 5.85009 17.0424C7.17489 17.2404 8.20449 16.9812 9.04329 16.506C9.87849 16.9812 10.9117 17.244 12.2365 17.0424C13.4209 16.8984 14.3425 15.7572 14.3425 14.6844C14.3425 13.338 13.8961 12.8376 12.7225 12.4344H12.7189ZM11.1565 14.0436H9.78489L9.78849 15.4836H8.29089L8.29449 14.0436H6.84009V12.6036H8.29809L8.29449 11.1636H9.79209V12.6036H11.1637V14.0436H11.1565Z" fill="#3F78D8" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M6.65289 6.79678C7.49169 6.65278 8.11449 5.88958 8.20809 4.97878C8.30529 4.04998 8.52129 0.320381 7.12089 0.557981C3.48849 1.17358 3.74409 7.28998 6.65289 6.79678ZM11.4301 6.79678C14.3389 7.28998 14.5945 1.17358 10.9621 0.557981C9.56169 0.320381 9.77769 4.04998 9.87489 4.97878C9.96849 5.89318 10.5913 6.65638 11.4301 6.79678ZM5.15889 9.68038C5.15889 9.19438 4.98609 8.75518 4.70529 8.43478C4.24809 7.83358 2.78649 6.62398 2.43009 6.93358C1.68129 7.58518 1.70649 9.18358 2.15649 10.3464C2.38689 10.9944 2.94849 11.448 3.60009 11.448C4.46049 11.448 5.15889 10.656 5.15889 9.68038ZM15.6493 6.93358C15.2929 6.62398 13.8313 7.83718 13.3741 8.43478C13.0969 8.75518 12.9205 9.19438 12.9205 9.68038C12.9205 10.656 13.6189 11.448 14.4793 11.448C15.1345 11.448 15.6925 10.9944 15.9229 10.3464C16.3729 9.18358 16.3981 7.58518 15.6493 6.93358ZM12.7189 12.4344C11.3941 11.7756 11.4373 10.5048 11.1349 9.34558C10.8973 8.42038 10.0477 7.73638 9.03969 7.73638C8.05329 7.73638 7.21809 8.39158 6.95889 9.28798C6.63849 10.3968 6.82929 11.6892 5.38929 12.4272C4.21929 12.8088 3.74409 13.3668 3.74409 14.6844C3.74409 15.7536 4.66209 16.902 5.85009 17.0424C7.17489 17.2404 8.20449 16.9812 9.04329 16.506C9.87849 16.9812 10.9117 17.244 12.2365 17.0424C13.4209 16.8984 14.3425 15.7572 14.3425 14.6844C14.3425 13.338 13.8961 12.8376 12.7225 12.4344H12.7189ZM11.1565 14.0436H9.78489L9.78849 15.4836H8.29089L8.29449 14.0436H6.84009V12.6036H8.29809L8.29449 11.1636H9.79209V12.6036H11.1637V14.0436H11.1565Z" fill="black" />
-              </svg>
-            )}
-            <span>{t("auth.veterinarySurgeon")}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (profile === "guardian") {
-                return
-              }
-              setShowPassword(false)
-              setPassword("")
-              setEmail("")
-              setProfileType('guardian')
-            }}
-            className={`flex-1 py-3 px-4 rounded-full transition-all flex items-center justify-center gap-2 font-medium ${profile === 'guardian'
-              ? 'bg-[#EBF2FF] text-primary'
-              : 'bg-gray-50 text-gray-700 hover:bg-gray-200'
-              }`}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
-            </svg>
-            <span>{t("auth.guardian")}</span>
-          </button>
         </div>
 
         {/* Login Form */}
@@ -521,7 +436,7 @@ export default function SignInForm() {
         </p>
         <div className="mt-2 text-sm text-gray-500">
           <Link
-          href={"/legal/terms"}
+            href={"/legal/terms"}
             type="button"
             className="hover:text-gray-700 bg-transparent border-0 cursor-pointer"
           >
