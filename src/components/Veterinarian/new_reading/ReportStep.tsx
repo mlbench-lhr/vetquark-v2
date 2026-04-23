@@ -220,11 +220,11 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
       </div>
 
       <div className="mt-4">
-        <div className="text-sm text-gray-900 mb-2">{t('reading.report.otherInformation')}</div>
+        <div className="text-sm text-gray-900 mb-2">{t('reading.report.recommendation')}</div>
         <textarea
           value={report.otherInformation}
           onChange={(e) => onChangeReport({ otherInformation: e.target.value })}
-          placeholder={t('reading.report.enterOtherInformation')}
+          placeholder={t('reading.report.enterRecommendation')}
           rows={2}
           className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 resize-none"
         />

@@ -897,6 +897,7 @@ const resources = {
           failedToSaveReading: "Failed to save reading",
           savedReading: "Reading saved successfully",
           networkErrorSavingReading: "Network error saving reading",
+          interpretationUnavailable: "Interpretation service unavailable. You can still edit and complete the report manually.",
         },
         identification: {
           title: "Exam Identification",
@@ -1017,6 +1018,8 @@ const resources = {
           retake: "Retake",
           summaryInterpretation: "Summary and interpretation",
           enterSummaryInterpretation: "Enter your summary and interpretation",
+          recommendation: "Recommendation",
+          enterRecommendation: "Enter recommendation",
           otherInformation: "Other information",
           enterOtherInformation: "Enter other information",
           veterinarianNotes: "Veterinarian notes",
@@ -2117,6 +2120,7 @@ const resources = {
           failedToSaveReading: "Falha ao guardar a leitura",
           savedReading: "Leitura guardada com sucesso",
           networkErrorSavingReading: "Erro de rede ao guardar a leitura",
+          interpretationUnavailable: "Serviço de interpretação indisponível. Ainda pode editar e concluir o relatório manualmente.",
         },
         identification: {
           title: "Identificação do exame",
@@ -2221,6 +2225,8 @@ const resources = {
           retake: "Refazer",
           summaryInterpretation: "Resumo e interpretação",
           enterSummaryInterpretation: "Introduza o seu resumo e interpretação",
+          recommendation: "Recomendação",
+          enterRecommendation: "Introduza a recomendação",
           otherInformation: "Outras informações",
           enterOtherInformation: "Introduza outras informações",
           veterinarianNotes: "Notas do veterinário",

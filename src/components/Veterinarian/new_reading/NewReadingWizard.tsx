@@ -55,7 +55,7 @@ function inferFirstIncompleteStep(draft: NewReadingDraft, signatureImageUrl: str
 }
 
 export default function NewReadingWizard() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const searchParams = useSearchParams()
   const router = useRouter()
   const profile = useAppSelector((s: RootState) => s.userProfile.profile)
@@ -484,6 +484,28 @@ export default function NewReadingWizard() {
     }
   }
 
+  function extractPrimaryResultText(payload: any) {
+    const primary = payload?.primary_result
+    if (!primary || typeof primary !== 'object') {
+      return { interpretation: '', recommendation: '' }
+    }
+    const language = String(i18n.language || 'en').toLowerCase()
+    const preferredLocales = language.startsWith('pt') ? ['pt', 'en'] : ['en', 'pt']
+    for (const locale of preferredLocales) {
+      const localized = primary?.[locale]
+      if (!localized || typeof localized !== 'object') continue
+      const interpretation = String(localized?.assisted_interpretation || '').trim()
+      const recommendation = String(localized?.recommendations || '').trim()
+      if (interpretation || recommendation) {
+        return { interpretation, recommendation }
+      }
+    }
+    return {
+      interpretation: String(primary?.assisted_interpretation || '').trim(),
+      recommendation: String(primary?.recommendations || '').trim(),
+    }
+  }
+
   async function submitReading() {
     if (submitting) return
     if (!canSubmit) {
@@ -590,8 +612,40 @@ export default function NewReadingWizard() {
             setDraft((prev) => ({ ...prev, reviewSelections: next }))
           }
           onBack={() => setStep('timer')}
-          onIssueReport={(results: ReviewResultDraft[]) => {
-            setDraft((prev) => ({ ...prev, results }))
+          onIssueReport={async (results: ReviewResultDraft[]) => {
+            const panelType = String((draft.identification.panelProductCode || defaultPanelProductCode || '')).trim() || 'VETQ_MASTER_360'
+            let nextInterpretation = ''
+            let nextRecommendation = ''
+
+            try {
+              const res = await fetch('/api/strip/interpret', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  panel_type: panelType,
+                  results,
+                }),
+              })
+              const data = await res.json().catch(() => null)
+              if (!res.ok) {
+                throw new Error(typeof data?.error === 'string' ? data.error : `HTTP ${res.status}`)
+              }
+              const extracted = extractPrimaryResultText(data)
+              nextInterpretation = extracted.interpretation
+              nextRecommendation = extracted.recommendation
+            } catch {
+              toast.info(t('reading.wizard.interpretationUnavailable'))
+            }
+
+            setDraft((prev) => ({
+              ...prev,
+              results,
+              report: {
+                ...prev.report,
+                summaryAndInterpretation: nextInterpretation || prev.report.summaryAndInterpretation,
+                otherInformation: nextRecommendation || prev.report.otherInformation,
+              },
+            }))
             setStep('report')
           }}
           visibleKeys={visibleKeys ?? undefined}
