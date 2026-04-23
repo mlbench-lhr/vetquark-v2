@@ -11,7 +11,10 @@ type Props = {
   selectedSeconds: number
   onChangeSelectedSeconds: (nextSeconds: number) => void
   onBack: () => void
-  onAnalyzeAndProceed: (results: ReviewSelectionMap) => void
+  onAnalyzeAndProceed: (
+    results: ReviewSelectionMap,
+    rawApiResults: Array<{ atSeconds: number; time: string; response: any }>,
+  ) => void
 }
 
 const marks = [30, 40, 60, 120]
@@ -129,6 +132,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const analysisProgressTimerRef = useRef<number | null>(null)
   const analysisSessionRef = useRef(0)
   const finalFrameRef = useRef<{ atSeconds: number; time: string; image: string } | null>(null)
+  const rawApiResultsRef = useRef<Array<{ atSeconds: number; time: string; response: any }>>([])
 
   const [cameraError, setCameraError] = useState('')
   const [needsTap, setNeedsTap] = useState(false)
@@ -160,6 +164,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     combinedMappedResultsRef.current = null
     analysisErrorRef.current = null
     finalFrameRef.current = null
+    rawApiResultsRef.current = []
+    rawApiResultsRef.current = []
     setStarted(false)
     setAnalysisFailed(false)
     setAnalysisProgress(0)
@@ -436,6 +442,14 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       }
 
       const normalized = normalizeSingleResponse(raw, frame.time)
+      rawApiResultsRef.current = [
+        ...rawApiResultsRef.current,
+        {
+          atSeconds: frame.atSeconds,
+          time: frame.time,
+          response: raw,
+        },
+      ].sort((a, b) => a.atSeconds - b.atSeconds)
       const partial = transformTestBoxes(normalized)
       combinedNumericResultsRef.current = { ...combinedNumericResultsRef.current, ...partial }
       processedAtSetRef.current.add(frame.atSeconds)
@@ -678,7 +692,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       const mappedResults = combinedMappedResultsRef.current
       if (!mappedResults) throw new Error('Analysis failed')
       await new Promise((resolve) => setTimeout(resolve, 200))
-      onAnalyzeAndProceed(mappedResults)
+      onAnalyzeAndProceed(mappedResults, rawApiResultsRef.current)
     } catch (e) {
       if ((e as any)?.name === 'AbortError') {
         return

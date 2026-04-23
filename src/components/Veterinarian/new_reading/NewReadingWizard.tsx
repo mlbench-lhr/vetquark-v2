@@ -133,6 +133,7 @@ export default function NewReadingWizard() {
     species: string
     guardianName: string
   } | null>(null)
+  const [processSingleRawResults, setProcessSingleRawResults] = useState<Array<{ atSeconds: number; time: string; response: any }>>([])
 
   const patientIdFromQuery = useMemo(() => (searchParams.get('patientId') || '').trim(), [searchParams])
   const paymentLinkIdFromQuery = useMemo(() => (searchParams.get('paymentLinkId') || '').trim(), [searchParams])
@@ -593,13 +594,14 @@ export default function NewReadingWizard() {
             setDraft((prev) => ({ ...prev, timer: { ...prev.timer, selectedSeconds: next } }))
           }
           onBack={() => setStep('identification')}
-          onAnalyzeAndProceed={(results: ReviewSelectionMap) => {
+          onAnalyzeAndProceed={(results: ReviewSelectionMap, rawApiResults) => {
             const dummy = makeDummyAnalysis()
             setDraft((prev) => ({
               ...prev,
               timer: { ...prev.timer, analyzedAt: dummy.analyzedAt, analysis: dummy.analysis },
               reviewSelections: results
             }))
+            setProcessSingleRawResults(Array.isArray(rawApiResults) ? rawApiResults : [])
             setStep('review')
           }}
         />
@@ -608,6 +610,7 @@ export default function NewReadingWizard() {
       {step === 'review' && (
         <ReviewStep
           selectedByKey={draft.reviewSelections}
+          rawProcessSingleResults={processSingleRawResults}
           onChangeSelectedByKey={(next: NewReadingDraft["reviewSelections"]) =>
             setDraft((prev) => ({ ...prev, reviewSelections: next }))
           }

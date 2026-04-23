@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 
 type Props = {
   selectedByKey: ReviewSelectionMap
+  rawProcessSingleResults?: Array<{ atSeconds: number; time: string; response: any }>
   onChangeSelectedByKey: (next: ReviewSelectionMap) => void
   onBack: () => void
   onIssueReport: (results: ReviewResultDraft[]) => void
@@ -490,7 +491,14 @@ function parseNumericValueLabel(valueLabel: string): number | undefined {
   return Number.isFinite(n) ? n : undefined
 }
 
-export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBack, onIssueReport, visibleKeys }: Props) {
+export default function ReviewStep({
+  selectedByKey,
+  rawProcessSingleResults,
+  onChangeSelectedByKey,
+  onBack,
+  onIssueReport,
+  visibleKeys,
+}: Props) {
   const { t } = useTranslation()
   const [normalRuleByKey, setNormalRuleByKey] = useState<Record<string, NormalRule | undefined>>({})
   const visibleRows = useMemo(() => {
@@ -566,6 +574,12 @@ export default function ReviewStep({ selectedByKey, onChangeSelectedByKey, onBac
       <p className="mt-1 text-[13px] leading-[18px] text-[#6B7280]">
         {t('reading.review.desc')}
       </p>
+      <div className="mt-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-3">
+        <div className="text-xs font-medium text-[#374151]">/api/strip/process_single JSON</div>
+        <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-white p-3 text-[11px] leading-4 text-[#111827]">
+          {JSON.stringify(Array.isArray(rawProcessSingleResults) ? rawProcessSingleResults : [], null, 2)}
+        </pre>
+      </div>
 
       <div className="mt-5 divide-y divide-[#F1F5F9] border border-[#F1F5F9] rounded-[16px] shadow-2xs">
         {visibleRows.map((row) => (
