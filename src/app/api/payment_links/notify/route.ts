@@ -37,18 +37,15 @@ export async function POST(req: NextRequest) {
     if (collectionMethod !== "free_catch" && collectionMethod !== "cystocentesis" && collectionMethod !== "catheter") {
       return NextResponse.json({ error: "Invalid identification.collectionMethod" }, { status: 400 });
     }
-    if (!stripLot) {
-      return NextResponse.json({ error: "Invalid identification.stripLot" }, { status: 400 });
-    }
     const collectionAt = new Date(collectionAtRaw);
     if (!collectionAtRaw || Number.isNaN(collectionAt.getTime())) {
       return NextResponse.json({ error: "Invalid identification.collectionAt" }, { status: 400 });
     }
-    const stripExpiry = new Date(stripExpiryRaw);
-    if (!stripExpiryRaw || Number.isNaN(stripExpiry.getTime())) {
+    const stripExpiry = stripExpiryRaw ? new Date(stripExpiryRaw) : null;
+    if (stripExpiryRaw && (!stripExpiry || Number.isNaN(stripExpiry.getTime()))) {
       return NextResponse.json({ error: "Invalid identification.stripExpiry" }, { status: 400 });
     }
-    {
+    if (stripExpiry) {
       const todayStr = new Date().toISOString().slice(0, 10);
       const expiryStr = stripExpiry.toISOString().slice(0, 10);
       if (expiryStr < todayStr) {

@@ -725,7 +725,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
           {cameraReady && (
             <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
-              <div className="w-12 h-[90%] rounded-xl ms-16 border-2 border-dashed border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
+              <div className="w-12 h-[90%] rounded-xl ms-0 border-2 border-dashed border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
             </div>
           )}
 
@@ -740,7 +740,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
             </div>
           ) : null}
 
-          {analyzing ? (
+          {!analyzing ? (
             <div className="absolute inset-0 z-30 flex items-end p-3">
               <div className="w-full rounded-2xl bg-black/55 backdrop-blur-sm border border-white/10 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
@@ -748,20 +748,16 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
                     <div className="h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
                     <div className="text-sm font-medium truncate">{t('reading.timer.analyzing')}</div>
                   </div>
-                  {/* <button
-                    type="button"
-                    onClick={handleCancelAnalyze}
-                    className="shrink-0 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs font-medium px-3 py-1.5"
-                  >
-                    {t('reading.timer.cancel')}
-                  </button> */}
                 </div>
 
-                <div className="mt-2 h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                {/* <div className="mt-2 h-2 w-full rounded-full bg-white/10 overflow-hidden">
                   <div
-                    className={`h-full bg-white/60 transition-[width] duration-200 ease-linear ${analysisProgress === 0 ? 'animate-progress' : ''}`}
-                    style={{ width: `${analysisProgress === 0 ? '30%' : analysisProgress}%` }}
+                    className={`h-full bg-white/60 transition-[width] duration-200 ease-linear ${analyzing && analysisProgress < 100 ? 'animate-progress' : ''}`}
+                    style={{ width: `${analysisProgress === 0 ? '30%' : Math.min(analysisProgress, 95)}%` }}
                   />
+                </div> */}
+                <div className="mt-2 h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className="progress-bar h-full bg-white/60 rounded-full" />
                 </div>
               </div>
             </div>

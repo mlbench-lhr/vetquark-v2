@@ -129,21 +129,19 @@ export async function POST(req: NextRequest) {
     const collectionMethod = identification.collectionMethod;
     const stripLot = String(identification.stripLot || "").trim();
     const collectionAt = toDate(identification.collectionAt);
-    const stripExpiry = toDate(identification.stripExpiry);
+    const stripExpiryRaw = typeof identification.stripExpiry === "string" ? identification.stripExpiry.trim() : "";
+    const stripExpiry = stripExpiryRaw ? toDate(stripExpiryRaw) : null;
 
     if (!isCollectionMethod(collectionMethod)) {
       return NextResponse.json({ error: "Invalid collectionMethod" }, { status: 400 });
     }
-    if (!stripLot) {
-      return NextResponse.json({ error: "stripLot is required" }, { status: 400 });
-    }
     if (!collectionAt) {
       return NextResponse.json({ error: "Invalid collectionAt" }, { status: 400 });
     }
-    if (!stripExpiry) {
+    if (stripExpiryRaw && !stripExpiry) {
       return NextResponse.json({ error: "Invalid stripExpiry" }, { status: 400 });
     }
-    {
+    if (stripExpiry) {
       const todayStr = new Date().toISOString().slice(0, 10);
       const expiryStr = stripExpiry.toISOString().slice(0, 10);
       if (expiryStr < todayStr) {

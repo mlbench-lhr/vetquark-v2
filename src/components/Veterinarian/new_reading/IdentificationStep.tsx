@@ -28,7 +28,6 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   const [panels, setPanels] = useState<Array<{ code: string; title: string; description: string; params: string; sortOrder: number }>>([])
 
   const collectionRef = useRef<HTMLInputElement | null>(null)
-  const stripExpiryRef = useRef<HTMLInputElement | null>(null)
 
   const selectedPanelCode = (value.panelProductCode || "").trim() || "VETQ_MASTER_360"
   const selectedPanel = useMemo(
@@ -138,11 +137,8 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
   }
 
   const canProceed = useMemo(() => {
-    const todayStr = new Date().toISOString().slice(0, 10)
-    const expiryStr = (value.stripExpiry || '').trim()
-    const expiryValid = !!expiryStr && expiryStr >= todayStr
-    return !!value.patientId && !!value.collectionMethod && !!value.collectionAt && !!value.stripLot && expiryValid
-  }, [value.collectionAt, value.collectionMethod, value.patientId, value.stripExpiry, value.stripLot])
+    return !!value.patientId && !!value.collectionMethod && !!value.collectionAt
+  }, [value.collectionAt, value.collectionMethod, value.patientId])
 
   if (showLink) {
     return (
@@ -285,60 +281,6 @@ export default function IdentificationStep({ value, onChange, onNext }: Props) {
               className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-00 cursor-pointer"
             />
           </div>
-        </div>
-
-        <div className="pt-2 border-t border-gray-200" />
-
-        <div>
-          <div className="text-sm text-gray-900 mb-2">{t("reading.identification.stripLot")}</div>
-          <input
-            type='number'
-            value={value.stripLot}
-            onChange={(e) => onChange({ stripLot: e.target.value })}
-            placeholder={t("reading.identification.enterStripLot")}
-            className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700"
-          />
-        </div>
-
-        <div className="text-sm text-gray-900 mb-2">{t("reading.identification.stripExpiry")}</div>
-        <div className="w-full flex justify-start items-center gap-2 relative">
-          <div className="relative w-[calc(100%-0px)]">
-            <div className="relative">
-              <input
-                ref={stripExpiryRef}
-                type="date"
-                value={value.stripExpiry}
-                min={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => {
-                  const v = (e.target.value || '').trim()
-                  const todayStr = new Date().toISOString().slice(0, 10)
-                  if (v && v < todayStr) {
-                    toast.error(t('reading.identification.stripExpiryMustBeFuture') || 'Strip expiry must be today or future')
-                    return
-                  }
-                  onChange({ stripExpiry: v })
-                }}
-                placeholder={t("reading.identification.enterStripExpiry")}
-                className="w-full px-4 py-4 bg-gray-100 rounded-2xl text-gray-700 pr-12"
-                style={{ colorScheme: 'light' }}
-              />
-              <Calendar
-                color='#3F78D8'
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-00 cursor-pointer"
-                onClick={() => {
-                  const el = stripExpiryRef.current as any
-                  if (!el) return
-                  if (typeof el.showPicker === 'function') el.showPicker()
-                  else el.click()
-                }}
-              />
-            </div>
-          </div>
-          {/* <div className='w-[56px] h-[56px] flex justify-center items-center bg-[#EBF2FF] rounded-[20px]'>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M3 11H11V3H3V11ZM5 5H9V9H5V5ZM3 21H11V13H3V21ZM5 15H9V19H5V15ZM13 3V11H21V3H13ZM19 9H15V5H19V9ZM13.01 13H15.01V15H13.01V13ZM15.01 15H17.01V17H15.01V15ZM13.01 17H15.01V19H13.01V17ZM17.01 17H19.01V19H17.01V17ZM19.01 19H21.01V21H19.01V19ZM15.01 19H17.01V21H15.01V19ZM17.01 13H19.01V15H17.01V13ZM19.01 15H21.01V17H19.01V15Z" fill="#3F78D8" />
-            </svg>
-          </div> */}
         </div>
 
         <button

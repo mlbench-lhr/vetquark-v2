@@ -1065,3 +1065,18 @@ input[type="date"]:valid {
   width: 60px;
   height: 60px;
 }
+
+
+.progress-bar {
+  width: 30%;
+  animation: moveBar 1.2s linear infinite;
+}
+
+@keyframes moveBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}

@@ -44,10 +44,7 @@ function makeEmptyDraft(panelProductCode?: string): NewReadingDraft {
 
 function inferFirstIncompleteStep(draft: NewReadingDraft, signatureImageUrl: string): NewReadingStep {
   const i = draft.identification
-  const todayStr = new Date().toISOString().slice(0, 10)
-  const expiryStr = (i.stripExpiry || '').trim()
-  const expiryValid = !!expiryStr && expiryStr >= todayStr
-  if (!i.patientId || !i.collectionMethod || !i.collectionAt || !i.stripLot || !expiryValid) return 'identification'
+  if (!i.patientId || !i.collectionMethod || !i.collectionAt) return 'identification'
   if (!draft.timer.analysis) return 'timer'
   if (!draft.results || draft.results.length === 0) return 'review'
   if (!signatureImageUrl) return 'report'
@@ -466,10 +463,7 @@ export default function NewReadingWizard() {
 
   const canSubmit = useMemo(() => {
     const i = draft.identification
-    const todayStr = new Date().toISOString().slice(0, 10)
-    const expiryStr = (i.stripExpiry || '').trim()
-    const expiryValid = !!expiryStr && expiryStr >= todayStr
-    return !!i.patientId && !!i.collectionMethod && !!i.collectionAt && !!i.stripLot && expiryValid && !!draft.timer.analysis && draft.results.length > 0 && !!signatureImageUrl
+    return !!i.patientId && !!i.collectionMethod && !!i.collectionAt && !!draft.timer.analysis && draft.results.length > 0 && !!signatureImageUrl
   }, [draft.identification, draft.timer.analysis, draft.results.length, signatureImageUrl])
 
   function makeDummyAnalysis(): { analyzedAt: string; analysis: { summary: string; confidence: number; flags: string[] } } {

@@ -74,7 +74,7 @@ export default function Page() {
   const items: Array<{ id: Lang; label: string; flag: string }> = useMemo(
     () => [
       { id: "en", label: t("common.english"), flag: "🇬🇧" },
-      { id: "pt", label: t("common.portuguese"), flag: "🇵🇹" },
+      { id: "pt", label: t("common.portuguese"), flag: "\u{1F1E7}\u{1F1F7}" },
     ],
     [t]
   );

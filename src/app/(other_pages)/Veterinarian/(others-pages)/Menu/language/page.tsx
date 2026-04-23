@@ -48,7 +48,7 @@ export default function Page() {
   const items: Array<{ id: Lang; label: string; flag: string }> = useMemo(
     () => [
       { id: "en", label: t("common.english"), flag: "🇬🇧" },
-      { id: "pt", label: t("common.portuguese"), flag: "🇵🇹" },
+      { id: "pt", label: t("common.portuguese"), flag: "\u{1F1E7}\u{1F1F7}" },
     ],
     [t]
   );
@@ -70,16 +70,14 @@ export default function Page() {
                   i18n.changeLanguage(item.id);
                   if (typeof window !== "undefined") window.localStorage.setItem("ui_language_v1", item.id);
                 }}
-                className={`flex h-[56px] w-full items-center justify-between rounded-[16px] px-4 ${
-                  selected ? "bg-[#EEF4FF]" : "bg-[#F5F6F6]"
-                }`}
+                className={`flex h-[56px] w-full items-center justify-between rounded-[16px] px-4 ${selected ? "bg-[#EEF4FF]" : "bg-[#F5F6F6]"
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-[18px] leading-none">{item.flag}</span>
                   <div
-                    className={`text-[16px] font-medium leading-[20px] ${
-                      selected ? "text-[#3F78D8]" : "text-[#111827]"
-                    }`}
+                    className={`text-[16px] font-medium leading-[20px] ${selected ? "text-[#3F78D8]" : "text-[#111827]"
+                      }`}
                   >
                     {item.label}
                   </div>

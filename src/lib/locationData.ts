@@ -1,7 +1,12 @@
+import brazilCitiesByStateUfJson from "@/lib/brazilCitiesByStateUf.json";
 export type StateItem = { value: string; text: string };
 
 function sortByText(a: StateItem, b: StateItem) {
   return a.text.localeCompare(b.text);
+}
+
+function sortCities(a: string, b: string) {
+  return a.localeCompare(b, "pt-BR");
 }
 
 export const STATES_BY_COUNTRY: Record<string, StateItem[]> = {
@@ -266,36 +271,19 @@ export const STATES_BY_COUNTRY: Record<string, StateItem[]> = {
   ].sort(sortByText),
 };
 
+const BRAZIL_CITIES_BY_STATE_UF = brazilCitiesByStateUfJson as Record<string, string[]>;
+
+const BRAZIL_CITIES_BY_STATE: Record<string, string[]> = (STATES_BY_COUNTRY.Brazil || []).reduce<Record<string, string[]>>((acc, state) => {
+  const cityList = [...(BRAZIL_CITIES_BY_STATE_UF[state.value] || [])].sort(sortCities);
+  if (cityList.length === 0) return acc;
+
+  acc[state.value] = cityList;
+  acc[state.text] = cityList;
+  return acc;
+}, {});
+
 export const CITIES_BY_COUNTRY_STATE: Record<string, Record<string, string[]>> = {
-  Brazil: {
-    AC: ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá"].sort(),
-    AL: ["Maceió", "Arapiraca", "Palmeira dos Índios", "Rio Largo"].sort(),
-    AP: ["Macapá", "Santana", "Laranjal do Jari"].sort(),
-    AM: ["Manaus", "Itacoatiara", "Parintins", "Manacapuru", "Coari"].sort(),
-    BA: ["Salvador", "Feira de Santana", "Vitória da Conquista", "Ilhéus", "Itabuna", "Camaçari", "Jequié"].sort(),
-    CE: ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Sobral", "Maracanaú"].sort(),
-    DF: ["Brasília", "Ceilândia", "Taguatinga", "Samambaia", "Planaltina"].sort(),
-    ES: ["Vitória", "Vila Velha", "Serra", "Cariacica", "Cachoeiro de Itapemirim"].sort(),
-    GO: ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde"].sort(),
-    MA: ["São Luís", "Imperatriz", "Caxias", "Timon"].sort(),
-    MT: ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop"].sort(),
-    MS: ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá"].sort(),
-    MG: ["Belo Horizonte", "Contagem", "Uberlândia", "Juiz de Fora", "Betim", "Montes Claros", "Uberaba", "Governador Valadares", "Ipatinga"].sort(),
-    PA: ["Belém", "Ananindeua", "Santarém", "Marabá", "Castanhal"].sort(),
-    PB: ["João Pessoa", "Campina Grande", "Patos", "Santa Rita"].sort(),
-    PR: ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "Foz do Iguaçu"].sort(),
-    PE: ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina"].sort(),
-    PI: ["Teresina", "Parnaíba", "Picos", "Floriano"].sort(),
-    RJ: ["Rio de Janeiro", "Niterói", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Petrópolis", "Volta Redonda", "Campos dos Goytacazes"].sort(),
-    RN: ["Natal", "Mossoró", "Parnamirim", "Ceará-Mirim"].sort(),
-    RS: ["Porto Alegre", "Caxias do Sul", "Pelotas", "Canoas", "Santa Maria", "Gravataí"].sort(),
-    RO: ["Porto Velho", "Ji-Paraná", "Vilhena", "Ariquemes"].sort(),
-    RR: ["Boa Vista", "Rorainópolis", "Caracaraí"].sort(),
-    SC: ["Florianópolis", "Joinville", "Blumenau", "Itajaí", "Chapecó", "Criciúma"].sort(),
-    SP: ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "São José dos Campos", "Sorocaba", "Ribeirão Preto", "Santos", "Diadema", "Jundiaí", "Piracicaba", "Bauru", "Barueri", "Mauá", "Carapicuíba", "Mogi das Cruzes", "Itaquaquecetuba", "Limeira", "Suzano"].sort(),
-    SE: ["Aracaju", "Nossa Senhora do Socorro", "Lagarto"].sort(),
-    TO: ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"].sort(),
-  },
+  Brazil: BRAZIL_CITIES_BY_STATE,
   "United States": {
     CA: ["Los Angeles", "San Diego", "San Jose", "San Francisco", "Sacramento"].sort(),
     NY: ["New York", "Buffalo", "Rochester", "Syracuse", "Albany"].sort(),

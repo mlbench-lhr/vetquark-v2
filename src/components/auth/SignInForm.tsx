@@ -331,7 +331,7 @@ export default function SignInForm() {
           className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg transition-colors border-0 cursor-pointer text-gray-700"
         >
           <option value="en">🇬🇧 {t("common.english")}</option>
-          <option value="pt">🇵🇹 {t("common.portuguese")}</option>
+          <option value="pt">{"\u{1F1E7}\u{1F1F7}"} {t("common.portuguese")}</option>
         </select>
       </div>
 
