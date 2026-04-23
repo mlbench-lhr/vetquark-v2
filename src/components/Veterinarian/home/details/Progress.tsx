@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
+import { translateUrinalysisParameterLabel } from "@/lib/urinalysisParameters";
 
 interface ParameterData {
     name: string;
@@ -366,7 +367,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             const trend = classifyTrend(values, key, last?.valueLabel || "", normalRuleByKey);
             const changePct = prev && last ? Math.round(((last.value - prev.value) / Math.max(Math.abs(prev.value), 1e-9)) * 100) : 0;
             rows.push({
-                name: last?.label || key,
+                name: translateUrinalysisParameterLabel(t, key, last?.label || key),
                 normal: normalLabel,
                 value: last ? (last.unit ? `${last.valueLabel} ${last.unit}` : last.valueLabel) : "-",
                 change: changePct,
@@ -399,7 +400,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             const trend = classifyTrend(values, key, last?.valueLabel || "", normalRuleByKey);
             const changePct = prev && last ? Math.round(((last.value - prev.value) / Math.max(Math.abs(prev.value), 1e-9)) * 100) : 0;
             rows.push({
-                name: last?.label || key,
+                name: translateUrinalysisParameterLabel(t, key, last?.label || key),
                 normal: normalLabel,
                 value: last ? (last.unit ? `${last.valueLabel} ${last.unit}` : last.valueLabel) : "-",
                 change: changePct,
@@ -431,7 +432,7 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             const trend = classifyTrend(values, key, last?.valueLabel || "", normalRuleByKey);
             const changePct = prev && last ? Math.round(((last.value - prev.value) / Math.max(Math.abs(prev.value), 1e-9)) * 100) : 0;
             rows.push({
-                name: last?.label || key,
+                name: translateUrinalysisParameterLabel(t, key, last?.label || key),
                 normal: normalLabel,
                 value: last ? (last.unit ? `${last.valueLabel} ${last.unit}` : last.valueLabel) : "-",
                 change: changePct,
@@ -640,9 +641,13 @@ export function ParameterProgress({
         return keys.map((k) => {
             const raw = (dataByParameter || {})[k] || [];
             const last = raw.length ? raw[raw.length - 1] : undefined;
-            return { key: k, name: last?.label || k, normalValue: normalLabelByKey[k] || "" };
+            return {
+                key: k,
+                name: translateUrinalysisParameterLabel(t, k, last?.label || k),
+                normalValue: normalLabelByKey[k] || "",
+            };
         });
-    }, [dataByParameter, normalLabelByKey]);
+    }, [dataByParameter, normalLabelByKey, t]);
 
     useEffect(() => {
         if (!selectedParameter && parameterOptions.length) {
@@ -668,11 +673,11 @@ export function ParameterProgress({
         }));
         const last = raw.length ? raw[raw.length - 1] : undefined;
         return {
-            name: last?.label || selectedParameter,
+            name: translateUrinalysisParameterLabel(t, selectedParameter, last?.label || selectedParameter),
             normalValue: normalLabelByKey[selectedParameter] || "",
             data: series,
         };
-    }, [selectedParameter, dataByParameter, dateRange?.from, dateRange?.to, normalLabelByKey]);
+    }, [selectedParameter, dataByParameter, dateRange?.from, dateRange?.to, normalLabelByKey, t]);
 
     const currentTrendColor = useMemo(() => {
         if (!selectedParameter) return INCREASING_COLOR;

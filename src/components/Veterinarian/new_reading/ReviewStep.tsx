@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Check, Pencil, X } from 'lucide-react'
 import { ReviewResultDraft, ReviewSelectionMap } from './types'
 import { useTranslation } from 'react-i18next'
+import { translateUrinalysisParameterLabel } from '@/lib/urinalysisParameters'
 
 type Props = {
   selectedByKey: ReviewSelectionMap
@@ -368,10 +369,11 @@ function ResultRow({
     const num = numericValueFromLabel(row.key, label)
     return isNormalByRule(normalRuleByKey, row.key, label, num) ? 'Normal' : 'Abnormal'
   }, [normalRuleByKey, row.key, row.options, selectedIndex])
+  const translatedLabel = translateUrinalysisParameterLabel(t, row.key, row.label)
   return (
     <div className={`py-4 px-3 ${editing ? 'bg-[#F5F6F6] rounded-xl' : ''}`}>
       <div className="flex items-center opa justify-between">
-        <div className="text-[14px] leading-[18px] font-medium text-[#111827]">{row.label}</div>
+        <div className="text-[14px] leading-[18px] font-medium text-[#111827]">{translatedLabel}</div>
         <div className="flex items-center gap-1">
           {editing ? (
             <>

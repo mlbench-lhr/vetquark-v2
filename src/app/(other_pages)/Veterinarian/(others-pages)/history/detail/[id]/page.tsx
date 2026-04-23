@@ -9,6 +9,7 @@ import Image from "next/image";
 import { createUrinalysisPdfObjectUrl, downloadUrinalysisPdf } from "@/utils/urinalysisPdf";
 import { useAppSelector } from "@/store/hooks";
 import type { RootState } from "@/store/store";
+import { translateUrinalysisParameterLabel } from "@/lib/urinalysisParameters";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -77,16 +78,18 @@ function normalizePanelCode(value?: string | null) {
 }
 
 function ResultRow({ item }: { item: ReadingResult }) {
+  const { t } = useTranslation();
   const isNormal = item.status === "Normal";
   const dotColor = isNormal ? "#10B981" : "#F59E0B";
   const value = item.unit ? `${item.valueLabel} ${item.unit}` : item.valueLabel;
+  const translatedLabel = translateUrinalysisParameterLabel(t, item.key, item.label);
   return (
     <div className="bg-white py-4 border-t px-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: dotColor }} />
           <div className="min-w-0">
-            <p className="truncate text-[14px] font-medium text-gray-900">{item.label}</p>
+            <p className="truncate text-[14px] font-medium text-gray-900">{translatedLabel}</p>
             <p className="truncate text-[12px] text-gray-400">{value}</p>
           </div>
         </div>

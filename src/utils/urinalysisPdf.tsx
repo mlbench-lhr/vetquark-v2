@@ -2,6 +2,7 @@
 
 import { Document, Image as PdfImage, Page as PDFPage, StyleSheet, Text, View, pdf } from "@react-pdf/renderer";
 import i18n from "@/i18n/i18n";
+import { translateUrinalysisParameterLabel } from "@/lib/urinalysisParameters";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -320,7 +321,9 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading, t }: { 
           {[...physical, ...chemical, ...microscopic].map((it, idx, arr) => (
             <View key={it.key} style={idx === arr.length - 1 ? [reportStyles.tableRow, reportStyles.tableRowLast] : reportStyles.tableRow}>
               <View style={reportStyles.colName}>
-                <Text style={reportStyles.tableCellLabel}>{asReportText(it.label)}</Text>
+                <Text style={reportStyles.tableCellLabel}>
+                  {asReportText(translateUrinalysisParameterLabel(translate, it.key, it.label))}
+                </Text>
               </View>
               <View style={reportStyles.colValue}>
                 <Text style={reportStyles.tableCellValue}>{asReportText(valueWithUnit(it))}</Text>

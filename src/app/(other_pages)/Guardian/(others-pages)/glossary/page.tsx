@@ -2,6 +2,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { ChevronRight, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { translateUrinalysisParameterLabel } from '@/lib/urinalysisParameters';
 
 type GlossaryItem = {
   id: string;
@@ -14,6 +16,7 @@ type GlossaryItem = {
 };
 
 export default function Page() {
+  const { t } = useTranslation();
   const items: GlossaryItem[] = useMemo(
     () => [
       {
@@ -157,9 +160,17 @@ export default function Page() {
     ],
     []
   );
+  const translatedItems = useMemo(
+    () =>
+      items.map((item) => ({
+        ...item,
+        name: translateUrinalysisParameterLabel(t, item.id, item.name),
+      })),
+    [items, t]
+  );
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  const activeItem = useMemo(() => items.find((i) => i.id === activeId) ?? null, [activeId, items]);
+  const activeItem = useMemo(() => translatedItems.find((i) => i.id === activeId) ?? null, [activeId, translatedItems]);
 
   return (
     <div className=" bg-[#F4F6FB">
@@ -170,7 +181,7 @@ export default function Page() {
         </div>
 
         <div className="mt-5 space-y-3">
-          {items.map((item) => (
+          {translatedItems.map((item) => (
             <button
               key={item.id}
               type="button"

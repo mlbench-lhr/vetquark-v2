@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { getCountryCities, STATES_BY_COUNTRY } from "@/lib/locationData";
 import Header from "@/components/common/header";
+import TypedDateInput from "@/components/form/input/TypedDateInput";
 
 function maskCpf(digits: string) {
   const v = digits.slice(0, 11);
@@ -170,17 +171,14 @@ export default function Page() {
           )}
 
           <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("profile.dateOfBirth")}</div>
-          <div className="relative mt-3">
-            <input
-              type="date"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              className="h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 pr-12 text-[16px] leading-[20px] text-[#111827] outline-none"
-            />
-            <Calendar
-              color='#3F78D8'
-              className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9AA4AF]" />
-          </div>
+          <TypedDateInput
+            value={dateOfBirth}
+            onChange={(nextIsoDate) => setDateOfBirth(nextIsoDate)}
+            placeholder="dd/mm/yyyy"
+            containerClassName="relative mt-3"
+            className="h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 pr-12 text-[16px] leading-[20px] text-[#111827] outline-none"
+            iconClassName="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9AA4AF] cursor-pointer"
+          />
 
           <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("profile.address")}</div>
           <input

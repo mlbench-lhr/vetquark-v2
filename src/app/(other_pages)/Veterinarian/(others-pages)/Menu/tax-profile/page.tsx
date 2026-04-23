@@ -2,13 +2,13 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Header from "@/components/common/header";
-import { Calendar } from "lucide-react";
 import DropdownSelect from "@/components/form/DropdownSelect";
 import MultiSelect from "@/components/form/MultiSelect";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import TypedDateInput from "@/components/form/input/TypedDateInput";
 
 type TaxProfileFormData = {
   taxId: string;
@@ -94,7 +94,6 @@ const brazilianStateOptions = [
 export default function TaxInfoAndProfessionalProfilePage() {
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.userProfile.profile);
-  const dobRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const [saving, setSaving] = useState(false);
   const { t } = useTranslation();
@@ -205,29 +204,15 @@ export default function TaxInfoAndProfessionalProfilePage() {
 
             <div>
               <label className="block text-gray-900 font-medium mb-2">{t("profile.dateOfBirth")}</label>
-              <div className="relative">
-                <input
-                  ref={dobRef}
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, dateOfBirth: e.target.value }))}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12 [&::-webkit-calendar-picker-indicator]:opacity-0"
-                  style={{ colorScheme: "light" }}
-                />
-                <Calendar
-                  color='#3F78D8'
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
-                  size={20}
-                  onClick={() => {
-                    const el = dobRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
-                    if (!el) return;
-                    if (typeof el.showPicker === "function") el.showPicker();
-                    else el.click();
-                  }}
-                />
-              </div>
+              <TypedDateInput
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={(nextIsoDate) => setFormData((prev) => ({ ...prev, dateOfBirth: nextIsoDate }))}
+                required
+                placeholder="dd/mm/yyyy"
+                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12"
+                iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
+              />
             </div>
 
             <div>

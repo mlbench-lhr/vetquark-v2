@@ -1,6 +1,6 @@
 'use client'
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Calendar, ChevronLeft, Plus } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { ChevronLeft, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PhoneInput from '@/components/form/group-input/PhoneInput';
@@ -12,6 +12,7 @@ import Pusher from 'pusher-js';
 import { useTranslation } from 'react-i18next';
 import { STATES_BY_COUNTRY, getCountryCities } from '@/lib/locationData';
 import Header from '@/components/common/header';
+import TypedDateInput from '@/components/form/input/TypedDateInput';
 
 function digitsOnly(value: string) {
     return value.replace(/\D/g, "");
@@ -123,7 +124,6 @@ export default function GuardianRegistration() {
     const [unreadCount, setUnreadCount] = useState(0);
     const guardianId = (searchParams.get('guardianId') || '').trim() || null;
     const isEditing = !!guardianId;
-    const dobRef = useRef<HTMLInputElement | null>(null);
     const [formData, setFormData] = useState<FormData>({
         fullName: '',
         taxId: '',
@@ -542,28 +542,15 @@ export default function GuardianRegistration() {
                             <label className="block text-sm text-gray-900 mb-2">
                                 {t('auth.dateOfBirth')}<span className="text-red-500">*</span>
                             </label>
-                            <div className="relative">
-                                <input
-                                    ref={dobRef}
-                                    type="date"
-                                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 10)).toISOString().slice(0, 10)}
-                                    placeholder={t('newPatient.patientForm.selectDateOfBirth')}
-                                    value={formData.dateOfBirth}
-                                    onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
-                                    style={{ colorScheme: 'light' }}
-                                />
-                                <Calendar
-                                    color='#3F78D8'
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
-                                    onClick={() => {
-                                        const el = dobRef.current as any;
-                                        if (!el) return;
-                                        if (typeof el.showPicker === "function") el.showPicker();
-                                        else el.click();
-                                    }}
-                                />
-                            </div>
+                            <TypedDateInput
+                                value={formData.dateOfBirth}
+                                onChange={(nextIsoDate) => handleChange('dateOfBirth', nextIsoDate)}
+                                max={new Date(new Date().setFullYear(new Date().getFullYear() - 10)).toISOString().slice(0, 10)}
+                                placeholder="dd/mm/yyyy"
+                                required
+                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
+                                iconClassName="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
+                            />
                         </div>
                     </div>
                 </div>

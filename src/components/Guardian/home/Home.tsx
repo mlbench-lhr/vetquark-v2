@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Pusher from 'pusher-js';
 import { downloadUrinalysisPdf } from '@/utils/urinalysisPdf';
+import { translateUrinalysisParameterLabel } from '@/lib/urinalysisParameters';
 
 function normalizePanelCode(value?: string | null) {
     return (value || "").trim() || "VETQ_MASTER_360";
@@ -237,6 +238,7 @@ function formatDateLabel(value: string) {
 }
 
 export default function Home() {
+    const { t } = useTranslation();
     const profile = useAppSelector((s: RootState) => s.userProfile.profile);
     const router = useRouter();
     const [panelByCode, setPanelByCode] = useState<Map<string, { title: string; visibleKeys: string[] | null }>>(new Map());
@@ -407,14 +409,17 @@ export default function Home() {
         const keys = visibleKeysForAccess(latestReading?.productCode, (latestReading as any)?.unlockedProductCodes);
         const results = keys ? all.filter((r: any) => keys.includes(String(r?.key || ""))) : all;
         if (results.length === 0) {
-            return { lastTestDate: "N/A", parameters: ["No recent tests"] };
+            return { lastTestDate: "N/A", parameters: [t("guardianHome.noRecentTests")] };
         }
-        const abnormal = results.filter((r: any) => r?.status === "Abnormal").map((r: any) => String(r?.label || "")).filter(Boolean);
+        const abnormal = results
+            .filter((r: any) => r?.status === "Abnormal")
+            .map((r: any) => translateUrinalysisParameterLabel(t, String(r?.key || ""), String(r?.label || "")))
+            .filter(Boolean);
         return {
             lastTestDate: formatDateLabel(dateRaw),
-            parameters: abnormal.length ? abnormal.slice(0, 4) : ["All parameters normal"],
+            parameters: abnormal.length ? abnormal.slice(0, 4) : [t("guardianHome.allParametersNormal")],
         };
-    }, [latestReading, latestReadingListItem?.date, visibleKeysForAccess]);
+    }, [latestReading, latestReadingListItem?.date, t, visibleKeysForAccess]);
 
     const trendItems = useMemo<TrendsProps["items"]>(() => {
         const readingId = String(latestReading?.id || "");
@@ -429,14 +434,14 @@ export default function Home() {
             const combinedValue = unit ? `${valueLabel} ${unit}` : valueLabel;
             return {
                 id: `${readingId}:${String(r?.key || r?.label || "result")}:${idx}`,
-                label: String(r?.label || "N/A"),
+                label: translateUrinalysisParameterLabel(t, String(r?.key || ""), String(r?.label || "N/A")),
                 valueLabel: combinedValue || "N/A",
                 status: r?.status === "Abnormal" ? "Abnormal" : "Normal",
                 readingId,
                 dateLabel,
             };
         });
-    }, [latestReading, visibleKeysForAccess]);
+    }, [latestReading, t, visibleKeysForAccess]);
 
     const navigateToReading = useCallback((item: any) => {
         if (!item?.id) return;
