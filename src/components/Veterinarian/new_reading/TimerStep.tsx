@@ -740,7 +740,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
             </div>
           ) : null}
 
-          {!analyzing ? (
+          {analyzing ? (
             <div className="absolute inset-0 z-30 flex items-end p-3">
               <div className="w-full rounded-2xl bg-black/55 backdrop-blur-sm border border-white/10 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
