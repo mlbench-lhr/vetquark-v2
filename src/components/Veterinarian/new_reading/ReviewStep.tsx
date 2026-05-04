@@ -310,14 +310,14 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     subUnit: 'g/L',
     defaultIndex: 0,
     options: [
-      { topLabel: '0', topSubLabel: '0', color: '#FFF8F2' },
-      { topLabel: '50', topSubLabel: '0.5', color: '#F2E2D5' },
-      { topLabel: '100', topSubLabel: '1.0', color: '#E4C7B0' },
-      { topLabel: '150', topSubLabel: '1.5', color: '#D6AA8A' },
-      { topLabel: '200', topSubLabel: '2.0', color: '#C78E65' },
-      { topLabel: '250', topSubLabel: '2.5', color: '#A96E4E' },
-      { topLabel: '300', topSubLabel: '3.0', color: '#7B4F35' },
-    ],
+      { topLabel: '0', topSubLabel: '0', color: '#4E3122' },
+      { topLabel: '50', topSubLabel: '0.5', color: '#724C36' },
+      { topLabel: '100', topSubLabel: '1.0', color: '#8F6549' },
+      { topLabel: '150', topSubLabel: '1.5', color: '#A27E63' },
+      { topLabel: '200', topSubLabel: '2.0', color: '#B59A80' },
+      { topLabel: '250', topSubLabel: '2.5', color: '#C9B6A0' },
+      { topLabel: '300', topSubLabel: '3.0', color: '#DDD1C2' },
+    ]
   },
 ]
 
