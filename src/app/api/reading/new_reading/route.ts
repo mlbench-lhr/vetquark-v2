@@ -214,36 +214,20 @@ async function persistCapturedImages(args: {
     })
   );
 
-  const resultsSnapshot = args.results.map((r) => ({
-    key: r.key,
-    valueLabel: r.valueLabel,
-    status: r.status,
-    numericValue: r.numericValue,
+  const imagesData = uploaded.map(({ img, cloud }) => ({
+    cloudinaryUrl: cloud.secureUrl,
+    captureSecond: img.atSeconds,
+    capturedAt: img.capturedAt,
   }));
 
   await ReadingCapturedImage.deleteMany({ reading: args.readingId });
-  await ReadingCapturedImage.insertMany(
-    uploaded.map(({ img, cloud }) => ({
-      reading: args.readingId,
-      veterinarian: args.veterinarianId,
-      guardian: args.guardianId,
-      patient: args.patientId,
-      paymentLink: args.paymentLinkId,
-      testType: "urine",
-      captureSecond: img.atSeconds,
-      capturedAt: img.capturedAt,
-      cloudinaryUrl: cloud.secureUrl,
-      cloudinaryPublicId: cloud.publicId,
-      cloudinaryAssetId: cloud.assetId,
-      cloudinaryVersion: cloud.version,
-      source: {
-        origin: "new_reading",
-        uploadedFrom: "timer_step_auto_capture",
-        app: "web",
-      },
-      resultsSnapshot,
-    }))
-  );
+  await ReadingCapturedImage.create({
+    patient: args.patientId,
+    guardian: args.guardianId,
+    veterinarian: args.veterinarianId,
+    reading: args.readingId,
+    images: imagesData,
+  });
 }
 
 const REQUIRED_RESULT_KEYS = [
