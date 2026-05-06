@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { transformTestBoxes } from '../../../lib/helper/transformRespose'
 import { RESULT_ROWS } from './ReviewStep'
-import { ReviewSelectionMap } from './types'
+import { CapturedReadingImageDraft, ReviewSelectionMap } from './types'
 import { toast } from 'react-toastify'
 import { useTranslation } from 'react-i18next'
 
@@ -14,6 +14,7 @@ type Props = {
   onAnalyzeAndProceed: (
     results: ReviewSelectionMap,
     rawApiResults: Array<{ atSeconds: number; time: string; response: any }>,
+    capturedImages: CapturedReadingImageDraft[],
   ) => void
 }
 
@@ -48,10 +49,21 @@ function buildDemoAnalysisResponse(times: string[]) {
   }
 }
 
-type CapturedImage = {
-  atSeconds: number
-  dataUrl: string
-  capturedAt: string
+function createStorageDataUrl(canvas: HTMLCanvasElement): string {
+  const maxWidth = 1280
+  if (!canvas.width || !canvas.height) return ''
+  if (canvas.width <= maxWidth) return canvas.toDataURL('image/jpeg', 0.82)
+
+  const scale = maxWidth / canvas.width
+  const targetWidth = maxWidth
+  const targetHeight = Math.max(1, Math.round(canvas.height * scale))
+  const resized = document.createElement('canvas')
+  resized.width = targetWidth
+  resized.height = targetHeight
+  const resizedCtx = resized.getContext('2d')
+  if (!resizedCtx) return canvas.toDataURL('image/jpeg', 0.82)
+  resizedCtx.drawImage(canvas, 0, 0, targetWidth, targetHeight)
+  return resized.toDataURL('image/jpeg', 0.82)
 }
 
 async function normalizeCameraStream(stream: MediaStream) {
@@ -137,7 +149,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [cameraError, setCameraError] = useState('')
   const [needsTap, setNeedsTap] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
-  const [images, setImages] = useState<CapturedImage[]>([])
+  const [images, setImages] = useState<CapturedReadingImageDraft[]>([])
   const [secondsLeft, setSecondsLeft] = useState(() => Math.max(selectedSeconds, requiredTotalSeconds))
   const [running, setRunning] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -505,6 +517,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       ctx.drawImage(video, 0, 0)
       const dataUrl = canvas.toDataURL('image/jpeg')
+      const storageDataUrl = createStorageDataUrl(canvas)
       const imageBase64 = dataUrl.replace(/^data:image\/\w+;base64,/, '')
       if (atSeconds === requiredTotalSeconds) {
         finalFrameRef.current = { atSeconds, time: String(atSeconds), image: imageBase64 }
@@ -516,7 +529,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         ...prev,
         {
           atSeconds,
-          dataUrl,
+          dataUrl: storageDataUrl || dataUrl,
           capturedAt: new Date().toISOString(),
         },
       ])
@@ -692,7 +705,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       const mappedResults = combinedMappedResultsRef.current
       if (!mappedResults) throw new Error('Analysis failed')
       await new Promise((resolve) => setTimeout(resolve, 200))
-      onAnalyzeAndProceed(mappedResults, rawApiResultsRef.current)
+      onAnalyzeAndProceed(mappedResults, rawApiResultsRef.current, images)
     } catch (e) {
       if ((e as any)?.name === 'AbortError') {
         return

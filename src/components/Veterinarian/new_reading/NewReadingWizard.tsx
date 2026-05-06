@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Stepper from './Stepper'
-import { NewReadingDraft, NewReadingStep, ReviewResultDraft, ReviewSelectionMap } from './types'
+import { CapturedReadingImageDraft, NewReadingDraft, NewReadingStep, ReviewResultDraft, ReviewSelectionMap } from './types'
 import IdentificationStep from './IdentificationStep'
 import TimerStep from './TimerStep'
 import ReviewStep from './ReviewStep'
@@ -131,6 +131,7 @@ export default function NewReadingWizard() {
     guardianName: string
   } | null>(null)
   const [processSingleRawResults, setProcessSingleRawResults] = useState<Array<{ atSeconds: number; time: string; response: any }>>([])
+  const [capturedImages, setCapturedImages] = useState<CapturedReadingImageDraft[]>([])
 
   const patientIdFromQuery = useMemo(() => (searchParams.get('patientId') || '').trim(), [searchParams])
   const paymentLinkIdFromQuery = useMemo(() => (searchParams.get('paymentLinkId') || '').trim(), [searchParams])
@@ -234,6 +235,7 @@ export default function NewReadingWizard() {
           nextDraft.report = r?.report ?? nextDraft.report
           setDraft(nextDraft)
           setSignatureImageUrl(typeof r?.signatureImageUrl === 'string' ? r.signatureImageUrl : '')
+          setCapturedImages([])
           const ws = String(r?.wizardStep || '').trim()
           const storedStep =
             ws === 'identification' || ws === 'timer' || ws === 'review' || ws === 'report'
@@ -271,6 +273,7 @@ export default function NewReadingWizard() {
       }
     })
     setSignatureImageUrl('')
+    setCapturedImages([])
     lastSavedJsonRef.current = ''
     creatingDraftRef.current = false
     setDraftId('')
@@ -530,6 +533,11 @@ export default function NewReadingWizard() {
           results: draft.results,
           report: draft.report,
           signatureImageUrl,
+          capturedImages: capturedImages.map((img) => ({
+            atSeconds: Number(img.atSeconds),
+            dataUrl: String(img.dataUrl || ''),
+            capturedAt: String(img.capturedAt || ''),
+          })),
         }),
       })
       const data = await res.json().catch(() => null)
@@ -550,6 +558,7 @@ export default function NewReadingWizard() {
         report: { summaryAndInterpretation: "", otherInformation: "", veterinarianNotes: "" },
       }))
       setSignatureImageUrl("")
+      setCapturedImages([])
       setStep("identification")
       setDraftId("")
       if (destinationReadingId) {
@@ -588,7 +597,7 @@ export default function NewReadingWizard() {
             setDraft((prev) => ({ ...prev, timer: { ...prev.timer, selectedSeconds: next } }))
           }
           onBack={() => setStep('identification')}
-          onAnalyzeAndProceed={(results: ReviewSelectionMap, rawApiResults) => {
+          onAnalyzeAndProceed={(results: ReviewSelectionMap, rawApiResults, nextCapturedImages) => {
             const dummy = makeDummyAnalysis()
             setDraft((prev) => ({
               ...prev,
@@ -596,6 +605,7 @@ export default function NewReadingWizard() {
               reviewSelections: results
             }))
             setProcessSingleRawResults(Array.isArray(rawApiResults) ? rawApiResults : [])
+            setCapturedImages(Array.isArray(nextCapturedImages) ? nextCapturedImages : [])
             setStep('review')
           }}
         />

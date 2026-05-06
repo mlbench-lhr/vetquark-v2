@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import crypto from "crypto";
 import connectMongo from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import Patient from "@/lib/models/Patient";
 import Reading, { CollectionMethod, ReadingResultStatus } from "@/lib/models/Reading";
 import PaymentLink from "@/lib/models/PaymentLink";
 import Notification from "@/lib/models/Notification";
+import ReadingCapturedImage from "@/lib/models/ReadingCapturedImage";
 import { getPusherServer, notificationsChannelForUser } from "@/lib/pusherServer";
 import { isPushEnabledForUser } from "@/lib/utils";
 
@@ -73,6 +75,175 @@ function isAllowedCloudinaryUrl(value: unknown): boolean {
   } catch {
     return false;
   }
+}
+
+type CapturedImageInput = {
+  atSeconds: number;
+  dataUrl: string;
+  capturedAt: Date | null;
+};
+
+type CloudinaryUploadResult = {
+  secureUrl: string;
+  publicId: string;
+  assetId: string;
+  version: number | null;
+};
+
+function normalizeCapturedImages(value: unknown): { images: CapturedImageInput[]; error: string | null } {
+  if (value == null) return { images: [], error: null };
+  if (!Array.isArray(value)) return { images: [], error: "capturedImages must be an array" };
+  if (value.length === 0) return { images: [], error: null };
+  if (value.length !== 4) return { images: [], error: "capturedImages must contain exactly 4 images" };
+
+  const parsed: CapturedImageInput[] = [];
+  for (const item of value) {
+    const atSeconds = toFiniteNumber((item as any)?.atSeconds);
+    const dataUrl = String((item as any)?.dataUrl || "").trim();
+    const capturedAtRaw = String((item as any)?.capturedAt || "").trim();
+    const capturedAt = capturedAtRaw ? toDate(capturedAtRaw) : null;
+
+    if (atSeconds === null || atSeconds < 0) {
+      return { images: [], error: "capturedImages.atSeconds must be a non-negative number" };
+    }
+    if (!dataUrl || !/^data:image\/(png|jpeg|jpg|webp);base64,/i.test(dataUrl)) {
+      return { images: [], error: "capturedImages.dataUrl must be a valid image data URL" };
+    }
+    if (dataUrl.length > 7_000_000) {
+      return { images: [], error: "capturedImages item is too large" };
+    }
+    if (capturedAtRaw && !capturedAt) {
+      return { images: [], error: "capturedImages.capturedAt must be a valid date" };
+    }
+
+    parsed.push({ atSeconds, dataUrl, capturedAt });
+  }
+
+  const secondsSet = new Set(parsed.map((p) => p.atSeconds));
+  if (secondsSet.size !== parsed.length) {
+    return { images: [], error: "capturedImages contains duplicate atSeconds values" };
+  }
+
+  parsed.sort((a, b) => a.atSeconds - b.atSeconds);
+  return { images: parsed, error: null };
+}
+
+function buildCloudinarySignature(params: Record<string, string | number>, apiSecret: string): string {
+  const toSign = Object.keys(params)
+    .sort()
+    .map((k) => `${k}=${params[k]}`)
+    .join("&");
+  return crypto.createHash("sha1").update(`${toSign}${apiSecret}`).digest("hex");
+}
+
+async function uploadCapturedImageToCloudinary(args: {
+  imageDataUrl: string;
+  folder: string;
+  publicId: string;
+}): Promise<CloudinaryUploadResult> {
+  const cloudName = String(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "").trim();
+  const apiKey = String(process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "").trim();
+  const apiSecret = String(process.env.CLOUDINARY_API_SECRET || "").trim();
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error("Cloudinary credentials are not configured");
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = buildCloudinarySignature(
+    {
+      folder: args.folder,
+      public_id: args.publicId,
+      timestamp,
+    },
+    apiSecret
+  );
+
+  const form = new FormData();
+  form.append("file", args.imageDataUrl);
+  form.append("folder", args.folder);
+  form.append("public_id", args.publicId);
+  form.append("api_key", apiKey);
+  form.append("timestamp", String(timestamp));
+  form.append("signature", signature);
+
+  const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: form,
+    cache: "no-store",
+  });
+  const uploadJson = await uploadRes.json().catch(() => null);
+  if (!uploadRes.ok) {
+    const msg = typeof uploadJson?.error?.message === "string" ? uploadJson.error.message : "Cloudinary upload failed";
+    throw new Error(msg);
+  }
+
+  const secureUrl = String(uploadJson?.secure_url || uploadJson?.url || "").trim();
+  if (!secureUrl) {
+    throw new Error("Cloudinary did not return secure URL");
+  }
+
+  return {
+    secureUrl,
+    publicId: String(uploadJson?.public_id || "").trim(),
+    assetId: String(uploadJson?.asset_id || "").trim(),
+    version: Number.isFinite(Number(uploadJson?.version)) ? Number(uploadJson?.version) : null,
+  };
+}
+
+async function persistCapturedImages(args: {
+  readingId: string;
+  veterinarianId: string;
+  guardianId: string;
+  patientId: string;
+  paymentLinkId: string | null;
+  results: Array<{ key: string; valueLabel: string; status: ReadingResultStatus; numericValue?: number }>;
+  capturedImages: CapturedImageInput[];
+}) {
+  if (!args.capturedImages.length) return;
+
+  const folder = `reading_captures/${args.readingId}`;
+  const uploaded = await Promise.all(
+    args.capturedImages.map(async (img, idx) => {
+      const publicId = `sec_${String(img.atSeconds)}_${Date.now()}_${idx + 1}`;
+      const cloud = await uploadCapturedImageToCloudinary({
+        imageDataUrl: img.dataUrl,
+        folder,
+        publicId,
+      });
+      return { img, cloud };
+    })
+  );
+
+  const resultsSnapshot = args.results.map((r) => ({
+    key: r.key,
+    valueLabel: r.valueLabel,
+    status: r.status,
+    numericValue: r.numericValue,
+  }));
+
+  await ReadingCapturedImage.deleteMany({ reading: args.readingId });
+  await ReadingCapturedImage.insertMany(
+    uploaded.map(({ img, cloud }) => ({
+      reading: args.readingId,
+      veterinarian: args.veterinarianId,
+      guardian: args.guardianId,
+      patient: args.patientId,
+      paymentLink: args.paymentLinkId,
+      testType: "urine",
+      captureSecond: img.atSeconds,
+      capturedAt: img.capturedAt,
+      cloudinaryUrl: cloud.secureUrl,
+      cloudinaryPublicId: cloud.publicId,
+      cloudinaryAssetId: cloud.assetId,
+      cloudinaryVersion: cloud.version,
+      source: {
+        origin: "new_reading",
+        uploadedFrom: "timer_step_auto_capture",
+        app: "web",
+      },
+      resultsSnapshot,
+    }))
+  );
 }
 
 const REQUIRED_RESULT_KEYS = [
@@ -226,6 +397,11 @@ export async function POST(req: NextRequest) {
     if (!signatureImageUrl || !isAllowedCloudinaryUrl(signatureImageUrl)) {
       return NextResponse.json({ error: "Invalid signatureImageUrl" }, { status: 400 });
     }
+    const normalizedCapturedImages = normalizeCapturedImages((body as any).capturedImages);
+    if (normalizedCapturedImages.error) {
+      return NextResponse.json({ error: normalizedCapturedImages.error }, { status: 400 });
+    }
+    const capturedImages = normalizedCapturedImages.images;
 
     await connectMongo();
 
@@ -238,6 +414,28 @@ export async function POST(req: NextRequest) {
     if (!patient) {
       return NextResponse.json({ error: "Patient not found" }, { status: 404 });
     }
+    const guardianId = String((patient as any).guardian || "").trim();
+    const maybePersistCapturedImages = async (readingId: string) => {
+      if (!capturedImages.length) return;
+      try {
+        await persistCapturedImages({
+          readingId,
+          veterinarianId,
+          guardianId,
+          patientId,
+          paymentLinkId,
+          results: results.map((r) => ({
+            key: r.key,
+            valueLabel: r.valueLabel,
+            status: r.status as ReadingResultStatus,
+            numericValue: typeof r.numericValue === "number" ? r.numericValue : undefined,
+          })),
+          capturedImages,
+        });
+      } catch (imageErr) {
+        console.error("Failed to persist captured reading images", imageErr);
+      }
+    };
 
     let paymentStatus: "pending" | "paid" | "expired" | null = null;
     let paymentLinkReadingId: string | null = null;
@@ -317,6 +515,7 @@ export async function POST(req: NextRequest) {
       ).lean();
 
       if (updatedReading?._id) {
+        await maybePersistCapturedImages(String(updatedReading._id));
         await PaymentLink.updateOne(
           { _id: paymentLinkId, veterinarian: veterinarianId, patient: patientId, $or: [{ reading: null }, { reading: updatedReading._id }] },
           { $set: { reading: updatedReading._id } },
@@ -407,6 +606,7 @@ export async function POST(req: NextRequest) {
       if (!updatedReading?._id) {
         return NextResponse.json({ error: "Draft not found" }, { status: 404 });
       }
+      await maybePersistCapturedImages(String(updatedReading._id));
 
       if (paymentLinkId) {
         await PaymentLink.updateOne(
@@ -500,6 +700,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Payment link already used" }, { status: 409 });
       }
     }
+    await maybePersistCapturedImages(String(created._id));
 
     {
       if (paymentStatus === "paid") {

@@ -42,6 +42,12 @@ export type TimerDraft = {
   analysis: TimerAnalysisDraft | null;
 };
 
+export type CapturedReadingImageDraft = {
+  atSeconds: number;
+  dataUrl: string;
+  capturedAt: string;
+};
+
 export type ReviewSelectionMap = Record<string, number>;
 
 export type ReviewResultStatus = "Normal" | "Abnormal";
