@@ -7,11 +7,12 @@ import { ServerPaginationProvider } from "@/components/PaginationProvider";
 import { SearchComponent } from "@/components/SearchComponent";
 import type { Column } from "@/components/Table/page";
 import { DynamicTable } from "@/components/Table/page";
-import { Download, Eye } from "lucide-react";
+import { Download, Eye, Images } from "lucide-react";
 import { format } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { downloadUrinalysisPdf, openUrinalysisPdf } from "@/utils/urinalysisPdf";
+import { ImagesModal } from "@/components/ImagesModal";
 
 type AdminRecordRow = {
   id: string;
@@ -46,6 +47,9 @@ export default function RecordsPage() {
   const [search, setSearch] = useState("");
   const [actionReadingId, setActionReadingId] = useState<string | null>(null);
   const [panelTitleByCode, setPanelTitleByCode] = useState<Map<string, string>>(new Map());
+  const [imagesModalOpen, setImagesModalOpen] = useState(false);
+  const [selectedReadingId, setSelectedReadingId] = useState<string>("");
+  const [selectedPetName, setSelectedPetName] = useState<string>("");
 
   const queryParams = useMemo(() => ({ search }), [search]);
 
@@ -127,6 +131,12 @@ export default function RecordsPage() {
     },
     []
   );
+
+  const handleViewImages = useCallback((readingId: string, petName: string) => {
+    setSelectedReadingId(readingId);
+    setSelectedPetName(petName);
+    setImagesModalOpen(true);
+  }, []);
 
   return (
     <BasicStructureWithName
@@ -218,6 +228,7 @@ export default function RecordsPage() {
                   accessor: "id",
                   render: (item) => {
                     const id = String(item?.id ?? "");
+                    const petName = String(item?.petName ?? "Unknown");
                     const disabled = !id || actionReadingId === id;
                     return (
                       <div className="flex justify-start items-center gap-2">
@@ -239,6 +250,15 @@ export default function RecordsPage() {
                         >
                           <Download size={16} />
                         </button>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-blue-700 hover:bg-blue-100"
+                          disabled={disabled}
+                          onClick={() => handleViewImages(id, petName)}
+                          aria-label="View Images"
+                        >
+                          <Images size={16} />
+                        </button>
                       </div>
                     );
                   },
@@ -250,6 +270,13 @@ export default function RecordsPage() {
           </ServerPaginationProvider>
         </BoxProviderWithName>
       </div>
+
+      <ImagesModal
+        isOpen={imagesModalOpen}
+        onClose={() => setImagesModalOpen(false)}
+        readingId={selectedReadingId}
+        petName={selectedPetName}
+      />
     </BasicStructureWithName>
   );
 }
