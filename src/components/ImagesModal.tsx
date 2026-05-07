@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Modal } from "@/components/ui/modal";
 import { X, ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
 
@@ -78,7 +78,9 @@ export const ImagesModal: React.FC<ImagesModalProps> = ({
   };
 
   const currentImage = images[currentIndex];
-
+  const captureSecondText = useMemo(() => {
+    return currentImage?.captureSecond ? `${currentImage?.captureSecond}s` : "N/A";
+  }, [currentImage?.captureSecond]);
   if (!isOpen) return null;
 
   return (
@@ -133,11 +135,11 @@ export const ImagesModal: React.FC<ImagesModalProps> = ({
               <div className="relative bg-gray-50 rounded-xl overflow-hidden" style={{ minHeight: "400px" }}>
                 <img
                   src={currentImage.cloudinaryUrl}
-                  alt={`Captured at ${currentImage.captureSecond}s`}
+                  alt={`Captured at ${captureSecondText}`}
                   className="w-full h-full object-contain"
                   style={{ maxHeight: "500px" }}
                 />
-                
+
                 {/* Navigation Buttons */}
                 {images.length > 1 && (
                   <>
@@ -170,7 +172,7 @@ export const ImagesModal: React.FC<ImagesModalProps> = ({
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    Capture Time: {currentImage.captureSecond}s
+                    Capture Time: {captureSecondText}
                   </p>
                   {currentImage.capturedAt && (
                     <p className="text-xs text-gray-500 mt-1">
@@ -178,7 +180,7 @@ export const ImagesModal: React.FC<ImagesModalProps> = ({
                     </p>
                   )}
                 </div>
-                
+
                 {/* Thumbnail Navigation */}
                 {images.length > 1 && (
                   <div className="flex gap-2">
@@ -186,11 +188,10 @@ export const ImagesModal: React.FC<ImagesModalProps> = ({
                       <button
                         key={index}
                         onClick={() => setCurrentIndex(index)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          index === currentIndex
-                            ? "bg-blue-500"
-                            : "bg-gray-300 hover:bg-gray-400"
-                        }`}
+                        className={`w-2 h-2 rounded-full transition-colors ${index === currentIndex
+                          ? "bg-blue-500"
+                          : "bg-gray-300 hover:bg-gray-400"
+                          }`}
                       />
                     ))}
                   </div>
@@ -204,11 +205,10 @@ export const ImagesModal: React.FC<ImagesModalProps> = ({
                     <button
                       key={index}
                       onClick={() => setCurrentIndex(index)}
-                      className={`flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
-                        index === currentIndex
-                          ? "border-blue-500 shadow-lg"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
+                      className={`flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${index === currentIndex
+                        ? "border-blue-500 shadow-lg"
+                        : "border-gray-200 hover:border-gray-300"
+                        }`}
                     >
                       <img
                         src={image.cloudinaryUrl}
