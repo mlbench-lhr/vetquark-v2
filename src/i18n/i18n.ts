@@ -175,6 +175,7 @@ const resources = {
         cats: "Cats",
         month: "Month",
         total: "Total",
+        newTest: "New test",
       },
       auth: {
         sending: "Sending...",
@@ -1888,6 +1889,7 @@ const resources = {
         cats: "Gatos",
         month: "Mês",
         total: "Total",
+        newTest: "Novo teste",
       },
       home: {
         guardianDetailsTitle: "Detalhes do tutor",
