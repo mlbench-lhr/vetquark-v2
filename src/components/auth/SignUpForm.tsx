@@ -76,7 +76,7 @@ export default function SignUpForm() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const [step, setStep] = useState(5);
+  const [step, setStep] = useState(1);
   const [profileType] = useState<ProfileType>("veterinarian");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -87,12 +87,24 @@ export default function SignUpForm() {
   const OTP_LENGTH = 5;
 
   React.useEffect(() => {
-    if (step !== 3 || countdown <= 0) return;
+    if (step !== 2 || countdown <= 0) return;
     const id = setTimeout(() => setCountdown((c) => (c > 0 ? c - 1 : 0)), 1000);
     return () => clearTimeout(id);
   }, [step, countdown]);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingClinicLogo, setUploadingClinicLogo] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
+  const passwordRequirements = [
+    { key: "minLength", label: t("auth.passwordReqMinLength"), test: (pwd: string) => pwd.length >= 8 },
+    { key: "upperLower", label: t("auth.passwordReqUpperLower"), test: (pwd: string) => /[a-z]/.test(pwd) && /[A-Z]/.test(pwd) },
+    { key: "number", label: t("auth.passwordReqNumber"), test: (pwd: string) => /\d/.test(pwd) },
+    { key: "special", label: t("auth.passwordReqSpecial"), test: (pwd: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd) },
+  ];
+  const [formData, setFormData] = useState<SignUpFormData>(() => getEmptyFormData());
+
+  const passwordStrength = passwordRequirements.filter((r) => r.test(formData.password)).length;
+  const passwordStrengthPercent = (passwordStrength / passwordRequirements.length) * 100;
 
   const expertiseOptions = [
     { value: "acupuncture", text: t("auth.acupuncture"), selected: false },
@@ -198,9 +210,8 @@ export default function SignUpForm() {
     return getCountryCities(country, stateCode, stateName);
   }
 
-  const [formData, setFormData] = useState<SignUpFormData>(() => getEmptyFormData());
 
-  const finalStep = 6;
+  const finalStep = 4;
 
   const resetInnerFormFields = () => {
     setFormData(getEmptyFormData());
@@ -396,7 +407,7 @@ export default function SignUpForm() {
   };
 
   const handleResendOtp = async () => {
-    if (step !== 3 || countdown > 0) return;
+    if (step !== 2 || countdown > 0) return;
     try {
       const res = await fetch('/api/auth/resend', {
         method: 'POST',
@@ -529,7 +540,7 @@ export default function SignUpForm() {
     }
   };
 
-  const handleStep2Submit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleStep1Submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const passwordInput = form.querySelector('input[name="password"]') as HTMLInputElement | null;
@@ -542,18 +553,27 @@ export default function SignUpForm() {
     passwordInput.setCustomValidity("");
     confirmInput.setCustomValidity("");
     if (whitespaceRe.test(passwordInput.value)) {
-      passwordInput.setCustomValidity("Password must not contain spaces");
+      passwordInput.setCustomValidity(t("auth.passwordNoSpaces"));
       passwordInput.reportValidity();
       return;
     }
     if (whitespaceRe.test(confirmInput.value)) {
-      confirmInput.setCustomValidity("Confirm password must not contain spaces");
+      confirmInput.setCustomValidity(t("auth.confirmPasswordNoSpaces"));
       confirmInput.reportValidity();
       return;
     }
     if (passwordInput.value !== confirmInput.value) {
-      confirmInput.setCustomValidity("Passwords do not match");
+      confirmInput.setCustomValidity(t("auth.passwordsDoNotMatch"));
       confirmInput.reportValidity();
+      return;
+    }
+    if (passwordStrength < passwordRequirements.length) {
+      toast.error(t("auth.passwordReqMinLength"));
+      passwordInput.focus();
+      return;
+    }
+    if (!formData.acceptTerms) {
+      toast.error(t("auth.mustAcceptTerms"));
       return;
     }
 
@@ -580,11 +600,11 @@ export default function SignUpForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(typeof data.error === 'string' ? data.error : 'Failed to start signup');
-        console.error("Step 2 signup error:", data.error || data);
+        toast.error(typeof data.error === "string" ? data.error : t("auth.failedToStartSignup"));
+        console.error("Step 1 signup error:", data.error || data);
         return;
       }
-      toast.success(data.message ?? "OTP sent to your email");
+      toast.success(data.message ?? t("auth.otpSentToEmail"));
       setCountdown(RESEND_COOLDOWN_SECONDS);
       handleNext();
     } finally {
@@ -595,153 +615,246 @@ export default function SignUpForm() {
   const renderStepContent = () => {
     switch (step) {
       case 1:
-      case 2:
-
         return (
-          <form id="signup-step-2" onSubmit={(e) => { e.preventDefault(); handleStep2Submit(e) }} className="pt-8">
+          <form id="signup-step-1" onSubmit={handleStep1Submit} className="px-6 pt-4 pb-8">
             <div className="space-y-4">
-              <div>
-                <label className="block text-gray-900 text-sm mb-2 ">
-                  {t("auth.fullName")}
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  placeholder={t("auth.enterFullName")}
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
-                />
-              </div>
+              <input
+                type="text"
+                name="fullName"
+                placeholder={`${t("auth.fullName")}*`}
+                value={formData.fullName}
+                onChange={handleInputChange}
+                required
+                className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
+              />
+
+              <input
+                type="email"
+                name="email"
+                placeholder={`${t("auth.email")}*`}
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
+              />
 
               <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.email")}
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder={t("auth.enterEmail")}
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.phoneNumber")}
-                </label>
                 <PhoneInput
                   name="phone"
                   value={formData.phone}
                   onChange={(next) => setFormData((prev) => ({ ...prev, phone: next }))}
                   defaultCountry="br"
                   required
-                  inputClassName="!w-full !h-12 !px-11 !py-3 !bg-gray-50 !rounded-xl !border-0 !text-gray-800 placeholder:!text-gray-400 focus:!outline-none"
-                  buttonClassName="!h-12 !bg-gray-50 !border-0 !rounded-xl"
+                  inputClassName="!w-full !h-14 !px-11 !py-3 !bg-gray-100 !rounded-xl !border-0 !text-gray-800 placeholder:!text-gray-500 focus:!outline-none focus:!ring-2 focus:!ring-primary"
+                  buttonClassName="!h-14 !bg-gray-100 !border-0 !rounded-xl"
                   containerClassName="w-full"
                 />
               </div>
 
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.password")}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder={t("auth.enterPassword")}
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    onInput={(e) => e.currentTarget.setCustomValidity("")}
-                    onInvalid={(e) => {
-                      const el = e.currentTarget;
-                      if (el.validity.valueMissing) {
-                        el.setCustomValidity(t("auth.passwordRequired"));
-                      }
-                    }}
-                    autoComplete="new-password"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400 pr-12"
-                    onKeyDown={(e) => { if (/\s/.test(e.key)) e.preventDefault(); }}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const text = e.clipboardData.getData("text").replace(/\s+/gu, "");
-                      const el = e.currentTarget;
-                      el.setCustomValidity("");
-                      setFormData((prev) => ({ ...prev, password: text }));
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder={`${t("auth.password")}*`}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
+                  onInput={(e) => e.currentTarget.setCustomValidity("")}
+                  autoComplete="new-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  required
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 pr-12"
+                  onKeyDown={(e) => { if (/\s/.test(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const text = e.clipboardData.getData("text").replace(/\s+/gu, "");
+                    const el = e.currentTarget;
+                    el.setCustomValidity("");
+                    setFormData((prev) => ({ ...prev, password: text }));
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
 
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.confirmPassword")}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    placeholder={t("auth.confirmPassword")}
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    onInput={(e) => (e.currentTarget.setCustomValidity(""))}
-                    onInvalid={(e) => {
-                      const el = e.currentTarget;
-                      if (el.validity.valueMissing) {
-                        el.setCustomValidity(t("auth.passwordRequired"));
-                      }
-                    }}
-                    autoComplete="new-password"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400 pr-12"
-                    onKeyDown={(e) => { if (/\s/.test(e.key)) e.preventDefault(); }}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const text = e.clipboardData.getData("text").replace(/\s+/gu, "");
-                      const el = e.currentTarget;
-                      el.setCustomValidity("");
-                      setFormData((prev) => ({ ...prev, confirmPassword: text }));
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
-                  >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
+              {(passwordFocused || formData.password) && (
+                <div className="space-y-2 px-1">
+                  <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${passwordStrengthPercent === 100 ? "bg-primary" : "bg-red-500"}`}
+                      style={{ width: `${passwordStrengthPercent}%` }}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    {passwordRequirements.map((req) => (
+                      <div key={req.key} className="flex items-center gap-2 text-sm">
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${req.test(formData.password) ? "bg-primary border-primary" : "border-gray-400"}`}>
+                          {req.test(formData.password) && <Check size={10} className="text-white" strokeWidth={3} />}
+                        </div>
+                        <span className={req.test(formData.password) ? "text-gray-900" : "text-gray-500"}>{req.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              )}
+
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder={t("auth.confirmPassword")}
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  onInput={(e) => e.currentTarget.setCustomValidity("")}
+                  autoComplete="new-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  required
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 pr-12"
+                  onKeyDown={(e) => { if (/\s/.test(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const text = e.clipboardData.getData("text").replace(/\s+/gu, "");
+                    const el = e.currentTarget;
+                    el.setCustomValidity("");
+                    setFormData((prev) => ({ ...prev, confirmPassword: text }));
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  name="taxId"
+                  placeholder="CPF"
+                  value={formData.taxId}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 text-center"
+                />
+                <TypedDateInput
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={(nextIsoDate) => setFormData((prev) => ({ ...prev, dateOfBirth: nextIsoDate }))}
+                  required
+                  max={new Date().toISOString().slice(0, 10)}
+                  placeholder="dd/mm/yyyy"
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 pr-10"
+                  iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  name="postalCode"
+                  placeholder="CEP"
+                  value={formData.postalCode}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 text-center"
+                />
+                <input
+                  type="text"
+                  name="address"
+                  placeholder="Número"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 text-center"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <select
+                  name="state"
+                  value={formData.state}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
+                  required
+                  disabled={!formData.country || loadingStates || stateOptions.length === 0}
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 appearance-none text-center"
+                >
+                  <option value="" disabled>
+                    {!formData.country ? t("auth.selectCountryFirst") : loadingStates ? t("auth.loadingStates") : "Estado"}
+                  </option>
+                  {stateOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.text}
+                    </option>
+                  ))}
+                </select>
+                {cityOptions.length > 0 ? (
+                  <select
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    required
+                    disabled={!formData.country || !formData.state || loadingCities || cityOptions.length === 0}
+                    className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 appearance-none text-center"
+                  >
+                    <option value="" disabled>
+                      {!formData.state ? t("auth.selectStateFirst") : loadingCities ? t("auth.loadingCities") : "Cidade"}
+                    </option>
+                    {cityOptions.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    name="city"
+                    placeholder="Cidade"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    required
+                    disabled={!formData.country || !formData.state}
+                    className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 text-center"
+                  />
+                )}
+              </div>
+
+              <div className="flex items-start gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  name="acceptTerms"
+                  id="terms"
+                  checked={formData.acceptTerms}
+                  onChange={handleInputChange}
+                  className="mt-0.5 w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                />
+                <label htmlFor="terms" className="text-xs text-gray-600 leading-relaxed">
+                  Aceito os termos de Serviço e Política de Privacidade
+                </label>
               </div>
             </div>
           </form>
         );
 
-      case 3:
+      case 2:
         return (
-          <form id="signup-step-3" onSubmit={handleVerifySubmit} className="pt-8">
+          <form id="signup-step-2" onSubmit={handleVerifySubmit} className="px-6 pt-8">
             <h1 className="text-2xl font-medium text-gray-900 mb-2">
               {t("auth.emailVerification")}
             </h1>
-            <p className="text-sm text-tertiary ">
+            <p className="text-sm text-gray-500 mb-1">
               {t("auth.enterVerificationCode")}
             </p>
             <p className="text-primary font-medium mb-1">
@@ -764,7 +877,7 @@ export default function SignUpForm() {
                   onClick={() => handleInputClick(index)}
                   className="w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none text-lg bg-gray-50"
                   maxLength={1}
-                  required // ✅ this enables native validation
+                  required
                   autoComplete="off"
                 />
               ))}
@@ -772,7 +885,7 @@ export default function SignUpForm() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <span className="inline-flex items-center justify-center gap-2">
@@ -790,191 +903,12 @@ export default function SignUpForm() {
                 {countdown > 0 ? `${t("auth.resendIn")} ${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')}` : t("auth.sendAgain")}
               </button>
             </p>
-
           </form>
         );
 
-      case 4:
+      case 3:
         return (
-          <form id="signup-step-4" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="pt-8">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.taxId")}
-                </label>
-                <input
-                  type="number"
-                  name="taxId"
-                  placeholder={t("auth.egTaxId")}
-                  value={formData.taxId}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.dateOfBirth")}
-                </label>
-                <TypedDateInput
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={(nextIsoDate) => setFormData((prev) => ({ ...prev, dateOfBirth: nextIsoDate }))}
-                  required
-                  max={new Date().toISOString().slice(0, 10)}
-                  placeholder="dd/mm/yyyy"
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12"
-                  iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.address")}
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  placeholder={t("auth.enterAddress")}
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.country")}
-                </label>
-                <select
-                  name="country"
-                  value={formData.country}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, country: e.target.value, state: "", city: "" }))}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
-                >
-                  <option value="" disabled>
-                    {t("auth.selectCountry")}
-                  </option>
-                  {countryOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.text}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.state")}
-                </label>
-                <select
-                  name="state"
-                  value={formData.state}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
-                  required
-                  disabled={!formData.country || loadingStates || stateOptions.length === 0}
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
-                >
-                  <option value="" disabled>
-                    {!formData.country ? t("auth.selectCountryFirst") : loadingStates ? t("auth.loadingStates") : t("auth.selectState")}
-                  </option>
-                  {stateOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.text}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.city")}
-                </label>
-                {cityOptions.length > 0 ? (
-                  <select
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    required
-                    disabled={!formData.country || !formData.state || loadingCities || cityOptions.length === 0}
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
-                  >
-                    <option value="" disabled>
-                      {!formData.state ? t("auth.selectStateFirst") : loadingCities ? t("auth.loadingCities") : t("auth.selectCity")}
-                    </option>
-                    {cityOptions.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    name="city"
-                    placeholder={t("auth.enterCity")}
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    required
-                    disabled={!formData.country || !formData.state}
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
-                  />
-                )}
-              </div>
-
-              <div>
-                <label className="block text-gray-900 text-sm mb-2">
-                  {t("auth.postalCode")}
-                </label>
-                <input
-                  type="number"
-                  name="postalCode"
-                  placeholder={t("auth.enterPostalCode")}
-                  value={formData.postalCode}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
-                />
-              </div>
-
-              <div className="flex items-end gap-3 pt-4">
-                <input
-                  type="checkbox"
-                  name="acceptTerms"
-                  id="terms"
-                  checked={formData.acceptTerms}
-                  onChange={handleInputChange}
-                  required
-                  className="mt-1 w-5 h-5 text-primary rounded border-gray-300 focus:ring-primary"
-                />
-                <label htmlFor="terms" className="text-sm text-gray-700">
-                  {t("auth.agreeToTermsPrefix")}
-                  <button
-                    type="button"
-                    onClick={() => router.push("/legal/terms")}
-                    className="text-primary hover:text-blue-700 bg-transparent border-0 cursor-pointer"
-                  >
-                    {t("auth.termsOfUse")}
-                  </button>
-                  {" & "}
-                  <button
-                    type="button"
-                    onClick={() => router.push("/legal/privacy")}
-                    className="text-primary hover:text-blue-700 bg-transparent border-0 cursor-pointer"
-                  >
-                    {t("auth.privacyPolicy")}
-                  </button>
-                </label>
-              </div>
-            </div>
-          </form>
-        );
-
-      case 5:
-        return (
-          <form id="signup-step-5" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="pt-8">
+          <form id="signup-step-3" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="px-6 pt-8">
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-900 font-medium mb-2">
@@ -987,7 +921,7 @@ export default function SignUpForm() {
                   value={formData.crmv}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
                 />
               </div>
 
@@ -1014,8 +948,7 @@ export default function SignUpForm() {
                   placeholder={t("auth.enterMapa")}
                   value={formData.mapaRegistration}
                   onChange={handleInputChange}
-                  // required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none  text-gray-800 placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
                 />
               </div>
 
@@ -1061,9 +994,9 @@ export default function SignUpForm() {
           </form>
         );
 
-      case 6:
+      case 4:
         return (
-          <form id="signup-step-6" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="pt-8">
+          <form id="signup-step-4" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="px-6 pt-8">
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-900 font-medium mb-2">
@@ -1154,44 +1087,40 @@ export default function SignUpForm() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-48px) h-fit bg-white pb-[100px]! flex flex-col">
+    <div className="min-h-[calc(100dvh-32px)] flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between ">
-        <button
-          onClick={handleBack}
-          className="hover:bg-gray-100 rounded-lg transition-colors bg-transparent border-0 cursor-pointer"
-        >
-          <ChevronLeft size={24} />
-        </button>
-
-        <h2 className="text-sm font-medium text-gray-900">
-          {step === 1 && t("auth.createAccount")}
-          {step === 2 && t("auth.personalDetails")}
-          {step === 3 && ""}
-          {step === 4 && t("auth.taxAddressInfo")}
-          {step === 5 && t("auth.professionalRegistration")}
-          {step === 6 && t("auth.clinicReports")}
-        </h2>
-
+      <div className="flex items-center justify-between px-6 pt-6">
+        <div className="flex items-center gap-3">
+          {step > 1 && (
+            <button
+              onClick={handleBack}
+              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors bg-transparent border-0 cursor-pointer"
+            >
+              <ChevronLeft size={20} />
+            </button>
+          )}
+          <h2 className="text-xl font-bold text-primary">
+            {t("auth.createAccount")}
+          </h2>
+        </div>
         <div className="text-primary font-medium text-sm">
           {t("auth.step")} {step}/{finalStep}
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto ">
+      <div className="flex-1 overflow-y-auto">
         {renderStepContent()}
       </div>
 
       {/* Footer */}
-      {(step === 1 || step === 2 || step === 4 || step === 5 || step === 6) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4">
+      {step !== 2 && (
+        <div className="px-6 pb-8 pt-4">
           <button
             type="submit"
             form={`signup-step-${step}`}
-            onClick={step === 1 ? handleNext : undefined}
             disabled={submitting || uploadingClinicLogo}
-            className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {submitting ? (
               <span className="inline-flex items-center justify-center gap-2">
@@ -1199,12 +1128,12 @@ export default function SignUpForm() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                {profileType === "veterinarian" && step === finalStep ? t("auth.creating") : t("auth.next")}
+                {step === finalStep ? t("auth.creating") : t("auth.continue")}
               </span>
-            ) : (profileType === "veterinarian" && step === finalStep ? t("auth.createAccount") : t("auth.next"))}
+            ) : (step === finalStep ? t("auth.createAccount") : t("auth.continue"))}
           </button>
-          {(step === 1 || step === 2) && (
-            <p className="text-center text-gray-600 mt-4">
+          {step === 1 && (
+            <p className="text-center text-gray-600 mt-4 text-sm">
               {t("auth.alreadyHaveAccount")}{" "}
               <button className="text-primary hover:text-blue-700 font-semibold bg-transparent border-0 cursor-pointer" onClick={() => router.push("/signin")}>
                 {t("auth.signIn")}

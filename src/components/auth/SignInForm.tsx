@@ -193,28 +193,28 @@
 
 
 
-'use client'
-import React, { useEffect, useState } from 'react';
-import { Eye } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-toastify';
-import { useAppDispatch } from '@/store/hooks';
-import { setProfile as setUserProfile } from '@/store/userProfileSlice';
+"use client";
+import React, { useState } from "react";
+import { Eye } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
+import { useAppDispatch } from "@/store/hooks";
+import { setProfile as setUserProfile } from "@/store/userProfileSlice";
 import { useTranslation } from "react-i18next";
 import i18n, { isAppLanguage, type AppLanguage } from "@/i18n/i18n";
 import { Modal } from "@/components/ui/modal";
 import EmailVerification from "@/components/auth/EmailVerification";
-import Link from 'next/link';
+import Link from "next/link";
 
-type ProfileType = 'veterinarian';
+type ProfileType = "veterinarian";
 
 export default function SignInForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const [profile] = useState<ProfileType>('veterinarian');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [profile] = useState<ProfileType>("veterinarian");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState<AppLanguage>(() => (isAppLanguage(i18n.language) ? i18n.language : "en"));
@@ -230,16 +230,16 @@ export default function SignInForm() {
     }
     try {
       setVerifying(true);
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, role: profile }),
-        credentials: 'include',
+        credentials: "include",
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(typeof data.error === 'string' ? data.error : t("auth.loginFailed"));
-        console.error('Login error:', data.error || data);
+        toast.error(typeof data.error === "string" ? data.error : t("auth.loginFailed"));
+        console.error("Login error:", data.error || data);
         return;
       }
       if (data?.twoFactorRequired) {
@@ -250,15 +250,14 @@ export default function SignInForm() {
         dispatch(setUserProfile(data.profile));
       }
       toast.success(t("auth.loggedInSuccessfully"));
-      router.push('/Veterinarian/home');
+      router.push("/Veterinarian/home");
     } catch (err) {
       toast.error(t("auth.networkErrorDuringLogin"));
-      console.error('Login network error:', err);
+      console.error("Login network error:", err);
     } finally {
       setVerifying(false);
     }
   };
-
 
   const verify2FA = async (code: string) => {
     if (code.length !== 5) {
@@ -283,7 +282,7 @@ export default function SignInForm() {
       }
       toast.success(t("auth.loggedInSuccessfully"));
       setTwoFARequired(false);
-      router.push('/Veterinarian/home');
+      router.push("/Veterinarian/home");
     } finally {
       setVerifying(false);
     }
@@ -309,16 +308,16 @@ export default function SignInForm() {
   };
 
   const handleSignUp = () => {
-    router.push('/signup');
+    router.push("/signup");
   };
   const handleForgotPassword = () => {
-    router.push('/forget-password');
+    router.push("/forget-password");
   };
 
   return (
-    <div className="min-h-[calc(100dvh-32px)] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-end">
+    <div className="min-h-[calc(100dvh-32px)] flex flex-col bg-white">
+      {/* Language Selector */}
+      <div className="flex items-center justify-end px-6 pt-4">
         <select
           value={language}
           onChange={(e) => {
@@ -328,62 +327,55 @@ export default function SignInForm() {
             i18n.changeLanguage(next);
             if (typeof window !== "undefined") window.localStorage.setItem("ui_language_v1", next);
           }}
-          className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg transition-colors border-0 cursor-pointer text-gray-700"
+          className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg transition-colors border-0 cursor-pointer text-gray-700 text-sm"
         >
           <option value="en">🇬🇧 {t("common.english")}</option>
           <option value="pt">{"\u{1F1E7}\u{1F1F7}"} {t("common.portuguese")}</option>
         </select>
       </div>
 
-      <div className="flex-1">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-medium text-gray-900 mb-2">
-            {t("auth.login")}
-          </h1>
-          <p className="text-tertiary">
-            {t("auth.accountTypePrompt")}
-          </p>
+      <div className="flex-1 flex flex-col px-6 pt-6 pb-8">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <span className="text-3xl font-bold text-gray-700 tracking-tight">
+            VetQuark<sup className="text-sm font-normal">™</sup>
+          </span>
         </div>
 
-        {/* Login Form */}
+        {/* Welcome */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold text-primary mb-3">{t("auth.welcome")}</h1>
+          <p className="text-gray-500 text-base">{t("auth.accountTypePrompt")}</p>
+        </div>
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-900 font-medium mb-2">
-              {t("auth.email")}
-            </label>
+          <input
+            type="email"
+            placeholder={t("auth.email")}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
+          />
+
+          <div className="relative">
             <input
-              type="email"
-              placeholder={t("auth.enterYourEmail")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-400"
+              type={showPassword ? "text" : "password"}
+              placeholder={t("auth.password")}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 pr-12"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
+            >
+              <Eye size={20} />
+            </button>
           </div>
 
-          <div>
-            <label className="block text-gray-900 font-medium mb-2">
-              {t("auth.password")}
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder={t("auth.enterYourPassword")}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-400 pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
-              >
-                <Eye size={20} />
-              </button>
-            </div>
-          </div>
-
-          <div className="text-right">
+          <div className="text-center pt-1">
             <button
               type="button"
               onClick={handleForgotPassword}
@@ -394,64 +386,62 @@ export default function SignInForm() {
           </div>
 
           <button
-            type='submit'
+            type="submit"
             disabled={verifying}
-            className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-full transition-colors cursor-pointer border-0 mt-6 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors cursor-pointer border-0 mt-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {verifying ? (
               <span className="inline-flex items-center justify-center gap-2">
-                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 {t("auth.login")}
               </span>
-            ) : t("auth.login")}
+            ) : (
+              t("auth.login")
+            )}
           </button>
         </form>
 
-        <Modal isOpen={twoFARequired} onClose={() => setTwoFARequired(false)} className="max-w-[420px] p-0">
-          <EmailVerification
-            mode="modal"
-            title={t("auth.emailVerification")}
-            codeLength={5}
-            initialTimer={600}
-            onSubmit={(code) => verify2FA(code)}
-            onResend={() => resend2FA()}
-            onClose={() => setTwoFARequired(false)}
-          />
-        </Modal>
-      </div>
-
-      {/* Footer */}
-      <div className="text-center pb-8 px-6">
-        <p className="text-gray-600">
-          {t("auth.dontHaveAccount")}{" "}
+        {/* Create Account */}
+        <div className="text-center mt-6">
           <button
             onClick={handleSignUp}
-            className="text-primary hover:text-blue-700 font-semibold bg-transparent border-0 cursor-pointer"
+            className="text-primary hover:text-blue-700 font-medium bg-transparent border-0 cursor-pointer"
           >
-            {t("auth.signUp")}
-          </button>
-        </p>
-        <div className="mt-2 text-sm text-gray-500">
-          <Link
-            href={"/legal/terms"}
-            type="button"
-            className="hover:text-gray-700 bg-transparent border-0 cursor-pointer"
-          >
-            Termos de Serviço
-          </Link>
-          <span className="mx-2">•</span>
-          <button
-            type="button"
-            onClick={() => router.push("/legal/privacy")}
-            className="hover:text-gray-700 bg-transparent border-0 cursor-pointer"
-          >
-            Política de Privacidade
+            {t("auth.createAccount")}
           </button>
         </div>
+
+        {/* Footer */}
+        <div className="mt-auto pt-10 text-center text-sm">
+          <Link href="/legal/terms" className="text-primary hover:text-blue-700">
+            {t("auth.termsOfService")}
+          </Link>
+          <span className="mx-2 text-primary">•</span>
+          <Link href="/legal/privacy" className="text-primary hover:text-blue-700">
+            {t("auth.privacyPolicyFooter")}
+          </Link>
+        </div>
       </div>
+
+      <Modal isOpen={twoFARequired} onClose={() => setTwoFARequired(false)} className="max-w-[420px] p-0">
+        <EmailVerification
+          mode="modal"
+          title={t("auth.emailVerification")}
+          codeLength={5}
+          initialTimer={600}
+          onSubmit={(code) => verify2FA(code)}
+          onResend={() => resend2FA()}
+          onClose={() => setTwoFARequired(false)}
+        />
+      </Modal>
     </div>
   );
 }
