@@ -8,19 +8,22 @@ interface StatCardProps {
   variant?: 'primary' | 'secondary';
 }
 
-const StatCard: React.FC<StatCardProps> = ({ number, label, sublabel, variant = 'primary' }) => {
+const StatCard: React.FC<StatCardProps> = ({ number, label, sublabel }) => {
   return (
-    <div className={`rounded-2xl border- h-full bg-gray-100`}>
-      <div className="flex flex-col p-2 h-full">
-        <p className="text-sm font-">{label}</p>
-        <div className={`text-4xl font-semibold text-primary gap-3 flex`}>
-          {number}
-          <div className='p-1'>
-
-            {sublabel && <p className="text-xs font-light bg-[#EBF2FF] text-primary rounded-full p-1 mt-1 text-center">{sublabel}</p>}
-          </div>
-        </div>
-
+    <div className="rounded-2xl border border-primary/30 bg-white p-3.5 flex items-center gap-3">
+      <span className="text-[28px] font-bold text-primary leading-none pl-1">
+        {number}
+      </span>
+      <div className="w-px h-10 bg-gray-200" />
+      <div className="flex flex-col gap-1">
+        <span className="text-sm font-semibold text-gray-800 leading-tight">
+          {label}
+        </span>
+        {sublabel && (
+          <span className="text-[11px] font-medium bg-blue-50 text-primary rounded-full px-2.5 py-0.5 w-fit leading-tight">
+            {sublabel}
+          </span>
+        )}
       </div>
     </div>
   );

@@ -144,7 +144,7 @@ const SearchBar: React.FC = () => {
   };
 
   return (
-    <div className="mt-2 flex items-center gap-3" ref={containerRef}>
+    <div className="mt-4 flex items-center gap-3" ref={containerRef}>
       <div className="flex-1 relative">
         <input
           type="text"
@@ -172,10 +172,10 @@ const SearchBar: React.FC = () => {
               if (firstExam) selectExam(firstExam);
             }
           }}
-          className="w-full px-4 py-3 pl-12  rounded-xl focus:outline-none focus:border-primary bg-gray-100"
+          className="w-full px-4 py-3 pl-11 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white border border-gray-200 text-sm placeholder:text-gray-400"
         />
         <svg
-          className="w-5 h-5 text-primary absolute left-4 top-1/2 -translate-y-1/2"
+          className="w-5 h-5 text-primary absolute left-3.5 top-1/2 -translate-y-1/2"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -239,9 +239,9 @@ const SearchBar: React.FC = () => {
           </div>
         ) : null}
       </div>
-      <Link href={"/Veterinarian/store"} className="px-4 py-3 rounded-xl flex items-center gap-2 bg-gray-100" >
+      <Link href={"/Veterinarian/store"} className="px-4 py-3 rounded-xl flex items-center gap-2 bg-white border border-gray-200 shrink-0" >
         <ShoppingCartIcon className="w-5 h-5 text-primary" />
-        <span className="text-black font-light">{t('dashboard.store')}</span>
+        <span className="text-gray-700 font-medium text-sm">{t('dashboard.store')}</span>
       </Link>
 
     </div>

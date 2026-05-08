@@ -1,3 +1,19 @@
+@font-face {
+  font-family: 'Neulis Neue';
+  src: url('/fonts/neulis-neue.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neulis Neue';
+  src: url('/fonts/neulis-neue-bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @import 'tailwindcss';
 
 @plugin 'tailwindcss-animate';
@@ -7,7 +23,7 @@
 
 @theme {
   --font-*: initial;
-  --font-outfit: Outfit, sans-serif;
+  --font-neulis: 'Neulis Neue', sans-serif;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -281,10 +297,7 @@
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
-
-  font-family: 'Raleway', sans-serif;
-
+    @apply relative font-normal font-neulis z-1 bg-gray-50;
   }
 }
 

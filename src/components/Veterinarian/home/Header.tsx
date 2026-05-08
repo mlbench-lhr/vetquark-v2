@@ -116,28 +116,26 @@ const Header: React.FC<HeaderProps> = ({ userName, balance }) => {
           <h1 className="text-sm font-semibold text-gray-800">{resolvedName}</h1>
         </div>
       </div>
-      <div className="flex items-center gap-3" >
-        <div className="bg-gray-100 flex flex-col text-sm py-0.5 pl-2 pr-4 rounded-lg cursor-pointe"
-        // onClick={() => openModal()}
-        >
-          <span className="text-tertiary text-xs">
+      <div className="flex items-center gap-3">
+        <div className="flex flex-col items-center justify-center py-1 px-3 rounded-full border border-primary/40 bg-white">
+          <span className="text-primary/70 text-[10px] leading-3 font-medium">
             {t('dashboard.balance')}
           </span>
-          <span className="py-1 text-primary font-bold text-center">
+          <span className="text-primary font-bold text-sm leading-4">
             {walletBalance}
           </span>
         </div>
 
-        <Link href={"/Veterinarian/notifications"} className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-          {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
-          <span className="text-white text-sm">
-            <Image
-              src={"/images/home/bell.svg"}
-              alt={t('common.notifications')}
-              width={24}
-              height={24}
-            />
-          </span>
+        <Link href={"/Veterinarian/notifications"} className="relative w-10 h-10 bg-primary rounded-full flex items-center justify-center shrink-0">
+          {unreadCount > 0 ? (
+            <span className="absolute -top-1 -left-1 h-5 w-5 rounded-full bg-white border border-primary text-primary text-[10px] font-bold flex items-center justify-center">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          ) : null}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </Link>
       </div>
       <WithdrawModal

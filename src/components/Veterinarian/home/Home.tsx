@@ -10,7 +10,6 @@ import { Patient } from './types';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
-import { ArrowRight, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 
@@ -123,11 +122,11 @@ export default function Home() {
         })();
     }, []);
     return (
-        <div className="">
-            <Header userName={profile?.fullName} balance="$ 925.00" />
+        <div className="space-y-5 pb-4">
+            <Header userName={profile?.fullName} balance="R$ 925,00" />
             <SearchBar />
 
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
                 <StatCard number={examStats.todayTotal} label={t('dashboard.examsToday')} sublabel={t('dashboard.completedCount', { count: examStats.todayCompleted })} variant="primary" />
                 <StatCard
                     number={patientStats.activePatients}
@@ -137,42 +136,35 @@ export default function Home() {
                 />
             </div>
 
+            <AttendanceChart
+                months={attendance.months}
+                dogs={attendance.dogs}
+                cats={attendance.cats}
+                interactive={true}
+            />
 
-
-            <div className="">
-                <AttendanceChart
-                    months={attendance.months}
-                    dogs={attendance.dogs}
-                    cats={attendance.cats}
-                    interactive={true}
-                />
-            </div>
-            <div className="mt-2">
-                {
-                    patients.length > 0 &&
-                    <div className="flex items-center justify-between mb-3">
-                        <div>
-                            <h2 className="text-base font-bold text-gray-800">{t('dashboard.recentPatients')}</h2>
-                            <p className="text-xs text-gray-500">{t('dashboard.recentPatientsDesc')}</p>
-                        </div>
-                        <button
-                            type="button"
-                            className="px-3 py-2 borde border-gray-300 rounded-full text-sm flex items-center gap-2 bg-gray-100"
-                            onClick={() => router.push('/Veterinarian/home/patients')}
-                        >
-                            {t('dashboard.viewAll')}
-                            <ChevronRight size={14} color='#3F78D8' />
-                        </button>
+            {patients.length > 0 && (
+                <div>
+                    <h2 className="text-base font-bold text-gray-800 mb-3">{t('dashboard.recentPatients')}</h2>
+                    <div className="bg-white border border-gray-200 rounded-2xl p-3 space-y-3">
+                        {patients.slice(0, 4).map((patient, index) => (
+                            <PatientCard key={patient.id} patient={patient} featured={index === 0} />
+                        ))}
                     </div>
-                }
-                <div className="space-y-3">
-                    {patients.slice(0, 3).map((patient, index) => (
-                        <PatientCard key={patient.id} patient={patient} featured={index === 0} />
-                    ))}
                 </div>
+            )}
 
-
-            </div>
+            <button
+                type="button"
+                onClick={() => router.push('/Veterinarian/new-reading')}
+                className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-colors cursor-pointer border-0 flex items-center justify-center gap-2"
+            >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" />
+                    <path d="M12 8v8M8 12h8" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                {t('dashboard.newTest')}
+            </button>
         </div>
     );
 }
