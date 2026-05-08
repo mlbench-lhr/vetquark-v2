@@ -76,7 +76,7 @@ export default function SignUpForm() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(5);
   const [profileType] = useState<ProfileType>("veterinarian");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
