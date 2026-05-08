@@ -41,7 +41,7 @@ export default function TotalGuestsChart({ scan, manually, tck }: GuestProps) {
   const options: ApexOptions = {
     colors: ["#465fff", "#758bff", "#b5c1ff"], // base colors for the stacked bars
     chart: {
-      fontFamily: "Outfit, sans-serif",
+      fontFamily: "Neulis Neue, sans-serif",
       type: "bar",
       height: 180,
       stacked: true,
@@ -72,7 +72,7 @@ export default function TotalGuestsChart({ scan, manually, tck }: GuestProps) {
       show: true,
       position: "top",
       horizontalAlign: "right",
-      fontFamily: "Outfit",
+      fontFamily: "Neulis Neue",
     },
     yaxis: {
       title: { text: undefined },

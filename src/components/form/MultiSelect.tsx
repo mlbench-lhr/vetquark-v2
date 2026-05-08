@@ -8,7 +8,7 @@ interface Option {
 }
 
 interface MultiSelectProps {
-  label: string;
+  label?: string;
   options: Option[];
   defaultSelected?: string[];
   onChange?: (selected: string[]) => void;
@@ -69,9 +69,9 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
 
   return (
     <div className="w-full">
-      <label className="mb-1.5 block text-sm font-medium text-gray-700 ">
+      {label && <label className="mb-1.5 block text-sm font-medium text-gray-700">
         {label}
-      </label>
+      </label>}
 
       <div className="relative z-20 inline-block w-full">
         <div className="relative flex flex-col items-center">
@@ -129,8 +129,8 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                     >
                       <div
                         className={`relative flex w-full items-center p-2 pl-2 ${selectedOptions.includes(option.value)
-                            ? "bg-primary/10"
-                            : ""
+                          ? "bg-primary/10"
+                          : ""
                           }`}
                       >
                         <div className="mx-2 leading-6 text-gray-800 ">

@@ -40,7 +40,7 @@ export default function MonthlySalesChart({ links }: MonthlySalesChartProps) {
   const options: ApexOptions = {
     colors: ["#465fff"],
     chart: {
-      fontFamily: "Outfit, sans-serif",
+      fontFamily: "Neulis Neue, sans-serif",
       type: "bar",
       height: 180,
       toolbar: { show: false },
@@ -63,7 +63,7 @@ export default function MonthlySalesChart({ links }: MonthlySalesChartProps) {
       show: true,
       position: "top",
       horizontalAlign: "left",
-      fontFamily: "Outfit",
+      fontFamily: "Neulis Neue",
     },
     yaxis: { title: { text: undefined } },
     grid: {

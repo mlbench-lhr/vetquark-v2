@@ -1,4 +1,3 @@
-import { Outfit } from 'next/font/google';
 import './globals.css';
 import 'react-phone-input-2/lib/style.css';
 
@@ -12,10 +11,6 @@ import I18nProvider from '@/i18n/I18nProvider';
 import { Suspense } from 'react';
 import Image from 'next/image';
 
-
-const outfit = Outfit({
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "VetQuark",
@@ -44,7 +39,7 @@ export default function RootLayout({
   return (
 
     <html lang="pt-BR">
-      <body className={`${outfit.className} `} suppressHydrationWarning>
+      <body className="font-neulis" suppressHydrationWarning>
         <ReduxProvider>
           <I18nProvider>
             <UserProvider>

@@ -344,7 +344,7 @@ export default function SignInForm() {
 
         {/* Welcome */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-primary mb-3">{t("auth.welcome")}</h1>
+          <h1 className="text-4xl font-[700] text-primary mb-3">{t("auth.welcome")}</h1>
           <p className="text-gray-500 text-base">{t("auth.accountTypePrompt")}</p>
         </div>
 

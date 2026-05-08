@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     if (!email || !otp) {
       return NextResponse.json({ error: "Email and OTP are required" }, { status: 400 });
     }
-    if (typeof otp !== "string" || otp.length !== 5) {
+    if (typeof otp !== "string" || otp.length !== 6) {
       return NextResponse.json({ error: "Invalid OTP format" }, { status: 400 });
     }
 

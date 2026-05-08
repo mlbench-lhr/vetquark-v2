@@ -1,71 +1,69 @@
 "use client";
-import Input from "@/components/form/input/InputField";
-import Label from "@/components/form/Label";
-import Button from "@/components/ui/button/Button";
-import Link from "next/link";
+
 import React, { useEffect, useRef, useState } from "react";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
-import { buildRequestBody } from "@/utils/apiWrapper";
-import { redirect } from "next/navigation";
+import { ChevronLeft, Eye, EyeOff, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
-
 export default function ForgetForm() {
-    const OTP_LENGTH = 5;
+    const { t } = useTranslation();
+    const router = useRouter();
+
+    const [step, setStep] = useState(1);
+    const [email, setEmail] = useState("");
+
+    const OTP_LENGTH = 6;
     const RESEND_COOLDOWN_SECONDS = 35;
-    const [isApiSent, setIsApiSent] = useState(false);
     const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-    const [isOTPLoading, setIsOTPLoading] = useState(false);
-    const [isVerificationLoading, setIsVerificationLoading] = useState(false);
-    const [email, setEmail] = useState("")
-    const router = useRouter();
-    const [cooldown, setCooldown] = useState(0);
-    const { t } = useTranslation();
+    const [countdown, setCountdown] = useState(0);
+
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [passwordFocused, setPasswordFocused] = useState(false);
+
+    const [submitting, setSubmitting] = useState(false);
+    const [resending, setResending] = useState(false);
+
+    const passwordRequirements = [
+        { key: "minLength", label: t("auth.passwordReqMinLength"), test: (pwd: string) => pwd.length >= 8 },
+        { key: "upperLower", label: t("auth.passwordReqUpperLower"), test: (pwd: string) => /[a-z]/.test(pwd) && /[A-Z]/.test(pwd) },
+        { key: "number", label: t("auth.passwordReqNumber"), test: (pwd: string) => /\d/.test(pwd) },
+        { key: "special", label: t("auth.passwordReqSpecial"), test: (pwd: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd) },
+    ];
+    const passwordStrength = passwordRequirements.filter((r) => r.test(password)).length;
+    const passwordStrengthPercent = (passwordStrength / passwordRequirements.length) * 100;
 
     useEffect(() => {
-        let timer: NodeJS.Timeout;
-
-        if (cooldown > 0) {
-            timer = setInterval(() => {
-                setCooldown((prev) => prev - 1);
-            }, 1000);
-        }
-
-        return () => clearInterval(timer);
-    }, [cooldown]);
+        if (countdown <= 0) return;
+        const id = setTimeout(() => setCountdown((c) => (c > 0 ? c - 1 : 0)), 1000);
+        return () => clearTimeout(id);
+    }, [countdown]);
 
     const handleOtpChange = (index: number, value: string) => {
         if (!/^[0-9]?$/.test(value)) return;
-
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
-
         if (value && index < OTP_LENGTH - 1) {
-            setTimeout(() => {
-                inputRefs.current[index + 1]?.focus();
-            }, 0);
+            setTimeout(() => inputRefs.current[index + 1]?.focus(), 0);
         }
     };
 
     const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Backspace") {
             if (otp[index]) {
-                // Clear current field
                 const newOtp = [...otp];
                 newOtp[index] = "";
                 setOtp(newOtp);
             } else if (index > 0) {
-                // Move focus to previous field and clear it
                 const newOtp = [...otp];
                 newOtp[index - 1] = "";
                 setOtp(newOtp);
-                setTimeout(() => {
-                    inputRefs.current[index - 1]?.focus();
-                }, 0);
+                setTimeout(() => inputRefs.current[index - 1]?.focus(), 0);
             }
         } else if (e.key === "ArrowLeft" && index > 0) {
             inputRefs.current[index - 1]?.focus();
@@ -78,39 +76,32 @@ export default function ForgetForm() {
         const raw = e.clipboardData.getData("text");
         const digits = raw.replace(/\D/g, "").slice(0, OTP_LENGTH).split("");
         if (digits.length === 0) return;
-
         e.preventDefault();
-
         const newOtp = Array(OTP_LENGTH).fill("");
-        for (let i = 0; i < digits.length; i++) {
-            newOtp[i] = digits[i];
-        }
-
+        for (let i = 0; i < digits.length; i++) newOtp[i] = digits[i];
         setOtp(newOtp);
-
         const focusIndex = digits.length >= OTP_LENGTH ? OTP_LENGTH - 1 : digits.length;
-        setTimeout(() => {
-            inputRefs.current[focusIndex]?.focus();
-        }, 0);
+        setTimeout(() => inputRefs.current[focusIndex]?.focus(), 0);
     };
 
-    // Handle input focus on click
     const handleInputClick = (index: number) => {
-        // Focus the first empty field or the clicked field
-        const firstEmptyIndex = otp.findIndex(digit => !digit);
+        const firstEmptyIndex = otp.findIndex((d) => !d);
         if (firstEmptyIndex !== -1 && firstEmptyIndex < index) {
             inputRefs.current[firstEmptyIndex]?.focus();
         }
     };
 
-
     const sendOTP = async () => {
-        setIsOTPLoading(true);
+        if (!email.trim()) {
+            toast.error(t("auth.emailRequired"));
+            return;
+        }
+        setSubmitting(true);
         try {
             const response = await fetch("/api/auth/forget", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email })
+                body: JSON.stringify({ email }),
             });
             const result = await response.json();
             if (!response.ok) {
@@ -118,189 +109,285 @@ export default function ForgetForm() {
                 return;
             }
             toast.success(result.message ?? t("auth.otpSentToEmail"));
-            setIsApiSent(true);
-            setCooldown(RESEND_COOLDOWN_SECONDS);
+            setCountdown(RESEND_COOLDOWN_SECONDS);
+            setStep(2);
         } catch (error) {
             toast.error(t("auth.networkErrorSendingOtp"));
             console.error("Network Error:", error);
         } finally {
-            setIsOTPLoading(false);
+            setSubmitting(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (countdown > 0 || resending) return;
+        setResending(true);
+        try {
+            const response = await fetch("/api/auth/forget", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                toast.error(typeof result.message === "string" ? result.message : t("auth.failedToSendOtp"));
+                return;
+            }
+            toast.success(result.message ?? t("auth.otpSentToEmail"));
+            setCountdown(RESEND_COOLDOWN_SECONDS);
+        } catch (error) {
+            toast.error(t("auth.networkErrorResendingOtp"));
+            console.error("Network Error:", error);
+        } finally {
+            setResending(false);
         }
     };
 
     const verifyOTP = async () => {
-        setIsVerificationLoading(true);
         const token = otp.join("");
-
+        if (token.length !== OTP_LENGTH) {
+            toast.error(t("auth.enterOtpCode"));
+            return;
+        }
+        setSubmitting(true);
         try {
-            if (token.length !== 5) {
-                toast.error(t("auth.enterOtpCode"));
-                return;
-            }
-
             const response = await fetch("/api/auth/verify-otp", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ email, otp: token, purpose: "reset" })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, otp: token, purpose: "reset" }),
             });
-
             const result = await response.json();
-
             if (!response.ok) {
                 toast.error(typeof result.error === "string" ? result.error : t("auth.verificationFailed"));
                 return;
             }
-
             sessionStorage.setItem("email", email);
             if (typeof result.reset_token === "string" && result.reset_token.trim()) {
                 sessionStorage.setItem("reset_token", result.reset_token);
             }
             sessionStorage.setItem("token", token);
-            router.push("/reset-password");
+            setStep(3);
         } catch (error) {
             toast.error(t("auth.networkErrorVerifyingOtp"));
             console.error("Network Error:", error);
         } finally {
-            setIsVerificationLoading(false);
+            setSubmitting(false);
         }
     };
 
+    const handleResetPassword = async () => {
+        if (password !== confirmPassword) {
+            toast.error(t("auth.passwordsDoNotMatch"));
+            return;
+        }
+        if (passwordStrength < passwordRequirements.length) {
+            toast.error(t("auth.passwordRequirementsNotMet"));
+            return;
+        }
+        setSubmitting(true);
+        try {
+            const resetToken = sessionStorage.getItem("reset_token") || "";
+            const response = await fetch("/api/auth/reset", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, otp: sessionStorage.getItem("token"), reset_token: resetToken, new_password: password }),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                toast.error(typeof result.error === "string" ? result.error : t("auth.failedToResetPassword"));
+                return;
+            }
+            toast.success(result.message ?? t("auth.passwordResetSuccessfully"));
+            sessionStorage.removeItem("email");
+            sessionStorage.removeItem("reset_token");
+            sessionStorage.removeItem("token");
+            router.push("/signin");
+        } catch (error) {
+            toast.error(t("auth.networkErrorResettingPassword"));
+            console.error("Network Error:", error);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleBack = () => {
+        if (step === 1) router.push("/signin");
+        else setStep((s) => s - 1);
+    };
+
+    const getTitle = () => {
+        if (step === 1) return t("auth.forgotPasswordTitle");
+        if (step === 2) return t("auth.emailVerification");
+        return t("auth.resetPasswordTitle");
+    };
+
+    const getDesc = () => {
+        if (step === 1) return t("auth.forgotPasswordDesc");
+        if (step === 2) return t("auth.enterOtpCode");
+        return t("auth.createNewPassword");
+    };
+
     return (
-        <div className="flex flex-col justify-between w-full min-h-[calc(100vh-40px)]">
-            <div>
-                <div className="w-full mb-10">
-                    <Link
-                        href="/signin"
-                        className="  "
-                    >
-                        <ChevronLeftIcon size={24} />
-                        {/* Go Back */}
-                    </Link>
-                </div>
-                <div className="flex flex-col justify-center flex-1 w-full mx-auto">
-                    <div>
-                        <div className="mb-5 sm:mb-8">
-                            <h1 className="mb-2 font-medium text-gray-800 text-3xl">
-                                {t("auth.forgotPasswordTitle")}
-                            </h1>
-                            <p className="text-sm text-tertiary ">
-                                {t("auth.forgotPasswordDesc")}
-                            </p>
-                        </div>
-                        <div>
-                            {/* Email Form */}
-                            <form
-                                onSubmit={(e) => { e.preventDefault(); sendOTP(); }}>
-                                <div className="space-y-4">
-                                    <div>
-                                        <Label>
-                                            {t("auth.email")} <span className="text-error-500">*</span>
-                                        </Label>
-                                        <input
-                                            placeholder={t("auth.enterEmail")}
-                                            type="email"
-                                            required
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full px-4 py-3 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-400"
-                                        />
-                                    </div>
-                                    {isApiSent &&
-                                        <div className="text-right mb-6">
-                                            <button
-                                                onClick={sendOTP}
-                                                disabled={isOTPLoading || cooldown > 0}
-                                                className="text-primary font-medium underline hover:text-blue-700 transition-colors disabled:opacity-50"
-                                            >
-                                                {cooldown > 0 ? `${t("auth.resendIn")} ${String(Math.floor(cooldown / 60)).padStart(2, '0')}:${String(cooldown % 60).padStart(2, '0')}` : t("auth.sendOtp")}
-                                            </button>
-                                        </div>
-                                    }
-
-                                    {!isApiSent && (
-                                        <div>
-                                            <button className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 rounded-full transition-colors cursor-pointer border-0 mt-6" disabled={isOTPLoading}>
-                                                {isOTPLoading ? (
-                                                    <div className="flex items-center justify-center">
-                                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                        </svg>
-                                                        {t("auth.sendingOtpLink")}
-                                                    </div>
-                                                ) : (
-                                                    t("auth.sendResetLink")
-                                                )}
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </form>
-                            {/* OTP Verification Form */}
-                            {isApiSent && (
-                                <form
-                                    onSubmit={(e) => {
-                                        e.preventDefault();
-                                        verifyOTP(); // Will only run if all OTP inputs are filled
-                                    }}
-                                >
-                                    <div className="space-y-4 mt-6">
-                                        <div className="flex justify-center space-x-4">
-                                            {otp.map((digit, index) => (
-                                                <input
-                                                    key={index}
-                                                    id={`otp-${index}`}
-                                                    ref={(el) => {
-                                                        inputRefs.current[index] = el;
-                                                    }}
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    value={digit}
-                                                    onPaste={handlePaste}
-                                                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                                                    onKeyDown={(e) => handleKeyDown(index, e)}
-                                                    onClick={() => handleInputClick(index)}
-                                                    className="w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none text-lg bg-gray-50"
-                                                    maxLength={1}
-                                                    required // ✅ this enables native validation
-                                                    autoComplete="off"
-                                                />
-                                            ))}
-                                        </div>
-
-                                        <button className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 rounded-full transition-colors cursor-pointer border-0 mt-6" type="submit" disabled={isVerificationLoading}>
-                                            {isVerificationLoading ? (
-                                                <div className="flex items-center justify-center">
-                                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    {t("auth.verifying")}
-                                                </div>
-                                            ) : (
-                                                t("auth.verifyOtp")
-                                            )}
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
-                        </div>
-                    </div>
-                </div>
+        <div className="min-h-[calc(100dvh-32px)] flex flex-col bg-white">
+            {/* Header */}
+            <div className="flex items-center gap-3 px-6 pt-6">
+                <button
+                    onClick={handleBack}
+                    className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors bg-transparent border-0 cursor-pointer"
+                >
+                    <ChevronLeft size={20} />
+                </button>
+                <h2 className="text-xl font-bold text-primary">{getTitle()}</h2>
             </div>
-            <div className="mt-5">
-                <p className="text-sm font-normal text-center text-gray-700  sm:text-start">
-                    {t("auth.rememberPassword")}{" "}
-                    <Link
-                        href="/signin"
-                        className="text-primary hover:text-brand-600 "
-                    >
-                        {t("auth.signIn")}
-                    </Link>
-                </p>
+
+            {/* Content */}
+            <div className="flex-1 px-6 pt-4 pb-8">
+                <p className="text-sm text-gray-500 mb-6">{getDesc()}</p>
+
+                {step === 1 && (
+                    <form id="forget-step-1" onSubmit={(e) => { e.preventDefault(); sendOTP(); }} className="space-y-4">
+                        <input
+                            type="email"
+                            placeholder={t("auth.email")}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
+                        />
+                    </form>
+                )}
+
+                {step === 2 && (
+                    <form id="forget-step-2" onSubmit={(e) => { e.preventDefault(); verifyOTP(); }} className="space-y-4">
+                        <div className="flex justify-center gap-3">
+                            {otp.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    id={`otp-${index}`}
+                                    ref={(el) => { inputRefs.current[index] = el; }}
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={digit}
+                                    onPaste={handlePaste}
+                                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(index, e)}
+                                    onClick={() => handleInputClick(index)}
+                                    className="w-12 h-12 text-center rounded-lg focus:outline-none text-lg bg-gray-100 focus:ring-2 focus:ring-primary"
+                                    maxLength={1}
+                                    autoComplete="off"
+                                />
+                            ))}
+                        </div>
+                        <p className="text-center text-sm text-gray-500">
+                            {t("auth.didntGetCode")}{" "}
+                            {countdown > 0 ? (
+                                <span className="text-gray-400">
+                                    {t("auth.resendIn")} {String(Math.floor(countdown / 60)).padStart(2, "0")}:{String(countdown % 60).padStart(2, "0")}s
+                                </span>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleResendOtp}
+                                    disabled={resending}
+                                    className="text-primary font-medium hover:text-blue-700 bg-transparent border-0 cursor-pointer"
+                                >
+                                    {resending ? t("auth.sending") : t("auth.sendAgain")}
+                                </button>
+                            )}
+                        </p>
+                    </form>
+                )}
+
+                {step === 3 && (
+                    <form id="forget-step-3" onSubmit={(e) => { e.preventDefault(); handleResetPassword(); }} className="space-y-4">
+                        {/* Password */}
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                placeholder={t("auth.newPassword")}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                onFocus={() => setPasswordFocused(true)}
+                                onBlur={() => setPasswordFocused(false)}
+                                required
+                                className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 pr-12"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((p) => !p)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
+
+                        {/* Strength */}
+                        {passwordFocused && (
+                            <div className="space-y-2">
+                                <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-300 ${passwordStrengthPercent === 100 ? "bg-green-500" : passwordStrengthPercent >= 50 ? "bg-yellow-500" : "bg-red-500"
+                                            }`}
+                                        style={{ width: `${passwordStrengthPercent}%` }}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    {passwordRequirements.map((req) => (
+                                        <div key={req.key} className="flex items-center gap-2 text-sm">
+                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center border ${req.test(password) ? "bg-green-500 border-green-500" : "border-gray-300"}`}>
+                                                {req.test(password) && <Check size={10} className="text-white" />}
+                                            </div>
+                                            <span className={req.test(password) ? "text-green-600" : "text-gray-500"}>{req.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Confirm Password */}
+                        <div className="relative">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                placeholder={t("auth.confirmNewPassword")}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 pr-12"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword((p) => !p)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
+                            >
+                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-8 pt-4">
+                <button
+                    type="submit"
+                    form={`forget-step-${step}`}
+                    disabled={submitting}
+                    className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    {submitting ? (
+                        <span className="inline-flex items-center justify-center gap-2">
+                            <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            {step === 3 ? t("auth.reseting") : step === 2 ? t("auth.verifying") : t("auth.sending")}
+                        </span>
+                    ) : (
+                        step === 3 ? t("auth.updatePassword") : step === 2 ? t("auth.verifyOtp") : t("auth.continue")
+                    )}
+                </button>
             </div>
         </div>
     );
 }
+

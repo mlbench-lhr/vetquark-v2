@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "User not found" }, { status: 400 });
     }
 
-    const otp = String(Math.floor(10000 + Math.random() * 90000)); // 5-digit
+    const otp = String(Math.floor(100000 + Math.random() * 900000)); // 6-digit
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await User.updateOne(

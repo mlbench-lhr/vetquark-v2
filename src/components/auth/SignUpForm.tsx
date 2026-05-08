@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, EyeOff, Check, ChevronLeft } from "lucide-react";
+import { Eye, EyeOff, Check, ChevronLeft, Image as ImageIcon } from "lucide-react";
 import MultiSelect from "@/components/form/MultiSelect";
 import DropdownSelect from "@/components/form/DropdownSelect";
 import { toast } from "react-toastify";
@@ -80,11 +80,11 @@ export default function SignUpForm() {
   const [profileType] = useState<ProfileType>("veterinarian");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const RESEND_COOLDOWN_SECONDS = 35;
   const [countdown, setCountdown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const OTP_LENGTH = 5;
+  const OTP_LENGTH = 6;
 
   React.useEffect(() => {
     if (step !== 2 || countdown <= 0) return;
@@ -516,7 +516,7 @@ export default function SignUpForm() {
   const handleVerifySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const code = otp.join("");
-    if (code.length !== 5) {
+    if (code.length !== OTP_LENGTH) {
       toast.error(t("auth.enterOtpCode"));
       return;
     }
@@ -850,19 +850,12 @@ export default function SignUpForm() {
 
       case 2:
         return (
-          <form id="signup-step-2" onSubmit={handleVerifySubmit} className="px-6 pt-8">
-            <h1 className="text-2xl font-medium text-gray-900 mb-2">
-              {t("auth.emailVerification")}
-            </h1>
-            <p className="text-sm text-gray-500 mb-1">
-              {t("auth.enterVerificationCode")}
+          <form id="signup-step-2" onSubmit={handleVerifySubmit} className="px-6 pt-6 flex flex-col">
+            <p className="text-sm text-gray-700 mb-8 leading-relaxed">
+              {t("auth.codeSentToEmail")} {t("auth.enterCodeToActivate")}
             </p>
-            <p className="text-primary font-medium mb-1">
-              {`${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')}`}
-            </p>
-            <p className="text-xs text-gray-500 mb-8">This code expires in 10 minutes</p>
 
-            <div className="flex justify-center gap-3 mb-8">
+            <div className="flex justify-center gap-3 mb-10">
               {otp.map((digit, index) => (
                 <input
                   key={index}
@@ -875,86 +868,66 @@ export default function SignUpForm() {
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onClick={() => handleInputClick(index)}
-                  className="w-12 h-12 text-center border border-gray-300 rounded-lg focus:outline-none text-lg bg-gray-50"
+                  className="w-12 h-14 text-center border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-xl font-medium bg-gray-50"
                   maxLength={1}
                   required
                   autoComplete="off"
                 />
               ))}
             </div>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {submitting ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {t("auth.verify")}
-                </span>
-              ) : t("auth.verify")}
-            </button>
-            <p className="text-center text-gray-600 mt-4">
-              {t("auth.didntGetCode")}{" "}
-              <button onClick={handleResendOtp} disabled={countdown > 0} className="text-primary hover:text-blue-700 font-medium bg-transparent border-0 cursor-pointer disabled:opacity-50">
-                {countdown > 0 ? `${t("auth.resendIn")} ${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')}` : t("auth.sendAgain")}
-              </button>
-            </p>
+
+            <div className="text-center mt-auto">
+              <p className="text-sm font-semibold text-primary mb-1">
+                {t("auth.didntGetCode")}
+              </p>
+              <p className="text-sm text-gray-500">
+                {countdown > 0
+                  ? `${t("auth.resendIn")} ${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')}`
+                  : (
+                    <button type="button" onClick={handleResendOtp} className="text-primary hover:text-blue-700 font-medium bg-transparent border-0 cursor-pointer underline">
+                      {t("auth.sendAgain")}
+                    </button>
+                  )}
+              </p>
+            </div>
           </form>
         );
 
       case 3:
         return (
-          <form id="signup-step-3" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="px-6 pt-8">
+          <form id="signup-step-3" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="px-6 pt-6">
             <div className="space-y-4">
-              <div>
-                <label className="block text-gray-900 font-medium mb-2">
-                  {t("auth.crmv")}
-                </label>
-                <input
-                  type="text"
-                  name="crmv"
-                  placeholder={t("auth.enterCrmv")}
-                  value={formData.crmv}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
-                />
-              </div>
+              <input
+                type="text"
+                name="crmv"
+                placeholder="CRMV*"
+                value={formData.crmv}
+                onChange={handleInputChange}
+                required
+                className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
+              />
+
+              <DropdownSelect
+                options={brazilianStateOptions}
+                value={formData.crmvState}
+                onChange={(value) => setFormData((prev) => ({ ...prev, crmvState: value }))}
+                placeholder="Estado do CRMV*"
+                name="crmvState"
+                required
+              />
+
+              <input
+                type="text"
+                name="mapaRegistration"
+                placeholder="Registro no MAPA (opcional)"
+                value={formData.mapaRegistration}
+                onChange={handleInputChange}
+                className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
+              />
 
               <div>
+                <p className="text-sm font-semibold text-primary mb-2">{t("auth.operateHow")}</p>
                 <DropdownSelect
-                  label={t("auth.crmvState")}
-                  options={brazilianStateOptions}
-                  value={formData.crmvState}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, crmvState: value }))}
-                  placeholder={t("auth.selectState")}
-                  name="crmvState"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-900 font-medium mb-2">
-                  {t("auth.mapaRegistration")}{" "}
-                  <span className="text-gray-500 font-normal">{t("auth.optional")}</span>
-                </label>
-                <input
-                  type="text"
-                  name="mapaRegistration"
-                  placeholder={t("auth.enterMapa")}
-                  value={formData.mapaRegistration}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
-                />
-              </div>
-
-              <div>
-                <DropdownSelect
-                  label={t("auth.operateHow")}
                   options={operateOptions}
                   value={formData.operateHow}
                   onChange={(value) => setFormData((prev) => ({ ...prev, operateHow: value }))}
@@ -965,8 +938,8 @@ export default function SignUpForm() {
               </div>
 
               <div>
+                <p className="text-sm font-semibold text-primary mb-2">{t("auth.expertise")}</p>
                 <MultiSelect
-                  label={t("auth.expertise")}
                   options={expertiseOptions}
                   defaultSelected={formData.expertise}
                   onChange={(values) => setFormData((prev) => ({ ...prev, expertise: values }))}
@@ -977,18 +950,6 @@ export default function SignUpForm() {
                   name="expertise"
                   required
                 />
-                <div className="mt-2 flex flex-wrap gap-2 bg-gray-50 p-5 rounded-[12px]">
-                  {formData.expertise.length === 0 ? (
-                    <span className="text-sm text-gray-500">{t("auth.noExpertiseSelected")}</span>
-                  ) : (
-                    formData.expertise.map((v) => {
-                      const opt = expertiseOptions.find((o) => o.value === v);
-                      return (
-                        <span key={v} className="inline-flex items-center rounded-full bg-primary text-white text-sm px-3 py-1">{opt ? opt.text : v}</span>
-                      );
-                    })
-                  )}
-                </div>
               </div>
             </div>
           </form>
@@ -996,64 +957,63 @@ export default function SignUpForm() {
 
       case 4:
         return (
-          <form id="signup-step-4" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="px-6 pt-8">
+          <form id="signup-step-4" onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="px-6 pt-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-900 font-medium mb-2">
-                  {t("auth.clinicLogo")} <span className="text-gray-500 font-normal">{t("auth.optional")}</span>
-                </label>
-                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                <p className="text-sm font-semibold text-primary mb-2">
+                  {t("auth.clinicLogo")} <span className="text-gray-400 font-normal">{t("auth.optional")}</span>
+                </p>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
                   {formData.clinicLogoUrl ? (
                     <div className="flex flex-col items-center gap-3">
                       <Image width={200} height={200} src={formData.clinicLogoUrl} alt={t("auth.clinicLogoAlt")} className="w-32 h-32 object-contain rounded-lg bg-white" />
-                      <label className="inline-block">
+                      <label className="inline-block cursor-pointer">
                         <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
-                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? t("auth.uploading") : t("auth.changeLogo")}</span>
+                        <span className="text-sm text-primary font-medium hover:text-blue-700">{uploadingClinicLogo ? t("auth.uploading") : t("auth.changeLogo")}</span>
                       </label>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="text-gray-600 text-sm">{t("auth.uploadClinicLogo")}</div>
-                      <label className="inline-block">
-                        <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
-                        <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">{uploadingClinicLogo ? t("auth.uploading") : t("auth.selectFile")}</span>
-                      </label>
-                    </div>
+                    <label className="flex flex-col items-center gap-2 cursor-pointer">
+                      <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
+                      <ImageIcon size={32} className="text-gray-400" />
+                      <span className="text-sm font-semibold text-gray-700">{t("auth.clickToSelect")}</span>
+                      <span className="text-xs text-gray-400">{t("auth.supportedFormats")}</span>
+                    </label>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">{t("auth.tradeName")}</label>
+                <label className="block text-sm text-gray-700 mb-1.5">{t("auth.tradeName")}</label>
                 <input
                   type="text"
                   name="tradeName"
-                  placeholder={t("auth.enterTradeName")}
+                  placeholder="Clínica Vet+"
                   value={formData.tradeName}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">
-                  {t("auth.cnpjIe")} <span className="text-gray-500 font-normal">{t("auth.optional")}</span>
+                <label className="block text-sm text-gray-700 mb-1.5">
+                  {t("auth.cnpjIe")} <span className="text-gray-400">{t("auth.optional")}</span>
                 </label>
                 <input
                   type="text"
                   name="cnpjIe"
-                  placeholder={t("auth.enterCnpjIe")}
+                  placeholder="00.000.000/0001-00"
                   value={formData.cnpjIe}
                   onChange={(e) => setFormData((prev) => ({ ...prev, cnpjIe: e.target.value.replace(/\D/g, "") }))}
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">{t("auth.reportHeaderAddress")}</label>
+                <label className="block text-sm text-gray-700 mb-1.5">{t("auth.reportHeaderAddress")}</label>
                 <input
                   type="text"
                   name="reportHeaderAddress"
@@ -1061,12 +1021,12 @@ export default function SignUpForm() {
                   value={formData.reportHeaderAddress}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-900 font-medium mb-2">{t("auth.reportFooter")}</label>
+                <label className="block text-sm text-gray-700 mb-1.5">{t("auth.reportFooter")}</label>
                 <textarea
                   name="reportFooter"
                   placeholder={t("auth.enterReportFooter")}
@@ -1074,8 +1034,9 @@ export default function SignUpForm() {
                   onChange={handleInputChange}
                   rows={4}
                   required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 resize-none"
+                  className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 resize-none"
                 />
+                <p className="text-xs text-gray-400 mt-1.5">{t("auth.reportFooterHelp")}</p>
               </div>
             </div>
           </form>
@@ -1100,7 +1061,7 @@ export default function SignUpForm() {
             </button>
           )}
           <h2 className="text-xl font-bold text-primary">
-            {t("auth.createAccount")}
+            {step === 2 ? t("auth.emailVerification") : step === 3 ? t("auth.professionalRegistration") : step === 4 ? t("auth.clinicReports") : t("auth.createAccount")}
           </h2>
         </div>
         <div className="text-primary font-medium text-sm">
@@ -1114,34 +1075,32 @@ export default function SignUpForm() {
       </div>
 
       {/* Footer */}
-      {step !== 2 && (
-        <div className="px-6 pb-8 pt-4">
-          <button
-            type="submit"
-            form={`signup-step-${step}`}
-            disabled={submitting || uploadingClinicLogo}
-            className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {submitting ? (
-              <span className="inline-flex items-center justify-center gap-2">
-                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {step === finalStep ? t("auth.creating") : t("auth.continue")}
-              </span>
-            ) : (step === finalStep ? t("auth.createAccount") : t("auth.continue"))}
-          </button>
-          {step === 1 && (
-            <p className="text-center text-gray-600 mt-4 text-sm">
-              {t("auth.alreadyHaveAccount")}{" "}
-              <button className="text-primary hover:text-blue-700 font-semibold bg-transparent border-0 cursor-pointer" onClick={() => router.push("/signin")}>
-                {t("auth.signIn")}
-              </button>
-            </p>
-          )}
-        </div>
-      )}
+      <div className="px-6 pb-8 pt-4">
+        <button
+          type="submit"
+          form={`signup-step-${step}`}
+          disabled={submitting || uploadingClinicLogo}
+          className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          {submitting ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {step === finalStep ? t("auth.creating") : t("auth.continue")}
+            </span>
+          ) : (step === finalStep ? t("auth.createAccount") : t("auth.continue"))}
+        </button>
+        {step === 1 && (
+          <p className="text-center text-gray-600 mt-4 text-sm">
+            {t("auth.alreadyHaveAccount")}{" "}
+            <button className="text-primary hover:text-blue-700 font-semibold bg-transparent border-0 cursor-pointer" onClick={() => router.push("/signin")}>
+              {t("auth.signIn")}
+            </button>
+          </p>
+        )}
+      </div>
     </div>
   );
 }
