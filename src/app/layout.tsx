@@ -40,6 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
+  console.log("Ahmad 2 test");
   return (
 
     <html lang="pt-BR">
