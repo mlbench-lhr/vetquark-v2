@@ -18,13 +18,14 @@ export type ReadingResultItem = {
   status: "Normal" | "Attention";
 };
 
-export type CollectionMethod = "free_catch" | "cystocentesis" | "catheter";
+export type CollectionMethod = "free_catch" | "cystocentesis" | "catheter" | "compression";
 
 export type IdentificationDraft = {
   patientId: string;
   paymentLinkId?: string;
   panelProductCode?: string;
   collectionMethod: CollectionMethod | "";
+  isJejum?: boolean;
   stripLot: string;
   stripExpiry: string;
   collectionAt: string;

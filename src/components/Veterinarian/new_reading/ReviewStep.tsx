@@ -502,6 +502,7 @@ export default function ReviewStep({
   visibleKeys,
 }: Props) {
   const { t } = useTranslation()
+  const [observations, setObservations] = useState('')
   const [normalRuleByKey, setNormalRuleByKey] = useState<Record<string, NormalRule | undefined>>({})
   const visibleRows = useMemo(() => {
     const keys = Array.isArray(visibleKeys) ? visibleKeys : null
@@ -572,16 +573,10 @@ export default function ReviewStep({
 
   return (
     <div className="">
-      <h2 className="text-[18px] leading-[24px] font-semibold text-[#111827]">{t('reading.review.title')}</h2>
+      <h2 className="text-[20px] font-bold text-[#111827]">{t('reading.review.title')}</h2>
       <p className="mt-1 text-[13px] leading-[18px] text-[#6B7280]">
         {t('reading.review.desc')}
       </p>
-      {/* <div className="mt-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-3">
-        <div className="text-xs font-medium text-[#374151]">/api/strip/process_single JSON</div>
-        <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-white p-3 text-[11px] leading-4 text-[#111827]">
-          {JSON.stringify(Array.isArray(rawProcessSingleResults) ? rawProcessSingleResults : [], null, 2)}
-        </pre>
-      </div> */}
 
       <div className="mt-5 divide-y divide-[#F1F5F9] border border-[#F1F5F9] rounded-[16px] shadow-2xs">
         {visibleRows.map((row) => (
@@ -595,7 +590,19 @@ export default function ReviewStep({
         ))}
       </div>
 
-      <div className="mt-6 space-y-3">
+      {/* Observations textarea */}
+      <div className="mt-5">
+        <div className="text-[14px] font-semibold text-[#111827] mb-2">{t('reading.review.observationsLabel')}</div>
+        <textarea
+          value={observations}
+          onChange={(e) => setObservations(e.target.value)}
+          placeholder={t('reading.review.observationsPlaceholder')}
+          rows={3}
+          className="w-full px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-[14px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-2 focus:ring-[#3F78D8]/20"
+        />
+      </div>
+
+      <div className="mt-5 space-y-3">
         <button
           onClick={() => {
             const results: ReviewResultDraft[] = RESULT_ROWS.map((row) => {
@@ -617,12 +624,15 @@ export default function ReviewStep({
             onIssueReport(results)
           }}
           disabled={!canProceed}
-          className="w-full py-4 rounded-full bg-primary text-white font-medium disabled:opacity-60"
+          className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px] disabled:opacity-60 shadow-sm"
         >
           {t('reading.review.issueReport')}
         </button>
-        <button onClick={onBack} className="w-full py-4 rounded-full bg-gray-100 text-gray-500 font-medium">
-          {t('common.back')}
+        <button
+          onClick={onBack}
+          className="w-full py-4 rounded-full border border-[#E5E7EB] bg-white text-[#374151] font-medium text-[15px]"
+        >
+          {t('reading.review.redo')}
         </button>
       </div>
     </div>

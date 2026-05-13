@@ -575,9 +575,50 @@ export default function NewReadingWizard() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="text-base font-medium">{t("reading.wizard.newUrineTest")}</div>
+      {/* Page Header */}
+      <div className="flex items-center justify-between py-1">
+        <div className="flex items-center gap-2">
+          {step !== 'identification' && (
+            <button
+              type="button"
+              aria-label="Voltar"
+              onClick={() => {
+                if (step === 'timer') setStep('identification')
+                else if (step === 'review') setStep('timer')
+                else if (step === 'report') setStep('review')
+              }}
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 text-gray-700"
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+          <span className="text-[22px] font-bold text-[#3F78D8] leading-tight">
+            {t('reading.wizard.pageTitle')}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" className="w-9 h-9 flex items-center justify-center text-gray-500">
+            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="relative w-9 h-9 bg-[#3F78D8] rounded-full flex items-center justify-center">
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-white border border-[#3F78D8] text-[#3F78D8] text-[9px] font-bold flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+            <svg viewBox="0 0 24 24" fill="none" className="w-4.5 h-4.5 w-[18px] h-[18px]" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </div>
       </div>
+
       <Stepper active={step} />
 
       {step === 'identification' && (
@@ -587,6 +628,7 @@ export default function NewReadingWizard() {
             setDraft((prev) => ({ ...prev, identification: { ...prev.identification, ...patch } }))
           }
           onNext={() => setStep('timer')}
+          paymentLinkStatus={paymentLinkStatus}
         />
       )}
 
@@ -672,6 +714,11 @@ export default function NewReadingWizard() {
           signatureImageUrl={signatureImageUrl}
           onChangeSignatureUrl={setSignatureImageUrl}
           submitting={submitting}
+          reviewResults={draft.results}
+          panelName={(() => {
+            const code = (draft.identification.panelProductCode || defaultPanelProductCode || '').trim()
+            return code || undefined
+          })()}
           veterinarian={profile ? {
             fullName: profile.fullName,
             crmv: profile.crmv,

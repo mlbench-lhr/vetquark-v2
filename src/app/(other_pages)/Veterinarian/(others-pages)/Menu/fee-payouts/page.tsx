@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 
 interface FAQItem {
-  question: string;
-  answer: string;
+    question: string;
+    answer: string;
 }
 
 export default function FeesAndPayoutsPage() {
@@ -62,14 +62,14 @@ export default function FeesAndPayoutsPage() {
     }, []);
 
     return (
-        <div className="w-full bg-background space-y-6">
+        <div className="w-full bg-white min-h-screen space-y-6 px-4 pb-6">
             <Header title={t("menu.feePayouts")} />
             {/* How the charging works */}
             <section>
-                <h2 className="text-[16px] font-semibold text-foreground mb-3">
+                <h2 className="text-[16px] font-semibold text-[#111827] mb-3">
                     How the charging works?
                 </h2>
-                <div className="text-[14px] text-muted-foreground leading-[1.6] space-y-1">
+                <div className="text-[14px] text-[#9AA4AF] leading-[1.6] space-y-1">
                     <p>Fixed fee per exam: R$ {platformFee.toFixed(2)} (charged by the platform at the time of tutor payment).</p>
                     <p>Price to the tutor: set by you in Pricing.</p>
                     <p>Payout to the veterinarian: Price to the tutor – R$ {platformFee.toFixed(2)}.</p>
@@ -78,10 +78,10 @@ export default function FeesAndPayoutsPage() {
 
             {/* Flow Of Money */}
             <section>
-                <h2 className="text-[16px] font-semibold text-foreground mb-3">
+                <h2 className="text-[16px] font-semibold text-[#111827] mb-3">
                     Flow Of Money
                 </h2>
-                <div className="text-[14px] text-muted-foreground leading-[1.7] space-y-1">
+                <div className="text-[14px] text-[#9AA4AF] leading-[1.7] space-y-1">
                     <p>1. Tutor pays for the exam (link/QR).</p>
                     <p>2. The platform retains R$ {platformFee.toFixed(2)}.</p>
                     <p>3. The net amount enters your Wallet and is available immediately.</p>
@@ -91,10 +91,10 @@ export default function FeesAndPayoutsPage() {
 
             {/* Transparency of fees */}
             <section>
-                <h2 className="text-[16px] font-semibold text-foreground mb-3">
+                <h2 className="text-[16px] font-semibold text-[#111827] mb-3">
                     Transparency of fees
                 </h2>
-                <div className="text-[14px] text-muted-foreground leading-[1.7] space-y-1">
+                <div className="text-[14px] text-[#9AA4AF] leading-[1.7] space-y-1">
                     <p>Platform: R$ {platformFee.toFixed(2)} per exam.</p>
                     <p>Payment methods: Costs already included in the platform fee.</p>
                     <p>Withdrawal: No additional fee from the platform (except for any external bank fees, if applicable).</p>
@@ -103,24 +103,24 @@ export default function FeesAndPayoutsPage() {
 
             {/* Quick questions - Accordion */}
             <section>
-                <h2 className="text-[16px] font-semibold text-foreground mb-3">
+                <h2 className="text-[16px] font-semibold text-[#111827] mb-3">
                     Quick questions
                 </h2>
-                <div className="border border-border rounded-xl overflow-hidden">
+                <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
                     {faqItems.map((item, index) => (
                         <div
                             key={index}
-                            className={`${index !== faqItems.length - 1 ? "border-b border-border" : ""}`}
+                            className={`${index !== faqItems.length - 1 ? "border-b border-[#E5E7EB]" : ""}`}
                         >
                             <button
                                 onClick={() => toggleFAQ(index)}
-                                className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-muted/30 transition-colors"
+                                className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-[#F5F6F6]/50 transition-colors"
                             >
-                                <span className="text-[14px] font-medium text-foreground">
+                                <span className="text-[14px] font-medium text-[#111827]">
                                     {item.question}
                                 </span>
                                 <ChevronDown
-                                    className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${openFAQ === index ? "rotate-180" : ""
+                                    className={`w-5 h-5 text-[#9AA4AF] transition-transform duration-200 ${openFAQ === index ? "rotate-180" : ""
                                         }`}
                                 />
                             </button>
@@ -128,7 +128,7 @@ export default function FeesAndPayoutsPage() {
                                 className={`overflow-hidden transition-all duration-200 ${openFAQ === index ? "max-h-40" : "max-h-0"
                                     }`}
                             >
-                                <p className="px-4 pb-4 text-[13px] text-muted-foreground leading-[1.5]">
+                                <p className="px-4 pb-4 text-[13px] text-[#9AA4AF] leading-[1.5]">
                                     {item.answer}
                                 </p>
                             </div>
@@ -139,10 +139,10 @@ export default function FeesAndPayoutsPage() {
 
             {/* Withdrawals and Refunds */}
             <section>
-                <h2 className="text-[16px] font-semibold text-foreground mb-3">
+                <h2 className="text-[16px] font-semibold text-[#111827] mb-3">
                     Withdrawals and Refunds
                 </h2>
-                <div className="text-[14px] text-muted-foreground leading-[1.7] space-y-1 mb-4">
+                <div className="text-[14px] text-[#9AA4AF] leading-[1.7] space-y-1 mb-4">
                     <p>Withdrawals are requested on the Wallet screen for your registered payment method.</p>
                     <p>The minimum withdrawal amount is R$ {minWithdrawal.toFixed(2)}.</p>
                     <p>The processing time is up to 1 business day.</p>
@@ -150,7 +150,7 @@ export default function FeesAndPayoutsPage() {
                 </div>
                 <button
                     onClick={() => router.push("/Veterinarian/Menu/wallet")}
-                    className="w-full h-[48px] bg-[hsl(224,65%,56%)] text-[hsl(220,20%,96%)] text-[15px] font-medium rounded-full transition-colors"
+                    className="w-full h-[48px] bg-[#4A7BF7] text-white text-[15px] font-medium rounded-full transition-colors hover:bg-[#3A6BE7]"
                 >
                     Go To Wallet
                 </button>
@@ -158,10 +158,10 @@ export default function FeesAndPayoutsPage() {
 
             {/* Taxes and Invoices */}
             <section>
-                <h2 className="text-[16px] font-semibold text-foreground mb-3">
+                <h2 className="text-[16px] font-semibold text-[#111827] mb-3">
                     Taxes and Invoices
                 </h2>
-                <p className="text-[14px] text-muted-foreground leading-[1.6]">
+                <p className="text-[14px] text-[#9AA4AF] leading-[1.6]">
                     The fee of R$ {platformFee.toFixed(2)} does not include taxes for your CNPJ/CPF. Consult your accountant regarding the issuance of an invoice to the tutor, if applicable.
                 </p>
             </section>

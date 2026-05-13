@@ -137,26 +137,26 @@ export default function BasePriceCard() {
     };
 
     return (
-        <div className="w-full bg-background flex flex-col">
+        <div className="w-full bg-white min-h-screen flex flex-col px-4">
             {/* Header */}
             <Header title="Pricing" />
 
-            <div className="mb-4">
-                <h1 className="text-[18px] font-semibold text-foreground mb-2">Master 360</h1>
-                <p className="text-[14px] text-muted-foreground leading-[1.5]">
+            <div className="mb-4 mt-2">
+                <h1 className="text-[18px] font-semibold text-[#111827] mb-2">Master 360</h1>
+                <p className="text-[14px] text-[#9AA4AF] leading-[1.5]">
                     This is the amount that the tutor will pay for complete 16-parameter Protocol. The platform will apply a fixed fee of R$ {platformFee.toFixed(2)} on this amount and on specific panels also.
                 </p>
             </div>
 
             {/* Amount Card */}
-            <div className="bg-[hsl(220,20%,97%)] rounded-xl p-4 mb-3">
-                <p className="text-[13px] text-muted-foreground mb-1">
+            <div className="bg-[#F5F6F6] rounded-xl p-4 mb-3">
+                <p className="text-[13px] text-[#9AA4AF] mb-1">
                     Amount For The Tutor
                 </p>
                 <div className="flex items-center gap-2">
                     {isEditing ? (
                         <div className="flex items-center">
-                            <span className="text-[28px] font-semibold text-[hsl(217,91%,40%)]">R$ </span>
+                            <span className="text-[28px] font-semibold text-[#3F78D8]">R$ </span>
                             <input
                                 type="number"
                                 value={amount}
@@ -164,19 +164,19 @@ export default function BasePriceCard() {
                                 onBlur={() => setIsEditing(false)}
                                 autoFocus
                                 step="0.01"
-                                className="text-[28px] font-semibold text-[hsl(217,91%,40%)] bg-transparent border-b-2 border-[hsl(217,91%,40%)] outline-none w-24"
+                                className="text-[28px] font-semibold text-[#3F78D8] bg-transparent border-b-2 border-[#3F78D8] outline-none w-24"
                             />
                         </div>
                     ) : (
                         <>
-                            <span className="text-[28px] font-semibold text-[hsl(217,91%,40%)]">
+                            <span className="text-[28px] font-semibold text-[#3F78D8]">
                                 R$ {amount.toFixed(2)}
                             </span>
                             <button
                                 onClick={() => setIsEditing(true)}
                                 className="p-1 hover:bg-white/50 rounded transition-colors"
                             >
-                                <Pencil className="w-5 h-5 text-[hsl(217,91%,40%)]" />
+                                <Pencil className="w-5 h-5 text-[#3F78D8]" />
                             </button>
                         </>
                     )}
@@ -184,34 +184,29 @@ export default function BasePriceCard() {
             </div>
 
             {/* Suggested Range */}
-            <p className="text-[13px] text-muted-foreground mb-4">
+            <p className="text-[13px] text-[#9AA4AF] mb-4">
                 Suggested range by the platform: R$ {minSuggested.toFixed(2)} – R$ {maxSuggested.toFixed(2)}
             </p>
 
             {/* Net Payout Card */}
-            <div
-                className="rounded-xl p-4"
-                style={{
-                    background: "linear-gradient(135deg, hsl(140, 50%, 96%) 0%, hsl(140, 40%, 92%) 100%)"
-                }}
-            >
-                <p className="text-[13px] text-muted-foreground mb-1">
+            <div className="rounded-xl p-4 bg-[#F0FDF4]">
+                <p className="text-[13px] text-[#9AA4AF] mb-1">
                     Your net payout per exam will be:
                 </p>
-                <span className="text-[28px] font-semibold text-[hsl(145,63%,35%)]">
+                <span className="text-[28px] font-semibold text-[#16A34A]">
                     R$ {netPayout.toFixed(2)}
                 </span>
             </div>
 
             <div className="mt-6">
-                <h2 className="text-[16px] font-semibold text-foreground mb-3">Panel Pricing</h2>
+                <h2 className="text-[16px] font-semibold text-[#111827] mb-3">Panel Pricing</h2>
                 <div className="space-y-5">
                     {panelDefs.map((p) => (
                         <div key={p.code}>
-                            <div className="text-[15px] font-medium text-foreground mb-2">{p.title}</div>
-                            <div className="bg-[hsl(220,20%,97%)] rounded-xl px-4 py-3">
+                            <div className="text-[15px] font-medium text-[#111827] mb-2">{p.title}</div>
+                            <div className="bg-[#F5F6F6] rounded-xl px-4 py-3">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[16px] font-medium text-foreground">R$</span>
+                                    <span className="text-[16px] font-medium text-[#111827]">R$</span>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -223,11 +218,11 @@ export default function BasePriceCard() {
                                                 [p.code]: Number.isFinite(next) && next >= 0 ? next : 0,
                                             }));
                                         }}
-                                        className="w-full bg-transparent outline-none text-[16px] font-medium text-foreground"
+                                        className="w-full bg-transparent outline-none text-[16px] font-medium text-[#111827]"
                                     />
                                 </div>
                             </div>
-                            <div className="mt-2 text-[12px] text-muted-foreground leading-[1.5]">{p.description}</div>
+                            <div className="mt-2 text-[12px] text-[#9AA4AF] leading-[1.5]">{p.description}</div>
                         </div>
                     ))}
                 </div>
@@ -237,17 +232,17 @@ export default function BasePriceCard() {
             <div className="flex-1" />
 
             {/* Buttons */}
-            <div className="space-y-3 pt-6">
+            <div className="space-y-3 pt-6 pb-6">
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full h-[52px] bg-[hsl(224,65%,56%)] hover:bg-[hsl(224,65%,50%)] text-white text-[16px] font-medium rounded-full transition-colors"
+                    className="w-full h-[52px] bg-[#4A7BF7] hover:bg-[#3A6BE7] text-white text-[16px] font-medium rounded-full transition-colors"
                 >
                     {saving ? "Saving..." : "Save Changes"}
                 </button>
                 <button
                     onClick={handleReset}
-                    className="w-full h-[44px] text-muted-foreground text-[15px] font-medium hover:text-foreground transition-colors"
+                    className="w-full h-[44px] text-[#9AA4AF] text-[15px] font-medium hover:text-[#111827] transition-colors"
                 >
                     Reset To Suggestion
                 </button>

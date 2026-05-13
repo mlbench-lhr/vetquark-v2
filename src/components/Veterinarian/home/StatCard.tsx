@@ -8,23 +8,49 @@ interface StatCardProps {
   variant?: 'primary' | 'secondary';
 }
 
-const StatCard: React.FC<StatCardProps> = ({ number, label, sublabel }) => {
+const ExamIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 3H6C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V15" stroke="#C7D2FE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8 13H12M8 17H16M8 9H10" stroke="#C7D2FE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 3L20 7L12 15H8V11L16 3Z" stroke="#C7D2FE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const PatientIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="8" r="4" stroke="#C7D2FE" strokeWidth="1.5" />
+    <path d="M5 20C5 16.134 8.13401 13 12 13C15.866 13 19 16.134 19 20" stroke="#C7D2FE" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M17 8L19 10L21 8" stroke="#C7D2FE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const StatCard: React.FC<StatCardProps> = ({ number, label, sublabel, variant = 'primary' }) => {
   return (
-    <div className="rounded-2xl border border-primary/30 bg-white p-3.5 flex items-center gap-3">
-      <span className="text-[28px] font-bold text-primary leading-none pl-1">
+    <div className="rounded-2xl border border-primary/20 bg-white p-4 flex flex-col gap-1 relative overflow-hidden">
+      {/* Icon in top-right */}
+      <div className="absolute top-3 right-3 opacity-80">
+        {variant === 'primary' ? <ExamIcon /> : <PatientIcon />}
+      </div>
+
+      {/* Label */}
+      <span className="text-[10px] font-semibold tracking-wider text-gray-500 uppercase leading-tight">
+        {label}
+      </span>
+
+      {/* Number */}
+      <span className="text-[32px] font-bold text-gray-900 leading-none mt-0.5">
         {number}
       </span>
-      <div className="w-px h-10 bg-gray-200" />
-      <div className="flex flex-col gap-1">
-        <span className="text-sm font-semibold text-gray-800 leading-tight">
-          {label}
+
+      {/* Sublabel */}
+      {sublabel && (
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-600 bg-green-50 rounded-full px-2.5 py-0.5 w-fit mt-1.5">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M5 8V2M5 2L2 5M5 2L8 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {sublabel}
         </span>
-        {sublabel && (
-          <span className="text-[11px] font-medium bg-blue-50 text-primary rounded-full px-2.5 py-0.5 w-fit leading-tight">
-            {sublabel}
-          </span>
-        )}
-      </div>
+      )}
     </div>
   );
 };

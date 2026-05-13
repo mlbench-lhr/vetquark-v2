@@ -167,24 +167,24 @@ export default function WalletCard({
     });
 
     return (
-        <div className="bg-background">
+        <div className="bg-white min-h-screen">
             <Header title={t("wallet.wallet")} />
             {/* Balance Card */}
             {loading ? (
                 <BalanceCardSkeleton />
             ) : (
-                <div className="mx- mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5 text-white">
-                    <p className="text-sm opacity-90 mb-1 text-black">{t("wallet.availableBalance")}</p>
-                    <p className="text-3xl font-bold text-primary">
+                <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-[#F5F6F6] to-[#EBF2FF] p-5">
+                    <p className="text-[14px] opacity-90 mb-1 text-[#111827]">{t("wallet.availableBalance")}</p>
+                    <p className="text-[28px] font-bold text-[#3F78D8]">
                         {currency} {balance}
                     </p>
                 </div>
             )}
-            <div className="flex gap-3 mx- mt-4">
+            <div className="flex gap-3 mx-4 mt-4">
                 <Button
                     onClick={handleWithdraw}
                     variant="secondary"
-                    className="flex-1 h-12 rounded-full bg-[#F5F6F6] text-foreground font-medium hover:bg-white/90"
+                    className="flex-1 h-12 rounded-full bg-[#F5F6F6] text-[#111827] font-medium hover:bg-[#E5E7EB]"
                 >
                     {t("wallet.withdraw")}
                 </Button>
@@ -193,44 +193,44 @@ export default function WalletCard({
                         router.push("/Veterinarian/Menu/wallet/bankDetails")
                     }}
                     variant="outline"
-                    className="flex-1 h-12 rounded-full border-white/40 bg-[#F5F6F6] text-black font-medium hover:bg-white/10"
+                    className="flex-1 h-12 rounded-full border-[#E5E7EB] bg-[#F5F6F6] text-[#111827] font-medium hover:bg-[#E5E7EB]"
                 >
                     {t("wallet.bankDetails")}
                 </Button>
             </div>
 
             {/* PIX Info */}
-            <div className="mx- mt-4 flex items-center gap-3 p-4 bg-[#F5F6F6] rounded-2xl">
+            <div className="mx-4 mt-4 flex items-center gap-3 p-4 bg-[#F5F6F6] rounded-2xl">
                 <div className="w-10 h-10 rounded-full bg-[#00D4AA]/10 flex items-center justify-center">
                     <Image src={"/images/pixLogo.svg"} alt="" width={20} height={20} />
                 </div>
                 <div>
-                    <p className="font-medium text-foreground text-sm">PIX (CPF/CNPJ)</p>
-                    <p className="text-xs text-muted-foreground">{resolvedPixNumber}</p>
+                    <p className="font-medium text-[#111827] text-[15px] leading-[18px]">PIX (CPF/CNPJ)</p>
+                    <p className="text-[14px] leading-[18px] text-[#9AA4AF]">{resolvedPixNumber}</p>
                 </div>
             </div>
 
             <div className="h-2 w-full bg-[#F5F6F6] mt-6"></div>
 
             {/* Statement Section */}
-            <div className="mx- mt-6">
+            <div className="mx-4 mt-6">
                 <div className="flex items-center justify-between mb-1">
-                    <h2 className="text-lg font-semibold text-foreground">{t("wallet.statement")}</h2>
+                    <h2 className="text-[18px] font-semibold text-[#111827]">{t("wallet.statement")}</h2>
                     <div className="flex gap-1">
                         {(["7d", "30d", "90d"] as const).map((p) => (
                             <button
                                 key={p}
                                 onClick={() => setPeriod(p)}
-                                className={`px-4 py-2 text-xs font-medium rounded-[8px] transition-colors ${period === p
-                                    ? "bg-[#EBF2FF] text-primary"
-                                    : "bg-[#F5F6F6] text-foreground hover:bg-muted/50"}`}
+                                className={`px-4 py-2 text-[12px] font-medium rounded-[8px] transition-colors ${period === p
+                                    ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                    : "bg-[#F5F6F6] text-[#111827] hover:bg-[#E5E7EB]"}`}
                             >
                                 {p}
                             </button>
                         ))}
                     </div>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">{t("wallet.recentTransactions")}</p>
+                <p className="text-[14px] text-[#9AA4AF] mb-4">{t("wallet.recentTransactions")}</p>
 
                 {/* Filter Tabs */}
                 <div className="flex gap-2 mb-4">
@@ -242,9 +242,9 @@ export default function WalletCard({
                         <button
                             key={f.key}
                             onClick={() => setFilter(f.key)}
-                            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${filter === f.key
-                                ? "bg-[#EBF2FF] text-primary"
-                                : "bg-[#F5F6F6] text-foreground hover:bg-muted/50"
+                            className={`px-4 py-2 text-[14px] font-medium rounded-full transition-colors ${filter === f.key
+                                ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                : "bg-[#F5F6F6] text-[#111827] hover:bg-[#E5E7EB]"
                                 }`}
                         >
                             {f.label}
@@ -261,12 +261,12 @@ export default function WalletCard({
                             <ListItemSkeleton />
                         </>
                     ) : filteredTransactions.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No Transactions Found.</div>
+                        <div className="text-[14px] text-[#9AA4AF]">No Transactions Found.</div>
                     ) : (
                         filteredTransactions.map((transaction) => (
                             <div
                                 key={transaction.id}
-                                className="flex items-center gap-3 p-3 bg-muted/30 rounded-2xl"
+                                className="flex items-center gap-3 p-3 bg-[#F5F6F6]/50 rounded-2xl"
                             >
                                 {transaction.isPix ? (
                                     <div className="w-10 h-10 rounded-full bg-[#00D4AA]/10 flex items-center justify-center flex-shrink-0">
@@ -282,10 +282,10 @@ export default function WalletCard({
                                     </div>
                                 )}
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-foreground text-sm truncate">
+                                    <p className="font-medium text-[#111827] text-[15px] truncate">
                                         {transaction.title}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-[13px] text-[#9AA4AF]">
                                         {transaction.subtitle === "Urinalysis Report"
                                             ? t("reports.urinalysisReport")
                                             : transaction.subtitle || transaction.date}
@@ -294,7 +294,7 @@ export default function WalletCard({
                                 {transaction.amount ? (
                                     <div className="text-right flex-shrink-0">
                                         <p
-                                            className={`font-semibold text-sm ${transaction.type === "credit"
+                                            className={`font-semibold text-[15px] ${transaction.type === "credit"
                                                 ? "text-green-600"
                                                 : "text-red-500"
                                                 }`}
@@ -302,7 +302,7 @@ export default function WalletCard({
                                             R$ {transaction.amount}
                                         </p>
                                         <p
-                                            className={`text-xs ${transaction.type === "credit"
+                                            className={`text-[13px] ${transaction.type === "credit"
                                                 ? "text-green-600"
                                                 : "text-red-500"
                                                 }`}
@@ -311,7 +311,7 @@ export default function WalletCard({
                                         </p>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-muted-foreground flex-shrink-0">
+                                    <p className="text-[13px] text-[#9AA4AF] flex-shrink-0">
                                         {transaction.date}
                                     </p>
                                 )}

@@ -147,12 +147,12 @@ export default function Page() {
         <div className="w-full mx-auto bg-white flex flex-col pb-6">
             {/* Tab Selector */}
             <Header title={t("wallet.bankDetails")} />
-            <div className="flex gap-2 mb-6 mt-4">
+            <div className="flex gap-2 mb-6 mt-4 px-4">
                 <button
                     onClick={() => setActiveTab("pix")}
-                    className={`px-5 py-2.5  rounded-full text-sm font-medium transition-colors ${activeTab === "pix"
-                        ? "bg-[#EBF2FF] text-primary"
-                        : "bg-[#F0F1F3] text-foreground"
+                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "pix"
+                        ? "bg-[#EBF2FF] text-[#3F78D8]"
+                        : "bg-[#F5F6F6] text-[#111827]"
                         }`}
                 >
                     {t("wallet.pixRecommended")}
@@ -160,8 +160,8 @@ export default function Page() {
                 <button
                     onClick={() => setActiveTab("bank")}
                     className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "bank"
-                        ? "bg-[#EBF2FF] text-primary"
-                        : "bg-[#F0F1F3] text-foreground"
+                        ? "bg-[#EBF2FF] text-[#3F78D8]"
+                        : "bg-[#F5F6F6] text-[#111827]"
                         }`}
                 >
                     {t("wallet.bankAccountLabel")}
@@ -171,29 +171,29 @@ export default function Page() {
             {activeTab === "pix" ? (
                 <div className="flex flex-col flex-1">
                     {/* Info Box */}
-                    <div className="bg-[#EEF4FF] rounded-xl p-4 mb-6">
+                    <div className="bg-[#EEF4FF] rounded-xl p-4 mb-6 mx-4">
                         <div className="flex items-center gap-2 mb-1">
                             <Zap className="w-4 h-4 text-[#4A7BF7]" fill="#4A7BF7" />
-                            <span className="text-[#1F2937] text-sm font-medium">
+                            <span className="text-[#111827] text-sm font-medium">
                                 {t("wallet.pixFewerErrors")}
                             </span>
                         </div>
-                        <p className="text-[#6B7280] text-xs pl-6">
+                        <p className="text-[#9AA4AF] text-xs pl-6">
                             {t("wallet.pixFastSafeDesc")}
                         </p>
                     </div>
 
                     {/* Key Type */}
-                    <div className="mb-5">
-                        <label className="block text-[#1F2937] text-sm font-medium mb-3">
+                    <div className="mb-5 mx-4">
+                        <label className="block text-[#111827] text-sm font-medium mb-3">
                             {t("wallet.keyType")}
                         </label>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setKeyType("cpf")}
                                 className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${keyType === "cpf"
-                                    ? "bg-[#EEF4FF] text-[#4A7BF7]"
-                                    : "bg-[#F0F1F3] text-[#6B7280]"
+                                    ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                    : "bg-[#F5F6F6] text-[#9AA4AF]"
                                     }`}
                             >
                                 {t("wallet.cpf")}
@@ -201,8 +201,8 @@ export default function Page() {
                             <button
                                 onClick={() => setKeyType("cnpj")}
                                 className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${keyType === "cnpj"
-                                    ? "bg-[#EEF4FF] text-[#4A7BF7]"
-                                    : "bg-[#F0F1F3] text-[#6B7280]"
+                                    ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                    : "bg-[#F5F6F6] text-[#9AA4AF]"
                                     }`}
                             >
                                 {t("wallet.cnpj")}
@@ -211,8 +211,8 @@ export default function Page() {
                     </div>
 
                     {/* PIX Key */}
-                    <div className="mb-5">
-                        <label className="block text-[#1F2937] text-sm font-medium mb-2">
+                    <div className="mb-5 mx-4">
+                        <label className="block text-[#111827] text-sm font-medium mb-2">
                             {t("wallet.pixKey")}
                         </label>
                         <input
@@ -220,13 +220,13 @@ export default function Page() {
                             value={pixKey}
                             onChange={(e) => setPixKey(e.target.value)}
                             placeholder={t("wallet.egCpfCnpj")}
-                            className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
+                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
 
                     {/* Account Holder Name */}
-                    <div className="mb-5">
-                        <label className="block text-[#1F2937] text-sm font-medium mb-2">
+                    <div className="mb-5 mx-4">
+                        <label className="block text-[#111827] text-sm font-medium mb-2">
                             {t("wallet.holderName")}
                         </label>
                         <input
@@ -234,13 +234,13 @@ export default function Page() {
                             value={pixHolderName}
                             onChange={(e) => setPixHolderName(e.target.value)}
                             placeholder={t("wallet.egHolderName")}
-                            className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
+                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
 
                     {/* Account Holder's CPF/CNPJ */}
-                    <div className="mb-5">
-                        <label className="block text-[#1F2937] text-sm font-medium mb-2">
+                    <div className="mb-5 mx-4">
+                        <label className="block text-[#111827] text-sm font-medium mb-2">
                             {t("wallet.holderCpfCnpj")}
                         </label>
                         <input
@@ -248,23 +248,23 @@ export default function Page() {
                             value={pixHolderCpfCnpj}
                             onChange={(e) => setPixHolderCpfCnpj(e.target.value)}
                             placeholder={t("wallet.egCpfCnpj")}
-                            className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
+                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
                 </div>
             ) : (
                 <div className="flex flex-col flex-1">
                     {/* Type Of Person */}
-                    <div className="mb-5">
-                        <label className="block text-[#1F2937] text-sm font-medium mb-3">
+                    <div className="mb-5 mx-4">
+                        <label className="block text-[#111827] text-sm font-medium mb-3">
                             {t("wallet.typeOfPerson")}
                         </label>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setPersonType("individual")}
                                 className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${personType === "individual"
-                                    ? "bg-[#EEF4FF] text-[#4A7BF7]"
-                                    : "bg-[#F0F1F3] text-[#6B7280]"
+                                    ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                    : "bg-[#F5F6F6] text-[#9AA4AF]"
                                     }`}
                             >
                                 {t("wallet.individual")}
@@ -272,8 +272,8 @@ export default function Page() {
                             <button
                                 onClick={() => setPersonType("legal")}
                                 className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${personType === "legal"
-                                    ? "bg-[#EEF4FF] text-[#4A7BF7]"
-                                    : "bg-[#F0F1F3] text-[#6B7280]"
+                                    ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                    : "bg-[#F5F6F6] text-[#9AA4AF]"
                                     }`}
                             >
                                 {t("wallet.legalEntity")}
@@ -282,8 +282,8 @@ export default function Page() {
                     </div>
 
                     {/* Bank Name */}
-                    <div className="mb-5">
-                        <label className="block text-[#1F2937] text-sm font-medium mb-2">
+                    <div className="mb-5 mx-4">
+                        <label className="block text-[#111827] text-sm font-medium mb-2">
                             {t("wallet.bankName")}
                         </label>
                         <input
@@ -291,13 +291,13 @@ export default function Page() {
                             value={bankName}
                             onChange={(e) => setBankName(e.target.value)}
                             placeholder={t("wallet.egBankName")}
-                            className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
+                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
 
                     {/* Agency */}
-                    <div className="mb-5">
-                        <label className="block text-[#1F2937] text-sm font-medium mb-2">
+                    <div className="mb-5 mx-4">
+                        <label className="block text-[#111827] text-sm font-medium mb-2">
                             {t("wallet.agencyWithDigit")}
                         </label>
                         <input
@@ -305,13 +305,13 @@ export default function Page() {
                             value={agency}
                             onChange={(e) => setAgency(e.target.value)}
                             placeholder={t("wallet.egAgency")}
-                            className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
+                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
 
                     {/* Account */}
-                    <div className="mb-5">
-                        <label className="block text-[#1F2937] text-sm font-medium mb-2">
+                    <div className="mb-5 mx-4">
+                        <label className="block text-[#111827] text-sm font-medium mb-2">
                             {t("wallet.accountWithDigit")}
                         </label>
                         <input
@@ -319,13 +319,13 @@ export default function Page() {
                             value={account}
                             onChange={(e) => setAccount(e.target.value)}
                             placeholder={t("wallet.egAccount")}
-                            className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
+                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
 
                     {/* Holder's CPF/CNPJ */}
-                    <div className="mb-5">
-                        <label className="block text-[#1F2937] text-sm font-medium mb-2">
+                    <div className="mb-5 mx-4">
+                        <label className="block text-[#111827] text-sm font-medium mb-2">
                             {t("wallet.holderCpfCnpj")}
                         </label>
                         <input
@@ -333,13 +333,13 @@ export default function Page() {
                             value={bankHolderCpfCnpj}
                             onChange={(e) => setBankHolderCpfCnpj(e.target.value)}
                             placeholder={t("wallet.egCpfCnpj")}
-                            className="w-full bg-[#F5F6F8] rounded-xl px-4 py-3.5 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
+                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
                         />
                     </div>
                 </div>
             )}
 
-            <div className="mt-auto pt-6">
+            <div className="mt-auto pt-6 px-4">
                 <button
                     onClick={handleSave}
                     disabled={saving}

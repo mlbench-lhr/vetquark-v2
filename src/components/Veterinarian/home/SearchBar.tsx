@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import type { Patient } from './types';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
+import StoreModal from '@/components/Modals/StoreModal';
 
 type ExamSuggestion = {
   id: string;
@@ -25,6 +26,7 @@ const SearchBar: React.FC = () => {
   const [examSuggestions, setExamSuggestions] = useState<ExamSuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(false);
   const { t } = useTranslation();
 
   const trimmedQuery = useMemo(() => query.trim(), [query]);
@@ -239,11 +241,12 @@ const SearchBar: React.FC = () => {
           </div>
         ) : null}
       </div>
-      <Link href={"/Veterinarian/store"} className="px-4 py-3 rounded-xl flex items-center gap-2 bg-white border border-gray-200 shrink-0" >
+      <button type="button" onClick={() => setStoreOpen(true)} className="px-4 py-3 rounded-xl flex items-center gap-2 bg-white border border-gray-200 shrink-0 cursor-pointer" >
         <ShoppingCartIcon className="w-5 h-5 text-primary" />
         <span className="text-gray-700 font-medium text-sm">{t('dashboard.store')}</span>
-      </Link>
+      </button>
 
+      <StoreModal isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
     </div>
   );
 };

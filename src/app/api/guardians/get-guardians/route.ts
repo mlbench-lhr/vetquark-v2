@@ -161,7 +161,7 @@ export async function GET(req: NextRequest) {
     const pipeline: any[] = [{ $match: { veterinarian: veterinarianObjectId } }];
 
     pipeline.push({
-      $group: { _id: "$guardian", patientCount: { $sum: 1 } },
+      $group: { _id: "$guardian", patientCount: { $sum: 1 }, patientNames: { $push: "$animalName" } },
     });
 
     pipeline.push({
@@ -209,6 +209,7 @@ export async function GET(req: NextRequest) {
               name: "$guardianUser.fullName",
               idNumber: "$guardianUser.taxId",
               avatarUrl: "$guardianUser.profileImageUrl",
+              patientNames: 1,
             },
           },
         ],
@@ -219,7 +220,7 @@ export async function GET(req: NextRequest) {
     const itemsA = Array.isArray(agg?.[0]?.items) ? agg[0].items : [];
     const setIds = new Set(itemsA.map((it: any) => String(it._id)));
     const guardiansByPrimary = await User.find({ role: "Guardian", primaryVeterinarian: veterinarianId })
-      .select("_id fullName taxId profileImageUrl")
+      .select("_id fullName taxId profileImageUrl phone")
       .lean();
     const itemsB = guardiansByPrimary
       .filter((g: any) => {
@@ -233,6 +234,8 @@ export async function GET(req: NextRequest) {
         name: g.fullName ?? "N/A",
         idNumber: g.taxId ?? "",
         avatarUrl: g.profileImageUrl ?? "",
+        patientNames: [],
+        phone: g.phone ?? "",
       }));
     let merged = [...itemsA, ...itemsB];
     if (q) {
@@ -255,6 +258,8 @@ export async function GET(req: NextRequest) {
           idNumber: it.idNumber ?? "",
           avatarUrl: it.avatarUrl ?? "",
           patientCount: typeof it.patientCount === "number" ? it.patientCount : 0,
+          pets: Array.isArray(it.patientNames) ? it.patientNames : [],
+          phone: it.phone ?? "",
         })),
         pagination: toPaginationMeta({ page, pageSize, total }),
       },

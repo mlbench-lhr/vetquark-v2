@@ -15,9 +15,9 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, featured, onClickNav
   const router = useRouter();
   return (
     <div
-      className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-colors duration-200 ${featured
+      className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 hover:shadow-sm ${featured
         ? 'bg-primary border border-primary'
-        : 'bg-white border border-gray-200'
+        : 'bg-white border border-[#E8E8E8]'
         }`}
       onClick={() => router.push(onClickNavigate || `/Veterinarian/home/patientDetails/${patient.id}`)}
     >
@@ -29,10 +29,10 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, featured, onClickNav
         </div>
 
         <div>
-          <h3 className={`font-semibold text-sm ${featured ? 'text-white' : 'text-primary'}`}>
+          <h3 className={`font-semibold text-sm ${featured ? 'text-white' : 'text-[#1D2939]'}`}>
             {patient.name}
           </h3>
-          <p className={`text-xs ${featured ? 'text-blue-100' : 'text-gray-400'}`}>
+          <p className={`text-xs ${featured ? 'text-blue-100' : 'text-[#98A2B3]'}`}>
             {patient.owner}
           </p>
         </div>
@@ -41,7 +41,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, featured, onClickNav
       <div
         className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${featured
           ? 'bg-white/20'
-          : 'bg-primary'
+          : 'bg-[#1D2939]'
           }`}
       >
         <svg

@@ -36,6 +36,60 @@ export const PatientInfoCard: React.FC<PatientInfoCardProps> = ({
   const pathname = usePathname()
   const router = useRouter()
   const { t } = useTranslation();
+
+  const isVet = !pathname.includes("Guardian");
+
+  if (isVet) {
+    return (
+      <div className="flex flex-col justify-start items-start gap-4 w-full overflow-hidden px-4">
+        {/* Pet Image */}
+        <div className="relative h-56 rounded-[16px] overflow-hidden w-full">
+          <Image
+            src={image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
+            alt={name}
+            fill
+            sizes="100vw"
+            className="object-cover object-center rounded-[16px]"
+          />
+        </div>
+
+        {/* Name + Breed + Edit */}
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg font-bold text-gray-900">{name}</h2>
+            <span className="px-3 py-0.5 rounded-full text-xs text-gray-500 border border-gray-300">
+              {type} - {breed}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (!patientId) return
+              router.push(`/Veterinarian/patient/new_patient?patientId=${encodeURIComponent(patientId)}`)
+            }}
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 shrink-0"
+          >
+            <Edit size={14} className="text-primary" />
+          </button>
+        </div>
+
+        {/* Info Fields */}
+        <div className="w-full space-y-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-semibold text-gray-700">{t("home.details.gender")}</span>
+            <span className="px-3 py-1 rounded-md border border-gray-200 text-sm text-gray-600">{sex || "-"}</span>
+            <span className="text-sm font-semibold text-gray-700">{t("home.details.age")}</span>
+            <span className="px-3 py-1 rounded-md border border-gray-200 text-sm text-gray-600">{age || "-"}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-gray-700">{t("home.details.gender")}</span>
+            <span className="px-3 py-1 rounded-md border border-gray-200 text-sm text-gray-600">{gender || "-"}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col justify-start items-start gap-3 w-full overflow-hidden">
       <div className="px- object-center relative h-64 rounded-[16px] overflow-hidden w-full">
@@ -349,58 +403,62 @@ export const ReportsHistory: React.FC<ReportsHistoryProps> = ({ petName, reports
   const router = useRouter()
   const { t } = useTranslation();
   return (
-    <div className="col-span-1 mx-4 mt-6 rounded-3xl p-5 shadow-sm border border-gray-200">
-      <div className="flex items-start justify-between">
-        <div>
-          {/* <h3 className="text-lg font-bold text-gray-800 ">Reports History</h3> */}
-        </div>
+    <div className="mx-4 mt-6 rounded-2xl p-5 shadow-sm border border-gray-200 bg-white">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-base font-bold text-gray-900">{t("home.reportsHistory")}</h3>
         <button
           type="button"
           onClick={() => {
             if (!patientId) return
             router.push(`/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}`)
           }}
-          className="px-4 py-1 bg-primary text-white font-medium text-sm flex items-center justify-center  gap-2 rounded-full"
+          className="px-4 py-1.5 bg-primary text-white font-medium text-sm flex items-center justify-center gap-2 rounded-full"
         >
-          <Plus size={18} />
+          <Plus size={16} />
           {t("home.newTest")}
         </button>
       </div>
-      <p className="text-sm text-gray-600 mb-2 w-45">
+      <p className="text-sm text-gray-500 mb-4">
         {t("home.viewAllReportsAssociated", { name: petName })}
       </p>
 
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
-          <span className="text-sm font-semibold text-gray-500">{t("common.date")}</span>
-          <span className="text-sm font-semibold text-gray-500">{t("common.status")}</span>
-          <span className="text-sm font-semibold text-gray-500">{t("common.actions")}</span>
+      <div>
+        <div className="grid grid-cols-3 mb-3 pb-2 border-b border-gray-200">
+          <span className="text-xs font-semibold text-gray-400">{t("common.date")}</span>
+          <span className="text-xs font-semibold text-gray-400 text-center">{t("common.status")}</span>
+          <span className="text-xs font-semibold text-gray-400 text-right">{t("common.actions")}</span>
         </div>
 
-        {reports.map((report) => (
-          <div
-            key={report.id}
-            className="flex items-center justify-between border-b border-gray-100 last:border-b-0"
-          >
-            <span className="text-gray-700 font-light text-sm">{report.date}</span>
-            <span
-              className={`px-4 py-1 rounded-full text-xs font-bold flex items-center gap-2 border border-primary`}
+        {reports.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4 text-center">{t("home.noReportsYet")}</p>
+        ) : (
+          reports.map((report) => (
+            <div
+              key={report.id}
+              className="grid grid-cols-3 items-center py-2.5 border-b border-gray-50 last:border-b-0"
             >
-              {report.status === 'signed' && (
-                <CheckCircle2 size={16} className="text-green-600" />
-              )}
-              {report.status === 'signed' ? t("history.signed") : t("history.pending")}
-            </span>
-            <div className="flex items-center gap-2">
-              <button className="">
-                <Eye size={16} className="text-gray-600" />
-              </button>
-              <button className="">
-                <Download size={16} className="text-gray-600" />
-              </button>
+              <span className="text-sm text-gray-700">{report.date}</span>
+              <div className="flex justify-center">
+                <span
+                  className="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-gray-200"
+                >
+                  {report.status === 'signed' && (
+                    <CheckCircle2 size={14} className="text-green-500" />
+                  )}
+                  {report.status === 'signed' ? t("history.signed") : t("history.pending")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 justify-end">
+                <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100">
+                  <Eye size={15} className="text-gray-500" />
+                </button>
+                <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100">
+                  <Download size={15} className="text-gray-500" />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
