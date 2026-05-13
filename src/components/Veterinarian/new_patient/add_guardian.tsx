@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft, Plus } from 'lucide-react';
+import { ChevronLeft, Plus, ChevronDown, Folder, PawPrint, Search, Bell } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PhoneInput from '@/components/form/group-input/PhoneInput';
@@ -102,12 +102,16 @@ interface FormData {
     fullName: string;
     taxId: string;
     idCard: string;
+    rg: string;
     foreignIdentity: string;
     dateOfBirth: string;
     landline: string;
     mobile: string;
     email: string;
     address: string;
+    number: string;
+    complement: string;
+    neighborhood: string;
     country: string;
     city: string;
     state: string;
@@ -128,12 +132,16 @@ export default function GuardianRegistration() {
         fullName: '',
         taxId: '',
         idCard: '',
+        rg: '',
         foreignIdentity: '',
         dateOfBirth: '',
         landline: '',
         mobile: '',
         email: '',
         address: '',
+        number: '',
+        complement: '',
+        neighborhood: '',
         country: 'Brazil',
         city: '',
         state: '',
@@ -475,19 +483,66 @@ export default function GuardianRegistration() {
     };
 
     return (
-        <div className="min-h-scree">
+        <div className="min-h-[calc(100vh-96px)] p-4 space-y-4 bg-gray-50">
             {/* Header */}
-            <Header title={isEditing ? t('newPatient.guardian.editGuardianTitle') : t('newPatient.guardian.registrationTitle')} />
-            {/* Form Content */}
-            <div className="">
+            <div className="flex items-center justify-between">
+                <h1 className="text-xl font-semibold text-[#3F78D8]">{t('newPatient.addNewPatientTitle')}</h1>
+                <div className="flex items-center gap-3">
+                    <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <Search className="w-5 h-5 text-[#3F78D8]" />
+                    </button>
+                    <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <Bell className="w-5 h-5 text-[#3F78D8]" />
+                        {unreadCount > 0 && (
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                        )}
+                    </button>
+                </div>
+            </div>
+
+            {/* Progress Stepper */}
+            <div className="relative">
+                <div className="flex items-center justify-between relative z-10">
+                    {/* Step 1 - Active (Guardian Data) */}
+                    <div className="flex items-center gap-2 bg-gray-50 pr-2">
+                        <div className="w-10 h-10 bg-[#3F78D8] rounded-full flex items-center justify-center">
+                            <Folder className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-sm font-semibold text-[#3F78D8]">{t('newPatient.guardianDataStep')}</span>
+                    </div>
+                    {/* Step 2 - Inactive */}
+                    <div className="flex items-center gap-2 bg-gray-50 pl-2">
+                        <div className="w-10 h-10 bg-[#E8E8E8] rounded-full flex items-center justify-center">
+                            <PawPrint className="w-5 h-5 text-[#9CA3AF]" />
+                        </div>
+                        <span className="text-sm font-medium text-[#9CA3AF]">{t('newPatient.patientDetailsStep')}</span>
+                    </div>
+                </div>
+                {/* Connecting Line */}
+                <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 z-0">
+                    <div className="h-0.5 bg-[#E8E8E8] mx-5"></div>
+                </div>
+            </div>
+
+            {/* White Card */}
+            <div className="bg-white rounded-2xl shadow-sm p-5 space-y-6">
+                {/* Title & Subtitle */}
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900">{isEditing ? t('newPatient.guardian.editGuardianTitle') : t('newPatient.guardian.registrationTitle')}</h2>
+                    <p className="text-sm text-[#839297] mt-1">
+                        {t('newPatient.guardian.registrationSubtitle')}
+                    </p>
+                </div>
 
                 {/* Section 1: Identification */}
-                <div className="mb-8">
-                    <h2 className="text-base font-semibold text-gray-900 mb-4">{t('newPatient.guardian.identificationSectionTitle')}</h2>
-
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-base font-semibold text-gray-900">{t('newPatient.guardian.identificationSectionTitle')}</h3>
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                    </div>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm text-gray-900 mb-2">
+                            <label className="block text-sm font-medium text-gray-900 mb-1.5">
                                 {t('auth.fullName')}<span className="text-red-500">*</span>
                             </label>
                             <input
@@ -495,145 +550,250 @@ export default function GuardianRegistration() {
                                 placeholder={t('newPatient.guardian.guardianNamePlaceholder')}
                                 value={formData.fullName}
                                 onChange={(e) => handleChange('fullName', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
                             />
                         </div>
-
-                        {/* <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                Tax Identification Number
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="i.e AB374892928"
-                                value={formData.taxId}
-                                onChange={(e) => handleChange('taxId', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                        </div> */}
-
-                        <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                {t('newPatient.guardian.idCardLabel')}<span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                placeholder={t('newPatient.guardian.idCardPlaceholder')}
-                                value={formData.idCard}
-                                onChange={(e) => handleChange('idCard', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                        </div>
-
-                        {/* <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                Foreign Identity
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="Passport/ID"
-                                value={formData.foreignIdentity}
-                                onChange={(e) => handleChange('foreignIdentity', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                        </div> */}
-
-                        <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                {t('auth.dateOfBirth')}<span className="text-red-500">*</span>
-                            </label>
-                            <TypedDateInput
-                                value={formData.dateOfBirth}
-                                onChange={(nextIsoDate) => handleChange('dateOfBirth', nextIsoDate)}
-                                max={new Date(new Date().setFullYear(new Date().getFullYear() - 10)).toISOString().slice(0, 10)}
-                                placeholder="dd/mm/yyyy"
-                                required
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
-                                iconClassName="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40 cursor-pointer"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Section 2: Contact Details */}
-                <div className="mb-8">
-                    <h2 className="text-base font-semibold text-gray-900 mb-4">{t('newPatient.guardian.contactDetailsSectionTitle')}</h2>
-
-                    <div className="space-y-4">
-                        {/* <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                Landline
-                            </label>
-                            <input
-                                type="tel"
-                                placeholder="Guardian's Landline"
-                                value={formData.landline}
-                                onChange={(e) => handleChange('landline', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                        </div> */}
-
-                        <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                {t('auth.phoneNumber')}<span className="text-red-500">*</span>
-                            </label>
-                            <PhoneInput
-                                name="mobile"
-                                value={formData.mobile}
-                                onChange={(next) => handleChange('mobile', next)}
-                                defaultCountry="br"
-                                required
-                                inputClassName="!w-full !h-12 !px-11 !py-3 !bg-gray-100 !border-0 !rounded-lg !text-gray-900 placeholder:!text-gray-400 focus:!outline-none focus:!ring-2 focus:!ring-primary"
-                                buttonClassName="!h-12 !bg-gray-100 !border-0 !rounded-lg"
-                                containerClassName="w-full"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                {t('auth.email')}<span className="text-red-500">*</span>
-                            </label>
-                            <div className="flex gap-2">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('auth.taxId')}
+                                </label>
                                 <input
-                                    type="email"
-                                    placeholder={t('auth.enterEmail')}
-                                    value={formData.email}
-                                    onChange={(e) => handleChange('email', e.target.value)}
-                                    disabled={isEditing}
-                                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                                    type="text"
+                                    placeholder={t('newPatient.guardian.idCardPlaceholder')}
+                                    value={formData.idCard}
+                                    onChange={(e) => handleChange('idCard', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
                                 />
-
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('newPatient.guardian.rgLabel')}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={t('newPatient.guardian.rgPlaceholder')}
+                                    value={formData.rg}
+                                    onChange={(e) => handleChange('rg', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('newPatient.guardian.foreignIdentityLabel')}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={t('newPatient.guardian.foreignIdentityPlaceholder')}
+                                    value={formData.foreignIdentity}
+                                    onChange={(e) => handleChange('foreignIdentity', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('auth.dateOfBirth')}<span className="text-red-500">*</span>
+                                </label>
+                                <TypedDateInput
+                                    value={formData.dateOfBirth}
+                                    onChange={(nextIsoDate) => handleChange('dateOfBirth', nextIsoDate)}
+                                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 10)).toISOString().slice(0, 10)}
+                                    placeholder="dd/mm/yyyy"
+                                    required
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm pr-12"
+                                    iconClassName="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer"
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Section 3: Address Details */}
-                <div className="mb-8">
-                    <h2 className="text-base font-semibold text-gray-900 mb-4">{t('newPatient.guardian.addressDetailsSectionTitle')}</h2>
-
+                {/* Section 2: Contact Details */}
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-base font-semibold text-gray-900">{t('newPatient.guardian.contactDetailsSectionTitle')}</h3>
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                    </div>
                     <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('newPatient.guardian.landlineLabel')}
+                                </label>
+                                <input
+                                    type="tel"
+                                    placeholder={t('newPatient.guardian.landlinePlaceholder')}
+                                    value={formData.landline}
+                                    onChange={(e) => handleChange('landline', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('auth.phoneNumber')}<span className="text-red-500">*</span>
+                                </label>
+                                <PhoneInput
+                                    name="mobile"
+                                    value={formData.mobile}
+                                    onChange={(next) => handleChange('mobile', next)}
+                                    defaultCountry="br"
+                                    required
+                                    inputClassName="!w-full !h-12 !px-11 !py-3 !bg-white !border !border-[#E8E8E8] !rounded-xl !text-gray-900 placeholder:!text-[#9CA3AF] focus:!outline-none focus:!ring-2 focus:!ring-[#3F78D8] focus:!border-transparent"
+                                    buttonClassName="!h-12 !bg-white !border-0 !rounded-l-xl"
+                                    containerClassName="w-full"
+                                />
+                            </div>
+                        </div>
                         <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                {t('auth.address')}<span className="text-red-500">*</span>
+                            <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                {t('auth.email')}<span className="text-red-500">*</span>
                             </label>
                             <input
-                                type="text"
-                                placeholder={t('auth.enterAddress')}
-                                value={formData.address}
-                                onChange={(e) => handleChange('address', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                                type="email"
+                                placeholder={t('auth.enterEmail')}
+                                value={formData.email}
+                                onChange={(e) => handleChange('email', e.target.value)}
+                                disabled={isEditing}
+                                className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm disabled:bg-gray-50"
                             />
                         </div>
+                    </div>
+                </div>
 
+                {/* Section 3: Address Details */}
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-base font-semibold text-gray-900">{t('newPatient.guardian.addressDetailsSectionTitle')}</h3>
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('auth.postalCode')}<span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={t('auth.enterPostalCode')}
+                                    value={formData.postalCode}
+                                    onChange={(e) => handleChange('postalCode', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('auth.address')}<span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={t('auth.enterAddress')}
+                                    value={formData.address}
+                                    onChange={(e) => handleChange('address', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('newPatient.guardian.numberLabel')}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={t('newPatient.guardian.numberPlaceholder')}
+                                    value={formData.number}
+                                    onChange={(e) => handleChange('number', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('newPatient.guardian.complementLabel')}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={t('newPatient.guardian.complementPlaceholder')}
+                                    value={formData.complement}
+                                    onChange={(e) => handleChange('complement', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('newPatient.guardian.neighborhoodLabel')}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={t('newPatient.guardian.neighborhoodPlaceholder')}
+                                    value={formData.neighborhood}
+                                    onChange={(e) => handleChange('neighborhood', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('auth.city')}<span className="text-red-500">*</span>
+                                </label>
+                                {cityOptions.length > 0 ? (
+                                    <select
+                                        value={formData.city}
+                                        onChange={(e) => handleChange('city', e.target.value)}
+                                        disabled={!formData.state || loadingCities || cityOptions.length === 0}
+                                        className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                    >
+                                        <option value="" disabled>
+                                            {!formData.state ? t('auth.selectStateFirst') : loadingCities ? t('auth.loadingCities') : t('auth.selectCity')}
+                                        </option>
+                                        {cityOptions.map((c) => (
+                                            <option key={c} value={c}>
+                                                {c}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        placeholder={t('auth.enterCity')}
+                                        value={formData.city}
+                                        onChange={(e) => handleChange('city', e.target.value)}
+                                        disabled={!formData.state}
+                                        className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm disabled:bg-gray-50"
+                                    />
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-900 mb-1.5">
+                                    {t('auth.state')}<span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={formData.state}
+                                    onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
+                                    disabled={!formData.country || loadingStates || stateOptions.length === 0}
+                                    className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                                >
+                                    <option value="" disabled>
+                                        {!formData.country ? t('auth.selectCountryFirst') : loadingStates ? t('auth.loadingStates') : t('auth.selectState')}
+                                    </option>
+                                    {stateOptions.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>
+                                            {opt.text}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                         <div>
-                            <label className="block text-sm text-gray-900 mb-2">
+                            <label className="block text-sm font-medium text-gray-900 mb-1.5">
                                 {t('auth.country')}<span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={formData.country}
                                 onChange={(e) => setFormData((prev) => ({ ...prev, country: e.target.value, state: "", city: "" }))}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
                             >
                                 <option value="" disabled>
                                     {t('auth.selectCountry')}
@@ -646,79 +806,13 @@ export default function GuardianRegistration() {
                             </select>
                         </div>
 
-                        <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                {t('auth.state')}<span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={formData.state}
-                                onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
-                                disabled={!formData.country || loadingStates || stateOptions.length === 0}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            >
-                                <option value="" disabled>
-                                    {!formData.country ? t('auth.selectCountryFirst') : loadingStates ? t('auth.loadingStates') : t('auth.selectState')}
-                                </option>
-                                {stateOptions.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>
-                                        {opt.text}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                {t('auth.city')}<span className="text-red-500">*</span>
-                            </label>
-                            {cityOptions.length > 0 ? (
-                                <select
-                                    value={formData.city}
-                                    onChange={(e) => handleChange('city', e.target.value)}
-                                    disabled={!formData.state || loadingCities || cityOptions.length === 0}
-                                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                                >
-                                    <option value="" disabled>
-                                        {!formData.state ? t('auth.selectStateFirst') : loadingCities ? t('auth.loadingCities') : t('auth.selectCity')}
-                                    </option>
-                                    {cityOptions.map((c) => (
-                                        <option key={c} value={c}>
-                                            {c}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <input
-                                    type="text"
-                                    placeholder={t('auth.enterCity')}
-                                    value={formData.city}
-                                    onChange={(e) => handleChange('city', e.target.value)}
-                                    disabled={!formData.state}
-                                    className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm text-gray-900 mb-2">
-                                {t('auth.postalCode')}<span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                placeholder={t('auth.enterPostalCode')}
-                                value={formData.postalCode}
-                                onChange={(e) => handleChange('postalCode', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                        </div>
-
-                        <div className="flex items-end gap-3 pt-2">
+                        <div className="flex items-start gap-3 pt-2">
                             <input
                                 type="checkbox"
                                 checked={formData.acceptTerms}
                                 onChange={(e) => setFormData((prev) => ({ ...prev, acceptTerms: e.target.checked }))}
                                 disabled={isEditing}
-                                className="mt-1 w-5 h-5 text-primary rounded border-gray-300 focus:ring-primary"
+                                className="mt-1 w-5 h-5 text-[#3F78D8] rounded border-[#E8E8E8] focus:ring-[#3F78D8]"
                             />
                             <label className="text-sm text-gray-700">
                                 {t('auth.acceptTerms')}
@@ -729,19 +823,16 @@ export default function GuardianRegistration() {
             </div>
 
             {/* Fixed Bottom Button */}
-            <div className=" ">
-                <div className="">
-                    <button
-                        onClick={handleSubmit}
-                        disabled={submitting || loadingGuardian}
-                        className="w-full bg-primary hover:bg-primary/70 text-white font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                        <Plus className="w-5 h-5" />
-                        {submitting || loadingGuardian ? (isEditing ? t('common.saving') : t('newPatient.guardian.adding')) : (isEditing ? t('common.saveChanges') : t('newPatient.guardian.addGuardianButton'))}
-                    </button>
-                </div>
+            <div className="pb-4">
+                <button
+                    onClick={handleSubmit}
+                    disabled={submitting || loadingGuardian}
+                    className="w-full bg-[#3F78D8] hover:bg-[#3F78D8]/90 text-white font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    <Plus className="w-5 h-5" />
+                    {submitting || loadingGuardian ? (isEditing ? t('common.saving') : t('newPatient.guardian.adding')) : (isEditing ? t('common.saveChanges') : t('newPatient.guardian.addGuardianButton'))}
+                </button>
             </div>
-
         </div>
     );
 }

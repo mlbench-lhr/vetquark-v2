@@ -169,14 +169,14 @@ export default function TaxInfoAndProfessionalProfilePage() {
   };
 
   return (
-    <div className="w-full bg-background flex flex-col">
+    <div className="w-full bg-white min-h-screen flex flex-col">
       <Header title={t("menu.taxProfile")} />
 
-      <div className="flex-1 overflow-y-auto px- pb-28">
+      <div className="flex-1 overflow-y-auto px-4 pb-28">
         <form ref={formRef} onSubmit={handleSubmit} className="pt-2">
           <div className="space-y-4">
             <div>
-              <label className="block text-gray-900 font-medium mb-2">{t("profile.nationalId")}</label>
+              <label className="block text-[#111827] font-medium mb-2">{t("profile.nationalId")}</label>
               <input
                 type="text"
                 name="taxId"
@@ -184,13 +184,13 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 value={formData.taxId}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
               />
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">
-                {t("menu.cnpjIeLabel")} <span className="text-gray-500 font-normal">{t("menu.optionalSuffix")}</span>
+              <label className="block text-[#111827] font-medium mb-2">
+                {t("menu.cnpjIeLabel")} <span className="text-[#9AA4AF] font-normal">{t("menu.optionalSuffix")}</span>
               </label>
               <input
                 type="text"
@@ -198,25 +198,25 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 placeholder="i.e 12.345.678/0001-99"
                 value={formData.cnpjIe}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
               />
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">{t("profile.dateOfBirth")}</label>
+              <label className="block text-[#111827] font-medium mb-2">{t("profile.dateOfBirth")}</label>
               <TypedDateInput
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={(nextIsoDate) => setFormData((prev) => ({ ...prev, dateOfBirth: nextIsoDate }))}
                 required
                 placeholder="dd/mm/yyyy"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 pr-12"
-                iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-gray-40 cursor-pointer"
+                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] pr-12"
+                iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-[#9AA4AF] cursor-pointer"
               />
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">{t("profile.address")}</label>
+              <label className="block text-[#111827] font-medium mb-2">{t("profile.address")}</label>
               <input
                 type="text"
                 name="address"
@@ -224,13 +224,13 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 value={formData.address}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-gray-900 font-medium mb-2">CRMV</label>
+                <label className="block text-[#111827] font-medium mb-2">CRMV</label>
                 <input
                   type="text"
                   name="crmv"
@@ -238,7 +238,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
                   value={formData.crmv}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
                 />
               </div>
               <div className="pt-[30px]">
@@ -254,8 +254,8 @@ export default function TaxInfoAndProfessionalProfilePage() {
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">
-                Registration with MAPA <span className="text-gray-500 font-normal">(optional)</span>
+              <label className="block text-[#111827] font-medium mb-2">
+                Registration with MAPA <span className="text-[#9AA4AF] font-normal">(optional)</span>
               </label>
               <input
                 type="text"
@@ -263,7 +263,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 placeholder="Enter your registration with MAPA"
                 value={formData.mapaRegistration}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
               />
             </div>
 
@@ -293,14 +293,14 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 required
                 maxSelected={5}
               />
-              <div className="mt-2 flex flex-wrap gap-2 bg-gray-50 p-5 rounded-[12px]">
+              <div className="mt-2 flex flex-wrap gap-2 bg-[#F5F6F6] p-5 rounded-[12px]">
                 {formData.expertise.length === 0 ? (
-                  <span className="text-sm text-gray-500">No expertise selected</span>
+                  <span className="text-sm text-[#9AA4AF]">No expertise selected</span>
                 ) : (
                   formData.expertise.map((v) => {
                     const opt = expertiseOptions.find((o) => o.value === v);
                     return (
-                      <span key={v} className="inline-flex items-center rounded-full bg-primary text-white text-sm px-3 py-1">
+                      <span key={v} className="inline-flex items-center rounded-full bg-[#4A7BF7] text-white text-sm px-3 py-1">
                         {opt ? opt.text : v}
                       </span>
                     );
@@ -312,14 +312,14 @@ export default function TaxInfoAndProfessionalProfilePage() {
         </form>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-gray-100 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] p-4">
         <button
           type="submit"
           onClick={() => {
             formRef.current?.requestSubmit();
           }}
           disabled={saving}
-          className="w-full h-[52px] bg-[hsl(224,65%,56%)] hover:bg-[hsl(224,65%,50%)] text-white text-[16px] font-medium rounded-full transition-colors"
+          className="w-full h-[52px] bg-[#4A7BF7] hover:bg-[#3A6BE7] text-white text-[16px] font-medium rounded-full transition-colors"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>

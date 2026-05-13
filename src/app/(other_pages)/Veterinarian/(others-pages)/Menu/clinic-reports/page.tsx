@@ -133,17 +133,17 @@ export default function ClinicReportsPage() {
   };
 
   return (
-    <div className="w-full bg-background min-h-scree flex flex-col">
+    <div className="w-full bg-white min-h-screen flex flex-col">
       <Header title={t("menu.clinicReports")} />
 
-      <div className="flex-1 overflow-y-auto px- pb-28">
+      <div className="flex-1 overflow-y-auto px-4 pb-28">
         <form ref={formRef} onSubmit={handleSubmit} className="pt-2">
           <div className="space-y-4">
             <div>
-              <label className="block text-gray-900 font-medium mb-2">
-                {t("menu.uploadClinicLogo")} <span className="text-gray-500 font-normal">{t("menu.optionalSuffix")}</span>
+              <label className="block text-[#111827] font-medium mb-2">
+                {t("menu.uploadClinicLogo")} <span className="text-[#9AA4AF] font-normal">{t("menu.optionalSuffix")}</span>
               </label>
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p- text-center">
+              <div className="bg-[#F5F6F6] border-2 border-dashed border-[#E5E7EB] rounded-xl p-4 text-center">
                 {formData.clinicLogoUrl ? (
                   <div className="flex w-full h-[200px] flex-col relative items-center gap-3">
                     <Image
@@ -157,10 +157,10 @@ export default function ClinicReportsPage() {
                       <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
                       {
                         uploadingClinicLogo ?
-                          <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
+                          <span className="px-3 py-2 bg-[#4A7BF7] text-white rounded-md cursor-pointer">
                             {uploadingClinicLogo ? t("menu.uploading") : t("menu.changeLogo")}
                           </span>
-                          : <div className="p-2 bg-primary rounded-full">
+                          : <div className="p-2 bg-[#4A7BF7] rounded-full">
                             <Pencil color="white" size={16} />
                           </div>
                       }
@@ -168,10 +168,10 @@ export default function ClinicReportsPage() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 h-[200px]">
-                    <div className="text-gray-600 text-sm">{t("menu.uploadClinicLogo")}</div>
+                    <div className="text-[#9AA4AF] text-sm">{t("menu.uploadClinicLogo")}</div>
                     <label className="inline-block">
                       <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
-                      <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
+                      <span className="px-3 py-2 bg-[#4A7BF7] text-white rounded-md cursor-pointer">
                         {uploadingClinicLogo ? t("menu.uploading") : t("menu.selectFile")}
                       </span>
                     </label>
@@ -181,7 +181,7 @@ export default function ClinicReportsPage() {
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">{t("menu.tradeNameLabel")}</label>
+              <label className="block text-[#111827] font-medium mb-2">{t("menu.tradeNameLabel")}</label>
               <input
                 type="text"
                 name="tradeName"
@@ -189,13 +189,13 @@ export default function ClinicReportsPage() {
                 value={formData.tradeName}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
               />
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">
-                {t("menu.cnpjIeLabel")} <span className="text-gray-500 font-normal">{t("menu.optionalSuffix")}</span>
+              <label className="block text-[#111827] font-medium mb-2">
+                {t("menu.cnpjIeLabel")} <span className="text-[#9AA4AF] font-normal">{t("menu.optionalSuffix")}</span>
               </label>
               <input
                 type="text"
@@ -205,12 +205,12 @@ export default function ClinicReportsPage() {
                 onChange={(e) => setFormData((prev) => ({ ...prev, cnpjIe: e.target.value.replace(/\D/g, "") }))}
                 inputMode="numeric"
                 pattern="[0-9]*"
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
               />
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">{t("menu.addressHeaderLabel")}</label>
+              <label className="block text-[#111827] font-medium mb-2">{t("menu.addressHeaderLabel")}</label>
               <input
                 type="text"
                 name="reportHeaderAddress"
@@ -218,12 +218,12 @@ export default function ClinicReportsPage() {
                 value={formData.reportHeaderAddress}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400"
+                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
               />
             </div>
 
             <div>
-              <label className="block text-gray-900 font-medium mb-2">{t("menu.reportFooterLabel")}</label>
+              <label className="block text-[#111827] font-medium mb-2">{t("menu.reportFooterLabel")}</label>
               <textarea
                 name="reportFooter"
                 placeholder={t("menu.enterReportFooter")}
@@ -231,19 +231,19 @@ export default function ClinicReportsPage() {
                 onChange={handleInputChange}
                 rows={4}
                 required
-                className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:outline-none text-gray-800 placeholder-gray-400 resize-none"
+                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF] resize-none"
               />
             </div>
           </div>
         </form>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-gray-100 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] p-4">
         <button
           type="submit"
           onClick={() => formRef.current?.requestSubmit()}
           disabled={uploadingClinicLogo || saving}
-          className="w-full h-[52px] bg-[hsl(224,65%,56%)] hover:bg-[hsl(224,65%,50%)] text-white text-[16px] font-medium rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="w-full h-[52px] bg-[#4A7BF7] hover:bg-[#3A6BE7] text-white text-[16px] font-medium rounded-full transition-colors disabled:bg-[#9AA4AF] disabled:cursor-not-allowed"
         >
           {saving ? t("common.saving") : t("common.saveChanges")}
         </button>

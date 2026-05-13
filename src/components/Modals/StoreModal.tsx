@@ -1,5 +1,5 @@
 'use client'
-import { Check, ChevronLeft, MapPin, Minus, Plus, Ticket } from "lucide-react";
+import { ArrowLeft, Check, MapPin, Minus, Pencil, Plus, ShoppingCart, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from 'react';
 import PhoneInput from "@/components/form/group-input/PhoneInput";
@@ -39,6 +39,7 @@ const brazilianStateOptions = [
 ];
 
 type StoreStep = "store" | "cart" | "checkout" | "change-address" | "add-address" | "success";
+type PaymentMethod = "card" | "pix";
 
 type Product = {
     id: string;
@@ -55,6 +56,17 @@ type ApiProduct = {
     price: number;
     image: string;
 };
+
+interface Address {
+    id: string;
+    name: string;
+    phone: string;
+    location: string;
+    addressLine?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+}
 
 type Props = {
     isOpen: boolean;
@@ -86,6 +98,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         total: number;
         address: Address;
     } | null>(null);
+    const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("card");
     const [cardNumber, setCardNumber] = useState("");
     const [cardHolderName, setCardHolderName] = useState("");
     const [cardHolderDocument, setCardHolderDocument] = useState("");
@@ -178,7 +191,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                     id: orderId,
                     items: cartItems.map((i) => ({ name: i.product.name, quantity: i.quantity })),
                     total: cartTotal,
-                    address: selectedAddress,
+                    address: selectedAddress!,
                 });
                 setCart({});
                 setStep("success");
@@ -413,167 +426,261 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         };
     }, [selectedAddressId]);
 
+    if (!isOpen) return null;
+
+    const formatPrice = (value: number) =>
+        `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
     return (
-        <div className="min-h-[100dvh w-full bg-white">
-            <div className="mx-auto w-full bg relative pb- h-[calc(100vh-96px)]">
-
-                <div className=" flex items-center justify-between">
-                    <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors" onClick={handleBack}>
-                        <ChevronLeft className="w-6 h-6 text-gray-700" />
+        <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4"
+            style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+        >
+            <div
+                className="relative w-full max-w-[400px] bg-[#F8F9FD] rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col"
+                style={{ maxHeight: '92vh' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-5 pb-2 shrink-0 bg-[#F8F9FD]">
+                    <button
+                        type="button"
+                        onClick={handleBack}
+                        className="w-10 h-10 rounded-full bg-[#F0F0F0] flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5 text-gray-700" />
                     </button>
-                    <h1 className="text-base font-medium text-gray-900">
-                        {step === "store"
-                            ? t("auth.store.store")
-                            : step === "cart"
-                                ? t("auth.store.cart")
-                                : step === "checkout"
-                                    ? t("auth.store.checkout")
-                                    : step === "success"
-                                        ? t("auth.store.orderConfirmed")
-                                        : step === "change-address"
-                                            ? t("auth.store.changeAddress")
-                                            : t("auth.store.addNewAddress")}
-                    </h1>
-                    {
-                        step === "store" ?
-                            <button className="w-12 h-12 bg-gray-10 rounded-full flex items-center justify-center relative" onClick={handleViewCart}>
-                                <span className="h-10 w-10 flex justify-center items-center bg-[#F5F6F6] text-white text-sm rounded-full relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                        <path d="M17 18C15.89 18 15 18.89 15 20C15 20.5304 15.2107 21.0391 15.5858 21.4142C15.9609 21.7893 16.4696 22 17 22C17.5304 22 18.0391 21.7893 18.4142 21.4142C18.7893 21.0391 19 20.5304 19 20C19 19.4696 18.7893 18.9609 18.4142 18.5858C18.0391 18.2107 17.5304 18 17 18ZM1 2V4H3L6.6 11.59L5.24 14.04C5.09 14.32 5 14.65 5 15C5 15.5304 5.21071 16.0391 5.58579 16.4142C5.96086 16.7893 6.46957 17 7 17H19V15H7.42C7.3537 15 7.29011 14.9737 7.24322 14.9268C7.19634 14.8799 7.17 14.8163 7.17 14.75C7.17 14.7 7.18 14.66 7.2 14.63L8.1 13H15.55C16.3 13 16.96 12.58 17.3 11.97L20.88 5.5C20.95 5.34 21 5.17 21 5C21 4.73478 20.8946 4.48043 20.7071 4.29289C20.5196 4.10536 20.2652 4 20 4H5.21L4.27 2M7 18C5.89 18 5 18.89 5 20C5 20.5304 5.21071 21.0391 5.58579 21.4142C5.96086 21.7893 6.46957 22 7 22C7.53043 22 8.03914 21.7893 8.41421 21.4142C8.78929 21.0391 9 20.5304 9 20C9 19.4696 8.78929 18.9609 8.41421 18.5858C8.03914 18.2107 7.53043 18 7 18Z" fill="#2B2B2B" />
-                                    </svg>
-                                    {cartQuantity > 0 ? (
-                                        <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-white text-xs flex items-center justify-center">
-                                            {cartQuantity}
-                                        </span>
-                                    ) : null}
-                                </span>
-                            </button>
-                            : <div className="w-12 h-12" />}
-
+                    <div className="flex items-center gap-2 text-[#4A7BF7]">
+                        <ShoppingCart className="w-5 h-5" />
+                        <span className="text-lg font-semibold">Loja</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleClose}
+                        className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
+                    >
+                        <X className="w-5 h-5 text-gray-400" />
+                    </button>
                 </div>
-                {
-                    step === "store" ?
-                        <div className="flex-1 relative mx-2">
-                            <input
-                                type="text"
-                                placeholder={t("auth.store.searchPlaceholder")}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full px-4 py-3 pl-12  rounded-xl focus:outline-none focus:border-primary bg-gray-100"
-                            />
-                            <svg
-                                className="w-5 h-5 text-primary absolute left-4 top-1/2 -translate-y-1/2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <circle cx="11" cy="11" r="8" strokeWidth="2" />
-                                <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                        </div> :
-                        step === "cart" ?
-                            <div className="font-semibold text-base mx-2 mt-4">{t("auth.store.reviewItems")}
-                            </div> : null
-                }
-                {step === "add-address" ? (
-                    <div className="mt-6 px-4 pb-28">
-                        <div className="space-y-5">
-                            <div>
-                                <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    {t("auth.store.addressLabel")}
-                                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto px-5 pb-4">
+                    {step === "store" && (
+                        <div className="space-y-4">
+                            <div className="relative">
                                 <input
-                                    value={newAddressForm.label}
-                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, label: e.target.value }))}
-                                    placeholder={t("auth.store.addressLabelPlaceholder")}
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
+                                    type="text"
+                                    placeholder={t("auth.store.searchPlaceholder")}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full px-4 py-3 pl-11 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white border border-gray-100 text-sm placeholder:text-gray-400"
                                 />
-                            </div>
-
-                            <div>
-                                <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    {t("auth.store.phoneNumber")}
-                                </div>
-                                <PhoneInput
-                                    name="phone"
-                                    value={newAddressForm.phone}
-                                    onChange={(next) => setNewAddressForm((p) => ({ ...p, phone: next }))}
-                                    defaultCountry="br"
-                                    required
-                                    inputClassName="!w-full !h-[52px] !rounded-2xl !bg-[#F3F4F6] !border-0 !text-[15px] !text-[#111827] placeholder:!text-[#9CA3AF] focus:!outline-none"
-                                    buttonClassName="!h-[52px] !bg-[#F3F4F6] !border-0 !rounded-2xl"
-                                    containerClassName="w-full"
-                                />
-                            </div>
-
-                            <div>
-                                <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    {t("auth.store.address")}
-                                </div>
-                                <input
-                                    value={newAddressForm.address}
-                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, address: e.target.value }))}
-                                    placeholder={t("auth.store.addressPlaceholder")}
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
-                                />
-                            </div>
-
-                            <div>
-                                <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    {t("auth.store.city")}
-                                </div>
-                                <input
-                                    value={newAddressForm.city}
-                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, city: e.target.value }))}
-                                    placeholder={t("auth.store.cityPlaceholder")}
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
-                                />
-                            </div>
-
-                            <div>
-                                <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    {t("auth.store.state")}
-                                </div>
-                                <select
-                                    value={newAddressForm.state}
-                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, state: e.target.value }))}
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
+                                <svg
+                                    className="w-5 h-5 text-primary absolute left-3.5 top-1/2 -translate-y-1/2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
                                 >
-                                    <option value="" disabled>
-                                        {t("auth.store.selectState")}
-                                    </option>
-                                    {brazilianStateOptions.map((opt) => (
-                                        <option key={opt.value} value={opt.value}>
-                                            {opt.text}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <circle cx="11" cy="11" r="8" strokeWidth="2" />
+                                    <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" />
+                                </svg>
                             </div>
-
-                            <div>
-                                <div className="text-[14px] leading-[18px] text-[#111827] mb-2">
-                                    {t("auth.store.postalCode")}
-                                </div>
-                                <input
-                                    type="number"
-                                    value={newAddressForm.postalCode}
-                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, postalCode: e.target.value }))}
-                                    placeholder={t("auth.store.postalCodePlaceholder")}
-                                    className="w-full h-[52px] rounded-2xl bg-[#F3F4F6] px-4 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
-                                />
+                            <div className="space-y-3">
+                                {filteredProducts.length === 0 ? (
+                                    <div className="py-10 text-center text-sm text-gray-500">
+                                        {t("auth.store.noItemsFound")}
+                                    </div>
+                                ) : (
+                                    filteredProducts.map((product) => {
+                                        const qtyInCart = cart[product.id] ?? 0;
+                                        return (
+                                            <div key={product.id} className="bg-white rounded-2xl p-3 flex items-start gap-3">
+                                                <div className="w-[72px] h-[72px] rounded-xl bg-[#E8F0FE] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                    {product.image ? (
+                                                        <Image src={product.image} height={72} width={72} className="w-full h-full object-cover" alt={product.name} />
+                                                    ) : (
+                                                        <span className="text-xs text-primary font-bold">{product.name.slice(0, 2)}</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="text-sm font-bold text-gray-800 truncate">{product.name}</h3>
+                                                    <p className="text-[11px] text-gray-400 leading-tight mt-0.5">{product.description}</p>
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <span className="text-sm font-bold text-gray-800">{formatPrice(product.price)}</span>
+                                                        {qtyInCart > 0 ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={() => setCartQuantity(product.id, qtyInCart - 1)}
+                                                                    className="w-7 h-7 rounded-full bg-[#E8ECFF] flex items-center justify-center hover:bg-blue-100 transition"
+                                                                >
+                                                                    <Minus className="w-3.5 h-3.5 text-primary" />
+                                                                </button>
+                                                                <span className="text-sm font-semibold text-gray-800 w-4 text-center">{qtyInCart}</span>
+                                                                <button
+                                                                    onClick={() => setCartQuantity(product.id, qtyInCart + 1)}
+                                                                    className="w-7 h-7 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
+                                                                >
+                                                                    <Plus className="w-3.5 h-3.5 text-white" />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => addToCart(product.id)}
+                                                                className="h-8 px-3 rounded-full bg-primary text-white text-xs font-semibold hover:bg-blue-700 transition flex items-center gap-1"
+                                                            >
+                                                                <Plus className="w-3.5 h-3.5" />
+                                                                {t("auth.store.add")}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
+                    )}
 
-                        <button
-                            onClick={handleSaveNewAddress}
-                            className="w-full bg-primary text-white mt-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
-                        >
-                            {t("auth.store.save")}
-                        </button>
-                    </div>
-                ) : step === "change-address" ? (
-                    <div className="mt-4 px-4 pb-24">
-                        <div className="space-y-3">
+                    {step === "cart" && (
+                        <div className="space-y-3 pt-2">
+                            <h2 className="text-sm font-bold text-gray-800">{t("auth.store.reviewItems")}</h2>
+                            {cartItems.length === 0 ? (
+                                <div className="py-10 text-center text-sm text-gray-500">
+                                    {t("auth.store.cartEmpty")}
+                                </div>
+                            ) : (
+                                cartItems.map((item) => (
+                                    <div key={item.product.id} className="bg-white rounded-2xl p-3 flex items-start gap-3">
+                                        <div className="w-[72px] h-[72px] rounded-xl bg-[#E8F0FE] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                            {item.product.image ? (
+                                                <Image src={item.product.image} height={72} width={72} className="w-full h-full object-cover" alt={item.product.name} />
+                                            ) : (
+                                                <span className="text-xs text-primary font-bold">{item.product.name.slice(0, 2)}</span>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-sm font-bold text-gray-800 truncate">{item.product.name}</h3>
+                                            <p className="text-[11px] text-gray-400 leading-tight mt-0.5">{item.product.description}</p>
+                                            <div className="flex items-center justify-between mt-2">
+                                                <span className="text-sm font-bold text-gray-800">{formatPrice(item.product.price)}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => setCartQuantity(item.product.id, item.quantity - 1)}
+                                                        className="w-7 h-7 rounded-full bg-[#E8ECFF] flex items-center justify-center hover:bg-blue-100 transition"
+                                                    >
+                                                        <Minus className="w-3.5 h-3.5 text-primary" />
+                                                    </button>
+                                                    <span className="text-sm font-semibold text-gray-800 w-4 text-center">{item.quantity}</span>
+                                                    <button
+                                                        onClick={() => setCartQuantity(item.product.id, item.quantity + 1)}
+                                                        className="w-7 h-7 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
+                                                    >
+                                                        <Plus className="w-3.5 h-3.5 text-white" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+
+                    {step === "checkout" && (
+                        <div className="space-y-5 pt-2">
+                            {/* Delivery Address */}
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-800 mb-3">Endereço de entrega</h3>
+                                {selectedAddress ? (
+                                    <>
+                                        <div className="bg-white rounded-2xl border border-gray-100 p-4 relative">
+                                            <div className="flex items-start gap-3">
+                                                <div className="mt-0.5 w-4 h-4 rounded-full border-[5px] border-primary bg-white flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-gray-800">{selectedAddress.name}</p>
+                                                    <p className="text-xs text-gray-400 mt-1">{selectedAddress.phone}</p>
+                                                    <p className="text-xs text-gray-400">{selectedAddress.location}</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setStep("change-address")}
+                                                    className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 flex-shrink-0"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep("change-address")}
+                                            className="mt-2 text-xs text-primary font-medium hover:underline"
+                                        >
+                                            + Adicionar novo endereço
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
+                                        <p className="text-sm text-gray-500 mb-3">{t("auth.store.addADeliveryAddress")}</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep("add-address")}
+                                            className="h-10 px-4 rounded-full bg-primary text-white text-sm font-semibold hover:bg-blue-700 transition"
+                                        >
+                                            {t("auth.store.addAddress")}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Payment Method */}
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-800 mb-3">Método de pagamento</h3>
+                                <div className="space-y-3">
+                                    {/* Card */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedPayment("card")}
+                                        className={`w-full bg-white rounded-2xl border p-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'card' ? 'border-primary' : 'border-gray-100'}`}
+                                    >
+                                        <div className="w-10 h-10 rounded-lg bg-white border border-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                                <rect x="2" y="4" width="20" height="16" rx="2" fill="#253B80" />
+                                                <rect x="2" y="8" width="20" height="4" fill="#FFF" />
+                                                <path d="M7 15h2M14 15h3" stroke="#FFF" strokeWidth="1.5" strokeLinecap="round" />
+                                            </svg>
+                                        </div>
+                                        <span className="flex-1 text-sm font-medium text-gray-700">Cartão de crédito débito</span>
+                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === 'card' ? 'border-primary' : 'border-gray-300'}`}>
+                                            {selectedPayment === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                                        </div>
+                                    </button>
+                                    {/* PIX */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedPayment("pix")}
+                                        className={`w-full bg-white rounded-2xl border p-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'pix' ? 'border-primary' : 'border-gray-100'}`}
+                                    >
+                                        <div className="w-10 h-10 rounded-lg bg-[#E6F9F1] flex items-center justify-center flex-shrink-0">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                                <path d="M12 2L2 12l10 10 10-10L12 2z" fill="#32BCAD" />
+                                                <path d="M12 7l-5 5 5 5 5-5-5-5z" fill="#E6F9F1" />
+                                            </svg>
+                                        </div>
+                                        <span className="flex-1 text-sm font-medium text-gray-700">PIX</span>
+                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === 'pix' ? 'border-primary' : 'border-gray-300'}`}>
+                                            {selectedPayment === 'pix' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === "change-address" && (
+                        <div className="space-y-3 pt-2">
+                            <h2 className="text-sm font-bold text-gray-800">{t("auth.store.changeAddress")}</h2>
                             {addresses.map((address) => {
                                 const selected = address.id === selectedAddressId;
                                 return (
@@ -584,405 +691,289 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                             setSelectedAddressId(address.id);
                                             setStep("checkout");
                                         }}
-                                        className={[
-                                            "w-full rounded-2xl px-4 py-4 text-left",
-                                            selected ? "bg-[#EBF2FF]" : "bg-[#F3F4F6]",
-                                        ].join(" ")}
+                                        className={`w-full rounded-2xl px-4 py-4 text-left border transition ${selected ? 'bg-[#EBF2FF] border-primary' : 'bg-white border-gray-100'}`}
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
-                                                <div className="text-[16px] leading-[20px] font-semibold text-[#111827] truncate">
-                                                    {address.name}
-                                                </div>
-                                                <div className="mt-2 text-[14px] leading-[18px] text-[#9CA3AF]">
-                                                    {address.phone}
-                                                </div>
-                                                <div className="mt-1 text-[14px] leading-[18px] text-[#9CA3AF]">
-                                                    {address.location}
-                                                </div>
+                                                <div className="text-sm font-bold text-gray-800 truncate">{address.name}</div>
+                                                <div className="mt-1 text-xs text-gray-400">{address.phone}</div>
+                                                <div className="text-xs text-gray-400">{address.location}</div>
                                             </div>
-
-                                            <div className="flex items-center">
-                                                {selected ? <Check className="w-5 h-5 text-[#4A7BF7]" /> : <div className="w-5 h-5" />}
+                                            <div className="flex items-center mt-0.5">
+                                                {selected ? <Check className="w-5 h-5 text-primary" /> : <div className="w-5 h-5" />}
                                             </div>
                                         </div>
                                     </button>
                                 );
                             })}
-                        </div>
-
-                        <div className="fixed left-0 right-0 bottom-0 bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3">
                             <button
                                 type="button"
                                 onClick={() => setStep("add-address")}
-                                className="w-full h-[56px] rounded-full bg-[#4A7BF7] text-white text-[16px] font-medium flex items-center justify-center gap-2"
+                                className="w-full h-12 rounded-full bg-primary text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition"
                             >
-                                <Plus className="w-5 h-5" />
+                                <Plus className="w-4 h-4" />
                                 {t("auth.store.addNewAddress")}
                             </button>
                         </div>
-                    </div>
-                ) : (
-                    <div className={`mt-6 space-y-4 pt-4 px-4 rounded-[16px] ${step === "store" && "bg-[#F5F6F6]"} `}>
-                        <div className="bg-gray-0 rounded-2xl max-h-[85vh] ">
-                            {/* Content */}
-                            <div className="p- bg-transparent">
-                                {/* Header */}
+                    )}
 
-                                {step === 'store' ? (
-                                    <div className='flex flex-col justify-between h-[70vh]'>
-                                        <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
-                                            {filteredProducts.length === 0 ? (
-                                                <div className="py-10 text-center text-sm text-gray-500">
-                                                    {t("auth.store.noItemsFound")}
-                                                </div>
-                                            ) : (
-                                                filteredProducts.map((product) => {
-                                                    const qtyInCart = cart[product.id] ?? 0;
-                                                    return (
-                                                        <div key={product.id} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
-                                                            <div className="w-[80px] h-full rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                                <Image src={product.image} height={100} width={84} className="w-[80px] h-[84px]" alt="" />
-                                                            </div>
+                    {step === "add-address" && (
+                        <div className="space-y-4 pt-2">
+                            <h2 className="text-sm font-bold text-gray-800">{t("auth.store.addNewAddress")}</h2>
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1.5 block">{t("auth.store.addressLabel")}</label>
+                                <input
+                                    value={newAddressForm.label}
+                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, label: e.target.value }))}
+                                    placeholder={t("auth.store.addressLabelPlaceholder")}
+                                    className="w-full h-12 rounded-xl bg-white border border-gray-100 px-4 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1.5 block">{t("auth.store.phoneNumber")}</label>
+                                <PhoneInput
+                                    name="phone"
+                                    value={newAddressForm.phone}
+                                    onChange={(next) => setNewAddressForm((p) => ({ ...p, phone: next }))}
+                                    defaultCountry="br"
+                                    required
+                                    inputClassName="!w-full !h-12 !rounded-xl !bg-white !border !border-gray-100 !text-sm !text-gray-800 placeholder:!text-gray-400 focus:!outline-none focus:!border-primary focus:!ring-1 focus:!ring-primary/20"
+                                    buttonClassName="!h-12 !bg-white !border !border-gray-100 !rounded-xl"
+                                    containerClassName="w-full"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1.5 block">{t("auth.store.address")}</label>
+                                <input
+                                    value={newAddressForm.address}
+                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, address: e.target.value }))}
+                                    placeholder={t("auth.store.addressPlaceholder")}
+                                    className="w-full h-12 rounded-xl bg-white border border-gray-100 px-4 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1.5 block">{t("auth.store.city")}</label>
+                                <input
+                                    value={newAddressForm.city}
+                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, city: e.target.value }))}
+                                    placeholder={t("auth.store.cityPlaceholder")}
+                                    className="w-full h-12 rounded-xl bg-white border border-gray-100 px-4 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1.5 block">{t("auth.store.state")}</label>
+                                <select
+                                    value={newAddressForm.state}
+                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, state: e.target.value }))}
+                                    className="w-full h-12 rounded-xl bg-white border border-gray-100 px-4 text-sm text-gray-800 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                >
+                                    <option value="" disabled>{t("auth.store.selectState")}</option>
+                                    {brazilianStateOptions.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>{opt.text}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1.5 block">{t("auth.store.postalCode")}</label>
+                                <input
+                                    type="text"
+                                    value={newAddressForm.postalCode}
+                                    onChange={(e) => setNewAddressForm((p) => ({ ...p, postalCode: e.target.value }))}
+                                    placeholder={t("auth.store.postalCodePlaceholder")}
+                                    className="w-full h-12 rounded-xl bg-white border border-gray-100 px-4 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                />
+                            </div>
+                            <button
+                                onClick={handleSaveNewAddress}
+                                className="w-full h-12 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition"
+                            >
+                                {t("auth.store.save")}
+                            </button>
+                        </div>
+                    )}
 
-                                                            <div className="flex-1 text-xs">
-                                                                <h3 className="font-semibold text-gray-800">{product.name}</h3>
-                                                                <p className="max-w-[180px] text-gray-400">{product.description}</p>
-                                                                <div className='flex justify-between items-center gap-2'>
-                                                                    <p className="text-base font-bold text-gray-800">R$ {product.price.toFixed(2)}</p>
-                                                                    <div className="flex items-center gap-2">
-                                                                        {qtyInCart > 0 ? (
-                                                                            <span className="text-xs text-gray-500">{qtyInCart} {t("auth.store.inCart")}</span>
-                                                                        ) : null}
-                                                                        <button
-                                                                            onClick={() => addToCart(product.id)}
-                                                                            className="h-8 px-3 rounded-full bg-primary text-white text-xs font-semibold hover:bg-blue-700 transition flex items-center gap-1"
-                                                                        >
-                                                                            <Plus className="w-4 h-4" />
-                                                                            {t("auth.store.add")}
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : step === 'cart' ? (
-                                    <div className='flex flex-col justify-between h-[70vh]'>
-                                        <div className="space-y-4 mb-6 overflow-y-auto max-h-[calc(70vh-120px)] pr-">
-                                            {cartItems.length === 0 ? (
-                                                <div className="py-10 text-center text-sm text-gray-500">
-                                                    {t("auth.store.cartEmpty")}
-                                                </div>
-                                            ) : (
-                                                cartItems.map((item) => (
-                                                    <div key={item.product.id} className="h-[92px] rounded-[12px] p-2 flex items-start gap-4 bg-white">
-                                                        <div className="w-[80px] h-full rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                                            <Image src={item.product.image} height={100} width={84} className="w-[80px] h-[84px]" alt="" />
-                                                        </div>
-
-                                                        <div className="flex-1 text-xs">
-                                                            <h3 className="font-semibold text-gray-800">{item.product.name}</h3>
-                                                            <p className="max-w-[180px] text-gray-400">{item.product.description}</p>
-                                                            <div className='flex justify-between items-center gap-2'>
-                                                                <p className="text-base font-bold text-gray-800">R$ {item.product.price.toFixed(2)}</p>
-                                                                <div className="flex items-center">
-                                                                    <button
-                                                                        onClick={() => setCartQuantity(item.product.id, item.quantity - 1)}
-                                                                        className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center hover:bg-blue-200 transition"
-                                                                    >
-                                                                        <Minus className="w-4 h-4 text-primary" />
-                                                                    </button>
-                                                                    <span className="w-8 text-center font-semibold">{item.quantity}</span>
-                                                                    <button
-                                                                        onClick={() => setCartQuantity(item.product.id, item.quantity + 1)}
-                                                                        className="w-6 h-6 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
-                                                                    >
-                                                                        <Plus className="w-4 h-4 text-white" />
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : step === "checkout" ? (
-                                    <div className='h-[70vh]'>
-                                        {selectedAddress ? (
-                                            <>
-                                                <DeliveryAddress
-                                                    address={selectedAddress}
-                                                    onChangeAddress={() => setStep("change-address")}
-                                                    onAddNewAddress={() => setStep("add-address")}
-                                                />
-                                                <div className="h-2 bg-secondary" />
-                                                <OrderSummary items={cartItems.map((i) => ({ name: i.product.name, quantity: i.quantity }))} />
-                                            </>
-                                        ) : (
-                                            <div className="px-4">
-                                                <div className="text-sm text-gray-500 mb-3">{t("auth.store.addADeliveryAddress")}</div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setStep("add-address")}
-                                                    className="h-10 px-4 rounded-full bg-primary text-white text-sm font-semibold hover:bg-blue-700 transition"
-                                                >
-                                                    {t("auth.store.addAddress")}
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className='h-[70vh] px-4 py-6 overflow-y-auto'>
-                                        <div className="text-lg font-semibold text-gray-900">{t("auth.store.orderPlaced")}</div>
-                                        {lastOrder ? (
-                                            <div className="mt-1 text-sm text-gray-500">{t("auth.store.orderId")}: {lastOrder.id}</div>
-                                        ) : null}
-                                        {lastOrder ? (
-                                            <div className="mt-4 rounded-2xl bg-white border border-gray-100">
-                                                <div className="px-4 py-4 border-b border-gray-100">
-                                                    <div className="text-sm font-semibold text-gray-900">{lastOrder.address.name}</div>
-                                                    <div className="text-sm text-gray-500">{lastOrder.address.phone}</div>
-                                                    <div className="text-sm text-gray-500">{lastOrder.address.location}</div>
-                                                </div>
-                                                <OrderSummary items={lastOrder.items} />
-                                                <div className="px-4 pt-3">
-                                                    <div className="text-sm font-semibold text-gray-900">{t("auth.store.payWithCard")}</div>
-                                                    <div className="mt-2 space-y-3">
-                                                        <input
-                                                            type="text"
-                                                            inputMode="numeric"
-                                                            placeholder={t("auth.store.cardNumber")}
-                                                            value={cardNumber}
-                                                            onChange={(e) => setCardNumber(e.target.value)}
-                                                            className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            placeholder={t("auth.store.cardHolderName")}
-                                                            value={cardHolderName}
-                                                            onChange={(e) => setCardHolderName(e.target.value)}
-                                                            className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            inputMode="numeric"
-                                                            placeholder={t("auth.store.cardDocument")}
-                                                            value={cardHolderDocument}
-                                                            onChange={(e) => setCardHolderDocument(e.target.value)}
-                                                            className="h-12 w-full rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                                                        />
-                                                        <div className="flex gap-3">
-                                                            <input
-                                                                type="text"
-                                                                inputMode="numeric"
-                                                                placeholder={t("auth.store.expiryMonth")}
-                                                                value={cardExpMonth}
-                                                                onChange={(e) => setCardExpMonth(e.target.value)}
-                                                                className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                                                            />
-                                                            <input
-                                                                type="text"
-                                                                inputMode="numeric"
-                                                                placeholder={t("auth.store.expiryYear")}
-                                                                value={cardExpYear}
-                                                                onChange={(e) => setCardExpYear(e.target.value)}
-                                                                className="h-12 flex-1 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                                                            />
-                                                            <input
-                                                                type="text"
-                                                                inputMode="numeric"
-                                                                placeholder={t("auth.store.cvv")}
-                                                                value={cardCvv}
-                                                                onChange={(e) => setCardCvv(e.target.value)}
-                                                                className="h-12 w-24 rounded-2xl border border-[#E5E7EB] px-4 text-[15px]"
-                                                            />
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            disabled={payingWithCard || !lastOrder?.id}
-                                                            onClick={payStoreOrderWithCard}
-                                                            className="h-[48px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:opacity-60"
-                                                        >
-                                                            {payingWithCard ? t("auth.store.processing") : t("auth.store.payWithCard")}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : null}
-                                    </div>
+                    {step === "success" && (
+                        <div className="space-y-5 pt-2">
+                            <div className="text-center">
+                                <div className="w-14 h-14 rounded-full bg-[#EBF2FF] flex items-center justify-center mx-auto mb-3">
+                                    <Check className="w-7 h-7 text-primary" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-800">{t("auth.store.orderPlaced")}</h3>
+                                {lastOrder && (
+                                    <p className="text-xs text-gray-400 mt-1">{t("auth.store.orderId")}: {lastOrder.id}</p>
                                 )}
                             </div>
-                            <div className="space-y-4 border-t-4xl py-4 bg-white absolute w-full left-0 bottom-0 z-300">
-                                {
-                                    step === "store" ? (
-                                        <>
-                                            <button
-                                                type="button"
-                                                onClick={handleViewOrders}
-                                                className="w-full bg-[#F5F6F6] text-black py-2 rounded-full font-semibold px-3 flex items-center justify-center hover:bg-gray-200 transition"
-                                            >
-                                                {t("auth.store.viewMyOrders")}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={handleViewCart}
-                                                disabled={cartQuantity <= 0}
-                                                className={[
-                                                    "w-full bg-primary text-white py-2 rounded-full font-semibold px-3 flex justify-between items-center hover:bg-blue-700 transition",
-                                                    cartQuantity <= 0 ? "opacity-50 pointer-events-none" : "",
-                                                ].join(" ")}
-                                            >
-                                                <span className='text-base text-primary h-6 w-6 rounded-full bg-white flex justify-center items-center'>
-                                                    {cartQuantity}
-                                                </span>
-                                                {t("auth.store.viewYourCart")}
-                                                <span className='text-sm font-bold text-white'>R$ {cartTotal.toFixed(2)}</span>
-                                            </button>
-                                        </>
-                                    ) : step === "cart" ? (
-                                        <>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-500">{t("auth.store.totalAmount")}</span>
-                                                <span className="font-bold text-gray-800">R$ {cartTotal.toFixed(2)}</span>
+
+                            {lastOrder && (
+                                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                                    <div className="px-4 py-3 border-b border-gray-50">
+                                        <p className="text-sm font-bold text-gray-800">{lastOrder.address.name}</p>
+                                        <p className="text-xs text-gray-400">{lastOrder.address.phone}</p>
+                                        <p className="text-xs text-gray-400">{lastOrder.address.location}</p>
+                                    </div>
+                                    <div className="px-4 py-3 space-y-2">
+                                        {lastOrder.items.map((item, idx) => (
+                                            <div key={idx} className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-700">{item.name}</span>
+                                                <span className="text-gray-400">{item.quantity}x</span>
                                             </div>
-                                            <button
-                                                onClick={handleProceedToPurchase}
-                                                disabled={cartQuantity <= 0}
-                                                className={[
-                                                    "w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition",
-                                                    cartQuantity <= 0 ? "opacity-50 pointer-events-none" : "",
-                                                ].join(" ")}
-                                            >
-                                                {t("auth.store.proceedToCheckout")}
-                                            </button>
-                                        </>
-                                    ) : step === "checkout" ? (
-                                        <>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-500">{t("auth.store.totalAmount")}</span>
-                                                <span className="font-bold text-gray-800">R$ {cartTotal.toFixed(2)}</span>
-                                            </div>
-                                            <button
-                                                onClick={handleProceedToPurchase}
-                                                disabled={placingOrder || cartQuantity <= 0 || !selectedAddress}
-                                                className={[
-                                                    "w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition",
-                                                    placingOrder || cartQuantity <= 0 || !selectedAddress ? "opacity-50 pointer-events-none" : "",
-                                                ].join(" ")}
-                                            >
-                                                {placingOrder ? t("auth.store.placingOrder") : t("auth.store.placeOrder")}
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button
-                                            onClick={handleClose}
-                                            className="w-full bg-primary text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition"
-                                        >
-                                            {t("auth.store.done")}
-                                        </button>
-                                    )}
-                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedPayment === 'card' && lastOrder && (
+                                <div className="space-y-3">
+                                    <p className="text-sm font-semibold text-gray-800">{t("auth.store.payWithCard")}</p>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        placeholder={t("auth.store.cardNumber")}
+                                        value={cardNumber}
+                                        onChange={(e) => setCardNumber(e.target.value)}
+                                        className="h-12 w-full rounded-xl border border-gray-200 px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder={t("auth.store.cardHolderName")}
+                                        value={cardHolderName}
+                                        onChange={(e) => setCardHolderName(e.target.value)}
+                                        className="h-12 w-full rounded-xl border border-gray-200 px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none"
+                                    />
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        placeholder={t("auth.store.cardDocument")}
+                                        value={cardHolderDocument}
+                                        onChange={(e) => setCardHolderDocument(e.target.value)}
+                                        className="h-12 w-full rounded-xl border border-gray-200 px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none"
+                                    />
+                                    <div className="flex gap-3">
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            placeholder={t("auth.store.expiryMonth")}
+                                            value={cardExpMonth}
+                                            onChange={(e) => setCardExpMonth(e.target.value)}
+                                            className="h-12 flex-1 rounded-xl border border-gray-200 px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            placeholder={t("auth.store.expiryYear")}
+                                            value={cardExpYear}
+                                            onChange={(e) => setCardExpYear(e.target.value)}
+                                            className="h-12 flex-1 rounded-xl border border-gray-200 px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            placeholder={t("auth.store.cvv")}
+                                            value={cardCvv}
+                                            onChange={(e) => setCardCvv(e.target.value)}
+                                            className="h-12 w-24 rounded-xl border border-gray-200 px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={payingWithCard || !lastOrder?.id}
+                                        onClick={payStoreOrderWithCard}
+                                        className="h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white disabled:opacity-60 hover:bg-blue-700 transition"
+                                    >
+                                        {payingWithCard ? t("auth.store.processing") : t("auth.store.payWithCard")}
+                                    </button>
+                                </div>
+                            )}
+
+                            {selectedPayment === 'pix' && lastOrder && (
+                                <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
+                                    <div className="w-12 h-12 rounded-full bg-[#E6F9F1] flex items-center justify-center mx-auto mb-3">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                            <path d="M12 2L2 12l10 10 10-10L12 2z" fill="#32BCAD" />
+                                            <path d="M12 7l-5 5 5 5 5-5-5-5z" fill="#E6F9F1" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-sm font-semibold text-gray-800">PIX</p>
+                                    <p className="text-xs text-gray-400 mt-1">Escaneie o QR code ou copie o código PIX para pagar.</p>
+                                    <div className="mt-3 p-3 bg-gray-50 rounded-xl">
+                                        <p className="text-xs text-gray-500 font-mono break-all">00020126580014br.gov.bcb.pix0136pix@vetquark.com.br5204000053039865406200.005802BR5925VetQuark6009Sao Paulo62070503***6304</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => { toast.success("Código PIX copiado!"); }}
+                                        className="mt-3 h-10 px-5 rounded-full bg-[#E6F9F1] text-[#32BCAD] text-sm font-medium hover:bg-[#d0f0e6] transition"
+                                    >
+                                        Copiar código PIX
+                                    </button>
+                                </div>
+                            )}
                         </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                {step !== 'success' && step !== 'add-address' && step !== 'change-address' && (
+                    <div className="px-5 pb-6 pt-3 bg-[#F8F9FD] border-t border-gray-100 shrink-0 space-y-3">
+                        {step === "store" && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={handleViewOrders}
+                                    className="w-full h-11 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                                >
+                                    {t("auth.store.viewMyOrders")}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleViewCart}
+                                    disabled={cartQuantity <= 0}
+                                    className={`w-full h-11 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition flex items-center justify-between px-4 ${cartQuantity <= 0 ? 'opacity-50 pointer-events-none' : ''}`}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <span className="text-primary h-6 w-6 rounded-full bg-white flex justify-center items-center text-xs font-bold">
+                                            {cartQuantity}
+                                        </span>
+                                        {t("auth.store.viewYourCart")}
+                                    </span>
+                                    <span className="text-sm font-bold">{formatPrice(cartTotal)}</span>
+                                </button>
+                            </>
+                        )}
+                        {step === "cart" && (
+                            <>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-500">Valor Total</span>
+                                    <span className="font-bold text-gray-800">{formatPrice(cartTotal)}</span>
+                                </div>
+                                <button
+                                    onClick={handleProceedToPurchase}
+                                    disabled={cartQuantity <= 0}
+                                    className={`w-full h-11 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition ${cartQuantity <= 0 ? 'opacity-50 pointer-events-none' : ''}`}
+                                >
+                                    Seguir para compra
+                                </button>
+                            </>
+                        )}
+                        {step === "checkout" && (
+                            <>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-500">Valor Total</span>
+                                    <span className="font-bold text-gray-800">{formatPrice(cartTotal)}</span>
+                                </div>
+                                <button
+                                    onClick={handleProceedToPurchase}
+                                    disabled={placingOrder || cartQuantity <= 0 || !selectedAddress}
+                                    className={`w-full h-11 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition ${placingOrder || cartQuantity <= 0 || !selectedAddress ? 'opacity-50 pointer-events-none' : ''}`}
+                                >
+                                    {placingOrder ? t("auth.store.placingOrder") : 'Finalizar compra'}
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
             </div>
         </div>
-
     );
 };
 
 export default StoreModal;
-
-
-interface Address {
-    id: string;
-    name: string;
-    phone: string;
-    location: string;
-    addressLine?: string;
-    city?: string;
-    state?: string;
-    postalCode?: string;
-}
-
-interface DeliveryAddressProps {
-    address: Address;
-    onChangeAddress?: () => void;
-    onAddNewAddress?: () => void;
-}
-
-const DeliveryAddress = ({ address, onChangeAddress, onAddNewAddress }: DeliveryAddressProps) => {
-    const { t } = useTranslation();
-    return (
-        <div className="px-4 py-5">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-primary" fill="hsl(var(--primary))" />
-                    <span className="text-base font-semibold text-foreground">{t("auth.store.deliveryAddress")}</span>
-                </div>
-                <button
-                    onClick={onChangeAddress}
-                    className="text-primary text-base font-medium"
-                >
-                    {t("auth.store.change")}
-                </button>
-            </div>
-
-            {/* Address Card */}
-            <div className="border border-border rounded-lg p-4 mb-3">
-                <h3 className="text-base font-semibold text-foreground mb-1">{address.name}</h3>
-                <p className="text-muted-foreground text-sm mb-0.5">{address.phone}</p>
-                <p className="text-muted-foreground text-sm">{address.location}</p>
-            </div>
-
-            {/* Add New Address */}
-            <div className="flex justify-end">
-                <button
-                    onClick={onAddNewAddress}
-                    className="text-primary text-base font-medium"
-                >
-                    + {t("auth.store.addNewAddress")}
-                </button>
-            </div>
-        </div>
-    );
-};
-
-
-interface OrderItem {
-    name: string;
-    quantity: number;
-}
-
-interface OrderSummaryProps {
-    items: OrderItem[];
-}
-
-const OrderSummary = ({ items }: OrderSummaryProps) => {
-    const { t } = useTranslation();
-    return (
-        <div className="px-4 py-5">
-            {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <Ticket className="w-5 h-5 text-primary" />
-                <span className="text-base font-semibold text-foreground">{t("auth.store.orderSummary")}</span>
-            </div>
-
-            {/* Items List */}
-            <div className="space-y-3">
-                {items.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                        <span className="text-base text-foreground">{item.name}</span>
-                        <span className="text-base text-muted-foreground">{item.quantity}x</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};

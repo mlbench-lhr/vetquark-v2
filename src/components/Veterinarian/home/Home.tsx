@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from './Header';
 import SearchBar from './SearchBar';
+import BalanceCard from './BalanceCard';
 import StatCard from './StatCard';
 import PatientCard from './PatientCard';
 import AttendanceChart from './AttendanceChart';
@@ -36,7 +37,7 @@ export default function Home() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch('/api/patient/get_patients?page=1&pageSize=3');
+                const res = await fetch('/api/patient/get_patients?page=1&pageSize=4');
                 const data = await res.json();
                 if (res.ok && Array.isArray(data.items)) {
                     setPatients(
@@ -123,15 +124,21 @@ export default function Home() {
     }, []);
     return (
         <div className="space-y-5 pb-4">
-            <Header userName={profile?.fullName} balance="R$ 925,00" />
+            <Header userName={profile?.fullName} />
             <SearchBar />
+            <BalanceCard />
 
             <div className="grid grid-cols-2 gap-3">
-                <StatCard number={examStats.todayTotal} label={t('dashboard.examsToday')} sublabel={t('dashboard.completedCount', { count: examStats.todayCompleted })} variant="primary" />
+                <StatCard
+                    number={examStats.todayTotal}
+                    label={t('dashboard.examsToday')}
+                    sublabel={t('dashboard.vsYesterday', { count: examStats.todayCompleted })}
+                    variant="primary"
+                />
                 <StatCard
                     number={patientStats.activePatients}
                     label={t('dashboard.activePatients')}
-                    sublabel={t('dashboard.newThisMonthCount', { count: patientStats.newThisMonth })}
+                    sublabel={t('dashboard.vsYesterday', { count: patientStats.newThisMonth })}
                     variant="secondary"
                 />
             </div>
@@ -146,7 +153,7 @@ export default function Home() {
             {patients.length > 0 && (
                 <div>
                     <h2 className="text-base font-bold text-gray-800 mb-3">{t('dashboard.recentPatients')}</h2>
-                    <div className="bg-white border border-gray-200 rounded-2xl p-3 space-y-3">
+                    <div className="space-y-3">
                         {patients.slice(0, 4).map((patient, index) => (
                             <PatientCard key={patient.id} patient={patient} featured={index === 0} />
                         ))}

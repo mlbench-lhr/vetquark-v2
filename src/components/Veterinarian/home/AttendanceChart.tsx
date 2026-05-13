@@ -152,22 +152,17 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({
   return (
     <div className="mt-5 bg-white rounded-2xl border border-gray-200 p-4">
       {!hideHeader && (
-        <div className="flex items-center justify-between mb-3">
-          <button
-            type="button"
-            className="flex items-center gap-1.5 text-sm font-semibold text-gray-800 bg-white border border-gray-200 rounded-xl px-3 py-2 cursor-pointer"
-          >
-            {t('dashboard.attendances')}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-base font-bold text-gray-900 leading-tight">{t('dashboard.attendances')}</h3>
+            <p className="text-xs text-gray-400 mt-0.5">{t('dashboard.lastSixMonths')}</p>
+          </div>
           <button
             type="button"
             onClick={handleExport}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl px-3 py-2 cursor-pointer"
+            className="flex items-center gap-1.5 text-sm font-medium text-primary cursor-pointer"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
@@ -176,27 +171,25 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({
           </button>
         </div>
       )}
-      {/* toggle buttons */}
+      {/* Legend dots */}
       {
         showCounters && (
-          <div className="flex gap-3 mb-3">
+          <div className="flex items-center gap-4 mb-4">
             <button
               type="button"
               onClick={() => setShowDogs((s) => !s)}
-              className={`flex-1 py-2.5 rounded-full text-sm flex items-center justify-center gap-2 border transition-colors cursor-pointer ${showDogs ? 'border-primary text-primary bg-white' : 'border-gray-200 text-gray-400 bg-white'
-                }`}
+              className={`flex items-center gap-1.5 text-sm cursor-pointer ${showDogs ? 'opacity-100' : 'opacity-40'}`}
             >
-              <span className={showDogs ? 'text-primary' : 'text-gray-300'}>{dogIcon}</span>
-              <span className="font-semibold">{dogsTotal} <span className="font-normal opacity-70">{t('dashboard.dogs')}</span></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#3F78D8] inline-block" />
+              <span className="font-semibold text-gray-700">{dogsTotal} {t('dashboard.dogs')}</span>
             </button>
             <button
               type="button"
               onClick={() => setShowCats((s) => !s)}
-              className={`flex-1 py-2.5 rounded-full text-sm flex items-center justify-center gap-2 border transition-colors cursor-pointer ${showCats ? 'border-primary text-primary bg-white' : 'border-gray-200 text-gray-400 bg-white'
-                }`}
+              className={`flex items-center gap-1.5 text-sm cursor-pointer ${showCats ? 'opacity-100' : 'opacity-40'}`}
             >
-              <span className={showCats ? 'text-primary' : 'text-gray-300'}>{catIcon}</span>
-              <span className="font-semibold">{catsTotal} <span className="font-normal opacity-70">{t('dashboard.cats')}</span></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#93C5FD] inline-block" />
+              <span className="font-semibold text-gray-700">{catsTotal} {t('dashboard.cats')}</span>
             </button>
           </div>
         )}

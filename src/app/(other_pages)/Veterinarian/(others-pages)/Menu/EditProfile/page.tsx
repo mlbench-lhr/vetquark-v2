@@ -179,17 +179,17 @@ export default function EditProfileCard() {
     };
 
     return (
-        <div className="bg-background min-h-screen flex flex-col px-">
+        <div className="min-h-screen bg-white flex flex-col px-4">
             <Header title={t("menu.edit")} />
             {/* Avatar Section */}
             <div className="flex justify-center pt-8 pb-8">
                 <div className="relative">
-                    <div className="w-28 h-28 rounded-full overflow-hidden ring-2 ring-muted">
+                    <div className="w-28 h-28 rounded-full overflow-hidden ring-2 ring-[#F5F6F6]">
                         <Image
                             width={200}
                             height={200}
                             src={avatarUrl}
-                            alt={t("profile.profile")}
+                            alt={t('profile.profile')}
                             className="w-full h-full object-cover"
                         />
                     </div>
@@ -204,9 +204,9 @@ export default function EditProfileCard() {
                         type="button"
                         onClick={handleAvatarClick}
                         disabled={uploadingAvatar}
-                        className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+                        className="absolute bottom-0 right-0 w-8 h-8 bg-[#4A7BF7] rounded-full flex items-center justify-center shadow-lg hover:bg-[#3A6BE7] transition-colors"
                     >
-                        <Camera className="h-4 w-4 text-primary-foreground" />
+                        <Camera className="h-4 w-4 text-white" />
                     </button>
                 </div>
             </div>
@@ -214,46 +214,66 @@ export default function EditProfileCard() {
             {/* Form Fields */}
             <div className="flex-1 space-y-5">
                 <div>
-                    <Label className="block text-gray-900 font-medium mb-2">{t("menu.fullName")}</Label>
+                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
+                        {t('menu.fullName')}
+                    </Label>
                     <Input
                         value={localFullName}
                         onChange={(e) => setLocalFullName(e.target.value)}
-                        className="w-full h-12 px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-800 placeholder:text-gray-400 md:text-base"
+                        className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
                     />
                 </div>
 
                 <div>
-                    <Label className="block text-gray-900 font-medium mb-2">{t("menu.email")}</Label>
+                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
+                        {t('menu.email')}
+                    </Label>
                     <Input
                         type="email"
                         value={localEmail}
                         disabled
-                        className="w-full h-12 px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-800 placeholder:text-gray-400 md:text-base"
+                        className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
                     />
                 </div>
 
                 <div>
-                    <Label className="block text-gray-900 font-medium mb-2">{t("menu.phoneNumber")}</Label>
+                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
+                        {t('menu.phoneNumber')}
+                    </Label>
                     <PhoneInput
                         name="phone"
                         value={localPhone}
                         onChange={setLocalPhone}
                         defaultCountry="br"
                         containerClassName="w-full"
+                        inputClassName="!w-full !h-[56px] !rounded-[16px] !border-0 !bg-[#F5F6F6] !px-11 !text-[16px] !leading-[20px] !text-[#111827] placeholder:!text-[#9AA4AF] focus:!outline-none md:!text-[16px]"
+                        buttonClassName="!h-[56px] !border-0 !bg-[#F5F6F6] !rounded-[16px]"
                     />
                 </div>
+
                 <div>
-                    <Label className="block text-gray-900 font-medium mb-2">{t("menu.veterinarianUniqueCode")}</Label>
+                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
+                        {t("menu.veterinarianUniqueCode")}
+                    </Label>
                     <div className="flex gap-2">
                         <Input
                             value={localVetCode}
                             readOnly
-                            className="w-full h-12 px-4 py-3 bg-gray-50 rounded-xl border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-800 placeholder:text-gray-400 md:text-base"
+                            className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
                         />
-                        <Button type="button" onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success(t("menu.copied")); }}>
+                        <Button
+                            type="button"
+                            onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success(t("menu.copied")); }}
+                            className="h-[56px] rounded-full bg-[#4A7BF7] text-white px-4 text-[14px] font-medium hover:bg-[#3A6BE7]"
+                        >
                             {t("menu.copy")}
                         </Button>
-                        <Button type="button" onClick={handleRegenerateCode} disabled={saving}>
+                        <Button
+                            type="button"
+                            onClick={handleRegenerateCode}
+                            disabled={saving}
+                            className="h-[56px] rounded-full bg-[#F5F6F6] text-[#111827] px-4 text-[14px] font-medium hover:bg-[#E5E7EB]"
+                        >
                             {t("menu.regenerate")}
                         </Button>
                     </div>
@@ -265,9 +285,9 @@ export default function EditProfileCard() {
                 <Button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-base"
+                    className="w-full h-[52px] rounded-full bg-[#4A7BF7] hover:bg-[#3A6BE7] text-white font-medium text-[16px]"
                 >
-                    {saving ? t("menu.saving") : t("menu.saveChanges")}
+                    {saving ? t('menu.saving') : t('menu.saveChanges')}
                 </Button>
             </div>
         </div>

@@ -63,12 +63,12 @@ function SettingCard({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <div className="rounded-2xl bg-[#F3F4F6] px-5 py-4 flex items-start justify-between gap-4">
+    <div className="rounded-2xl bg-[#F5F6F6] px-5 py-4 flex items-start justify-between gap-4">
       <div className="min-w-0">
         <div className="text-[16px] leading-[22px] font-semibold text-[#111827]">
           {title}
         </div>
-        <div className="mt-1 text-[13px] leading-[18px] text-[#6B7280]">
+        <div className="mt-1 text-[13px] leading-[18px] text-[#9AA4AF]">
           {description}
         </div>
       </div>

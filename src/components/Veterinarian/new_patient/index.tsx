@@ -1,11 +1,10 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react';
-import { Link2, Mail, Plus, Search, X } from 'lucide-react';
+import { Link2, Mail, Plus, Search, X, Bell } from 'lucide-react';
 import Image from 'next/image';
 import PatientCard from '../home/PatientCard';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/tables/Pagination';
-import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { Modal } from '@/components/ui/modal';
 import { useModal } from '@/hooks/useModal';
@@ -99,8 +98,6 @@ export default function AddPatientGuardian() {
             );
             const data = await res.json();
             if (res.ok) {
-                console.log("data.items----", data.items);
-
                 setGuardians((data.items || []).map((u: any) => ({
                     id: String(u.id),
                     name: u.name,
@@ -121,7 +118,6 @@ export default function AddPatientGuardian() {
     useEffect(() => {
         handleSearch(searchQuery, page);
     }, [page, searchQuery]);
-    console.log("guardians----", guardians);
 
     const filteredGuardians = guardians.filter(guardian =>
         guardian.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -201,54 +197,71 @@ export default function AddPatientGuardian() {
     );
 
     return (
-        <div className="min-h-[calc(100vh-96px)] p- space-y-4">
+        <div className="min-h-[calc(100vh-96px)] p-4 space-y-4 bg-gray-50">
             {/* Header */}
-            <div className="bg-white flex items-center justify-between">
-                <h1 className="text-base font-medium text-gray-900">{t('newPatient.addNewPatientTitle')}</h1>
-            </div>
-
-            {/* Progress Tabs */}
-            <div className="bg-white ">
-                <div className="flex items-center justify-between relative">
-                    <div className="flex items-center gap-3 bg-white z-1 pe-2.5">
-                        <div className="w-10 h-10 bg-[#EBF2FF] rounded-full flex items-center justify-center">
-                            <Image
-                                src={"/images/new_patient/user-active.svg"}
-                                alt={t('newPatient.guardianIconAlt')}
-                                width={24}
-                                height={24}
-                            />
-                        </div>
-                        <span className="text-xs font-medium text-gray-900">{t('newPatient.guardianStep')}</span>
-                    </div>
-                    <div className="w-32 h-1 bg-primary rounded-full w-[100%] absolute left-0 top-1/2 z-0"></div>
-
-                    <div className="flex items-center gap-3 ps-2.5 z-1 bg-white">
-                        <div className="w-10 h-10 bg-[#F5F6F6] rounded-full flex items-center justify-center">
-                            <Image
-                                src={"/images/new_patient/paw.svg"}
-                                alt={t('newPatient.patientIconAlt')}
-                                width={24}
-                                height={24}
-                            />
-                        </div>
-                        <span className="text-xs font-medium text-gray-500">{t('newPatient.patientDetailsStep')}</span>
-                    </div>
+            <div className="flex items-center justify-between">
+                <h1 className="text-xl font-semibold text-[#3F78D8]">{t('newPatient.addNewPatientTitle')}</h1>
+                <div className="flex items-center gap-3">
+                    <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <Search className="w-5 h-5 text-[#3F78D8]" />
+                    </button>
+                    <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
+                        <Bell className="w-5 h-5 text-[#3F78D8]" />
+                        {unreadCount > 0 && (
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                        )}
+                    </button>
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="m">
-                <div className="mb-6">
-                    <h2 className="text-lg font-medium text-gray-900">{t('newPatient.linkGuardianTitle')}</h2>
-                    <p className="text-base text-tertiary">
+            {/* Progress Stepper */}
+            <div className="relative">
+                <div className="flex items-center justify-between relative z-10">
+                    {/* Step 1 - Active */}
+                    <div className="flex items-center gap-2 bg-gray-50 pr-2">
+                        <div className="w-10 h-10 bg-[#3F78D8] rounded-full flex items-center justify-center">
+                            <Image
+                                src={"/images/new_patient/user-active.svg"}
+                                alt={t('newPatient.guardianIconAlt')}
+                                width={20}
+                                height={20}
+                                className="invert brightness-0"
+                            />
+                        </div>
+                        <span className="text-sm font-semibold text-[#3F78D8]">{t('newPatient.guardianStep')}</span>
+                    </div>
+                    {/* Step 2 - Inactive */}
+                    <div className="flex items-center gap-2 bg-gray-50 pl-2">
+                        <div className="w-10 h-10 bg-[#E8E8E8] rounded-full flex items-center justify-center">
+                            <Image
+                                src={"/images/new_patient/paw.svg"}
+                                alt={t('newPatient.patientIconAlt')}
+                                width={20}
+                                height={20}
+                            />
+                        </div>
+                        <span className="text-sm font-medium text-[#9CA3AF]">{t('newPatient.patientDetailsStep')}</span>
+                    </div>
+                </div>
+                {/* Connecting Line */}
+                <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 z-0">
+                    <div className="h-0.5 bg-[#E8E8E8] mx-5"></div>
+                </div>
+            </div>
+
+            {/* White Card */}
+            <div className="bg-white rounded-2xl shadow-sm p-5 space-y-5">
+                {/* Title & Subtitle */}
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('newPatient.linkGuardianTitle')}</h2>
+                    <p className="text-sm text-[#839297] mt-1">
                         {t('newPatient.linkGuardianDesc')}
                     </p>
                 </div>
 
                 {/* Search Box */}
-                <div className="relative mb-6">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary" />
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#3F78D8]" />
                     <input
                         type="text"
                         placeholder={t('newPatient.searchPlaceholder')}
@@ -258,40 +271,27 @@ export default function AddPatientGuardian() {
                             setSearchQuery(v);
                             setPage(1);
                         }}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full pl-12 pr-4 py-3.5 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
                     />
                 </div>
 
                 {/* Guardian List */}
-                <div className="space-y-3 mb-6">
+                <div className="space-y-3">
                     {loading ? (
                         <GuardiansSkeleton />
                     ) : filteredGuardians.length === 0 ? (
-                        <div className="text-tertiary text-sm">{t('newPatient.noGuardiansFound')}</div>
+                        <div className="text-[#839297] text-sm text-center py-8">{t('newPatient.noGuardiansFound')}</div>
                     ) : filteredGuardians.map((guardian) => (
                         <PatientCard
                             key={guardian.id}
                             patient={guardian}
                             onClickNavigate={`/Veterinarian/patient/new_patient?guardianId=${guardian.id}&guardianName=${encodeURIComponent(guardian.name)}&guardianTaxId=${encodeURIComponent(guardian.taxId)}&guardianImage=${encodeURIComponent(guardian.image || '')}`}
                         />
-                        // <button
-                        //     key={guardian.id}
-                        //     className="w-full bg-white rounded-xl p-4 flex items-center gap-4 hover:shadow-md transition-shadow border border-gray-200"
-                        // >
-                        //     <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center text-2xl">
-                        //         {guardian.avatar}
-                        //     </div>
-                        //     <div className="flex-1 text-left">
-                        //         <h3 className="font-semibold text-gray-900 text-lg">{guardian.name}</h3>
-                        //         <p className="text-gray-500 text-sm">National ID: {guardian.nationalId}</p>
-                        //     </div>
-                        //     <ChevronRight className="w-6 h-6 text-primary" />
-                        // </button>
                     ))}
                 </div>
 
                 {!loading && totalPages > 1 ? (
-                    <div className="mt-4 flex justify-center">
+                    <div className="flex justify-center">
                         <Pagination
                             currentPage={page}
                             totalPages={totalPages}
@@ -302,22 +302,25 @@ export default function AddPatientGuardian() {
                         />
                     </div>
                 ) : null}
+            </div>
 
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                    <button className="w-full bg-primary hover:bg-primary/70 text-white font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors" onClick={() => router.push('/Veterinarian/patient/new_guardian')}>
-                        <Plus className="w-5 h-5" />
-                        {t('newPatient.newGuardianButton')}
-                    </button>
+            {/* Action Buttons */}
+            <div className="space-y-3">
+                <button
+                    className="w-full bg-[#3F78D8] hover:bg-[#3F78D8]/90 text-white font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm"
+                    onClick={() => router.push('/Veterinarian/patient/new_guardian')}
+                >
+                    <Plus className="w-5 h-5" />
+                    {t('newPatient.newGuardianButton')}
+                </button>
 
-                    <button
-                        onClick={handleInviteGuardian}
-                        className="w-full bg-[#EBF2FF] hover:bg-gray-200 text-primary font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors"
-                    >
-                        <Link2 className="w-5 h-5" />
-                        {t('newPatient.inviteGuardianButton')}
-                    </button>
-                </div>
+                <button
+                    onClick={handleInviteGuardian}
+                    className="w-full bg-white border border-[#E8E8E8] hover:bg-gray-50 text-[#3F78D8] font-medium py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors"
+                >
+                    <Link2 className="w-5 h-5" />
+                    {t('newPatient.inviteGuardianButton')}
+                </button>
             </div>
 
             <Modal isOpen={inviteModal.isOpen} onClose={inviteModal.closeModal} className="max-w-[520px] mx-4 p-6">

@@ -187,6 +187,27 @@ export async function GET(req: NextRequest) {
     });
 
     pipeline.push({
+      $lookup: {
+        from: "readings",
+        let: { patientId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$patient", "$$patientId"] },
+                  { $eq: ["$veterinarian", veterinarianObjectId] },
+                ],
+              },
+            },
+          },
+          { $count: "count" },
+        ],
+        as: "examCountArr",
+      },
+    });
+
+    pipeline.push({
       $addFields: {
         lastExamAt: { $arrayElemAt: ["$lastReading.examAt", 0] },
       },
@@ -247,6 +268,11 @@ export async function GET(req: NextRequest) {
               guardianName: 1,
               ageYears: 1,
               lastExamDaysAgo: 1,
+              microchip: 1,
+              allergies: 1,
+              planName: 1,
+              neutered: 1,
+              examCount: { $arrayElemAt: ["$examCountArr.count", 0] },
             },
           },
         ],
@@ -271,6 +297,11 @@ export async function GET(req: NextRequest) {
       ageYears: typeof p.ageYears === "number" ? p.ageYears : null,
       lastExamDaysAgo: typeof p.lastExamDaysAgo === "number" ? p.lastExamDaysAgo : null,
       guardianId: p.guardian ? String(p.guardian) : "",
+      microchip: p.microchip ?? "",
+      allergies: p.allergies ?? "",
+      planName: p.planName ?? "",
+      neutered: p.neutered ?? "",
+      examCount: typeof p.examCount === "number" ? p.examCount : 0,
     }));
 
     return NextResponse.json(
