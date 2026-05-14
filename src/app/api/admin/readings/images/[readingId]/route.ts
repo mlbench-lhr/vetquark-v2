@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import Admin from "@/lib/models/Admin";
 import ReadingCapturedImage from "@/lib/models/ReadingCapturedImage";
+import Reading from "@/lib/models/Reading";
 
 async function requireAdmin(req: NextRequest) {
   const token = req.cookies.get("admin_session")?.value;
