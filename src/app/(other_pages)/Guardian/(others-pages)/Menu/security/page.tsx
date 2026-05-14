@@ -102,7 +102,7 @@ export default function SecurityPage() {
                   toast.error("Network error updating 2FA");
                 }
               }}
-              className="h-10 px-6 rounded-full bg-[#4A7BF7] text-white text-[14px] font-medium"
+              className="h-10 px-6 rounded-full bg-[#3F78D8] text-white text-[14px] font-medium"
             >
               {twoFactorEnabled ? "Deactivate" : t("security.activate")}
             </button>
@@ -113,7 +113,7 @@ export default function SecurityPage() {
             <button
               type="button"
               onClick={() => setChangeOpen(true)}
-              className="h-10 px-6 rounded-full bg-[#4A7BF7] text-white text-[14px] font-medium"
+              className="h-10 px-6 rounded-full bg-[#3F78D8] text-white text-[14px] font-medium"
             >
               {t("security.change")}
             </button>
@@ -126,17 +126,17 @@ export default function SecurityPage() {
               {sessions.map((s) => (
                 <div key={s.id} className="rounded-xl bg-white px-3 py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg border border-[#4A7BF7] flex items-center justify-center bg-white">
-                      {s.icon.type === "smartphone" && <Smartphone className="w-5 h-5 text-[#4A7BF7]" />}
-                      {s.icon.type === "laptop" && <Laptop className="w-5 h-5 text-[#4A7BF7]" />}
-                      {s.icon.type === "monitor" && <Monitor className="w-5 h-5 text-[#4A7BF7]" />}
-                      {s.icon.type === "google" && <span className="text-[14px] font-semibold text-[#4A7BF7]">G</span>}
+                    <div className="w-9 h-9 rounded-lg border border-[#3F78D8] flex items-center justify-center bg-white">
+                      {s.icon.type === "smartphone" && <Smartphone className="w-5 h-5 text-[#3F78D8]" />}
+                      {s.icon.type === "laptop" && <Laptop className="w-5 h-5 text-[#3F78D8]" />}
+                      {s.icon.type === "monitor" && <Monitor className="w-5 h-5 text-[#3F78D8]" />}
+                      {s.icon.type === "google" && <span className="text-[14px] font-semibold text-[#3F78D8]">G</span>}
                     </div>
                     <div className="text-[15px] text-[#111827] font-medium">{s.label}</div>
                   </div>
 
                   {s.rightLabel ? (
-                    <div className="text-[14px] font-medium text-[#4A7BF7]">{s.rightLabel}</div>
+                    <div className="text-[14px] font-medium text-[#3F78D8]">{s.rightLabel}</div>
                   ) : (
                     <div className="w-20" />
                   )}
@@ -167,7 +167,7 @@ export default function SecurityPage() {
                     type={showCurrentPassword ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                    className="h-[48px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[15px] text-[#111827] outline-none"
                   />
                   <button
                     type="button"
@@ -189,7 +189,7 @@ export default function SecurityPage() {
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                    className="h-[48px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[15px] text-[#111827] outline-none"
                   />
                   <button
                     type="button"
@@ -211,7 +211,7 @@ export default function SecurityPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                    className="h-[48px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[15px] text-[#111827] outline-none"
                   />
                   <button
                     type="button"
@@ -263,7 +263,7 @@ export default function SecurityPage() {
                     setSaving(false);
                   }
                 }}
-                className="h-[52px] w-full rounded-full bg-[#4A7BF7] text-[15px] font-medium text-white disabled:opacity-60"
+                className="h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:opacity-60"
               >
                 {saving ? t("common.saving") : t("common.save")}
               </button>

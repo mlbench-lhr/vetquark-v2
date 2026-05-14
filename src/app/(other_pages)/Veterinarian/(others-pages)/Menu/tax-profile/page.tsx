@@ -9,6 +9,7 @@ import { setProfile } from "@/store/userProfileSlice";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import TypedDateInput from "@/components/form/input/TypedDateInput";
+import { ChevronDown, Pencil } from "lucide-react";
 
 type TaxProfileFormData = {
   taxId: string;
@@ -168,118 +169,107 @@ export default function TaxInfoAndProfessionalProfilePage() {
     }
   };
 
-  return (
-    <div className="w-full bg-white min-h-screen flex flex-col">
-      <Header title={t("menu.taxProfile")} />
+  const inputCls = "w-full h-[44px] rounded-lg border-0 bg-[#E8E8EE] px-4 text-[14px] leading-[18px] text-[#1C1C1E] placeholder:text-[#8E8E93] outline-none";
+  const labelCls = "block text-[14px] font-medium text-[#1C1C1E] mb-1.5";
 
-      <div className="flex-1 overflow-y-auto px-4 pb-28">
-        <form ref={formRef} onSubmit={handleSubmit} className="pt-2">
-          <div className="space-y-4">
+  return (
+    <div className="w-full bg-[#F4F5FA] min-h-screen flex flex-col">
+      <Header title={t("menu.settings") || "Ajustes"} />
+
+      <div className="flex-1 overflow-y-auto pt-2 pb-8">
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
+          <div className="flex items-start justify-between">
             <div>
-              <label className="block text-[#111827] font-medium mb-2">{t("profile.nationalId")}</label>
+              <h2 className="text-[18px] font-bold text-[#1C1C1E] leading-[24px]">
+                {t("menu.professionalProfile") || "Perfil Profissional"}
+              </h2>
+              <p className="text-[12px] text-[#8E8E93] mt-1 leading-[16px]">
+                {t("menu.professionalProfileDesc") || "Seus dados de identificação e assinatura."}
+              </p>
+            </div>
+            <ChevronDown className="w-5 h-5 text-[#8E8E93]" />
+          </div>
+
+          <form ref={formRef} onSubmit={handleSubmit} className="mt-5 space-y-4">
+            <div>
+              <label className={labelCls}>{t("menu.fullName")}</label>
+              <DropdownSelect
+                options={operateOptions}
+                value={formData.operateHow}
+                onChange={(value) => setFormData((prev) => ({ ...prev, operateHow: value }))}
+                placeholder="Dr. Vet"
+                name="operateHow"
+              />
+            </div>
+
+            <div className="grid grid-cols-[1fr_120px] gap-3">
+              <div>
+                <label className={labelCls}>CRMV</label>
+                <input
+                  type="text"
+                  name="crmv"
+                  placeholder="12345"
+                  value={formData.crmv}
+                  onChange={handleInputChange}
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>UF</label>
+                <input
+                  type="text"
+                  name="crmvState"
+                  placeholder="PE"
+                  value={formData.crmvState}
+                  onChange={handleInputChange}
+                  className={inputCls}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className={labelCls}>Telefone/WhatsApp</label>
               <input
                 type="text"
                 name="taxId"
-                placeholder="i.e AB374892928"
+                placeholder="(11) 98765-4321"
                 value={formData.taxId}
                 onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
+                className={inputCls}
               />
             </div>
 
             <div>
-              <label className="block text-[#111827] font-medium mb-2">
-                {t("menu.cnpjIeLabel")} <span className="text-[#9AA4AF] font-normal">{t("menu.optionalSuffix")}</span>
-              </label>
-              <input
-                type="text"
-                name="cnpjIe"
-                placeholder="i.e 12.345.678/0001-99"
-                value={formData.cnpjIe}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[#111827] font-medium mb-2">{t("profile.dateOfBirth")}</label>
+              <label className={labelCls}>{t("profile.dateOfBirth")}</label>
               <TypedDateInput
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={(nextIsoDate) => setFormData((prev) => ({ ...prev, dateOfBirth: nextIsoDate }))}
-                required
-                placeholder="dd/mm/yyyy"
-                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] pr-12"
-                iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-[#9AA4AF] cursor-pointer"
+                placeholder="dd/mm/aaaa"
+                className="w-full h-[44px] px-4 bg-[#E8E8EE] border-0 rounded-lg focus:outline-none text-[14px] text-[#1C1C1E] placeholder:text-[#8E8E93] pr-11"
+                iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E8E93] cursor-pointer"
               />
             </div>
 
             <div>
-              <label className="block text-[#111827] font-medium mb-2">{t("profile.address")}</label>
+              <label className={labelCls}>E-mail (somente leitura)</label>
               <input
                 type="text"
-                name="address"
-                placeholder="Enter your address"
-                value={formData.address}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[#111827] font-medium mb-2">CRMV</label>
-                <input
-                  type="text"
-                  name="crmv"
-                  placeholder="Enter CRMV code"
-                  value={formData.crmv}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
-                />
-              </div>
-              <div className="pt-[30px]">
-                <DropdownSelect
-                  options={brazilianStateOptions}
-                  value={formData.crmvState}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, crmvState: value }))}
-                  placeholder="State"
-                  name="crmvState"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[#111827] font-medium mb-2">
-                Registration with MAPA <span className="text-[#9AA4AF] font-normal">(optional)</span>
-              </label>
-              <input
-                type="text"
-                name="mapaRegistration"
-                placeholder="Enter your registration with MAPA"
-                value={formData.mapaRegistration}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-[#F5F6F6] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
+                placeholder="vet@stripscan.app"
+                value={profile?.email || ""}
+                readOnly
+                className={`${inputCls} opacity-80`}
               />
             </div>
 
             <div>
-              <DropdownSelect
-                label="How do you operate?"
-                options={operateOptions}
-                value={formData.operateHow}
-                onChange={(value) => setFormData((prev) => ({ ...prev, operateHow: value }))}
-                placeholder="Select an option"
-                name="operateHow"
-                required
-              />
+              <label className={labelCls}>Assinatura Digital</label>
+              <button type="button" className="h-[40px] rounded-lg bg-[#3D3D45] text-white px-4 text-[13px] font-medium inline-flex items-center gap-2">
+                <span className="text-[14px]">⊕</span> Enviar nova
+              </button>
             </div>
 
-            <div>
+            <div className="hidden">
               <MultiSelect
                 key={expertiseKey}
                 label="Area Of Expertise"
@@ -290,39 +280,21 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 showInlineChips={false}
                 showDoneButton={true}
                 name="expertise"
-                required
                 maxSelected={5}
               />
-              <div className="mt-2 flex flex-wrap gap-2 bg-[#F5F6F6] p-5 rounded-[12px]">
-                {formData.expertise.length === 0 ? (
-                  <span className="text-sm text-[#9AA4AF]">No expertise selected</span>
-                ) : (
-                  formData.expertise.map((v) => {
-                    const opt = expertiseOptions.find((o) => o.value === v);
-                    return (
-                      <span key={v} className="inline-flex items-center rounded-full bg-[#4A7BF7] text-white text-sm px-3 py-1">
-                        {opt ? opt.text : v}
-                      </span>
-                    );
-                  })
-                )}
-              </div>
             </div>
-          </div>
-        </form>
-      </div>
+          </form>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] p-4">
-        <button
-          type="submit"
-          onClick={() => {
-            formRef.current?.requestSubmit();
-          }}
-          disabled={saving}
-          className="w-full h-[52px] bg-[#4A7BF7] hover:bg-[#3A6BE7] text-white text-[16px] font-medium rounded-full transition-colors"
-        >
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
+          <button
+            type="button"
+            onClick={() => formRef.current?.requestSubmit()}
+            disabled={saving}
+            className="w-full h-[48px] mt-5 bg-[#3F78D8] hover:bg-[#2f68c8] text-white text-[15px] font-semibold rounded-lg inline-flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            <Pencil className="w-4 h-4" />
+            {saving ? t("common.saving") : (t("menu.saveProfile") || "Salvar perfil")}
+          </button>
+        </div>
       </div>
     </div>
   );

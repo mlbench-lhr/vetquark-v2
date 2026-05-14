@@ -1,11 +1,11 @@
 'use client'
-import Header from "@/components/common/header";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { PatientInfoCard, ReportsHistory } from "./Information";
 import { Report } from "../types";
 import Progress from "./Progress";
 import { useTranslation } from "react-i18next";
+import { ChevronLeft, Search, Bell } from "lucide-react";
 
 interface TabsProps {
   activeTab: string;
@@ -38,7 +38,7 @@ const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange }) => {
           : 'bg-white text-gray-600 border border-gray-300'
           }`}
       >
-        {t('home.progressTab')}
+        {t('reading.progress.evolutionTab')}
       </button>
     </div>
   );
@@ -189,9 +189,37 @@ const PatientProfilePage: React.FC = () => {
     </div>
   );
 
+  const router = useRouter();
+
   return (
     <div className="pb-5">
-      <Header title={t('home.patientProfileTitle')} />
+      <div className="flex items-center justify-between px-1 mb-3">
+        <button
+          onClick={() => router.back()}
+          aria-label={t('common.back')}
+          className="w-10 h-10 rounded-full bg-[#F1F2F3] flex items-center justify-center hover:bg-gray-200"
+        >
+          <ChevronLeft size={20} className="text-gray-700" />
+        </button>
+        <h1 className="text-[18px] font-bold text-primary">{t('home.patientProfileTitle')}</h1>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Search"
+            className="w-10 h-10 rounded-full bg-[#F1F2F3] flex items-center justify-center hover:bg-gray-200"
+          >
+            <Search size={18} className="text-gray-700" />
+          </button>
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="relative w-10 h-10 rounded-full bg-primary flex items-center justify-center hover:opacity-90"
+          >
+            <Bell size={18} className="text-white" />
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">1</span>
+          </button>
+        </div>
+      </div>
       <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {loading ? (
@@ -202,7 +230,7 @@ const PatientProfilePage: React.FC = () => {
           <ReportsHistory petName={patientData.name} reports={reports} patientId={patientId} />
         </>
       ) : (
-        <Progress patientId={patientId} />
+        <Progress patientId={patientId} variant="evolution" />
       )}
     </div>
   );

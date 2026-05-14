@@ -76,14 +76,14 @@ function Header({ name }: HeaderProps) {
     return (
         <header className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-                <Link href={"/Guardian/Menu"} className="w-12 h-12 border rounded-full flex items-center justify-center ">
+                <Link href={"/Guardian/Menu"} className="w-12 h-12 rounded-full flex items-center justify-center">
                     {profile?.profileImageUrl ? (
                         <Image
                             width={58}
                             height={58}
                             src={profile.profileImageUrl}
                             alt={t('profile.profile')}
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="w-12 h-12 rounded-full object-cover border-2 border-amber-400"
                         />
                     ) : (
                         <div className='flex justify-center items-center w-12 h-12 rounded-full bg-gray-100'>
@@ -92,20 +92,20 @@ function Header({ name }: HeaderProps) {
                     )}
                 </Link>
                 <div>
-                    <p className="text-sm text-gray-500">{t('guardianHome.welcome')}</p>
-                    <h1 className="text-sm font-semibold text-gray-800">{name}</h1>
+                    <p className="text-xs text-gray-400 leading-tight">{t('guardianHome.welcome')}</p>
+                    <h1 className="text-sm font-bold text-primary leading-tight">{name}</h1>
                 </div>
             </div>
-            <Link href={"/Guardian/notifications"} className="relative w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                {unreadCount > 0 ? <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
-                <span className="text-white text-sm">
-                    <Image
-                        src={"/images/home/bell.svg"}
-                        alt={t('notifications.bellIcon')}
-                        width={24}
-                        height={24}
-                    />
-                </span>
+            <Link href={"/Guardian/notifications"} className="relative w-10 h-10 bg-primary rounded-full flex items-center justify-center shrink-0">
+                {unreadCount > 0 ? (
+                    <span className="absolute -top-0.5 -right-0.5 inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#EF4444] px-[3px] text-[9px] font-bold leading-none text-white ring-2 ring-white">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                ) : null}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
             </Link>
 
         </header>

@@ -114,7 +114,7 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
           </Link>
           <div>
             <p className="text-xs text-gray-400 leading-tight">{t('dashboard.welcome')}</p>
-            <h1 className="text-sm font-bold text-gray-800 leading-tight">{resolvedName}</h1>
+            <h1 className="text-sm font-bold text-primary leading-tight">{resolvedName}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
 
           <Link href={"/Veterinarian/notifications"} className="relative w-10 h-10 bg-primary rounded-full flex items-center justify-center shrink-0">
             {unreadCount > 0 ? (
-              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white border border-primary text-primary text-[10px] font-bold flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#EF4444] px-[3px] text-[9px] font-bold leading-none text-white ring-2 ring-white">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             ) : null}

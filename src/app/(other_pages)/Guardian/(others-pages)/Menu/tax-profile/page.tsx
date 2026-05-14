@@ -162,7 +162,7 @@ export default function Page() {
             placeholder={t("profile.egNationalId")}
             inputMode="numeric"
             pattern="[0-9]*"
-            className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
           />
           {nationalIdDigits.length > 0 && !idValid && (
             <div className="mt-2 text-[12px] leading-[16px] text-[#EF4444]">
@@ -176,7 +176,7 @@ export default function Page() {
             onChange={(nextIsoDate) => setDateOfBirth(nextIsoDate)}
             placeholder="dd/mm/yyyy"
             containerClassName="relative mt-3"
-            className="h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 pr-12 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[16px] leading-[20px] text-[#111827] outline-none"
             iconClassName="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9AA4AF] cursor-pointer"
           />
 
@@ -185,7 +185,7 @@ export default function Page() {
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder={t("profile.egAddress")}
-            className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
           />
 
           <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("auth.country")}</div>
@@ -197,7 +197,7 @@ export default function Page() {
               setStateValue("");
               setCity("");
             }}
-            className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
           >
             <option value="" disabled>
               {t("auth.selectCountry")}
@@ -217,7 +217,7 @@ export default function Page() {
               setCity("");
             }}
             disabled={!country}
-            className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none disabled:opacity-60"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none disabled:opacity-60"
           >
             <option value="" disabled>
               {!country ? t("auth.selectCountryFirst") : t("auth.selectState")}
@@ -238,7 +238,7 @@ export default function Page() {
               value={city}
               onChange={(e) => setCity(e.target.value)}
               disabled={!stateValue}
-              className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none disabled:opacity-60"
+              className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none disabled:opacity-60"
             >
               <option value="" disabled>
                 {!stateValue ? t("auth.selectStateFirst") : t("auth.selectCity")}
@@ -256,7 +256,7 @@ export default function Page() {
               onChange={(e) => setCity(e.target.value)}
               placeholder={t("auth.enterCity")}
               disabled={!stateValue}
-              className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none disabled:opacity-60"
+              className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none disabled:opacity-60"
             />
           )}
 
@@ -266,7 +266,7 @@ export default function Page() {
             onChange={(e) => setPostalCode(e.target.value)}
             placeholder={t("auth.enterPostalCode")}
             inputMode="numeric"
-            className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
           />
         </div>
 

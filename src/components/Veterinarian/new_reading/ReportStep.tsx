@@ -141,169 +141,145 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
 
   return (
     <div className="">
-      {/* Patient card */}
-      <div className="rounded-[20px] border border-[#E5E7EB] bg-white px-5 py-5">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[#EBF2FF] flex items-center justify-center flex-shrink-0">
-            <svg viewBox="0 0 40 40" fill="none" className="w-9 h-9" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 20C22.2 20 24 18.2 24 16C24 13.8 22.2 12 20 12C17.8 12 16 13.8 16 16C16 18.2 17.8 20 20 20ZM20 22C17.3 22 12 23.4 12 26V28H28V26C28 23.4 22.7 22 20 22Z" fill="#3F78D8" />
-              <circle cx="28" cy="12" r="4" fill="#3F78D8" />
-              <circle cx="12" cy="12" r="4" fill="#3F78D8" />
-            </svg>
+      {/* Page header */}
+      <h2 className="text-[20px] font-bold text-[#111827]">Pré-visualização e Edição Final do Laudo</h2>
+      <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">Revise e edite o laudo abaixo. Após a assinatura, ele não poderá ser alterado.</p>
+
+      {/* Formal Report Preview Card */}
+      <div className="mt-4 bg-white rounded-[20px] border border-[#E5E7EB] overflow-hidden">
+
+        {/* Clinic header */}
+        <div className="px-5 pt-5 pb-4 text-center border-b border-[#F3F4F6]">
+          {veterinarian?.clinicLogoUrl ? (
+            <Image
+              src={veterinarian.clinicLogoUrl}
+              alt="logo"
+              width={100}
+              height={50}
+              className="mx-auto object-contain mb-1"
+            />
+          ) : (
+            <div className="text-[20px] font-bold italic text-[#111827] tracking-[0.18em]">
+              {veterinarian?.tradeName || 'XE IL XTE'}
+            </div>
+          )}
+          <div className="mt-1 text-[13px] font-bold text-[#111827]">
+            {veterinarian?.tradeName || 'StripScan - Laboratório Veterinário'}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[20px] font-bold text-[#111827] truncate">{patientName}</div>
-            <div className="text-[13px] text-[#6B7280] mt-0.5">{guardianName}</div>
-            {panelName && (
-              <div className="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#EBF2FF] text-[11px] font-medium text-[#3F78D8]">
-                {panelName}
-              </div>
-            )}
-          </div>
+          {veterinarian?.reportHeaderAddress ? (
+            <div className="mt-0.5 text-[10px] text-[#6B7280] leading-[14px]">{veterinarian.reportHeaderAddress}</div>
+          ) : null}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-[#F3F4F6] grid grid-cols-2 gap-y-2 text-[13px]">
-          <div>
-            <span className="text-[#9CA3AF]">{t('reading.report.breedLabel')}: </span>
-            <span className="text-[#111827] font-medium">{breed}</span>
-          </div>
-          <div>
-            <span className="text-[#9CA3AF]">{t('reading.report.speciesLabel')}: </span>
-            <span className="text-[#111827] font-medium">{species}</span>
-          </div>
-          <div className="col-span-2">
-            <span className="text-[#9CA3AF]">{t('reading.report.appointmentLabel')}: </span>
-            <span className="text-[#111827] font-medium">{appointment}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Physical parameters */}
-      {physicalResults.length > 0 && (
-        <div className="mt-4 rounded-[20px] border border-[#E5E7EB] bg-white px-5 py-4">
-          <div className="text-[14px] font-bold text-[#111827] mb-3">{t('reading.report.physicalParams')}</div>
-          <div className="flex flex-wrap gap-3">
-            {physicalResults.map((r) => (
-              <div key={r.key} className="flex items-center gap-1.5">
-                <span className="text-[12px] text-[#6B7280]">{r.label}:</span>
-                <span className={`text-[12px] font-semibold ${r.status === 'Normal' ? 'text-[#059669]' : 'text-[#BB4D00]'}`}>
-                  {r.valueLabel}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Chemical parameters */}
-      {chemicalResults.length > 0 && (
-        <div className="mt-3 rounded-[20px] border border-[#E5E7EB] bg-white px-5 py-4">
-          <div className="text-[14px] font-bold text-[#111827] mb-3">{t('reading.report.chemicalParams')}</div>
-          <div className="flex flex-wrap gap-3">
-            {chemicalResults.map((r) => (
-              <div key={r.key} className="flex items-center gap-1.5">
-                <span className="text-[12px] text-[#6B7280]">{r.label}:</span>
-                <span className={`text-[12px] font-semibold ${r.status === 'Normal' ? 'text-[#059669]' : 'text-[#BB4D00]'}`}>
-                  {r.valueLabel}
-                </span>
+        {/* Patient info table */}
+        <div className="px-5 py-4 border-b border-[#F3F4F6]">
+          <div className="space-y-[6px]">
+            {(
+              [
+                [t('reading.report.breedLabel'), breed],
+                [t('reading.report.speciesLabel'), species],
+                ['Paciente', patientName],
+                ['Tutor', guardianName],
+                [t('reading.report.appointmentLabel'), appointment],
+                ['Clínica', veterinarian?.tradeName || '—'],
+                ['Solicitante', `Dr(a). ${veterinarian?.fullName || 'Vet'}`],
+              ] as [string, string][]
+            ).map(([label, value]) => (
+              <div key={label} className="flex items-start text-[12px] leading-[17px]">
+                <span className="font-bold text-[#111827] min-w-[80px] flex-shrink-0">{label}:</span>
+                <span className="text-[#374151]">{value}</span>
               </div>
             ))}
           </div>
         </div>
-      )}
 
-      {/* Veterinary report section */}
-      <div className="mt-4 rounded-[20px] border border-[#E5E7EB] bg-white px-5 py-5">
-        <div className="text-[16px] font-bold text-[#111827] mb-4">{t('reading.report.vetReportSection')}</div>
+        {/* Certification line */}
+        <div className="px-5 py-3 border-b border-[#F3F4F6]">
+          <div className="h-px bg-[#D1D5DB] mb-3" />
+          <div className="text-[11px] font-bold text-[#111827]">Conferido, liberado e assinado:</div>
+          <div className="mt-1 text-[10px] leading-[14px] text-[#6B7280] italic">
+            A interpretação dos exames laboratoriais deverá ser realizada pelo médico veterinário responsável, mediante a sintomatologia clínica do animal.
+          </div>
+        </div>
 
-        <div className="space-y-4">
+        {/* Observations section */}
+        <div className="px-5 py-4 border-b border-[#F3F4F6]">
+          <div className="text-[14px] font-bold text-[#111827] mb-3">Observações e Interpretação</div>
+
+          <div className="mb-3">
+            <div className="text-[12px] text-[#374151] mb-1.5">{t('reading.report.veterinarianNotes')}:</div>
+            <textarea
+              value={report.veterinarianNotes}
+              onChange={(e) => onChangeReport({ veterinarianNotes: e.target.value })}
+              placeholder="Nenhuma observação adicional."
+              rows={3}
+              className="w-full px-3 py-2.5 bg-[#F5F6F6] rounded-xl text-[12px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-1 focus:ring-[#3F78D8]/30"
+            />
+          </div>
+
           <div>
-            <div className="text-[14px] font-semibold text-[#111827] mb-2">{t('reading.report.summaryInterpretation')}</div>
+            <div className="text-[12px] text-[#374151] mb-1.5">{t('reading.report.summaryInterpretation')}:</div>
             <textarea
               value={report.summaryAndInterpretation}
               onChange={(e) => onChangeReport({ summaryAndInterpretation: e.target.value })}
               placeholder={t('reading.report.enterSummaryInterpretation')}
-              rows={3}
-              className="w-full px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-[14px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-2 focus:ring-[#3F78D8]/20"
+              rows={4}
+              className="w-full px-3 py-2.5 bg-[#F5F6F6] rounded-xl text-[12px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-1 focus:ring-[#3F78D8]/30"
             />
           </div>
+        </div>
 
-          <div>
-            <div className="text-[14px] font-semibold text-[#111827] mb-2">{t('reading.report.recommendation')}</div>
-            <textarea
-              value={report.otherInformation}
-              onChange={(e) => onChangeReport({ otherInformation: e.target.value })}
-              placeholder={t('reading.report.enterRecommendation')}
-              rows={2}
-              className="w-full px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-[14px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-2 focus:ring-[#3F78D8]/20"
-            />
+        {/* Signature pad + vet info */}
+        <div className="px-5 py-4">
+          <div className="rounded-xl bg-[#F5F6F6] p-1.5 mb-4">
+            <canvas ref={canvasRef} width={320} height={100} className="w-full h-[100px] bg-white rounded-lg" />
+            <div className="mt-1.5 flex items-center gap-2 px-1">
+              {!signatureImageUrl && (
+                <button
+                  type="button"
+                  onClick={handleRetake}
+                  className="px-3 py-1.5 rounded-full bg-white text-[#374151] text-[11px] font-medium border border-[#E5E7EB]"
+                  disabled={uploading || !!submitting}
+                >
+                  {t('reading.report.clear')}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={ensureSignatureUploaded}
+                className="px-3 py-1.5 rounded-full bg-[#3F78D8] text-white text-[11px] font-medium disabled:opacity-70"
+                disabled={uploading || !!submitting}
+              >
+                {uploading ? t('reading.report.uploading') : signatureImageUrl ? t('reading.report.signatureReady') : t('reading.report.save')}
+              </button>
+              {!!signatureImageUrl && (
+                <button
+                  type="button"
+                  onClick={handleRetake}
+                  className="px-3 py-1.5 rounded-full bg-white text-[#3F78D8] text-[11px] font-medium border border-[#3F78D8]"
+                  disabled={uploading || !!submitting}
+                >
+                  {t('reading.report.retake')}
+                </button>
+              )}
+            </div>
           </div>
 
-          <div>
-            <div className="text-[14px] font-semibold text-[#111827] mb-2">{t('reading.report.veterinarianNotes')}</div>
-            <textarea
-              value={report.veterinarianNotes}
-              onChange={(e) => onChangeReport({ veterinarianNotes: e.target.value })}
-              placeholder={t('reading.report.enterVeterinarianNotes')}
-              rows={2}
-              className="w-full px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-[14px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-2 focus:ring-[#3F78D8]/20"
-            />
+          <div className="text-center">
+            <div className="text-[14px] font-bold text-[#111827]">{veterinarian?.fullName || 'Dr. Vet'}</div>
+            <div className="text-[12px] text-[#6B7280] mt-0.5">
+              {veterinarian?.crmvState && veterinarian?.crmv
+                ? `CRMV-${veterinarian.crmvState} ${veterinarian.crmv}`
+                : veterinarian?.crmv
+                  ? `CRMV ${veterinarian.crmv}`
+                  : 'CRMV'}
+            </div>
+            <div className="text-[11px] text-[#9CA3AF] mt-0.5">{t('reading.report.generatedOnPrefix')} {new Date().toLocaleString()}</div>
           </div>
         </div>
       </div>
 
-      {/* Signature section */}
-      <div className="mt-4 rounded-[20px] border border-[#E5E7EB] bg-white px-5 py-5">
-        <div className="text-[14px] font-bold text-[#111827] mb-3">{t('reading.report.signature')}</div>
-        <div className="rounded-2xl bg-[#F5F6F6] p-1.5">
-          <canvas ref={canvasRef} width={320} height={160} className="w-full h-36 bg-white rounded-xl" />
-          <div className="mt-2 flex items-center gap-2 px-1">
-            {!signatureImageUrl && (
-              <button
-                type="button"
-                onClick={handleRetake}
-                className="px-4 py-2 rounded-full bg-white text-[#374151] text-[13px] font-medium border border-[#E5E7EB]"
-                disabled={uploading || !!submitting}
-              >
-                {t('reading.report.clear')}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={ensureSignatureUploaded}
-              className="px-4 py-2 rounded-full bg-[#3F78D8] text-white text-[13px] font-medium disabled:opacity-70"
-              disabled={uploading || !!submitting}
-            >
-              {uploading ? t('reading.report.uploading') : signatureImageUrl ? t('reading.report.signatureReady') : t('reading.report.save')}
-            </button>
-            {!!signatureImageUrl && (
-              <button
-                type="button"
-                onClick={handleRetake}
-                className="px-4 py-2 rounded-full bg-white text-[#3F78D8] text-[13px] font-medium border border-[#3F78D8]"
-                disabled={uploading || !!submitting}
-              >
-                {t('reading.report.retake')}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Vet signature info */}
-        <div className="mt-4 pt-4 border-t border-[#F3F4F6] text-center">
-          <div className="text-[16px] font-semibold text-[#111827]">{veterinarian?.fullName || 'Dr. Vet'}</div>
-          <div className="text-[13px] text-[#6B7280] mt-0.5">
-            {veterinarian?.crmvState && veterinarian?.crmv
-              ? `CRMV-${veterinarian.crmvState} ${veterinarian.crmv}`
-              : veterinarian?.crmv
-                ? `CRMV ${veterinarian.crmv}`
-                : 'CRMV'}
-          </div>
-          <div className="text-[12px] text-[#9CA3AF] mt-1">{t('reading.report.generatedOnPrefix')} {new Date().toLocaleString()}</div>
-        </div>
-      </div>
-
-      <div className="mt-5 space-y-3">
+      <div className="mt-4 space-y-3">
         <button
           onClick={async () => {
             const ok = await ensureSignatureUploaded()

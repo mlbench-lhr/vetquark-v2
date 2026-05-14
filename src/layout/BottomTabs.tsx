@@ -51,7 +51,7 @@ export default function BottomTabs() {
                             className={`flex flex-col items-center justify-end min-w-0 transition-all flex-1 gap-1 py-1 ${middle ? '-mt-6' : ''}`}
                         >
                             {middle ? (
-                                <div className="w-[60px] h-[60px] rounded-full bg-gray-100 border border-gray-200 shadow-sm flex items-center justify-center -mt-2">
+                                <div className="w-[60px] h-[60px] rounded-full bg-white border border-gray-100 shadow-md flex items-center justify-center -mt-2">
                                     <Image
                                         src={Icon}
                                         alt={label}

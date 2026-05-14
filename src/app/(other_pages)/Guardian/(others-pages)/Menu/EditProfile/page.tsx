@@ -193,7 +193,7 @@ export default function EditProfileCard() {
                     <Input
                         value={localFullName}
                         onChange={(e) => setLocalFullName(e.target.value)}
-                        className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
+                        className="h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
                     />
                 </div>
 
@@ -205,7 +205,7 @@ export default function EditProfileCard() {
                         type="email"
                         value={localEmail}
                         disabled
-                        className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
+                        className="h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 opacity-70 md:text-[16px]"
                     />
                 </div>
 
@@ -219,8 +219,8 @@ export default function EditProfileCard() {
                         onChange={setLocalPhone}
                         defaultCountry="br"
                         containerClassName="w-full"
-                        inputClassName="!w-full !h-[56px] !rounded-[16px] !border-0 !bg-[#F5F6F6] !px-11 !text-[16px] !leading-[20px] !text-[#111827] placeholder:!text-[#9AA4AF] focus:!outline-none md:!text-[16px]"
-                        buttonClassName="!h-[56px] !border-0 !bg-[#F5F6F6] !rounded-[16px]"
+                        inputClassName="!w-full !h-[56px] !rounded-xl !border !border-[#E5E7EB] !bg-white !px-11 !text-[16px] !leading-[20px] !text-[#111827] placeholder:!text-[#9AA4AF] focus:!outline-none md:!text-[16px]"
+                        buttonClassName="!h-[56px] !border !border-[#E5E7EB] !border-r-0 !bg-white !rounded-l-xl"
                     />
                 </div>
             </div>

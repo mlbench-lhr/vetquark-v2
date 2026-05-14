@@ -39,7 +39,7 @@ export default function FullWidthPageLayout({
   }
   return (
     <MobileOnly >
-      <div>
+      <div className="min-h-[100dvh]">
         {children}
       </div>
     </MobileOnly >

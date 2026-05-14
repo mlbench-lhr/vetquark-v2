@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 
@@ -86,27 +86,33 @@ export default function EmailVerification({
 
     if (step === "success") {
         return (
-            <div className={mode === "modal" ? "w-full p-4 flex flex-col" : "w-full min-h-[100dvh] p-6 flex flex-col"}>
-                <div className="flex items-center mb-8">
-                    {mode === "page" ? (
-                        <button className="mr-4 text-gray-600 hover:text-gray-800" onClick={() => router.back()}>
-                            <ArrowLeft size={24} />
+            <div className={mode === "modal" ? "w-full p-5 flex flex-col" : "w-full min-h-[100dvh] bg-[#F2F2F7] flex flex-col"}
+            >
+                {mode === "page" && (
+                    <div className="flex items-center gap-3 px-5 pt-6 pb-2">
+                        <button
+                            className="w-[36px] h-[36px] rounded-full bg-[#EBEBF0] flex items-center justify-center border-0 cursor-pointer shrink-0"
+                            onClick={() => router.back()}
+                        >
+                            <ChevronLeft size={20} className="text-[#1C1C1E]" />
                         </button>
-                    ) : null}
-                    <h1 className={mode === "modal" ? "text-2xl font-bold text-primary" : "text-3xl font-bold text-primary"}>{displayTitle}</h1>
-                </div>
+                        <h2 className="text-[18px] font-bold text-primary">{displayTitle}</h2>
+                    </div>
+                )}
+                {mode === "modal" && (
+                    <h2 className="text-[18px] font-bold text-primary mb-4">{displayTitle}</h2>
+                )}
 
-                <p className={mode === "modal" ? "text-gray-700 text-sm mb-10" : "text-gray-700 text-lg mb-12"}>
+                <p className="text-[14px] text-[#6C6C70] mb-8 px-5">
                     {t("auth.emailVerifiedSuccess")}
                 </p>
 
-                <div className={mode === "modal" ? "flex justify-center items-center my-12" : "flex justify-center items-center my-20"}>
-                    <svg width="220" height="220" viewBox="0 0 220 220" className="block">
+                <div className="flex justify-center items-center my-10">
+                    <svg width="160" height="160" viewBox="0 0 220 220" className="block">
                         <defs>
                             <linearGradient id="ringGradient" x1="0" y1="0" x2="220" y2="220" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stopColor="#5B8DFE" />
-                                <stop offset="70%" stopColor="#CFE0FF" />
-                                <stop offset="100%" stopColor="#F4F7FF" />
+                                <stop offset="0%" stopColor="#3F78D8" />
+                                <stop offset="100%" stopColor="#C7D9F8" />
                             </linearGradient>
                             <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
                                 <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.06)" />
@@ -115,7 +121,7 @@ export default function EmailVerification({
                         <g filter="url(#softShadow)">
                             <circle cx="110" cy="110" r="94" fill="none" stroke="url(#ringGradient)" strokeWidth="8" strokeDasharray="590" strokeDashoffset="590" strokeLinecap="round" transform="rotate(-85 110 110)" className="ring-path" />
                         </g>
-                        <path d="M78 112 L100 134 L145 89" fill="none" stroke="#3B82F6" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M78 112 L100 134 L145 89" fill="none" stroke="#3F78D8" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </div>
                 <style jsx>{`
@@ -123,39 +129,45 @@ export default function EmailVerification({
                   .ring-path { animation: ring-draw 2.2s ease-out forwards; }
                 `}</style>
 
-                <button
-                    onClick={() => {
-                        if (onClose) onClose();
-                        else router.push("/Guardian");
-                    }}
-                    className={mode === "modal" ? "w-full py-3 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-sm mt-auto" : "w-full py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg mt-auto"}
-                >
-                    {t("auth.continue")}
-                </button>
-
-
+                <div className="mt-auto px-5 pb-8">
+                    <button
+                        onClick={() => {
+                            if (onClose) onClose();
+                            else router.push("/Veterinarian/home");
+                        }}
+                        className="w-full bg-primary text-white font-bold text-[16px] py-[17px] rounded-2xl transition-colors cursor-pointer border-0"
+                    >
+                        {t("auth.continue")}
+                    </button>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className={mode === "modal" ? "w-full p-4" : "w-full flex flex-col min-h-[100dvh] p-6"}>
-            <div className="flex items-center mb-8">
-                {mode === "page" ? (
-                    <button className="mr-4 text-gray-600 hover:text-gray-800" onClick={() => router.back()}>
-                        <ArrowLeft size={24} />
+        <div className={mode === "modal" ? "w-full p-5 flex flex-col" : "w-full flex flex-col min-h-[100dvh] bg-[#F2F2F7]"}>
+            {mode === "page" && (
+                <div className="flex items-center gap-3 px-5 pt-6 pb-2">
+                    <button
+                        className="w-[36px] h-[36px] rounded-full bg-[#EBEBF0] flex items-center justify-center border-0 cursor-pointer shrink-0"
+                        onClick={() => router.back()}
+                    >
+                        <ChevronLeft size={20} className="text-[#1C1C1E]" />
                     </button>
-                ) : null}
-                <h1 className={mode === "modal" ? "text-2xl font-bold text-primary" : "text-3xl font-bold text-primary"}>{displayTitle}</h1>
-            </div>
+                    <h2 className="text-[18px] font-bold text-primary">{displayTitle}</h2>
+                </div>
+            )}
+            {mode === "modal" && (
+                <h2 className="text-[18px] font-bold text-primary mb-3">{displayTitle}</h2>
+            )}
 
-            <p className={mode === "modal" ? "text-gray-700 text-sm mb-6" : "text-gray-700 text-lg mb-8"}>
+            <p className={mode === "modal" ? "text-[14px] text-[#6C6C70] mb-6" : "text-[14px] text-[#1C1C1E] mb-8 px-5 pt-2"}>
                 {t("auth.codeSentToEmail")}
                 <br />
                 {t("auth.enterCodeToActivate")}
             </p>
 
-            <div className={mode === "modal" ? "flex justify-center gap-x-2 gap-y-3 mb-6" : "flex justify-center gap-x-3 gap-y-4 mb-8"}>
+            <div className={mode === "modal" ? "flex justify-center gap-2 mb-6" : "flex justify-center gap-3 mb-8 px-5"}>
                 {code.map((digit, index) => (
                     <input
                         key={index}
@@ -166,34 +178,36 @@ export default function EmailVerification({
                         value={digit}
                         onChange={(e) => handleCodeChange(index, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(index, e)}
-                        className={mode === "modal" ? "w-10 h-10 sm:w-12 sm:h-12 text-center text-base sm:text-lg font-semibold bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500" : "w-12 h-12 sm:w-16 sm:h-16 text-center text-xl sm:text-2xl font-semibold bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"}
+                        className="w-[48px] h-[52px] text-center text-[18px] font-medium bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] border-0"
                     />
                 ))}
             </div>
 
-            <div className={mode === "modal" ? "text-center mb-6" : "text-center mb-8"}>
-                <p className={mode === "modal" ? "text-primary font-semibold mb-2 text-sm" : "text-primary font-semibold mb-2"}>{t("auth.didntReceiveCode")}</p>
+            <div className={mode === "modal" ? "text-center mb-6" : "text-center mb-8 px-5"}>
+                <p className="text-[14px] font-semibold text-primary mb-1">{t("auth.didntReceiveCode")}</p>
                 {timer > 0 ? (
-                    <p className={mode === "modal" ? "text-gray-500 text-sm" : "text-gray-500"}>
+                    <p className="text-[13px] text-[#8E8E93]">
                         {t("auth.requestNewCodeIn", { time: formatTime(timer) })}
                     </p>
                 ) : (
                     <button
                         onClick={handleRequestNewCode}
-                        className={mode === "modal" ? "text-gray-600 underline hover:text-gray-800 text-sm" : "text-gray-600 underline hover:text-gray-800"}
+                        className="text-[#8E8E93] underline bg-transparent border-0 cursor-pointer text-[13px]"
                     >
                         {t("auth.requestNewCode")}
                     </button>
                 )}
             </div>
 
-            <button
-                onClick={handleContinue}
-                disabled={code.some((digit) => !digit)}
-                className={mode === "modal" ? "w-full py-3 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed mt-auto" : "w-full py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-blue-700 transition-colors text-lg disabled:bg-gray-400 disabled:cursor-not-allowed mt-auto"}
-            >
-                {t("auth.continue")}
-            </button>
+            <div className={mode === "modal" ? "mt-2" : "mt-auto px-5 pb-8"}>
+                <button
+                    onClick={handleContinue}
+                    disabled={code.some((digit) => !digit)}
+                    className="w-full bg-primary text-white font-bold text-[16px] py-[17px] rounded-2xl transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                    {t("auth.continue")}
+                </button>
+            </div>
         </div>
     );
 }

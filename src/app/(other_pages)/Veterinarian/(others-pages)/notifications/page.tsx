@@ -283,7 +283,7 @@ export default function VetNotificationsPage() {
           {/* Bell icon */}
           <div className="relative w-10 h-10 bg-[#EBF2FF] rounded-full flex items-center justify-center shrink-0">
             {unreadCount > 0 ? (
-              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-[#3F78D8] text-white text-[9px] font-bold flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#EF4444] px-[3px] text-[9px] font-bold leading-none text-white ring-2 ring-white">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             ) : null}

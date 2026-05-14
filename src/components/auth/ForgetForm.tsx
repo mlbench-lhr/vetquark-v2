@@ -228,21 +228,21 @@ export default function ForgetForm() {
     };
 
     return (
-        <div className="min-h-[calc(100dvh-32px)] flex flex-col bg-white">
+        <div className="min-h-[100dvh] flex flex-col bg-[#F2F2F7]">
             {/* Header */}
-            <div className="flex items-center gap-3 px-6 pt-6">
+            <div className="flex items-center gap-3 px-5 pt-6 pb-2">
                 <button
                     onClick={handleBack}
-                    className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors bg-transparent border-0 cursor-pointer"
+                    className="w-[36px] h-[36px] rounded-full bg-[#EBEBF0] flex items-center justify-center border-0 cursor-pointer shrink-0"
                 >
-                    <ChevronLeft size={20} />
+                    <ChevronLeft size={20} className="text-[#1C1C1E]" />
                 </button>
-                <h2 className="text-xl font-bold text-primary">{getTitle()}</h2>
+                <h2 className="text-[18px] font-bold text-primary">{getTitle()}</h2>
             </div>
 
             {/* Content */}
-            <div className="flex-1 px-6 pt-4 pb-8">
-                <p className="text-sm text-gray-500 mb-6">{getDesc()}</p>
+            <div className="flex-1 px-5 pt-4 pb-8">
+                <p className="text-[14px] text-[#6C6C70] mb-6">{getDesc()}</p>
 
                 {step === 1 && (
                     <form id="forget-step-1" onSubmit={(e) => { e.preventDefault(); sendOTP(); }} className="space-y-4">
@@ -252,13 +252,13 @@ export default function ForgetForm() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
+                            className="w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0"
                         />
                     </form>
                 )}
 
                 {step === 2 && (
-                    <form id="forget-step-2" onSubmit={(e) => { e.preventDefault(); verifyOTP(); }} className="space-y-4">
+                    <form id="forget-step-2" onSubmit={(e) => { e.preventDefault(); verifyOTP(); }} className="space-y-6">
                         <div className="flex justify-center gap-3">
                             {otp.map((digit, index) => (
                                 <input
@@ -272,29 +272,29 @@ export default function ForgetForm() {
                                     onChange={(e) => handleOtpChange(index, e.target.value)}
                                     onKeyDown={(e) => handleKeyDown(index, e)}
                                     onClick={() => handleInputClick(index)}
-                                    className="w-12 h-12 text-center rounded-lg focus:outline-none text-lg bg-gray-100 focus:ring-2 focus:ring-primary"
+                                    className="w-[48px] h-[52px] text-center bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[18px] font-medium text-[#1C1C1E] border-0"
                                     maxLength={1}
                                     autoComplete="off"
                                 />
                             ))}
                         </div>
-                        <p className="text-center text-sm text-gray-500">
-                            {t("auth.didntGetCode")}{" "}
-                            {countdown > 0 ? (
-                                <span className="text-gray-400">
-                                    {t("auth.resendIn")} {String(Math.floor(countdown / 60)).padStart(2, "0")}:{String(countdown % 60).padStart(2, "0")}s
-                                </span>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={handleResendOtp}
-                                    disabled={resending}
-                                    className="text-primary font-medium hover:text-blue-700 bg-transparent border-0 cursor-pointer"
-                                >
-                                    {resending ? t("auth.sending") : t("auth.sendAgain")}
-                                </button>
-                            )}
-                        </p>
+                        <div className="text-center">
+                            <p className="text-[14px] font-semibold text-primary mb-1">{t("auth.didntGetCode")}</p>
+                            <p className="text-[13px] text-[#8E8E93]">
+                                {countdown > 0 ? (
+                                    <span>{t("auth.resendIn")} {String(Math.floor(countdown / 60)).padStart(2, "0")}:{String(countdown % 60).padStart(2, "0")}s</span>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={handleResendOtp}
+                                        disabled={resending}
+                                        className="text-[#8E8E93] underline bg-transparent border-0 cursor-pointer text-[13px]"
+                                    >
+                                        {resending ? t("auth.sending") : t("auth.sendAgain")}
+                                    </button>
+                                )}
+                            </p>
+                        </div>
                     </form>
                 )}
 
@@ -310,34 +310,33 @@ export default function ForgetForm() {
                                 onFocus={() => setPasswordFocused(true)}
                                 onBlur={() => setPasswordFocused(false)}
                                 required
-                                className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 pr-12"
+                                className="w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword((p) => !p)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93] bg-transparent border-0 cursor-pointer p-0"
                             >
                                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
 
                         {/* Strength */}
-                        {passwordFocused && (
-                            <div className="space-y-2">
-                                <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                        {(passwordFocused || password) && (
+                            <div className="space-y-2 px-1">
+                                <div className="h-[4px] w-full bg-[#E5E5EA] rounded-full overflow-hidden">
                                     <div
-                                        className={`h-full rounded-full transition-all duration-300 ${passwordStrengthPercent === 100 ? "bg-green-500" : passwordStrengthPercent >= 50 ? "bg-yellow-500" : "bg-red-500"
-                                            }`}
+                                        className={`h-full rounded-full transition-all duration-300 ${passwordStrengthPercent === 100 ? "bg-primary" : "bg-red-500"}`}
                                         style={{ width: `${passwordStrengthPercent}%` }}
                                     />
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                     {passwordRequirements.map((req) => (
-                                        <div key={req.key} className="flex items-center gap-2 text-sm">
-                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center border ${req.test(password) ? "bg-green-500 border-green-500" : "border-gray-300"}`}>
-                                                {req.test(password) && <Check size={10} className="text-white" />}
+                                        <div key={req.key} className="flex items-center gap-2 text-[13px]">
+                                            <div className={`w-[16px] h-[16px] rounded-full border flex items-center justify-center shrink-0 ${req.test(password) ? "bg-primary border-primary" : "border-[#C7C7CC]"}`}>
+                                                {req.test(password) && <Check size={9} className="text-white" strokeWidth={3} />}
                                             </div>
-                                            <span className={req.test(password) ? "text-green-600" : "text-gray-500"}>{req.label}</span>
+                                            <span className={req.test(password) ? "text-[#1C1C1E]" : "text-[#8E8E93]"}>{req.label}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -352,12 +351,12 @@ export default function ForgetForm() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
-                                className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 pr-12"
+                                className="w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmPassword((p) => !p)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93] bg-transparent border-0 cursor-pointer p-0"
                             >
                                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
@@ -367,12 +366,12 @@ export default function ForgetForm() {
             </div>
 
             {/* Footer */}
-            <div className="px-6 pb-8 pt-4">
+            <div className="px-5 pb-8 pt-4">
                 <button
                     type="submit"
                     form={`forget-step-${step}`}
                     disabled={submitting}
-                    className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors cursor-pointer border-0 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="w-full bg-primary text-white font-bold text-[16px] py-[17px] rounded-2xl transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     {submitting ? (
                         <span className="inline-flex items-center justify-center gap-2">

@@ -1,7 +1,7 @@
 'use client';
-import React, { useState } from 'react';
-import { ArrowLeft, Search, Bell, Edit2, Eye, Download, Plus, ChevronLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
+import { Search, Bell, ChevronLeft } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
@@ -11,7 +11,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ title, onBack }) => {
     const router = useRouter();
+    const pathname = usePathname();
     const { t } = useTranslation();
+
     const handleBack = () => {
         if (typeof onBack === 'function') {
             onBack();
@@ -19,26 +21,43 @@ const Header: React.FC<HeaderProps> = ({ title, onBack }) => {
             router.back();
         }
     };
+
+    const notificationsHref = pathname?.toLowerCase().includes('guardian')
+        ? '/Guardian/notifications'
+        : '/Veterinarian/notifications';
+
     return (
-        <div className="flex items-center justify-between p- ">
-            <div className="flex items-center gap-3 w-full justify-center">
+        <div className="flex items-center justify-between px-1 py-2">
+            {/* Left: back button + title */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
                 <button
                     onClick={handleBack}
                     aria-label={t("common.back")}
-                    className="w-fit h-fit rounded-full bg-gray-10 flex absolute left-1 items-center justify-center hover:bg-gray-200"
+                    className="w-9 h-9 rounded-full bg-[#F1F2F3] flex items-center justify-center hover:bg-gray-200 flex-shrink-0"
                 >
-                    <ChevronLeft size={20} className="text-gray-700" />
+                    <ChevronLeft size={18} className="text-gray-700" />
                 </button>
-                <h1 className="text-base font-medium">{title}</h1>
+                <h1 className="text-[18px] font-bold text-primary truncate leading-tight">{title}</h1>
             </div>
-            {/* <div className="flex items-center gap-3">
-                <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
-                    <Search size={20} className="text-primary" />
+
+            {/* Right: search + bell */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                    type="button"
+                    aria-label={t("common.search") ?? "Search"}
+                    className="w-9 h-9 flex items-center justify-center"
+                >
+                    <Search size={20} className="text-gray-500" />
                 </button>
-                <button className="w-10 h-10 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700">
-                    <Bell size={20} className="text-white" />
+                <button
+                    type="button"
+                    aria-label={t("common.notifications")}
+                    onClick={() => router.push(notificationsHref)}
+                    className="w-10 h-10 rounded-full bg-primary flex items-center justify-center hover:opacity-90"
+                >
+                    <Bell size={18} className="text-white" />
                 </button>
-            </div> */}
+            </div>
         </div>
     );
 };

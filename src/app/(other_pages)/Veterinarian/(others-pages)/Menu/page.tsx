@@ -114,35 +114,35 @@ export default function MenuPage() {
   );
 
   return (
-    <div className="bg-white min-h-screen flex flex-col">
+    <div className="bg-[#F4F5FA] min-h-screen flex flex-col">
       <Header title={t("menu.menu")} />
-      <div className="px-4 pt-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-14 w-14 overflow-hidden rounded-full bg-[#F5F6F6]">
+      <div className="px-1 pt-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-14 w-14 overflow-hidden rounded-full bg-[#E8E8EE] flex-shrink-0">
               <Image width={100} height={100} src={avatarUrl} alt={name} className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[20px] font-semibold leading-[24px] text-[#111827]">
+              <div className="truncate text-[18px] font-bold leading-[22px] text-[#1C1C1E]">
                 {name}
               </div>
-              <div className="truncate text-[14px] leading-[18px] text-[#9AA4AF]">
+              <div className="truncate text-[13px] leading-[18px] text-[#8E8E93]">
                 {email}
               </div>
             </div>
           </div>
           <Link
             href="/Veterinarian/Menu/EditProfile"
-            className="flex h-10 items-center gap-2 rounded-full bg-[#F5F6F6] px-5 text-[14px] font-medium text-[#111827]"
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-[#E8E8EE] px-3 text-[13px] font-medium text-[#1C1C1E] flex-shrink-0"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-3.5 w-3.5" />
             {t("menu.edit")}
           </Link>
         </div>
       </div>
 
       {/* Balance Card */}
-      <div className="mx-4 pt-5 pb-2">
+      <div className="pt-5">
         {walletLoading ? (
           <BalanceCardSkeleton />
         ) : (
@@ -150,45 +150,42 @@ export default function MenuPage() {
             onClick={() => {
               router.push("/Veterinarian/Menu/wallet")
             }}
-            className="w-full rounded-2xl bg-[#4A7BF7] p-4 text-left transition-colors hover:bg-[#3A6BE7]"
+            className="w-full rounded-2xl bg-[#3F78D8] p-4 text-left transition-colors hover:opacity-95"
           >
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-5 w-5 items-center justify-center rounded bg-white/20">
-                    <Wallet className="h-3 w-3 text-white" />
-                  </div>
-                  <span className="text-[13px] text-white/80">
+                  <Wallet className="h-4 w-4 text-white" />
+                  <span className="text-[14px] text-white">
                     {t("wallet.availableBalance")}
                   </span>
                 </div>
-                <p className="text-[24px] font-bold text-white">
+                <p className="text-[22px] font-bold text-white leading-[26px]">
                   {currency} {balance}
                 </p>
               </div>
-              <ChevronRight className="h-5 w-5 text-white" />
+              <ChevronRight className="h-6 w-6 text-white" />
             </div>
           </button>
         )}
       </div>
 
-      <div className="flex-1 px-4 pt-5">
-        <div className="space-y-2">
+      <div className="flex-1 pt-4">
+        <div className="space-y-1">
           {menuItems.map((item) => {
             const row = (
-              <div className="flex w-full items-center gap-4 rounded-2xl px-4 py-3 transition-colors hover:bg-[#F5F6F6]">
-                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#EAF1FF]">
+              <div className="flex w-full items-start gap-3 rounded-2xl px-2 py-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#E5EDF9]">
                   <item.icon className="h-5 w-5 text-[#3F78D8]" />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[16px] font-medium leading-[20px] text-[#111827]">
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <div className="text-[15px] font-semibold leading-[18px] text-[#1C1C1E]">
                     {item.title}
                   </div>
-                  <div className="mt-1 truncate text-[13px] leading-[16px] text-[#9AA4AF]">
+                  <div className="mt-1 text-[12px] leading-[16px] text-[#8E8E93]">
                     {item.description}
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 flex-shrink-0 text-[#3F78D8]" />
               </div>
             );
 
@@ -200,17 +197,17 @@ export default function MenuPage() {
           })}
         </div>
 
-        <div className="my-5 h-px w-full bg-[#E5E7EB]" />
+        <div className="my-4 h-px w-full bg-[#E5E5EA]" />
 
         <button
           type="button"
           onClick={logout}
-          className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[#9AA4AF] transition-colors hover:bg-[#F5F6F6]"
+          className="flex items-center gap-3 rounded-2xl px-2 py-3 text-[#1C1C1E]"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F5F6F6]">
-            <LogOut className="h-5 w-5 text-[#9AA4AF]" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E8E8EE]">
+            <LogOut className="h-5 w-5 text-[#1C1C1E]" />
           </div>
-          <div className="text-[16px] font-medium leading-[20px]">{t("common.logout")}</div>
+          <div className="text-[15px] font-semibold leading-[18px]">{t("common.logout")}</div>
         </button>
       </div>
     </div>

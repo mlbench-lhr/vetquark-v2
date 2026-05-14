@@ -117,27 +117,6 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
       </div>
 
       <div className="mt-10 space-y-3">
-        {!isPaid && (
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={handleCopy}
-              disabled={!safeUrl}
-              className="w-full py-3.5 rounded-full bg-[#F5F6F6] text-[#374151] font-medium text-[14px] disabled:opacity-60"
-            >
-              {t('reading.identification.copyPaymentLink')}
-            </button>
-            <button
-              type="button"
-              onClick={handleShare}
-              disabled={!safeUrl}
-              className="w-full py-3.5 rounded-full bg-[#F5F6F6] text-[#374151] font-medium text-[14px] disabled:opacity-60"
-            >
-              {t('reading.identification.sharePaymentLink')}
-            </button>
-          </div>
-        )}
-
         {isPaid ? (
           <button
             onClick={onContinue}
@@ -146,23 +125,13 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
             {t('common.continue')}
           </button>
         ) : (
-          <>
-            <button
-              onClick={onSend}
-              disabled={!!sending}
-              className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px] disabled:opacity-70"
-            >
-              {sending ? t('reading.identification.sending') : t('reading.identification.sendBillingLink')}
-            </button>
-            {onContinue && (
-              <button
-                onClick={onContinue}
-                className="w-full py-4 rounded-full border border-[#3F78D8] text-[#3F78D8] font-medium text-[15px]"
-              >
-                {t('common.continue')}
-              </button>
-            )}
-          </>
+          <button
+            onClick={onSend}
+            disabled={!!sending}
+            className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px] disabled:opacity-70"
+          >
+            {sending ? t('reading.identification.sending') : t('reading.identification.sendBillingLink')}
+          </button>
         )}
 
         <button

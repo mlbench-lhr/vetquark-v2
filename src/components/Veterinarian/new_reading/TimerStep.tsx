@@ -734,75 +734,80 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
   return (
     <div className="">
-      <h2 className="text-[20px] font-bold text-[#111827]">{t('reading.timer.title')}</h2>
-      <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">{t('reading.timer.desc')}</p>
+      {/* Title + Camera card */}
+      <div className="bg-white rounded-[20px] border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 pt-5 pb-4">
+          <h2 className="text-[20px] font-bold text-[#111827]">{t('reading.timer.title')}</h2>
+          <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">{t('reading.timer.desc')}</p>
+        </div>
 
-      {/* Camera view */}
-      <div className="mt-4 relative rounded-[20px] overflow-hidden bg-black" style={{ aspectRatio: '3/4' }}>
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className={`h-full w-full object-cover transition ${analyzing ? 'opacity-70 blur-[1px]' : ''}`}
-        />
-        <canvas ref={canvasRef} className="hidden" />
+        {/* Camera view */}
+        <div className="relative bg-black" style={{ aspectRatio: '3/4' }}>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`h-full w-full object-cover transition ${analyzing ? 'opacity-70 blur-[1px]' : ''}`}
+          />
+          <canvas ref={canvasRef} className="hidden" />
 
-        {/* Strip guide overlay */}
-        {cameraReady && (
-          <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
-            <div className="w-10 h-[88%] rounded-xl border-2 border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]" />
-          </div>
-        )}
-
-        {/* Camera not ready */}
-        {!cameraReady && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center">
-            <span className="text-sm text-white/80 px-4 text-center">
-              {cameraError || t('reading.timer.startingCamera')}
-            </span>
-          </div>
-        )}
-
-        {/* Tap to play */}
-        {needsTap && (
-          <button
-            type="button"
-            onClick={() => videoRef.current?.play()}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/60 rounded-full text-white text-sm"
-          >
-            {t('reading.timer.tapToStartCamera')}
-          </button>
-        )}
-
-        {/* Quality / camera status badge */}
-        {cameraReady && !analyzing && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
-            <div className={`px-4 py-2 rounded-full text-[13px] font-semibold ${qualityOk ? 'bg-[#F5A623] text-white' : 'bg-black/60 text-white/90'}`}>
-              {qualityOk
-                ? t('reading.timer.cameraReadyPosition')
-                : cameraError
-                  ? cameraError
-                  : qualityMessage}
+          {/* Strip guide overlay */}
+          {cameraReady && (
+            <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+              <div className="w-10 h-[88%] rounded-xl border-2 border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]" />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Analyzing overlay */}
-        {analyzing && (
-          <div className="absolute inset-0 z-30 flex items-end p-3">
-            <div className="w-full rounded-2xl bg-black/55 backdrop-blur-sm border border-white/10 px-4 py-3">
-              <div className="flex items-center gap-2 text-white">
-                <div className="h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
-                <div className="text-sm font-medium">{t('reading.timer.analyzing')}</div>
-              </div>
-              <div className="mt-2 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-                <div className="progress-bar h-full bg-white/60 rounded-full" />
+          {/* Camera not ready */}
+          {!cameraReady && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center">
+              <span className="text-sm text-white/80 px-4 text-center">
+                {cameraError || t('reading.timer.startingCamera')}
+              </span>
+            </div>
+          )}
+
+          {/* Tap to play */}
+          {needsTap && (
+            <button
+              type="button"
+              onClick={() => videoRef.current?.play()}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/60 rounded-full text-white text-sm"
+            >
+              {t('reading.timer.tapToStartCamera')}
+            </button>
+          )}
+
+          {/* Quality / camera status badge */}
+          {cameraReady && !analyzing && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
+              <div className={`px-4 py-2 rounded-full text-[13px] font-semibold ${qualityOk ? 'bg-[#F5A623] text-white' : 'bg-black/60 text-white/90'}`}>
+                {qualityOk
+                  ? t('reading.timer.cameraReadyPosition')
+                  : cameraError
+                    ? cameraError
+                    : qualityMessage}
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+
+          {/* Analyzing overlay */}
+          {analyzing && (
+            <div className="absolute inset-0 z-30 flex items-end p-3">
+              <div className="w-full rounded-2xl bg-black/55 backdrop-blur-sm border border-white/10 px-4 py-3">
+                <div className="flex items-center gap-2 text-white">
+                  <div className="h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
+                  <div className="text-sm font-medium">{t('reading.timer.analyzing')}</div>
+                </div>
+                <div className="mt-2 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className="progress-bar h-full bg-white/60 rounded-full" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>{/* end white card */}
 
       {/* Timer row: circle + start button */}
       <div className="mt-4 flex items-center gap-3">

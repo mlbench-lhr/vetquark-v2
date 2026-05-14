@@ -54,10 +54,10 @@ export default function Page() {
   );
 
   return (
-    <div className=" bg-white">
+    <div className="bg-[#F4F5FA] min-h-screen">
       <Header title={t("settings.languageTitle")} />
 
-      <div className="flex min-h-[calc(100dvh-72px)] flex-col  pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
+      <div className="flex min-h-[calc(100dvh-72px)] flex-col pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div className="space-y-3">
           {items.map((item) => {
             const selected = item.id === lang;
@@ -70,17 +70,14 @@ export default function Page() {
                   i18n.changeLanguage(item.id);
                   if (typeof window !== "undefined") window.localStorage.setItem("ui_language_v1", item.id);
                 }}
-                className={`flex h-[56px] w-full items-center justify-between rounded-[16px] px-4 ${selected ? "bg-[#EEF4FF]" : "bg-[#F5F6F6]"
+                className={`flex h-[52px] w-full items-center justify-between rounded-2xl px-4 ${selected ? "bg-[#E5EDF9]" : "bg-[#E8E8EE]"
                   }`}
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-[18px] leading-none">{item.flag}</span>
-                  <div
-                    className={`text-[16px] font-medium leading-[20px] ${selected ? "text-[#3F78D8]" : "text-[#111827]"
-                      }`}
-                  >
-                    {item.label}
-                  </div>
+                <div
+                  className={`text-[15px] font-medium leading-[20px] ${selected ? "text-[#3F78D8]" : "text-[#1C1C1E]"
+                    }`}
+                >
+                  {item.label}
                 </div>
 
                 {selected ? (
@@ -95,12 +92,12 @@ export default function Page() {
           })}
         </div>
 
-        <div className="mt-auto pt-10">
+        <div className="mt-5">
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+            className="h-[48px] w-full rounded-lg bg-[#3F78D8] text-[15px] font-semibold text-white"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

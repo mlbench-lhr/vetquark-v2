@@ -65,7 +65,8 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({
   };
   const desiredTicks = 5;
   const roughStep = (maxValue - minValue) / (desiredTicks - 1 || 1);
-  const step = yTickStep ?? niceStep(roughStep);
+  const rawStep = niceStep(roughStep);
+  const step = yTickStep ?? (maxValue <= desiredTicks ? 1 : rawStep);
   const maxY = Math.ceil(maxValue / step) * step;
   const yTicks: number[] = [];
   for (let v = minValue; v <= maxY + 1e-9; v += step) {
@@ -269,11 +270,12 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({
             {(() => {
               const dogPeakI = dogs.reduce((bestI, v, i, arr) => v > arr[bestI] ? i : bestI, 0);
               const catPeakI = cats.reduce((bestI, v, i, arr) => v > arr[bestI] ? i : bestI, 0);
+              const sameIndex = showDogs && showCats && dogPeakI === catPeakI && dogs[dogPeakI] > 0 && cats[catPeakI] > 0;
               return (
                 <>
                   {showDogs && dogs[dogPeakI] != null && dogs[dogPeakI] > 0 && (
                     <div
-                      style={{ position: 'absolute', left: toX(dogPeakI) - 26, top: toY(dogs[dogPeakI]) - 42 }}
+                      style={{ position: 'absolute', left: toX(dogPeakI) - 26, top: toY(dogs[dogPeakI]) - (sameIndex ? 88 : 42) }}
                       className="px-3 py-1.5 bg-[#4C4F7A] text-white text-xs font-medium rounded-xl shadow-lg pointer-events-none flex flex-col items-center"
                     >
                       {dogsLabel}
