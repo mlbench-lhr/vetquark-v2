@@ -530,14 +530,16 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         enqueueFrameForProcessing({ atSeconds, time: String(atSeconds), image: imageBase64 })
       }
 
-      setImages((prev) => [
-        ...prev,
+      const nextImages = [
+        ...imagesRef.current,
         {
           atSeconds,
           dataUrl: storageDataUrl || dataUrl,
           capturedAt: new Date().toISOString(),
         },
-      ])
+      ]
+      setImages(nextImages)
+      onImagesChangeRef.current?.(nextImages)
     },
     [enqueueFrameForProcessing],
   )
