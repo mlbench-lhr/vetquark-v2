@@ -54,11 +54,15 @@ export async function GET(req: NextRequest) {
     const page = clampInt(url.searchParams.get("page"), 1, 1, 10_000);
     const limit = clampInt(url.searchParams.get("limit"), 10, 1, 100);
     const search = String(url.searchParams.get("search") || "").trim();
+    const tab = url.searchParams.get("tab") === "incomplete" ? "incomplete" : "completed";
 
     await connectMongo();
 
     const coll = mongoose.connection.collection("readings");
-    const baseMatch: any = { signedAt: { $ne: null }, isDraft: { $ne: true } };
+    const baseMatch: any =
+      tab === "incomplete"
+        ? { isDraft: true, $or: [{ signedAt: { $exists: false } }, { signedAt: null }] }
+        : { signedAt: { $ne: null }, isDraft: { $ne: true } };
 
     const matchSearch: any = {};
     if (search) {
@@ -152,6 +156,9 @@ export async function GET(req: NextRequest) {
         ? d.unlockedProductCodes.map((c: any) => String(c || "").trim()).filter(Boolean)
         : [];
 
+      const wizardStep = typeof d?.wizardStep === "string" ? d.wizardStep : null;
+      const isDraft = typeof d?.isDraft === "boolean" ? d.isDraft : true;
+
       return {
         id: String(d?._id),
         petName,
@@ -164,6 +171,8 @@ export async function GET(req: NextRequest) {
         signedAt: signedAt && !Number.isNaN(signedAt.getTime()) ? signedAt.toISOString() : null,
         createdAt: createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toISOString() : null,
         paymentStatus,
+        wizardStep,
+        isDraft,
       };
     });
 
