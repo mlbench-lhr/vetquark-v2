@@ -16,6 +16,7 @@ type Props = {
     rawApiResults: Array<{ atSeconds: number; time: string; response: any }>,
     capturedImages: CapturedReadingImageDraft[],
   ) => void
+  onImagesChange?: (images: CapturedReadingImageDraft[]) => void
 }
 
 const marks = [30, 40, 60, 120]
@@ -125,7 +126,9 @@ async function getBackCameraStream(): Promise<MediaStream> {
   }
 }
 
-export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, onBack, onAnalyzeAndProceed }: Props) {
+export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, onBack, onAnalyzeAndProceed, onImagesChange }: Props) {
+  const onImagesChangeRef = useRef(onImagesChange)
+  onImagesChangeRef.current = onImagesChange
   const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -150,6 +153,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [needsTap, setNeedsTap] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
   const [images, setImages] = useState<CapturedReadingImageDraft[]>([])
+  const imagesRef = useRef<CapturedReadingImageDraft[]>([])
+  imagesRef.current = images
   const [secondsLeft, setSecondsLeft] = useState(() => Math.max(selectedSeconds, requiredTotalSeconds))
   const [running, setRunning] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -525,14 +530,16 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         enqueueFrameForProcessing({ atSeconds, time: String(atSeconds), image: imageBase64 })
       }
 
-      setImages((prev) => [
-        ...prev,
+      const nextImages = [
+        ...imagesRef.current,
         {
           atSeconds,
           dataUrl: storageDataUrl || dataUrl,
           capturedAt: new Date().toISOString(),
         },
-      ])
+      ]
+      setImages(nextImages)
+      onImagesChangeRef.current?.(nextImages)
     },
     [enqueueFrameForProcessing],
   )
@@ -815,8 +822,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           onClick={handlePrimaryClick}
           disabled={analysisFailed || (!started && !cameraReady)}
           className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-full font-semibold text-[15px] transition-all ${analysisFailed || (!started && !cameraReady)
-              ? 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
-              : 'bg-[#3F78D8] text-white shadow-sm'
+            ? 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+            : 'bg-[#3F78D8] text-white shadow-sm'
             }`}
         >
           <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -839,10 +846,10 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
               onClick={() => !started && onChangeSelectedSeconds(m)}
               disabled={started}
               className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${isCaptured
-                  ? 'bg-[#3F78D8] border-[#3F78D8] text-white'
-                  : isSelected && !started
-                    ? 'bg-white border-[#3F78D8] text-[#3F78D8]'
-                    : 'bg-white border-[#E5E7EB] text-[#6B7280]'
+                ? 'bg-[#3F78D8] border-[#3F78D8] text-white'
+                : isSelected && !started
+                  ? 'bg-white border-[#3F78D8] text-[#3F78D8]'
+                  : 'bg-white border-[#E5E7EB] text-[#6B7280]'
                 }`}
             >
               {m}s
@@ -856,8 +863,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           onClick={handleAnalyze}
           disabled={!captureProgress.allDone || analyzing}
           className={`w-full py-4 rounded-full font-semibold text-[15px] transition-all ${captureProgress.allDone && !analyzing
-              ? 'bg-[#3F78D8] text-white shadow-sm'
-              : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+            ? 'bg-[#3F78D8] text-white shadow-sm'
+            : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
             }`}
         >
           {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}

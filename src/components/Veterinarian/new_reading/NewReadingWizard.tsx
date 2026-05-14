@@ -647,8 +647,39 @@ export default function NewReadingWizard() {
               reviewSelections: results
             }))
             setProcessSingleRawResults(Array.isArray(rawApiResults) ? rawApiResults : [])
-            setCapturedImages(Array.isArray(nextCapturedImages) ? nextCapturedImages : [])
+            const imgs = Array.isArray(nextCapturedImages) ? nextCapturedImages : []
+            setCapturedImages(imgs)
             setStep('review')
+            if (draftId && imgs.length > 0) {
+              fetch('/api/reading/save_draft_images', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  draftId,
+                  capturedImages: imgs.map((img) => ({
+                    atSeconds: Number(img.atSeconds),
+                    dataUrl: String(img.dataUrl || ''),
+                    capturedAt: String(img.capturedAt || ''),
+                  })),
+                }),
+              }).catch(() => { })
+            }
+          }}
+          onImagesChange={(imgs) => {
+            const id = draftId
+            if (!id || imgs.length === 0) return
+            fetch('/api/reading/save_draft_images', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                draftId: id,
+                capturedImages: imgs.map((img) => ({
+                  atSeconds: Number(img.atSeconds),
+                  dataUrl: String(img.dataUrl || ''),
+                  capturedAt: String(img.capturedAt || ''),
+                })),
+              }),
+            }).catch(() => { })
           }}
         />
       )}

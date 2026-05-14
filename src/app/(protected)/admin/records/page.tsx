@@ -14,6 +14,8 @@ import { toast } from "react-toastify";
 import { downloadUrinalysisPdf, openUrinalysisPdf } from "@/utils/urinalysisPdf";
 import { ImagesModal } from "@/components/ImagesModal";
 
+type RecordsTab = "completed" | "incomplete";
+
 type AdminRecordRow = {
   id: string;
   petName: string;
@@ -26,6 +28,8 @@ type AdminRecordRow = {
   signedAt: string | null;
   createdAt: string | null;
   paymentStatus: string | null;
+  wizardStep?: string | null;
+  isDraft?: boolean;
 };
 
 function normalizePanelCode(productCode?: string | null) {
@@ -45,13 +49,14 @@ async function fetchAdminReadingDetail(readingId: string) {
 
 export default function RecordsPage() {
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<RecordsTab>("completed");
   const [actionReadingId, setActionReadingId] = useState<string | null>(null);
   const [panelTitleByCode, setPanelTitleByCode] = useState<Map<string, string>>(new Map());
   const [imagesModalOpen, setImagesModalOpen] = useState(false);
   const [selectedReadingId, setSelectedReadingId] = useState<string>("");
   const [selectedPetName, setSelectedPetName] = useState<string>("");
 
-  const queryParams = useMemo(() => ({ search }), [search]);
+  const queryParams = useMemo(() => ({ search, tab: activeTab }), [search, activeTab]);
 
   useEffect(() => {
     let mounted = true;
@@ -138,135 +143,227 @@ export default function RecordsPage() {
     setImagesModalOpen(true);
   }, []);
 
+  const STEP_LABELS: Record<string, string> = {
+    identification: "Identification",
+    timer: "Timer",
+    review: "Review",
+    report: "Report",
+  };
+
+  const sharedColumns: Column[] = [
+    {
+      header: "Pet",
+      accessor: "petName",
+      render: (item) => <span>{String(item?.petName ?? "—")}</span>,
+    },
+    {
+      header: "Pet Owner",
+      accessor: "guardianName",
+      render: (item) => (
+        <div className="min-w-0">
+          <div className="truncate">{String(item?.guardianName ?? "—")}</div>
+          <div className="truncate text-[12px] text-gray-500">{String(item?.guardianEmail ?? "")}</div>
+        </div>
+      ),
+    },
+    {
+      header: "Veterinarian",
+      accessor: "veterinarianName",
+      render: (item) => (
+        <div className="min-w-0">
+          <div className="truncate">{String(item?.veterinarianName ?? "—")}</div>
+          <div className="truncate text-[12px] text-gray-500">{String(item?.veterinarianEmail ?? "")}</div>
+        </div>
+      ),
+    },
+    {
+      header: "Panel",
+      accessor: "productCode",
+      render: (item) => {
+        const badges = panelBadgesForRecord(item);
+        if (!badges.length) return <span>—</span>;
+        return (
+          <div className="flex flex-wrap items-center gap-1.5 max-w-[260px]">
+            {badges.map((b) => (
+              <span
+                key={b.code}
+                title={b.code}
+                className={[
+                  "inline-flex items-center rounded-full border px-2 py-0.5 text-[12px] leading-[16px] truncate max-w-[240px]",
+                  b.isBase
+                    ? "border-gray-200 bg-gray-50 text-gray-800"
+                    : "border-blue-200 bg-blue-50 text-blue-800",
+                ].join(" ")}
+              >
+                {b.title}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
+  ];
+
+  const completedColumns: Column[] = [
+    ...sharedColumns,
+    {
+      header: "Signed",
+      accessor: "signedAt",
+      render: (item) => {
+        const raw = item?.signedAt;
+        const d = raw ? new Date(String(raw)) : null;
+        if (!d || Number.isNaN(d.getTime())) return <span>—</span>;
+        return <span>{format(d, "MMM dd, yyyy")}</span>;
+      },
+    },
+    {
+      header: "Payment",
+      accessor: "paymentStatus",
+      render: (item) => <span>{String(item?.paymentStatus ?? "—")}</span>,
+    },
+    {
+      header: "Actions",
+      accessor: "id",
+      render: (item) => {
+        const id = String(item?.id ?? "");
+        const petName = String(item?.petName ?? "Unknown");
+        const disabled = !id || actionReadingId === id;
+        return (
+          <div className="flex justify-start items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
+              disabled={disabled}
+              onClick={() => handleViewPdf(id)}
+              aria-label="View PDF"
+            >
+              <Eye size={16} />
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
+              disabled={disabled}
+              onClick={() => handleDownloadPdf(id)}
+              aria-label="Download PDF"
+            >
+              <Download size={16} />
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-blue-700 hover:bg-blue-100"
+              disabled={disabled}
+              onClick={() => handleViewImages(id, petName)}
+              aria-label="View Images"
+            >
+              <Images size={16} />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const incompleteColumns: Column[] = [
+    ...sharedColumns,
+    {
+      header: "Started",
+      accessor: "createdAt",
+      render: (item) => {
+        const raw = item?.createdAt;
+        const d = raw ? new Date(String(raw)) : null;
+        if (!d || Number.isNaN(d.getTime())) return <span>—</span>;
+        return <span>{format(d, "MMM dd, yyyy")}</span>;
+      },
+    },
+    {
+      header: "Step Reached",
+      accessor: "wizardStep",
+      render: (item) => {
+        const step = String(item?.wizardStep ?? "");
+        return (
+          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[12px] text-amber-800">
+            {STEP_LABELS[step] ?? "—"}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Actions",
+      accessor: "id",
+      render: (item) => {
+        const id = String(item?.id ?? "");
+        const petName = String(item?.petName ?? "Unknown");
+        const disabled = !id || actionReadingId === id;
+        return (
+          <div className="flex justify-start items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-blue-700 hover:bg-blue-100"
+              disabled={disabled}
+              onClick={() => handleViewImages(id, petName)}
+              aria-label="View Images"
+            >
+              <Images size={16} />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <BasicStructureWithName
       name="Records"
-      subHeading="All completed and signed test results."
+      subHeading={activeTab === "completed" ? "All completed and signed test results." : "Tests that were started but not completed."}
       showBackOption={false}
     >
       <div className="w-full flex flex-col justify-start items-start gap-6">
+        <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+          <button
+            type="button"
+            onClick={() => { setActiveTab("completed"); setSearch(""); }}
+            className={[
+              "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
+              activeTab === "completed"
+                ? "bg-white text-gray-900 shadow-sm border border-gray-200"
+                : "text-gray-500 hover:text-gray-700",
+            ].join(" ")}
+          >
+            Completed
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveTab("incomplete"); setSearch(""); }}
+            className={[
+              "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
+              activeTab === "incomplete"
+                ? "bg-white text-gray-900 shadow-sm border border-gray-200"
+                : "text-gray-500 hover:text-gray-700",
+            ].join(" ")}
+          >
+            Incomplete
+          </button>
+        </div>
+
         <SearchComponent searchQuery={search} onChangeFunc={setSearch} />
 
         <BoxProviderWithName>
           <ServerPaginationProvider<AdminRecordRow>
+            key={activeTab}
             apiEndpoint="/api/admin/readings"
             queryParams={queryParams}
             LoadingComponent={LoadingSkeleton}
             NoDataComponent={NoRecordsFound}
             itemsPerPage={10}
           >
-            {(data, isLoading) => {
-              const columns: Column[] = [
-                {
-                  header: "Pet",
-                  accessor: "petName",
-                  render: (item) => <span>{String(item?.petName ?? "—")}</span>,
-                },
-                {
-                  header: "Pet Owner",
-                  accessor: "guardianName",
-                  render: (item) => (
-                    <div className="min-w-0">
-                      <div className="truncate">{String(item?.guardianName ?? "—")}</div>
-                      <div className="truncate text-[12px] text-gray-500">{String(item?.guardianEmail ?? "")}</div>
-                    </div>
-                  ),
-                },
-                {
-                  header: "Veterinarian",
-                  accessor: "veterinarianName",
-                  render: (item) => (
-                    <div className="min-w-0">
-                      <div className="truncate">{String(item?.veterinarianName ?? "—")}</div>
-                      <div className="truncate text-[12px] text-gray-500">{String(item?.veterinarianEmail ?? "")}</div>
-                    </div>
-                  ),
-                },
-                {
-                  header: "Panel",
-                  accessor: "productCode",
-                  render: (item) => {
-                    const badges = panelBadgesForRecord(item);
-                    if (!badges.length) return <span>—</span>;
-                    return (
-                      <div className="flex flex-wrap items-center gap-1.5 max-w-[260px]">
-                        {badges.map((b) => (
-                          <span
-                            key={b.code}
-                            title={b.code}
-                            className={[
-                              "inline-flex items-center rounded-full border px-2 py-0.5 text-[12px] leading-[16px] truncate max-w-[240px]",
-                              b.isBase
-                                ? "border-gray-200 bg-gray-50 text-gray-800"
-                                : "border-blue-200 bg-blue-50 text-blue-800",
-                            ].join(" ")}
-                          >
-                            {b.title}
-                          </span>
-                        ))}
-                      </div>
-                    );
-                  },
-                },
-                {
-                  header: "Signed",
-                  accessor: "signedAt",
-                  render: (item) => {
-                    const raw = item?.signedAt;
-                    const d = raw ? new Date(String(raw)) : null;
-                    if (!d || Number.isNaN(d.getTime())) return <span>—</span>;
-                    return <span>{format(d, "MMM dd, yyyy")}</span>;
-                  },
-                },
-                {
-                  header: "Payment",
-                  accessor: "paymentStatus",
-                  render: (item) => <span>{String(item?.paymentStatus ?? "—")}</span>,
-                },
-                {
-                  header: "Actions",
-                  accessor: "id",
-                  render: (item) => {
-                    const id = String(item?.id ?? "");
-                    const petName = String(item?.petName ?? "Unknown");
-                    const disabled = !id || actionReadingId === id;
-                    return (
-                      <div className="flex justify-start items-center gap-2">
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
-                          disabled={disabled}
-                          onClick={() => handleViewPdf(id)}
-                          aria-label="View PDF"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100"
-                          disabled={disabled}
-                          onClick={() => handleDownloadPdf(id)}
-                          aria-label="Download PDF"
-                        >
-                          <Download size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-blue-700 hover:bg-blue-100"
-                          disabled={disabled}
-                          onClick={() => handleViewImages(id, petName)}
-                          aria-label="View Images"
-                        >
-                          <Images size={16} />
-                        </button>
-                      </div>
-                    );
-                  },
-                },
-              ];
-
-              return <DynamicTable data={data} columns={columns} itemsPerPage={10} isLoading={isLoading} />;
-            }}
+            {(data, isLoading) => (
+              <DynamicTable
+                data={data}
+                columns={activeTab === "completed" ? completedColumns : incompleteColumns}
+                itemsPerPage={10}
+                isLoading={isLoading}
+              />
+            )}
           </ServerPaginationProvider>
         </BoxProviderWithName>
       </div>
