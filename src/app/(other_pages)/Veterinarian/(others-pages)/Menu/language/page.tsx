@@ -54,7 +54,7 @@ export default function Page() {
   );
 
   return (
-    <div className="bg-[#F4F5FA] min-h-screen">
+    <div className="bg-[#F2F2F7] min-h-screen">
       <Header title={t("settings.languageTitle")} />
 
       <div className="flex min-h-[calc(100dvh-72px)] flex-col pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
@@ -70,7 +70,7 @@ export default function Page() {
                   i18n.changeLanguage(item.id);
                   if (typeof window !== "undefined") window.localStorage.setItem("ui_language_v1", item.id);
                 }}
-                className={`flex h-[52px] w-full items-center justify-between rounded-2xl px-4 ${selected ? "bg-[#E5EDF9]" : "bg-[#E8E8EE]"
+                className={`flex h-[52px] w-full items-center justify-between rounded-2xl px-4 transition-colors ${selected ? "bg-[#E5EDF9]" : "bg-[#EBEBF0]"
                   }`}
               >
                 <div
@@ -81,11 +81,11 @@ export default function Page() {
                 </div>
 
                 {selected ? (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#3F78D8]">
-                    <Check className="h-4 w-4 text-white" />
+                  <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[#3F78D8]">
+                    <Check className="h-[14px] w-[14px] text-white" strokeWidth={3} />
                   </div>
                 ) : (
-                  <div className="h-6 w-6" />
+                  <div className="h-[26px] w-[26px]" />
                 )}
               </button>
             );
@@ -97,7 +97,7 @@ export default function Page() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[48px] w-full rounded-lg bg-[#3F78D8] text-[15px] font-semibold text-white"
+            className="h-[52px] w-full rounded-xl bg-[#3F78D8] text-[16px] font-bold text-white disabled:opacity-60"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

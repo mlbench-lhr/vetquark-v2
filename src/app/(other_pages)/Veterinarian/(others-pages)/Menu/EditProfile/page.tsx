@@ -178,17 +178,18 @@ export default function EditProfileCard() {
         }
     };
 
-    const inputCls = "h-[44px] w-full rounded-lg border-0 bg-[#E8E8EE] px-4 text-[14px] leading-[18px] text-[#1C1C1E] placeholder:text-[#8E8E93] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0";
+    const inputCls = "h-[48px] w-full rounded-xl border border-[#E5E5EA] bg-white px-4 text-[15px] leading-[18px] text-[#1C1C1E] placeholder:text-[#8E8E93] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0";
+    const labelCls = "text-[14px] font-medium leading-[18px] text-[#1C1C1E] mb-1.5 block";
     return (
-        <div className="min-h-screen bg-[#F4F5FA] flex flex-col">
+        <div className="min-h-screen bg-[#F2F2F7] flex flex-col">
             <Header title={t("menu.editProfile")} />
             {/* Avatar Section */}
-            <div className="flex justify-center pt-4 pb-6">
+            <div className="flex justify-center pt-6 pb-8">
                 <div className="relative">
-                    <div className="w-[180px] h-[180px] rounded-full overflow-hidden bg-[#E8E8EE]">
+                    <div className="w-[160px] h-[160px] rounded-full overflow-hidden bg-[#E8E8EE]">
                         <Image
-                            width={360}
-                            height={360}
+                            width={320}
+                            height={320}
                             src={avatarUrl}
                             alt={t('profile.profile')}
                             className="w-full h-full object-cover"
@@ -205,7 +206,7 @@ export default function EditProfileCard() {
                         type="button"
                         onClick={handleAvatarClick}
                         disabled={uploadingAvatar}
-                        className="absolute bottom-2 right-2 w-10 h-10 bg-[#3F78D8] rounded-full flex items-center justify-center shadow-md hover:bg-[#2f68c8] transition-colors"
+                        className="absolute bottom-2 right-2 w-11 h-11 bg-[#3F78D8] rounded-full flex items-center justify-center shadow-md hover:bg-[#2f68c8] transition-colors"
                     >
                         <Camera className="h-5 w-5 text-white" />
                     </button>
@@ -213,9 +214,9 @@ export default function EditProfileCard() {
             </div>
 
             {/* Form Fields */}
-            <div className="flex-1 space-y-4">
+            <div className="flex-1 space-y-5">
                 <div>
-                    <Label className="text-[14px] font-medium leading-[18px] text-[#1C1C1E] mb-2 block">
+                    <Label className={labelCls}>
                         {t('menu.fullName')}<span className="text-[#1C1C1E]">*</span>
                     </Label>
                     <Input
@@ -227,7 +228,7 @@ export default function EditProfileCard() {
                 </div>
 
                 <div>
-                    <Label className="text-[14px] font-medium leading-[18px] text-[#1C1C1E] mb-2 block">
+                    <Label className={labelCls}>
                         {t('menu.email')}
                     </Label>
                     <Input
@@ -235,12 +236,12 @@ export default function EditProfileCard() {
                         value={localEmail}
                         disabled
                         placeholder="email@address.com"
-                        className={`${inputCls} opacity-80`}
+                        className={`${inputCls} opacity-70`}
                     />
                 </div>
 
                 <div>
-                    <Label className="text-[14px] font-medium leading-[18px] text-[#1C1C1E] mb-2 block">
+                    <Label className={labelCls}>
                         {t('menu.phoneNumber')}
                     </Label>
                     <PhoneInput
@@ -249,13 +250,13 @@ export default function EditProfileCard() {
                         onChange={setLocalPhone}
                         defaultCountry="br"
                         containerClassName="w-full"
-                        inputClassName="!w-full !h-[44px] !rounded-lg !border-0 !bg-[#E8E8EE] !pl-12 !text-[14px] !leading-[18px] !text-[#1C1C1E] placeholder:!text-[#8E8E93] focus:!outline-none"
-                        buttonClassName="!h-[44px] !border-0 !bg-[#E8E8EE] !rounded-l-lg"
+                        inputClassName="!w-full !h-[48px] !rounded-xl !border !border-[#E5E5EA] !bg-white !pl-[52px] !text-[15px] !leading-[18px] !text-[#1C1C1E] placeholder:!text-[#8E8E93] focus:!outline-none"
+                        buttonClassName="!h-[48px] !border !border-[#E5E5EA] !border-r-0 !bg-white !rounded-l-xl"
                     />
                 </div>
 
                 <div>
-                    <Label className="text-[14px] font-medium leading-[18px] text-[#1C1C1E] mb-2 block">
+                    <Label className={labelCls}>
                         {t("menu.veterinarianUniqueCode")}
                     </Label>
                     <div className="flex gap-2">
@@ -268,7 +269,7 @@ export default function EditProfileCard() {
                         <Button
                             type="button"
                             onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success(t("menu.copied")); }}
-                            className="h-[44px] rounded-lg bg-[#3F78D8] text-white px-4 text-[13px] font-medium hover:bg-[#2f68c8] shadow-none"
+                            className="h-[48px] rounded-xl bg-[#3F78D8] text-white px-4 text-[13px] font-semibold hover:bg-[#2f68c8] shadow-none"
                         >
                             {t("menu.copy")}
                         </Button>
@@ -276,7 +277,7 @@ export default function EditProfileCard() {
                             type="button"
                             onClick={handleRegenerateCode}
                             disabled={saving}
-                            className="h-[44px] rounded-lg bg-[#3F78D8] text-white px-4 text-[13px] font-medium hover:bg-[#2f68c8] whitespace-nowrap"
+                            className="h-[48px] rounded-xl bg-[#3F78D8] text-white px-4 text-[13px] font-semibold hover:bg-[#2f68c8] whitespace-nowrap shadow-none"
                         >
                             {t("menu.regenerate")}
                         </Button>
@@ -285,11 +286,11 @@ export default function EditProfileCard() {
             </div>
 
             {/* Save Button */}
-            <div className="py-6">
+            <div className="pb-8 pt-6">
                 <Button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full h-[48px] rounded-full bg-[#3F78D8] hover:bg-[#2f68c8] text-white font-semibold text-[15px]"
+                    className="w-full h-[52px] rounded-xl bg-[#3F78D8] hover:bg-[#2f68c8] text-white font-bold text-[16px] shadow-none"
                 >
                     {saving ? t('menu.saving') : t('menu.saveChanges')}
                 </Button>

@@ -96,7 +96,7 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
     <>
       <SaldoModal isOpen={saldoOpen} onClose={() => setSaldoOpen(false)} />
       <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
           <Link href={"/Veterinarian/Menu"} className="w-12 h-12 rounded-full flex items-center justify-center shrink-0">
             {profile?.profileImageUrl ? (
               <Image
@@ -104,17 +104,17 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
                 height={58}
                 src={profile.profileImageUrl}
                 alt={t('common.profile')}
-                className="w-12 h-12 rounded-full object-cover border-2 border-amber-400"
+                className="w-10.5 h-10.5 rounded-full object-cover border-2 bg-gray-300 border-amber-400"
               />
             ) : (
-              <div className='flex justify-center items-center w-12 h-12 rounded-full bg-gray-100'>
+              <div className='flex justify-center items-center w-10.5 h-10.5 rounded-full bg-gray-300'>
                 <User2 />
               </div>
             )}
           </Link>
           <div>
             <p className="text-xs text-gray-400 leading-tight">{t('dashboard.welcome')}</p>
-            <h1 className="text-sm font-bold text-black leading-tight">{resolvedName}</h1>
+            <h1 className="text-sm font-[500] text-black leading-tight">{resolvedName}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -122,17 +122,13 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
           <button
             type="button"
             onClick={() => setSaldoOpen(true)}
-            className="flex items-center gap-1.5 bg-[#EBF2FF] border border-[#BFDBFE] rounded-full pl-2.5 pr-3 py-1.5 shrink-0"
+            className="flex items-center border border-primary rounded-full shrink-0 overflow-hidden"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" stroke="#2563EB" strokeWidth="1.8" />
-              <path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.67 10.67 8 12 8s2.5.67 2.5 1.5S13.33 11 12 11s-2.5.83-2.5 1.5S10.67 16 12 16s2.5-.67 2.5-1.5" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-[10px] font-medium text-blue-700 leading-none">Saldo</span>
-            <span className="text-[11px] font-bold text-primary leading-none">{walletBalance}</span>
+            <span className="text-[10px] font-medium text-primary leading-none pl-1.5 py-1 pr-1 bg-primary/10">Saldo</span>
+            <span className="text-[11px] font-bold text-primary leading-none pr-1.5 py-1 pl-1">{walletBalance}</span>
           </button>
 
-          <Link href={"/Veterinarian/notifications"} className="relative w-10 h-10 bg-primary rounded-full flex items-center justify-center shrink-0">
+          <Link href={"/Veterinarian/notifications"} className="relative w-7 h-7 bg-primary rounded-full flex items-center justify-center shrink-0">
             {unreadCount > 0 ? (
               <span className="absolute -top-0.5 -right-0.5 inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#EF4444] px-[3px] text-[9px] font-bold leading-none text-white ring-2 ring-white">
                 {unreadCount > 9 ? '9+' : unreadCount}

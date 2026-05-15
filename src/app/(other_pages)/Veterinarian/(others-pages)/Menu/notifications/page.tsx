@@ -32,18 +32,18 @@ function Toggle({
       onClick={() => onChange(!checked)}
       className={[
         "relative inline-flex items-center shrink-0",
-        "w-[58px] h-[34px] rounded-full",
-        checked ? "bg-[#3F78D8]" : "bg-[#D1D5DB]",
+        "w-[51px] h-[31px] rounded-full",
+        checked ? "bg-[#3F78D8]" : "bg-[#78788029]",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
         "transition-colors",
       ].join(" ")}
     >
       <span
         className={[
-          "absolute top-[4px] left-[4px]",
-          "w-[26px] h-[26px] rounded-full bg-white",
-          "shadow-[0_1px_2px_rgba(0,0,0,0.18)]",
-          checked ? "translate-x-[24px]" : "translate-x-0",
+          "absolute top-[2px] left-[2px]",
+          "w-[27px] h-[27px] rounded-full bg-white",
+          "shadow-[0_3px_8px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.16)]",
+          checked ? "translate-x-[20px]" : "translate-x-0",
           "transition-transform",
         ].join(" ")}
       />
@@ -63,8 +63,8 @@ function SettingCard({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <div className="rounded-2xl bg-[#E8E8EE] px-5 py-4 flex items-start justify-between gap-4">
-      <div className="min-w-0">
+    <div className="rounded-2xl bg-[#EBEBF0] px-5 py-4 flex items-center justify-between gap-4">
+      <div className="min-w-0 flex-1">
         <div className="text-[15px] leading-[20px] font-semibold text-[#1C1C1E]">
           {title}
         </div>
@@ -72,7 +72,7 @@ function SettingCard({
           {description}
         </div>
       </div>
-      <div className="pt-1">
+      <div className="shrink-0">
         <Toggle checked={checked} onChange={onChange} />
       </div>
     </div>
@@ -181,10 +181,10 @@ export default function NotificationsSettingsPage() {
   };
 
   return (
-    <div className="bg-[#F4F5FA] min-h-screen">
+    <div className="bg-[#F2F2F7] min-h-screen">
       <Header title={t("menu.notifications")} />
 
-      <div className=" pb-10 pt-4">
+      <div className="pb-10 pt-4">
         <div className="space-y-3">
           {pushItems.map((item) => (
             <SettingCard
@@ -197,7 +197,7 @@ export default function NotificationsSettingsPage() {
           ))}
         </div>
 
-        <div className="text-[14px] leading-[20px] font-medium text-[#1C1C1E] mt-6 mb-3">
+        <div className="text-[15px] leading-[20px] font-medium text-[#1C1C1E] mt-6 mb-3">
           {t("notifications.settings.emailTitle")}
         </div>
 
@@ -218,7 +218,7 @@ export default function NotificationsSettingsPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[48px] w-full rounded-lg bg-[#3F78D8] text-[15px] font-semibold text-white"
+            className="h-[52px] w-full rounded-xl bg-[#3F78D8] text-[16px] font-bold text-white disabled:opacity-60"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

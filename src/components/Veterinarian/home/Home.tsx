@@ -152,8 +152,8 @@ export default function Home() {
 
             {patients.length > 0 && (
                 <div>
-                    <h2 className="text-base font-bold text-gray-800 mb-3">{t('dashboard.recentPatients')}</h2>
-                    <div className="space-y-3">
+                    <h2 className="text-base font-bold text-black/80 mb-2">{t('dashboard.recentPatients')}</h2>
+                    <div className="space-y-3 border bg-white border-[#E8E8E8] rounded-lg p-3">
                         {patients.slice(0, 4).map((patient, index) => (
                             <PatientCard key={patient.id} patient={patient} featured={index === 0} />
                         ))}
@@ -164,7 +164,7 @@ export default function Home() {
             <button
                 type="button"
                 onClick={() => router.push('/Veterinarian/new-reading')}
-                className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-colors cursor-pointer border-0 flex items-center justify-center gap-2"
+                className="w-full bg-primary mb-4 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors cursor-pointer border-0 flex items-center justify-center gap-2 text-[13px]"
             >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" />

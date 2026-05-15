@@ -169,21 +169,21 @@ export default function TaxInfoAndProfessionalProfilePage() {
     }
   };
 
-  const inputCls = "w-full h-[44px] rounded-lg border-0 bg-[#E8E8EE] px-4 text-[14px] leading-[18px] text-[#1C1C1E] placeholder:text-[#8E8E93] outline-none";
+  const inputCls = "w-full h-[44px] rounded-lg border border-[#E5E5EA] bg-white px-4 text-[14px] leading-[18px] text-[#1C1C1E] placeholder:text-[#8E8E93] outline-none focus:ring-2 focus:ring-[#3F78D8]";
   const labelCls = "block text-[14px] font-medium text-[#1C1C1E] mb-1.5";
 
   return (
-    <div className="w-full bg-[#F4F5FA] min-h-screen flex flex-col">
+    <div className="w-full bg-[#F2F2F7] min-h-screen flex flex-col">
       <Header title={t("menu.settings") || "Ajustes"} />
 
       <div className="flex-1 overflow-y-auto pt-2 pb-8">
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
+        <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-[18px] font-bold text-[#1C1C1E] leading-[24px]">
                 {t("menu.professionalProfile") || "Perfil Profissional"}
               </h2>
-              <p className="text-[12px] text-[#8E8E93] mt-1 leading-[16px]">
+              <p className="text-[13px] text-[#8E8E93] mt-1 leading-[18px]">
                 {t("menu.professionalProfileDesc") || "Seus dados de identificação e assinatura."}
               </p>
             </div>
@@ -246,7 +246,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 value={formData.dateOfBirth}
                 onChange={(nextIsoDate) => setFormData((prev) => ({ ...prev, dateOfBirth: nextIsoDate }))}
                 placeholder="dd/mm/aaaa"
-                className="w-full h-[44px] px-4 bg-[#E8E8EE] border-0 rounded-lg focus:outline-none text-[14px] text-[#1C1C1E] placeholder:text-[#8E8E93] pr-11"
+                className="w-full h-[44px] px-4 bg-white border border-[#E5E5EA] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F78D8] text-[14px] text-[#1C1C1E] placeholder:text-[#8E8E93] pr-11"
                 iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E8E93] cursor-pointer"
               />
             </div>
@@ -264,8 +264,9 @@ export default function TaxInfoAndProfessionalProfilePage() {
 
             <div>
               <label className={labelCls}>Assinatura Digital</label>
-              <button type="button" className="h-[40px] rounded-lg bg-[#3D3D45] text-white px-4 text-[13px] font-medium inline-flex items-center gap-2">
-                <span className="text-[14px]">⊕</span> Enviar nova
+              <button type="button" className="h-[40px] rounded-lg bg-[#3D3D45] text-white px-4 text-[13px] font-semibold inline-flex items-center gap-1.5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" /></svg>
+                Enviar nova
               </button>
             </div>
 
@@ -289,9 +290,9 @@ export default function TaxInfoAndProfessionalProfilePage() {
             type="button"
             onClick={() => formRef.current?.requestSubmit()}
             disabled={saving}
-            className="w-full h-[48px] mt-5 bg-[#3F78D8] hover:bg-[#2f68c8] text-white text-[15px] font-semibold rounded-lg inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full h-[52px] mt-5 bg-[#3F78D8] hover:bg-[#2f68c8] text-white text-[16px] font-bold rounded-xl inline-flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            <Pencil className="w-4 h-4" />
+            <Pencil className="w-[18px] h-[18px]" />
             {saving ? t("common.saving") : (t("menu.saveProfile") || "Salvar perfil")}
           </button>
         </div>

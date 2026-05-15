@@ -149,28 +149,28 @@ export default function Page() {
         }
     };
 
-    const inputCls = "w-full h-[44px] bg-[#E8E8EE] border-0 rounded-lg px-4 text-[14px] text-[#1C1C1E] placeholder:text-[#8E8E93] outline-none";
+    const inputCls = "w-full h-[44px] bg-white border border-[#E5E5EA] rounded-lg px-4 text-[14px] text-[#1C1C1E] placeholder:text-[#8E8E93] outline-none focus:ring-2 focus:ring-[#3F78D8]";
     const labelCls = "block text-[#1C1C1E] text-[14px] font-medium mb-1.5";
     return (
-        <div className="w-full bg-[#F4F5FA] min-h-screen flex flex-col pb-6">
+        <div className="w-full bg-[#F2F2F7] min-h-screen flex flex-col pb-6">
             <Header title={t("wallet.bankDetails") || "Dados Bancários"} />
 
             {/* Tab Selector */}
             <div className="flex gap-2 mb-4 mt-3">
                 <button
                     onClick={() => setActiveTab("pix")}
-                    className={`flex-1 h-[40px] rounded-full text-[13px] font-medium transition-colors ${activeTab === "pix"
-                        ? "bg-[#3F78D8] text-white"
-                        : "bg-white border border-[#3F78D8] text-[#3F78D8]"
+                    className={`flex-1 h-[42px] rounded-full text-[14px] font-semibold transition-colors ${activeTab === "pix"
+                            ? "bg-[#3F78D8] text-white"
+                            : "bg-white border border-[#D1D1D6] text-[#1C1C1E]"
                         }`}
                 >
                     {t("wallet.pixRecommended") || "PIX (Recomendado)"}
                 </button>
                 <button
                     onClick={() => setActiveTab("bank")}
-                    className={`flex-1 h-[40px] rounded-full text-[13px] font-medium transition-colors ${activeTab === "bank"
-                        ? "bg-[#3F78D8] text-white"
-                        : "bg-white border border-[#3F78D8] text-[#3F78D8]"
+                    className={`flex-1 h-[42px] rounded-full text-[14px] font-semibold transition-colors ${activeTab === "bank"
+                            ? "bg-[#3F78D8] text-white"
+                            : "bg-white border border-[#D1D1D6] text-[#1C1C1E]"
                         }`}
                 >
                     {t("wallet.bankAccountLabel") || "Conta Bancária"}
@@ -181,19 +181,19 @@ export default function Page() {
                 <div className="flex flex-col flex-1">
                     {/* Info Banner */}
                     <div className="bg-[#E5EDF9] rounded-xl px-4 py-3 mb-4 flex items-start gap-3">
-                        <Zap className="w-5 h-5 text-[#3F78D8] flex-shrink-0 mt-0.5" fill="#3F78D8" />
+                        <Zap className="w-[18px] h-[18px] text-[#3F78D8] flex-shrink-0 mt-0.5" fill="#3F78D8" />
                         <div>
-                            <p className="text-[#3F78D8] text-[14px] font-semibold leading-[18px]">
+                            <p className="text-[#3F78D8] text-[14px] font-bold leading-[18px]">
                                 {t("wallet.pixFewerErrors") || "Mais rápido e com menos erros."}
                             </p>
-                            <p className="text-[#3F78D8] text-[12px] mt-0.5 opacity-80">
+                            <p className="text-[#3F78D8] text-[12px] mt-0.5 leading-[16px] opacity-80">
                                 {t("wallet.pixFastSafeDesc") || "O PIX é o método mais rápido e seguro para receber seus repasses."}
                             </p>
                         </div>
                     </div>
 
                     {/* Form Card */}
-                    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 space-y-4">
+                    <div className="bg-white rounded-2xl border border-[#E5E5EA] p-4 space-y-4">
                         <div>
                             <label className={labelCls}>{t("wallet.keyType") || "Tipo de Chave"}</label>
                             <select
@@ -222,7 +222,7 @@ export default function Page() {
                 </div>
             ) : (
                 <div className="flex flex-col flex-1">
-                    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 space-y-4">
+                    <div className="bg-white rounded-2xl border border-[#E5E5EA] p-4 space-y-4">
                         <div>
                             <label className={`${labelCls} mb-3`}>{t("wallet.typeOfPerson") || "Tipo de Pessoa"}</label>
                             <div className="flex items-center gap-6">
@@ -276,7 +276,7 @@ export default function Page() {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full bg-[#3F78D8] text-white h-[48px] rounded-lg text-[15px] font-semibold hover:bg-[#2f68c8] transition-colors disabled:opacity-60"
+                    className="w-full bg-[#3F78D8] text-white h-[52px] rounded-xl text-[16px] font-bold hover:bg-[#2f68c8] transition-colors disabled:opacity-60"
                 >
                     {saving ? t("common.saving") : activeTab === "pix" ? "Salvar Dados Pix" : "Salvar Conta Bancária"}
                 </button>

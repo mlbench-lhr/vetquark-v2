@@ -165,7 +165,7 @@ export default function WalletCard({
     });
 
     return (
-        <div className="bg-[#F4F5FA] min-h-screen">
+        <div className="bg-[#F2F2F7] min-h-screen">
             <Header title={t("wallet.wallet")} />
 
             <div className="pt-3 pb-8 space-y-3">
@@ -173,27 +173,27 @@ export default function WalletCard({
                 {loading ? (
                     <BalanceCardSkeleton />
                 ) : (
-                    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
+                    <div className="bg-white rounded-2xl border border-[#E5E5EA] px-5 py-4">
                         <div className="text-[20px] font-bold text-[#1C1C1E] leading-[26px]">
                             {t("wallet.availableBalance") || "Saldo Disponível"}
                         </div>
-                        <div className="text-[13px] text-[#8E8E93] mt-1">
+                        <div className="text-[13px] text-[#8E8E93] mt-0.5 leading-[18px]">
                             Valores liberados para saque.
                         </div>
-                        <div className="flex items-end justify-between mt-2">
-                            <div className="text-[26px] font-bold text-[#3F78D8] leading-none">
+                        <div className="flex items-end justify-between mt-3">
+                            <div className="text-[28px] font-bold text-[#3F78D8] leading-none">
                                 {currency} {balance}
                             </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleWithdraw}
-                                    className="h-8 px-4 rounded-md bg-[#3F78D8] text-white text-[13px] font-medium hover:bg-[#2f68c8] transition-colors"
+                                    className="h-[34px] px-4 rounded-lg bg-[#3F78D8] text-white text-[13px] font-semibold hover:bg-[#2f68c8] transition-colors"
                                 >
                                     {t("wallet.withdraw") || "Sacar"}
                                 </button>
                                 <button
                                     onClick={() => router.push("/Veterinarian/Menu/wallet/bankDetails")}
-                                    className="h-8 px-4 rounded-md bg-[#3F78D8] text-white text-[13px] font-medium hover:bg-[#2f68c8] transition-colors"
+                                    className="h-[34px] px-4 rounded-lg bg-[#3F78D8] text-white text-[13px] font-semibold hover:bg-[#2f68c8] transition-colors"
                                 >
                                     {t("wallet.bankDetails") || "Dados Bancários"}
                                 </button>
@@ -203,23 +203,23 @@ export default function WalletCard({
                 )}
 
                 {/* Statement Card */}
-                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
+                <div className="bg-white rounded-2xl border border-[#E5E5EA] px-5 py-4">
                     <div className="text-[20px] font-bold text-[#1C1C1E] leading-[26px]">
                         {t("wallet.statement") || "Extrato"}
                     </div>
-                    <div className="text-[13px] text-[#8E8E93] mt-1 mb-3">
+                    <div className="text-[13px] text-[#8E8E93] mt-0.5 leading-[18px] mb-3">
                         Suas movimentações recentes.
                     </div>
 
                     {/* Period tabs */}
-                    <div className="flex gap-2 mb-3">
+                    <div className="flex gap-2 mb-4">
                         {(["7d", "30d", "90d"] as const).map((p) => (
                             <button
                                 key={p}
                                 onClick={() => setPeriod(p)}
-                                className={`px-3 py-1 text-[13px] font-medium rounded-md border transition-colors ${period === p
-                                    ? "bg-[#E5EDF9] border-[#3F78D8] text-[#3F78D8]"
-                                    : "bg-white border-[#E5E7EB] text-[#1C1C1E]"
+                                className={`h-[30px] px-3 text-[13px] font-medium rounded-lg border transition-colors ${period === p
+                                        ? "bg-[#E5EDF9] border-[#3F78D8] text-[#3F78D8]"
+                                        : "bg-white border-[#E5E5EA] text-[#1C1C1E]"
                                     }`}
                             >
                                 {p}
@@ -234,28 +234,29 @@ export default function WalletCard({
                             <ListItemSkeleton />
                         </>
                     ) : filteredTransactions.length === 0 ? (
-                        <div className="py-10 text-center">
+                        <div className="py-8 text-center">
                             <p className="text-[14px] font-semibold text-[#8E8E93]">
                                 Sem movimentações ainda
                             </p>
-                            <p className="text-[12px] text-[#8E8E93] mt-1 leading-[1.5] px-4">
+                            <p className="text-[12px] text-[#8E8E93] mt-1.5 leading-[1.5] px-6">
                                 Quando seus pagamentos forem confirmados, eles aparecerão aqui.
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-2">
-                            {filteredTransactions.map((transaction) => (
+                        <div>
+                            {filteredTransactions.map((transaction, idx) => (
                                 <div
                                     key={transaction.id}
-                                    className="flex items-center justify-between rounded-lg bg-[#F4F5FA] px-4 py-2.5"
+                                    className={`flex items-center justify-between py-3 ${idx < filteredTransactions.length - 1 ? "border-b border-[#F2F2F7]" : ""
+                                        }`}
                                 >
-                                    <div className="text-[14px] text-[#1C1C1E]">
+                                    <div className="text-[14px] font-medium text-[#1C1C1E]">
                                         {transaction.title}
                                     </div>
                                     {transaction.amount && (
                                         <div className={`text-[14px] font-semibold ${transaction.type === "credit"
-                                            ? "text-[#3F78D8]"
-                                            : "text-[#EF4444]"
+                                                ? "text-[#3F78D8]"
+                                                : "text-[#EF4444]"
                                             }`}>
                                             {transaction.type === "withdrawal" ? "-" : ""}R$ {transaction.amount}
                                         </div>
@@ -275,9 +276,9 @@ export default function WalletCard({
                             <button
                                 key={f.key}
                                 onClick={() => setFilter(f.key)}
-                                className={`px-4 py-1 text-[13px] font-medium rounded-md border transition-colors ${filter === f.key
-                                    ? "bg-[#E5EDF9] border-[#3F78D8] text-[#3F78D8]"
-                                    : "bg-white border-[#E5E7EB] text-[#1C1C1E]"
+                                className={`h-[30px] px-4 text-[13px] font-medium rounded-lg border transition-colors ${filter === f.key
+                                        ? "bg-[#E5EDF9] border-[#3F78D8] text-[#3F78D8]"
+                                        : "bg-white border-[#E5E5EA] text-[#1C1C1E]"
                                     }`}
                             >
                                 {f.label}
