@@ -54,8 +54,8 @@ function StatusPill({ isSigned, paymentStatus }: { isSigned: boolean; paymentSta
 
   if (isSigned) {
     return (
-      <span className="inline-flex items-center gap-[5px] rounded-full bg-[#3C3C3C] px-3 py-[5px] text-[11px] font-semibold text-white">
-        <span className="inline-flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-full bg-[#22C55E]">
+      <span className="inline-flex items-center gap-[5px] rounded-full bg-[#3C3C3C] px-3 py-[3px] text-[11px] font-semibold text-white">
+        <span className="inline-flex h-[10px] w-[10px] shrink-0 items-center justify-center rounded-full bg-[#22C55E]">
           <Check className="h-[8px] w-[8px] text-white" strokeWidth={3} />
         </span>
         {t("history.signed")}
@@ -65,8 +65,8 @@ function StatusPill({ isSigned, paymentStatus }: { isSigned: boolean; paymentSta
 
   if (paymentStatus === "pending") {
     return (
-      <span className="inline-flex items-center gap-[5px] rounded-full bg-[#C4B5FD] px-3 py-[5px] text-[11px] font-semibold text-white">
-        <span className="inline-flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-full bg-[#7C3AED]">
+      <span className="inline-flex items-center gap-[5px] rounded-full bg-[#C4B5FD] px-3 py-[3px] text-[11px] font-semibold text-white">
+        <span className="inline-flex h-[10px] w-[10px] shrink-0 items-center justify-center rounded-full bg-[#7C3AED]">
           <Clock className="h-[9px] w-[9px] text-white" strokeWidth={3} />
         </span>
         {t("history.signed")}
@@ -76,7 +76,7 @@ function StatusPill({ isSigned, paymentStatus }: { isSigned: boolean; paymentSta
 
   if (paymentStatus === "expired") {
     return (
-      <span className="inline-flex items-center gap-[5px] rounded-full bg-red-50 px-3 py-[5px] text-[11px] font-semibold text-red-600">
+      <span className="inline-flex items-center gap-[5px] rounded-full bg-red-50 px-3 py-[3px] text-[11px] font-semibold text-red-600">
         <span className="h-2 w-2 shrink-0 rounded-full bg-red-400" />
         {t("history.paymentExpired")}
       </span>
@@ -84,7 +84,7 @@ function StatusPill({ isSigned, paymentStatus }: { isSigned: boolean; paymentSta
   }
 
   return (
-    <span className="inline-flex items-center gap-[5px] rounded-full bg-gray-100 px-3 py-[5px] text-[11px] font-semibold text-gray-500">
+    <span className="inline-flex items-center gap-[5px] rounded-full bg-gray-100 px-3 py-[3px] text-[11px] font-semibold text-gray-500">
       <span className="h-2 w-2 shrink-0 rounded-full bg-gray-400" />
       {t("history.notSigned")}
     </span>
@@ -107,10 +107,10 @@ function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; on
   };
 
   return (
-    <div className="rounded-[16px] bg-white px-4 py-[14px] border border-[#EEF0F2]">
-      <div className="flex items-start justify-between gap-2">
+    <div className="rounded-[16px] px-2 py-2 border border-black/20">
+      <div className="flex items-start justify-between gap-2 relative">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-full bg-gray-200">
+          <div className="h-[46px] w-[46px] shrink-0 overflow-hidden rounded-full bg-gray-200">
             <Image
               width={100}
               height={100}
@@ -120,44 +120,46 @@ function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; on
             />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-[17px] font-bold text-[#111827] leading-tight">
+            <p className="truncate text-[15px] font-bold text-black/70 leading-tight">
               {item.patientName}
             </p>
             <p className="text-[12px] mt-[4px] leading-snug">
-              <span className="text-gray-400">{t("common.guardian")}: </span>
+              <span className="text-gray-400">Tutor: </span>
               <span className="font-bold text-gray-600">{item.guardianName}</span>
               <span className="text-gray-400"> | {t("common.date")}: </span>
               <span className="font-bold text-gray-600">{item.dateLabel}</span>
             </p>
-            <div className="mt-[8px]">
-              <StatusPill isSigned={item.isSigned} paymentStatus={item.paymentStatus} />
+            <div className="w-full flex justify-center ">
+              <div className="-translate-x-6">
+                <StatusPill isSigned={item.isSigned} paymentStatus={item.paymentStatus} />
+              </div>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-[6px] shrink-0 pt-[2px]">
+        <div className="absolute right-1 top-1 flex items-center gap-[6px] shrink-0">
           <button
             type="button"
             onClick={handleView}
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#E0EAFF] text-primary transition-colors hover:bg-[#D1DEFF]"
+            className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-[#D1DEFF]"
             aria-label={t("history.details")}
           >
-            <Eye className="h-[14px] w-[14px]" />
+            <Eye className="h-[10px] w-[10px]" />
           </button>
           <button
             type="button"
             onClick={onDownload}
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#E0EAFF] text-primary transition-colors hover:bg-[#D1DEFF]"
+            className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-[#D1DEFF]"
             aria-label={t("history.download")}
           >
-            <FileText className="h-[14px] w-[14px]" />
+            <FileText className="h-[10px] w-[10px]" />
           </button>
           <button
             type="button"
             onClick={onShare}
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#E0EAFF] text-primary transition-colors hover:bg-[#D1DEFF]"
+            className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-[#D1DEFF]"
             aria-label={t("common.share")}
           >
-            <Upload className="h-[14px] w-[14px]" />
+            <Upload className="h-[10px] w-[10px]" />
           </button>
         </div>
       </div>
@@ -279,7 +281,7 @@ function PageContent() {
   }, [t]);
 
   return (
-    <div className="w-full bg-white">
+    <div className="w-full ">
       {/* Page Header */}
       <div className="flex items-center justify-between px-2 pt-1 pb-2">
         <h1 className="text-[22px] font-bold text-primary">
@@ -289,7 +291,7 @@ function PageContent() {
           <button
             type="button"
             onClick={() => setSearchOpen((v) => !v)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white border border-[#E5E7EB] hover:bg-gray-50 transition-colors"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white border border-black/20 hover:bg-gray-50 transition-colors"
             aria-label={t("common.search")}
           >
             <Search className="h-[18px] w-[18px] text-[#6B7280]" />
@@ -325,12 +327,12 @@ function PageContent() {
       )}
 
       {/* Container Card */}
-      <div className="mt-2 rounded-[22px] bg-white p-4 pb-5 border border-[#EAECEF]">
+      <div className="mt-2 rounded-lg p-4 pb-5 border border-black/20">
         <div className="mb-4 px-1">
-          <h2 className="text-[22px] font-bold text-[#111827] leading-tight">
+          <h2 className="text-[18px] font-bold text-black/70 leading-tight">
             {t("history.laudosTitle")}
           </h2>
-          <p className="text-[13px] text-[#6B7280] mt-[4px]">
+          <p className="text-[12px] text-[#6B7280]">
             {t("history.manageLaudos")}
           </p>
         </div>
@@ -358,7 +360,7 @@ function PageContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="w-full bg-white" />}>
+    <Suspense fallback={<div className="w-full" />}>
       <PageContent />
     </Suspense>
   );
