@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { Modal } from "@/components/ui/modal";
 import EmailVerification from "@/components/auth/EmailVerification";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function SignInForm() {
   const router = useRouter();
@@ -109,8 +110,11 @@ export default function SignInForm() {
     <div className="min-h-[100dvh] flex flex-col bg-[#F2F2F7]">
       <div className="flex-1 flex flex-col px-5 pb-10">
         {/* Logo with circular backdrop */}
-        <div className="relative flex items-center justify-center h-[180px] overflow-hidden mb-4">
-          <div className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-[340px] h-[280px] bg-white rounded-full" />
+        <div className=" flex items-center justify-center h-[180px] overflow-hidden mb-4">
+          <div className="absolute -top-[17%] left-1/2 -translate-x-1/2 w-[100vw]"  >
+            <Image src={"/Ellipse 5.svg"} alt="edit icon" className="w-[100vw] h-[100vw]" width={100} height={100} />
+
+          </div>
           <span className="relative text-[32px] font-bold text-black/70 tracking-tight leading-none mt-6">
             VetQuark<sup className="text-[13px] font-normal align-super">™</sup>
           </span>
@@ -121,8 +125,10 @@ export default function SignInForm() {
           <h1 className="text-[38px] font-bold text-primary leading-tight mb-2">
             {t("auth.welcome")}
           </h1>
-          <p className="text-[#6C6C70] text-[15px] leading-snug max-w-[220px] mx-auto">
-            {t("auth.accountTypePrompt")}
+          <p className="text-[#6C6C70] text-[15px] leading-[16px] max-w-[220px] mx-auto">
+            {/* {t("auth.accountTypePrompt")} */}
+            Selecione seu perfil <br />
+            e acesse sua conta
           </p>
         </div>
 
@@ -133,7 +139,7 @@ export default function SignInForm() {
             placeholder={t("auth.email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-[#8E8E93] border-0"
+            className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-black/70! border-0"
           />
 
           <div className="relative">
@@ -142,7 +148,7 @@ export default function SignInForm() {
               placeholder={t("auth.password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-[#8E8E93] border-0 pr-12"
+              className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-black/70! border-0 pr-12"
             />
             <button
               type="button"
@@ -167,7 +173,7 @@ export default function SignInForm() {
           <button
             type="submit"
             disabled={verifying}
-            className="w-full bg-primary text-white font-bold text-[16px] py-[15px] rounded-xl transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed mt-1 shadow-[0_8px_24px_-8px_rgba(63,120,216,0.5)]"
+            className="w-full bg-primary text-white font-bold text-[16px] py-[15px] rounded-lg transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed mt-1 shadow-[0_8px_24px_-8px_rgba(63,120,216,0.5)]"
           >
             {verifying ? (
               <span className="inline-flex items-center justify-center gap-2">
