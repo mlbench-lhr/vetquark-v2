@@ -97,7 +97,7 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({
           <button
             type="button"
             onClick={handleExport}
-            className="flex items-center gap-1.5 text-[10px] font-normal text-primary border border-[#E5E7EB] rounded-xl px-2.5 py-2 cursor-pointer bg-white hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 text-[10px] font-normal text-primary border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 cursor-pointer bg-white hover:bg-gray-50 transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />

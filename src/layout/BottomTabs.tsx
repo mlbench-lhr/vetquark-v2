@@ -72,7 +72,7 @@ export default function BottomTabs() {
                                 </div>
                             )}
                             <span
-                                className={`text-[10px] transition-colors truncate w-full text-center px-0.5 ${isActive ? "text-[#3F78D8] font-medium" : "text-gray-500"
+                                className={`text-[10px] transition-colors truncate w-full text-center px-0.5 ${isActive ? "text-primary font-medium" : "text-gray-500"
                                     }`}
                             >
                                 {label}

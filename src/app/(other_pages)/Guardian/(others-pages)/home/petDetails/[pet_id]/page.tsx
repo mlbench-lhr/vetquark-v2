@@ -197,7 +197,7 @@ export default function Page() {
   const StatusPill = ({ status }: { status: "signed" | "pending" }) => {
     const label = status === "signed" ? t('history.signed') : t('history.pending');
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-3 py-1.5 text-[13px] font-medium text-[#3F78D8]">
+      <span className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-3 py-1.5 text-[13px] font-medium text-primary">
         <Check className="h-4 w-4" />
         {label}
       </span>
@@ -211,7 +211,7 @@ export default function Page() {
           <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t('dashboard.examsLabel')}</div>
           <Link
             href={`/Guardian/history?petId=${encodeURIComponent(String(petId || ""))}`}
-            className="text-[13px] font-medium leading-[18px] text-[#3F78D8]"
+            className="text-[13px] font-medium leading-[18px] text-primary"
           >
             {t('home.viewHistory')}
           </Link>
@@ -243,14 +243,14 @@ export default function Page() {
                 <div className="mt-3 flex items-center justify-end gap-3">
                   <button
                     type="button"
-                    className="inline-flex h-[34px] items-center gap-2 rounded-full bg-[#3F78D8] px-4 text-[13px] font-medium text-white"
+                    className="inline-flex h-[34px] items-center gap-2 rounded-full bg-primary px-4 text-[13px] font-medium text-white"
                     onClick={() => handleDownload(r.id)}
                   >
                     {t('history.download')}
                   </button>
                   <button
                     type="button"
-                    className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-[#3F78D8]"
+                    className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-primary"
                     onClick={() => router.push(`/Guardian/history/detail/${encodeURIComponent(r.id)}`)}
                   >
                     {t('history.details')}

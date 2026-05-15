@@ -288,7 +288,7 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
                     })()
                     : t("reading.identification.selectPatient")}
                 </span>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#3F78D8]" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
               </button>
               <button
                 type="button"
@@ -316,7 +316,7 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
                     type="button"
                     onClick={() => onChange({ collectionMethod: m.key })}
                     className={`py-3.5 px-3 rounded-2xl text-[14px] font-medium text-center border transition-all ${isSelected
-                      ? 'border-[#3F78D8] bg-[#EBF2FF] text-[#3F78D8]'
+                      ? 'border-primary bg-[#EBF2FF] text-primary'
                       : 'border-[#E5E7EB] bg-white text-[#374151]'
                       }`}
                   >
@@ -337,7 +337,7 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
               <button
                 type="button"
                 onClick={() => onChange({ isJejum: !value.isJejum })}
-                className={`relative inline-flex w-12 h-6 rounded-full duration-200 transition-colors flex-shrink-0 ${value.isJejum ? 'bg-[#3F78D8]' : 'bg-[#D1D5DB]'}`}
+                className={`relative inline-flex w-12 h-6 rounded-full duration-200 transition-colors flex-shrink-0 ${value.isJejum ? 'bg-primary' : 'bg-[#D1D5DB]'}`}
               >
                 <span
                   className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm duration-200 transition-all ${value.isJejum ? 'left-[26px]' : 'left-0.5'}`}
@@ -361,7 +361,7 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
                 </span>
               </button>
               <div className="relative w-12 h-12 flex-shrink-0 flex items-center justify-center bg-[#EBF2FF] rounded-2xl overflow-hidden">
-                <Calendar className="w-5 h-5 text-[#3F78D8] pointer-events-none" />
+                <Calendar className="w-5 h-5 text-primary pointer-events-none" />
                 <input
                   ref={collectionRef}
                   type="datetime-local"
@@ -382,7 +382,7 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
           onClick={handleProceed}
           disabled={!canProceed || generating}
           className={`w-full py-4 rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all ${canProceed && !generating
-            ? 'bg-[#3F78D8] text-white shadow-sm'
+            ? 'bg-primary text-white shadow-sm'
             : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
             }`}
         >

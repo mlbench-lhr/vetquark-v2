@@ -828,7 +828,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           disabled={analysisFailed || (!started && !cameraReady)}
           className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-full font-semibold text-[15px] transition-all ${analysisFailed || (!started && !cameraReady)
             ? 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
-            : 'bg-[#3F78D8] text-white shadow-sm'
+            : 'bg-primary text-white shadow-sm'
             }`}
         >
           <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -851,9 +851,9 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
               onClick={() => !started && onChangeSelectedSeconds(m)}
               disabled={started}
               className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${isCaptured
-                ? 'bg-[#3F78D8] border-[#3F78D8] text-white'
+                ? 'bg-primary border-primary text-white'
                 : isSelected && !started
-                  ? 'bg-white border-[#3F78D8] text-[#3F78D8]'
+                  ? 'bg-white border-primary text-primary'
                   : 'bg-white border-[#E5E7EB] text-[#6B7280]'
                 }`}
             >
@@ -868,7 +868,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           onClick={handleAnalyze}
           disabled={!captureProgress.allDone || analyzing}
           className={`w-full py-4 rounded-full font-semibold text-[15px] transition-all ${captureProgress.allDone && !analyzing
-            ? 'bg-[#3F78D8] text-white shadow-sm'
+            ? 'bg-primary text-white shadow-sm'
             : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
             }`}
         >

@@ -25,7 +25,7 @@ function Step({
   return (
     <div className="rounded-2xl bg-[#F5F6F6] px-4 py-4">
       <div className="flex items-start gap-3">
-        <div className="h-9 w-9 flex items-center justify-center rounded-full bg-[#3F78D8] text-white text-[14px] font-semibold">
+        <div className="h-9 w-9 flex items-center justify-center rounded-full bg-primary text-white text-[14px] font-semibold">
           {index}
         </div>
         <div className="w-[calc(100%-36px)]">
@@ -262,7 +262,7 @@ export default function Page() {
               "If collection fails, contact your veterinarian for alternatives",
             ].map((tip) => (
               <div key={tip} className="flex items-start gap-2">
-                <Check className="mt-[2px] h-4 w-4 text-[#3F78D8]" />
+                <Check className="mt-[2px] h-4 w-4 text-primary" />
                 <div className="text-[13px] leading-[18px] text-[#111827]">{tip}</div>
               </div>
             ))}
@@ -296,7 +296,7 @@ export default function Page() {
         <div className="mt-6">
           <button
             type="button"
-            className="h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white flex items-center justify-center gap-2"
+            className="h-[44px] w-full rounded-full bg-primary text-[14px] font-medium text-white flex items-center justify-center gap-2"
             onClick={handleDownloadPdf}
           >
             <Download className="h-5 w-5" />

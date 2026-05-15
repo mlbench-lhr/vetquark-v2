@@ -275,7 +275,7 @@ export default function Page() {
             type="button"
             onClick={handleSave}
             disabled={saving || !idValid}
-            className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+            className="h-[56px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

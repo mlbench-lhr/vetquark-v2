@@ -126,14 +126,14 @@ export default function VeterinarianUserDetailPage() {
                     <>
                       <a
                         href={`tel:${user.phone}`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F6F6] text-[#3F78D8] hover:bg-gray-100"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F6F6] text-primary hover:bg-gray-100"
                         aria-label="Call"
                       >
                         <Phone size={18} />
                       </a>
                       <a
                         href={`sms:${user.phone}`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F6F6] text-[#3F78D8] hover:bg-gray-100"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F6F6] text-primary hover:bg-gray-100"
                         aria-label="Message"
                       >
                         <MessageSquare size={18} />
@@ -143,7 +143,7 @@ export default function VeterinarianUserDetailPage() {
                   {user?.email?.trim() ? (
                     <a
                       href={`mailto:${user.email}`}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F6F6] text-[#3F78D8] hover:bg-gray-100"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F6F6] text-primary hover:bg-gray-100"
                       aria-label="Email"
                     >
                       <Mail size={18} />

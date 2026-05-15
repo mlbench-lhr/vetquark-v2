@@ -213,7 +213,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
               onChange={(e) => onChangeReport({ veterinarianNotes: e.target.value })}
               placeholder="Nenhuma observação adicional."
               rows={3}
-              className="w-full px-3 py-2.5 bg-[#F5F6F6] rounded-xl text-[12px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-1 focus:ring-[#3F78D8]/30"
+              className="w-full px-3 py-2.5 bg-[#F5F6F6] rounded-xl text-[12px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-1 focus:ring-primary/30"
             />
           </div>
 
@@ -224,7 +224,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
               onChange={(e) => onChangeReport({ summaryAndInterpretation: e.target.value })}
               placeholder={t('reading.report.enterSummaryInterpretation')}
               rows={4}
-              className="w-full px-3 py-2.5 bg-[#F5F6F6] rounded-xl text-[12px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-1 focus:ring-[#3F78D8]/30"
+              className="w-full px-3 py-2.5 bg-[#F5F6F6] rounded-xl text-[12px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-1 focus:ring-primary/30"
             />
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
               <button
                 type="button"
                 onClick={ensureSignatureUploaded}
-                className="px-3 py-1.5 rounded-full bg-[#3F78D8] text-white text-[11px] font-medium disabled:opacity-70"
+                className="px-3 py-1.5 rounded-full bg-primary text-white text-[11px] font-medium disabled:opacity-70"
                 disabled={uploading || !!submitting}
               >
                 {uploading ? t('reading.report.uploading') : signatureImageUrl ? t('reading.report.signatureReady') : t('reading.report.save')}
@@ -256,7 +256,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
                 <button
                   type="button"
                   onClick={handleRetake}
-                  className="px-3 py-1.5 rounded-full bg-white text-[#3F78D8] text-[11px] font-medium border border-[#3F78D8]"
+                  className="px-3 py-1.5 rounded-full bg-white text-primary text-[11px] font-medium border border-primary"
                   disabled={uploading || !!submitting}
                 >
                   {t('reading.report.retake')}
@@ -287,7 +287,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
             onComplete()
           }}
           disabled={!!submitting || uploading || !signatureImageUrl}
-          className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px] disabled:opacity-70 shadow-sm"
+          className="w-full py-4 rounded-full bg-primary text-white font-semibold text-[15px] disabled:opacity-70 shadow-sm"
         >
           {submitting ? t('reading.report.signing') : t('reading.report.signComplete')}
         </button>

@@ -333,7 +333,7 @@ function RegistrationsListContent() {
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
-          <h1 className="text-[24px] font-bold italic text-[#3F78D8] tracking-tight">{lang === "pt" ? "Cadastros" : t("registrations.title")}</h1>
+          <h1 className="text-[24px] font-bold italic text-primary tracking-tight">{lang === "pt" ? "Cadastros" : t("registrations.title")}</h1>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSearchOpen((s) => !s)}
@@ -344,14 +344,14 @@ function RegistrationsListContent() {
             </button>
             <button
               onClick={() => router.push("/Veterinarian/notifications")}
-              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#3F78D8]"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary"
               aria-label="Notifications"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3501 21.9965 12 21.9965C11.6499 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="absolute top-[7px] right-[7px] h-[8px] w-[8px] rounded-full bg-[#EF4444] ring-2 ring-[#3F78D8]" />
+              <span className="absolute top-[7px] right-[7px] h-[8px] w-[8px] rounded-full bg-[#EF4444] ring-2 ring-primary" />
             </button>
           </div>
         </div>
@@ -366,7 +366,7 @@ function RegistrationsListContent() {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder={lang === "pt" ? "Buscar..." : t("search.placeholder")}
-                className="h-10 w-full rounded-full border border-gray-200 bg-[#F5F6F6] pl-9 pr-4 text-sm outline-none focus:border-[#3F78D8] focus:ring-1 focus:ring-[#3F78D8]"
+                className="h-10 w-full rounded-full border border-gray-200 bg-[#F5F6F6] pl-9 pr-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 autoFocus
               />
             </div>
@@ -378,7 +378,7 @@ function RegistrationsListContent() {
           <button
             onClick={() => setActiveTab("patients")}
             className={`flex items-center gap-1.5 rounded-full px-3.5 py-[7px] text-[13px] font-medium whitespace-nowrap transition-colors ${activeTab === "patients"
-              ? "border border-[#3F78D8] text-[#3F78D8] bg-white"
+              ? "border border-primary text-primary bg-white"
               : "border border-transparent text-[#6B7280] bg-[#F2F3F5]"
               }`}
           >
@@ -388,7 +388,7 @@ function RegistrationsListContent() {
           <button
             onClick={() => setActiveTab("guardians")}
             className={`flex items-center gap-1.5 rounded-full px-3.5 py-[7px] text-[13px] font-medium whitespace-nowrap transition-colors ${activeTab === "guardians"
-              ? "border border-[#3F78D8] text-[#3F78D8] bg-white"
+              ? "border border-primary text-primary bg-white"
               : "border border-transparent text-[#6B7280] bg-[#F2F3F5]"
               }`}
           >
@@ -623,21 +623,21 @@ function RegistrationsListContent() {
                     <div className="flex items-center gap-2 shrink-0">
                       <a
                         href={guardian.phone ? `tel:${guardian.phone}` : undefined}
-                        className={`flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#3F78D8] ${guardian.phone ? "" : "opacity-60 pointer-events-none"}`}
+                        className={`flex h-[34px] w-[34px] items-center justify-center rounded-full bg-primary ${guardian.phone ? "" : "opacity-60 pointer-events-none"}`}
                         aria-label="Phone"
                       >
                         <Phone className="h-[15px] w-[15px] text-white" fill="white" strokeWidth={0} />
                       </a>
                       <button
                         onClick={() => router.push(`/Veterinarian/home/guardianDetails/${encodeURIComponent(guardian.id)}`)}
-                        className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#3F78D8]"
+                        className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-primary"
                         aria-label="Message"
                       >
                         <MessageCircle className="h-[15px] w-[15px] text-white" fill="white" strokeWidth={0} />
                       </button>
                       <button
                         onClick={() => router.push(`/Veterinarian/home/guardianDetails/${encodeURIComponent(guardian.id)}`)}
-                        className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#3F78D8]"
+                        className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-primary"
                         aria-label="Email"
                       >
                         <Mail className="h-[15px] w-[15px] text-white" strokeWidth={2.2} />
@@ -712,7 +712,7 @@ function RegistrationsListContent() {
           <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+92px)] left-4 right-4 z-10">
             <Button
               onClick={() => router.push("/Veterinarian/patient")}
-              className="h-[48px] w-full rounded-xl bg-[#3F78D8] text-[15px] font-semibold text-white hover:bg-[#3568C0] shadow-[0_6px_18px_-6px_rgba(63,120,216,0.5)] gap-2"
+              className="h-[48px] w-full rounded-xl bg-primary text-[15px] font-semibold text-white hover:bg-[#3568C0] shadow-[0_6px_18px_-6px_rgba(63,120,216,0.5)] gap-2"
             >
               <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
               {lang === "pt" ? "Adicionar Paciente" : t("registrations.addNewPatientButton")}
@@ -766,7 +766,7 @@ function RegistrationsListContent() {
                   >
                     <span>{opt.label}</span>
                     <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-[8px] ${active ? "bg-[#3F78D8]" : "bg-transparent"
+                      className={`flex h-6 w-6 items-center justify-center rounded-[8px] ${active ? "bg-primary" : "bg-transparent"
                         }`}
                     >
                       {active ? (
@@ -796,7 +796,7 @@ function RegistrationsListContent() {
               <button
                 type="button"
                 onClick={() => setSortOpen(false)}
-                className="h-[54px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+                className="h-[54px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
               >
                 {t("registrations.select")}
               </button>

@@ -169,8 +169,8 @@ export default function TaxInfoAndProfessionalProfilePage() {
     }
   };
 
-  const inputCls = "w-full h-[44px] rounded-lg border border-[#E5E5EA] bg-white px-4 text-[14px] leading-[18px] text-[#1C1C1E] placeholder:text-[#8E8E93] outline-none focus:ring-2 focus:ring-[#3F78D8]";
-  const labelCls = "block text-[14px] font-medium text-[#1C1C1E] mb-1.5";
+  const inputCls = "w-full h-[44px] rounded-lg border border-[#E5E5EA] bg-white px-4 text-[14px] leading-[18px] text-black/70 placeholder:text-[#8E8E93] outline-none focus:ring-2 focus:ring-primary";
+  const labelCls = "block text-[14px] font-medium text-black/70 mb-1.5";
 
   return (
     <div className="w-full bg-[#F2F2F7] min-h-screen flex flex-col">
@@ -180,7 +180,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
         <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-[18px] font-bold text-[#1C1C1E] leading-[24px]">
+              <h2 className="text-[18px] font-bold text-black/70 leading-[24px]">
                 {t("menu.professionalProfile") || "Perfil Profissional"}
               </h2>
               <p className="text-[13px] text-[#8E8E93] mt-1 leading-[18px]">
@@ -246,7 +246,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 value={formData.dateOfBirth}
                 onChange={(nextIsoDate) => setFormData((prev) => ({ ...prev, dateOfBirth: nextIsoDate }))}
                 placeholder="dd/mm/aaaa"
-                className="w-full h-[44px] px-4 bg-white border border-[#E5E5EA] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F78D8] text-[14px] text-[#1C1C1E] placeholder:text-[#8E8E93] pr-11"
+                className="w-full h-[44px] px-4 bg-white border border-[#E5E5EA] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-[14px] text-black/70 placeholder:text-[#8E8E93] pr-11"
                 iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E8E93] cursor-pointer"
               />
             </div>
@@ -290,7 +290,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
             type="button"
             onClick={() => formRef.current?.requestSubmit()}
             disabled={saving}
-            className="w-full h-[52px] mt-5 bg-[#3F78D8] hover:bg-[#2f68c8] text-white text-[16px] font-bold rounded-xl inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full h-[52px] mt-5 bg-primary hover:bg-[#2f68c8] text-white text-[16px] font-bold rounded-xl inline-flex items-center justify-center gap-2 disabled:opacity-60"
           >
             <Pencil className="w-[18px] h-[18px]" />
             {saving ? t("common.saving") : (t("menu.saveProfile") || "Salvar perfil")}

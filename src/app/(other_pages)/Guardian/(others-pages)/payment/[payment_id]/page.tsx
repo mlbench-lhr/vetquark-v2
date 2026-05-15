@@ -107,7 +107,7 @@ export default function Page() {
         ) : null}
         <div className="rounded-[16px] bg-[#F5F6F6] px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="h-[44px] w-[44px] rounded-full bg-[#3F78D8] p-[2px]">
+            <div className="h-[44px] w-[44px] rounded-full bg-primary p-[2px]">
               <Image width={200} height={200}
                 src={safePayment.petAvatarUrl}
                 alt={safePayment.petName}
@@ -135,7 +135,7 @@ export default function Page() {
           <div className="text-[14px] leading-[18px] text-[#6B7280]">
             Amount to be paid
           </div>
-          <div className="mt-1 text-[36px] font-semibold leading-[40px] tracking-[-0.02em] text-[#3F78D8]">
+          <div className="mt-1 text-[36px] font-semibold leading-[40px] tracking-[-0.02em] text-primary">
             {safePayment.amountLabel}
           </div>
         </div>

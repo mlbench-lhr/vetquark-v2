@@ -74,14 +74,14 @@ export default function Page() {
                   }`}
               >
                 <div
-                  className={`text-[15px] font-medium leading-[20px] ${selected ? "text-[#3F78D8]" : "text-[#1C1C1E]"
+                  className={`text-[15px] font-medium leading-[20px] ${selected ? "text-primary" : "text-black/70"
                     }`}
                 >
                   {item.label}
                 </div>
 
                 {selected ? (
-                  <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[#3F78D8]">
+                  <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-primary">
                     <Check className="h-[14px] w-[14px] text-white" strokeWidth={3} />
                   </div>
                 ) : (
@@ -97,7 +97,7 @@ export default function Page() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[52px] w-full rounded-xl bg-[#3F78D8] text-[16px] font-bold text-white disabled:opacity-60"
+            className="h-[52px] w-full rounded-xl bg-primary text-[16px] font-bold text-white disabled:opacity-60"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

@@ -200,12 +200,12 @@ export default function AddPatientGuardian() {
         <div className="min-h-[calc(100vh-96px)] p-4 space-y-4 bg-gray-50">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-[#3F78D8]">{t('newPatient.addNewPatientTitle')}</h1>
+                <h1 className="text-xl font-semibold text-primary">{t('newPatient.addNewPatientTitle')}</h1>
                 <div className="flex items-center gap-3">
                     <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <Search className="w-5 h-5 text-[#3F78D8]" />
+                        <Search className="w-5 h-5 text-primary" />
                     </button>
-                    <button className="relative w-10 h-10 rounded-full bg-[#3F78D8] flex items-center justify-center hover:bg-[#3F78D8]/90 transition-colors">
+                    <button className="relative w-10 h-10 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
                         <Bell className="w-5 h-5 text-white" />
                         {unreadCount > 0 && (
                             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
@@ -218,7 +218,7 @@ export default function AddPatientGuardian() {
             <div className="relative flex items-start justify-between">
                 {/* Step 1 - Active */}
                 <div className="flex flex-col items-center gap-1.5 z-10">
-                    <div className="w-10 h-10 rounded-full border-2 border-[#3F78D8] bg-white flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full border-2 border-primary bg-white flex items-center justify-center">
                         <Image
                             src={"/images/new_patient/user-active.svg"}
                             alt={t('newPatient.guardianIconAlt')}
@@ -226,7 +226,7 @@ export default function AddPatientGuardian() {
                             height={20}
                         />
                     </div>
-                    <span className="text-xs font-semibold text-[#3F78D8]">{t('newPatient.guardianStep')}</span>
+                    <span className="text-xs font-semibold text-primary">{t('newPatient.guardianStep')}</span>
                 </div>
                 {/* Connecting Line */}
                 <div className="absolute top-5 left-5 right-5 h-px bg-[#E0E0E0] z-0" />
@@ -256,7 +256,7 @@ export default function AddPatientGuardian() {
 
                 {/* Search Box */}
                 <div className="relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#3F78D8]" />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary" />
                     <input
                         type="text"
                         placeholder={t('newPatient.searchPlaceholder')}
@@ -266,7 +266,7 @@ export default function AddPatientGuardian() {
                             setSearchQuery(v);
                             setPage(1);
                         }}
-                        className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                        className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                 </div>
 
@@ -302,7 +302,7 @@ export default function AddPatientGuardian() {
             {/* Action Buttons */}
             <div className="space-y-3">
                 <button
-                    className="w-full bg-[#3F78D8] hover:bg-[#3F78D8]/90 active:bg-[#3568C0] text-white font-bold text-base py-[15px] rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm"
+                    className="w-full bg-primary hover:bg-primary/90 active:bg-[#3568C0] text-white font-bold text-base py-[15px] rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm"
                     onClick={() => router.push('/Veterinarian/patient/new_guardian')}
                 >
                     <Plus className="w-5 h-5" />
@@ -311,7 +311,7 @@ export default function AddPatientGuardian() {
 
                 <button
                     onClick={handleInviteGuardian}
-                    className="w-full text-[#3F78D8] text-sm font-medium py-2 flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full text-primary text-sm font-medium py-2 flex items-center justify-center gap-1.5 transition-colors"
                 >
                     <Link2 className="w-4 h-4" />
                     {t('newPatient.inviteGuardianButton')}

@@ -144,7 +144,7 @@ export default function BasePriceCard() {
             <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 mt-2">
                 {/* Section Header */}
                 <div className="flex items-start justify-between mb-2">
-                    <h1 className="text-[17px] font-bold text-[#1C1C1E] leading-[22px]">
+                    <h1 className="text-[17px] font-bold text-black/70 leading-[22px]">
                         {t("pricing.baseExamPrice") || "Preço base por exame"}
                     </h1>
                     <ChevronDown className="w-5 h-5 text-[#8E8E93]" />
@@ -165,7 +165,7 @@ export default function BasePriceCard() {
                     </div>
                     {isEditing ? (
                         <div className="flex items-center gap-1">
-                            <span className="text-[24px] font-bold text-[#1C1C1E]">R$ </span>
+                            <span className="text-[24px] font-bold text-black/70">R$ </span>
                             <input
                                 type="number"
                                 value={amount}
@@ -173,11 +173,11 @@ export default function BasePriceCard() {
                                 onBlur={() => setIsEditing(false)}
                                 autoFocus
                                 step="0.01"
-                                className="text-[24px] font-bold text-[#1C1C1E] bg-transparent border-b-2 border-[#3F78D8] outline-none w-28"
+                                className="text-[24px] font-bold text-black/70 bg-transparent border-b-2 border-primary outline-none w-28"
                             />
                         </div>
                     ) : (
-                        <span className="text-[24px] font-bold text-[#1C1C1E]">
+                        <span className="text-[24px] font-bold text-black/70">
                             R$ {amount.toFixed(2).replace(".", ",")}
                         </span>
                     )}
@@ -201,7 +201,7 @@ export default function BasePriceCard() {
                 {/* Reset link */}
                 <button
                     onClick={handleReset}
-                    className="w-full text-center text-[13px] text-[#8E8E93] hover:text-[#1C1C1E] transition-colors mb-3"
+                    className="w-full text-center text-[13px] text-[#8E8E93] hover:text-black/70 transition-colors mb-3"
                 >
                     {t("pricing.resetToSuggestion") || "Resetar para Sugestão"}
                 </button>
@@ -210,7 +210,7 @@ export default function BasePriceCard() {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full h-[44px] bg-[#3F78D8] hover:bg-[#2f68c8] text-white text-[14px] font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full h-[44px] bg-primary hover:bg-[#2f68c8] text-white text-[14px] font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                     <Pencil className="w-4 h-4" />
                     {saving ? t("common.saving") : (t("pricing.savePrice") || "Salvar Preço")}

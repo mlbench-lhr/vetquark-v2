@@ -446,7 +446,7 @@ export default function ReportDetailsPage() {
           >
             <ChevronLeft className="w-5 h-5 text-[#374151]" />
           </button>
-          <span className="text-[22px] font-bold text-[#3F78D8] leading-tight">{t("history.details")}</span>
+          <span className="text-[22px] font-bold text-primary leading-tight">{t("history.details")}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -473,7 +473,7 @@ export default function ReportDetailsPage() {
             <button
               type="button"
               aria-label={t("history.inviteToUpgrade")}
-              className="inline-flex h-9 items-center justify-center rounded-full bg-[#EBF2FF] px-3 text-[13px] font-medium text-[#3F78D8]"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-[#EBF2FF] px-3 text-[13px] font-medium text-primary"
               onClick={() => { setUpgradeOpen(true); setUpgradeProductCode(""); }}
               disabled={!reading || accessKeys === null}
             >
@@ -619,12 +619,12 @@ export default function ReportDetailsPage() {
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
                           <div className="text-[15px] font-medium text-[#111827]">{p.title}</div>
-                          <div className="mt-1 text-[12px] text-[#3F78D8]">
+                          <div className="mt-1 text-[12px] text-primary">
                             {p.subtitle} - {priceLabelFor(p.code, p.suggestedPriceBRL)}
                           </div>
                         </div>
                         <div
-                          className={`h-6 w-10 rounded-full p-1 transition-colors ${selected ? "bg-[#3F78D8]" : "bg-gray-300"}`}
+                          className={`h-6 w-10 rounded-full p-1 transition-colors ${selected ? "bg-primary" : "bg-gray-300"}`}
                         >
                           <div className={`h-4 w-4 rounded-full bg-white transition-transform ${selected ? "translate-x-4" : "translate-x-0"}`} />
                         </div>
@@ -636,7 +636,7 @@ export default function ReportDetailsPage() {
 
               <button
                 type="button"
-                className="mt-5 w-full rounded-full bg-[#3F78D8] py-4 text-[15px] font-medium text-white disabled:opacity-60"
+                className="mt-5 w-full rounded-full bg-primary py-4 text-[15px] font-medium text-white disabled:opacity-60"
                 onClick={handleSendUpgradeInvite}
                 disabled={!upgradeProductCode || sendingUpgrade}
               >

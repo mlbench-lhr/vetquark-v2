@@ -157,10 +157,10 @@ export default function ClinicReportsPage() {
                       <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
                       {
                         uploadingClinicLogo ?
-                          <span className="px-3 py-2 bg-[#3F78D8] text-white rounded-md cursor-pointer">
+                          <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
                             {uploadingClinicLogo ? t("menu.uploading") : t("menu.changeLogo")}
                           </span>
-                          : <div className="p-2 bg-[#3F78D8] rounded-full">
+                          : <div className="p-2 bg-primary rounded-full">
                             <Pencil color="white" size={16} />
                           </div>
                       }
@@ -171,7 +171,7 @@ export default function ClinicReportsPage() {
                     <div className="text-[#9AA4AF] text-sm">{t("menu.uploadClinicLogo")}</div>
                     <label className="inline-block">
                       <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
-                      <span className="px-3 py-2 bg-[#3F78D8] text-white rounded-md cursor-pointer">
+                      <span className="px-3 py-2 bg-primary text-white rounded-md cursor-pointer">
                         {uploadingClinicLogo ? t("menu.uploading") : t("menu.selectFile")}
                       </span>
                     </label>
@@ -243,7 +243,7 @@ export default function ClinicReportsPage() {
           type="submit"
           onClick={() => formRef.current?.requestSubmit()}
           disabled={uploadingClinicLogo || saving}
-          className="w-full h-[52px] bg-[#3F78D8] hover:bg-[#2f68c8] text-white text-[16px] font-medium rounded-full transition-colors disabled:bg-[#9AA4AF] disabled:cursor-not-allowed"
+          className="w-full h-[52px] bg-primary hover:bg-[#2f68c8] text-white text-[16px] font-medium rounded-full transition-colors disabled:bg-[#9AA4AF] disabled:cursor-not-allowed"
         >
           {saving ? t("common.saving") : t("common.saveChanges")}
         </button>

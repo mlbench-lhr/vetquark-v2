@@ -86,7 +86,7 @@ export default function Page() {
         </div>
 
         <div className="relative mt-4">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#3F78D8]" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
           <input
             value={query}
             onChange={(e) => {
@@ -124,7 +124,7 @@ export default function Page() {
                         <div className="mt-0.5 truncate text-[12px] leading-[16px] text-[#9CA3AF]">{t('registrations.idLabel')}: {p.id}</div>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-[#3F78D8]" />
+                    <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
                   </div>
                 </button>
               )
@@ -150,7 +150,7 @@ export default function Page() {
         <button
           type="button"
           onClick={() => router.push('/Veterinarian/patient')}
-          className="h-[56px] rounded-full bg-[#3F78D8] px-6 text-[16px] font-medium text-white shadow-theme-lg flex items-center gap-3"
+          className="h-[56px] rounded-full bg-primary px-6 text-[16px] font-medium text-white shadow-theme-lg flex items-center gap-3"
         >
           <Plus className="h-5 w-5" />
           {t('registrations.addNewPatientButton')}

@@ -138,7 +138,7 @@ function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; on
           <button
             type="button"
             onClick={handleView}
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#E0EAFF] text-[#3F78D8] transition-colors hover:bg-[#D1DEFF]"
+            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#E0EAFF] text-primary transition-colors hover:bg-[#D1DEFF]"
             aria-label={t("history.details")}
           >
             <Eye className="h-[14px] w-[14px]" />
@@ -146,7 +146,7 @@ function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; on
           <button
             type="button"
             onClick={onDownload}
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#E0EAFF] text-[#3F78D8] transition-colors hover:bg-[#D1DEFF]"
+            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#E0EAFF] text-primary transition-colors hover:bg-[#D1DEFF]"
             aria-label={t("history.download")}
           >
             <FileText className="h-[14px] w-[14px]" />
@@ -154,7 +154,7 @@ function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; on
           <button
             type="button"
             onClick={onShare}
-            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#E0EAFF] text-[#3F78D8] transition-colors hover:bg-[#D1DEFF]"
+            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#E0EAFF] text-primary transition-colors hover:bg-[#D1DEFF]"
             aria-label={t("common.share")}
           >
             <Upload className="h-[14px] w-[14px]" />
@@ -282,7 +282,7 @@ function PageContent() {
     <div className="w-full bg-white">
       {/* Page Header */}
       <div className="flex items-center justify-between px-2 pt-1 pb-2">
-        <h1 className="text-[22px] font-bold text-[#3F78D8]">
+        <h1 className="text-[22px] font-bold text-primary">
           {t("history.laudosTitle")}
         </h1>
         <div className="flex items-center gap-3">
@@ -296,7 +296,7 @@ function PageContent() {
           </button>
           <Link
             href="/Veterinarian/notifications"
-            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#3F78D8] text-white"
+            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white"
             aria-label={t("common.notifications")}
           >
             <Bell className="h-[16px] w-[16px]" />
@@ -317,7 +317,7 @@ function PageContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("dashboard.searchPlaceholder")}
-              className="w-full rounded-full bg-[#F5F6F6] pl-9 pr-4 py-2.5 text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#3F78D8]/20"
+              className="w-full rounded-full bg-[#F5F6F6] pl-9 pr-4 py-2.5 text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-primary/20"
               autoFocus
             />
           </div>

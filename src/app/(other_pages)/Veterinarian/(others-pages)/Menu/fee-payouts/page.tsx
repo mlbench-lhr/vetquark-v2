@@ -18,7 +18,7 @@ function AccordionSection({ title, children, defaultOpen = false }: { title: str
                 onClick={() => setOpen((v) => !v)}
                 className="w-full flex items-center justify-between px-5 py-4 text-left"
             >
-                <span className="text-[16px] font-bold text-[#1C1C1E]">{title}</span>
+                <span className="text-[16px] font-bold text-black/70">{title}</span>
                 <ChevronDown
                     className={`w-5 h-5 text-[#8E8E93] transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`}
                 />
@@ -91,7 +91,7 @@ export default function FeesAndPayoutsPage() {
                         <p>Repasse ao veterinário: Preço ao tutor – R$ {platformFee.toFixed(2)}.</p>
                     </div>
                     <div className="bg-[#E5EDF9] rounded-xl px-4 py-3">
-                        <p className="text-[13px] text-[#3F78D8] leading-[1.5]">
+                        <p className="text-[13px] text-primary leading-[1.5]">
                             <span className="font-semibold">Exemplo rápido:</span> Se você cobra R$ {exampleCharge.toFixed(2)}, retemos R$ {platformFee.toFixed(2)} e você recebe R$ {(exampleCharge - platformFee).toFixed(2)}.
                         </p>
                     </div>
@@ -151,7 +151,7 @@ export default function FeesAndPayoutsPage() {
                     </div>
                     <button
                         onClick={() => router.push("/Veterinarian/Menu/wallet")}
-                        className="w-full h-[44px] bg-[#3F78D8] text-white text-[14px] font-semibold rounded-lg hover:bg-[#2f68c8] transition-colors flex items-center justify-center gap-2"
+                        className="w-full h-[44px] bg-primary text-white text-[14px] font-semibold rounded-lg hover:bg-[#2f68c8] transition-colors flex items-center justify-center gap-2"
                     >
                         <Wallet className="w-4 h-4" />
                         {t("feePayouts.goToWallet") || "Ir para a Carteira"}

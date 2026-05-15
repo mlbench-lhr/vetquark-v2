@@ -111,7 +111,7 @@ export default function SignInForm() {
         {/* Logo with circular backdrop */}
         <div className="relative flex items-center justify-center h-[180px] overflow-hidden mb-4">
           <div className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-[340px] h-[280px] bg-white rounded-full" />
-          <span className="relative text-[32px] font-bold text-[#1C1C1E] tracking-tight leading-none mt-6">
+          <span className="relative text-[32px] font-bold text-black/70 tracking-tight leading-none mt-6">
             VetQuark<sup className="text-[13px] font-normal align-super">™</sup>
           </span>
         </div>
@@ -133,7 +133,7 @@ export default function SignInForm() {
             placeholder={t("auth.email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0"
+            className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-[#8E8E93] border-0"
           />
 
           <div className="relative">
@@ -142,7 +142,7 @@ export default function SignInForm() {
               placeholder={t("auth.password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
+              className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-[#8E8E93] border-0 pr-12"
             />
             <button
               type="button"

@@ -69,7 +69,7 @@ export default function DropdownSelect({
         <button
           type="button"
           onClick={() => !disabled && setOpen((v) => !v)}
-          className={`w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary border-0 text-[15px] ${value ? "text-[#1C1C1E]" : "text-[#8E8E93]"} pr-12 text-left ${className}`}
+          className={`w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary border-0 text-[15px] ${value ? "text-black/70" : "text-[#8E8E93]"} pr-12 text-left ${className}`}
         >
           {selectedLabel || placeholder || t("common.selectOption")}
         </button>

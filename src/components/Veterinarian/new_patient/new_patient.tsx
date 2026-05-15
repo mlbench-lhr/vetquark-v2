@@ -463,7 +463,7 @@ export default function AddPatientMultiStep() {
             <button
               onClick={handleCropConfirm}
               disabled={uploadingPhoto}
-              className="w-full bg-[#3F78D8] text-white font-bold text-base py-[15px] rounded-2xl disabled:opacity-60 transition-colors"
+              className="w-full bg-primary text-white font-bold text-base py-[15px] rounded-2xl disabled:opacity-60 transition-colors"
             >
               {uploadingPhoto ? t('auth.uploading') : 'Concluir'}
             </button>
@@ -480,12 +480,12 @@ export default function AddPatientMultiStep() {
 
       {/* Inline Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-[#3F78D8]">{t('newPatient.addNewPatientTitle')}</h1>
+        <h1 className="text-xl font-semibold text-primary">{t('newPatient.addNewPatientTitle')}</h1>
         <div className="flex items-center gap-3">
           <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
-            <Search className="w-5 h-5 text-[#3F78D8]" />
+            <Search className="w-5 h-5 text-primary" />
           </button>
-          <button className="relative w-10 h-10 rounded-full bg-[#3F78D8] flex items-center justify-center hover:bg-[#3F78D8]/90 transition-colors">
+          <button className="relative w-10 h-10 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
             <Bell className="w-5 h-5 text-white" />
             {unreadCount > 0 && (
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
@@ -498,19 +498,19 @@ export default function AddPatientMultiStep() {
       <div className="relative flex items-start justify-between">
         {/* Step 1 - Completed (Guardian) */}
         <div className="flex flex-col items-center gap-1.5 z-10">
-          <div className="w-10 h-10 bg-[#3F78D8] rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
             <Folder className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xs font-semibold text-[#3F78D8]">{t('newPatient.guardianDataStep')}</span>
+          <span className="text-xs font-semibold text-primary">{t('newPatient.guardianDataStep')}</span>
         </div>
         {/* Connecting Line */}
-        <div className="absolute top-5 left-5 right-5 h-px bg-[#3F78D8] z-0" />
+        <div className="absolute top-5 left-5 right-5 h-px bg-primary z-0" />
         {/* Step 2 - Active (Patient) */}
         <div className="flex flex-col items-center gap-1.5 z-10">
-          <div className="w-10 h-10 bg-[#3F78D8] rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
             <PawPrint className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xs font-semibold text-[#3F78D8]">{t('newPatient.patientDetailsStep')}</span>
+          <span className="text-xs font-semibold text-primary">{t('newPatient.patientDetailsStep')}</span>
         </div>
       </div>
 
@@ -549,7 +549,7 @@ export default function AddPatientMultiStep() {
           </div>
           <button
             onClick={() => setIsAlive(!isAlive)}
-            className={`relative w-12 h-7 rounded-full transition-colors ${isAlive ? 'bg-[#3F78D8]' : 'bg-gray-300'}`}
+            className={`relative w-12 h-7 rounded-full transition-colors ${isAlive ? 'bg-primary' : 'bg-gray-300'}`}
           >
             <span
               className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${isAlive ? 'translate-x-5' : 'translate-x-0'}`}
@@ -567,7 +567,7 @@ export default function AddPatientMultiStep() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-semibold text-[#1D2939]">1. {t('newPatient.patientForm.identificationsTitle')}</h2>
-                    <span className="flex items-center gap-0.5 text-xs text-[#3F78D8] font-medium">{t('auth.step')} 1/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 1/5 <ChevronUp className="w-3.5 h-3.5" /></span>
                   </div>
 
                   <div>
@@ -579,7 +579,7 @@ export default function AddPatientMultiStep() {
                           </div>
                           <label className="absolute bottom-0.5 right-0.5 cursor-pointer">
                             <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                            <div className="w-8 h-8 bg-[#3F78D8] rounded-full flex items-center justify-center shadow-md">
+                            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-md">
                               <Pencil className="w-4 h-4 text-white" />
                             </div>
                           </label>
@@ -589,7 +589,7 @@ export default function AddPatientMultiStep() {
                       <label className="flex flex-col items-center gap-3 py-8 cursor-pointer border-2 border-dashed border-[#E0E0E0] rounded-xl bg-[#FAFAFA]">
                         <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                         <div className="w-12 h-12 rounded-xl bg-[#F0F4FF] flex items-center justify-center">
-                          <Upload className="w-6 h-6 text-[#3F78D8]" />
+                          <Upload className="w-6 h-6 text-primary" />
                         </div>
                         <p className="text-sm text-[#6B7280] text-center px-4 leading-snug">{t('newPatient.patientForm.dragDropPhoto')}</p>
                         <p className="text-xs text-[#9CA3AF]">{t('newPatient.patientForm.photoFormatsHint')}</p>
@@ -606,7 +606,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.animalNamePlaceholder')}
                       value={formData.animalName}
                       onChange={(e) => handleChange('animalName', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                   </div>
 
@@ -617,7 +617,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.microchipPlaceholder')}
                       value={formData.microchip}
                       onChange={(e) => handleChange('microchip', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                   </div>
 
@@ -627,13 +627,13 @@ export default function AddPatientMultiStep() {
                       <select
                         value={formData.species}
                         onChange={(e) => handleChange('species', e.target.value)}
-                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] appearance-none focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] appearance-none focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                       >
                         <option value="">{t('auth.selectOption')}</option>
                         <option value="dog">{t('newPatient.speciesDog')}</option>
                         <option value="cat">{t('newPatient.speciesCat')}</option>
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#3F78D8] pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                     </div>
                   </div>
 
@@ -644,7 +644,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.breedPlaceholder')}
                       value={formData.breed}
                       onChange={(e) => handleChange('breed', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                   </div>
 
@@ -654,13 +654,13 @@ export default function AddPatientMultiStep() {
                       <select
                         value={formData.sex}
                         onChange={(e) => handleChange('sex', e.target.value as 'Male' | 'Female' | '')}
-                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] appearance-none focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] appearance-none focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                       >
                         <option value="">{t('auth.selectOption')}</option>
                         <option value="Male">{t('common.male')}</option>
                         <option value="Female">{t('common.female')}</option>
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#3F78D8] pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                     </div>
                   </div>
 
@@ -671,7 +671,7 @@ export default function AddPatientMultiStep() {
                       onChange={(nextIsoDate) => handleChange('dateOfBirth', nextIsoDate)}
                       max={new Date().toISOString().slice(0, 10)}
                       placeholder="dd/mm/yyyy"
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 pr-12 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 pr-12 text-sm"
                       iconClassName="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF] cursor-pointer"
                     />
                   </div>
@@ -685,7 +685,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.ageYearsPlaceholder')}
                       value={formData.ageYears}
                       onChange={(e) => handleChange('ageYears', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                     <p className="mt-1 text-xs text-[#9CA3AF]">{t('newPatient.patientForm.ageYearsHint')}</p>
                   </div>
@@ -696,7 +696,7 @@ export default function AddPatientMultiStep() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-semibold text-[#1D2939]">2. {t('newPatient.patientForm.additionalInfoTitle')}</h2>
-                    <span className="flex items-center gap-0.5 text-xs text-[#3F78D8] font-medium">{t('auth.step')} 2/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 2/5 <ChevronUp className="w-3.5 h-3.5" /></span>
                   </div>
 
                   <div>
@@ -706,7 +706,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.temperamentPlaceholder')}
                       value={formData.temperament}
                       onChange={(e) => handleChange('temperament', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                   </div>
 
@@ -717,7 +717,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.sizePlaceholder')}
                       value={formData.size}
                       onChange={(e) => handleChange('size', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                   </div>
 
@@ -728,7 +728,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.coatPlaceholder')}
                       value={formData.coat}
                       onChange={(e) => handleChange('coat', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                   </div>
 
@@ -738,13 +738,13 @@ export default function AddPatientMultiStep() {
                       <select
                         value={formData.neutered}
                         onChange={(e) => handleChange('neutered', e.target.value as 'Yes' | 'No' | '')}
-                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] appearance-none focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] appearance-none focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                       >
                         <option value="">{t('auth.selectOption')}</option>
                         <option value="Yes">{t('common.yes')}</option>
                         <option value="No">{t('common.no')}</option>
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#3F78D8] pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                     </div>
                   </div>
 
@@ -755,7 +755,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.rgaPlaceholder')}
                       value={formData.rga}
                       onChange={(e) => handleChange('rga', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                   </div>
                 </div>
@@ -765,7 +765,7 @@ export default function AddPatientMultiStep() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-semibold text-[#1D2939]">3. {t('newPatient.patientForm.healthPlanTitle')}</h2>
-                    <span className="flex items-center gap-0.5 text-xs text-[#3F78D8] font-medium">{t('auth.step')} 3/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 3/5 <ChevronUp className="w-3.5 h-3.5" /></span>
                   </div>
 
                   <div>
@@ -775,7 +775,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.healthPlanNamePlaceholder')}
                       value={formData.planName}
                       onChange={(e) => handleChange('planName', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                   </div>
 
@@ -786,7 +786,7 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.planCardNumberPlaceholder')}
                       value={formData.cardNumber}
                       onChange={(e) => handleChange('cardNumber', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                     />
                   </div>
 
@@ -797,7 +797,7 @@ export default function AddPatientMultiStep() {
                       onChange={(nextIsoDate) => handleChange('cardValidity', nextIsoDate)}
                       min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
                       placeholder="dd/mm/yyyy"
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 pr-12 text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 pr-12 text-sm"
                       iconClassName="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF] cursor-pointer"
                     />
                   </div>
@@ -808,7 +808,7 @@ export default function AddPatientMultiStep() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-semibold text-[#1D2939]">4. {t('newPatient.patientForm.clinicalInfoTitle')}</h2>
-                    <span className="flex items-center gap-0.5 text-xs text-[#3F78D8] font-medium">{t('auth.step')} 4/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 4/5 <ChevronUp className="w-3.5 h-3.5" /></span>
                   </div>
 
                   <div>
@@ -818,7 +818,7 @@ export default function AddPatientMultiStep() {
                       value={formData.allergies}
                       onChange={(e) => handleChange('allergies', e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 resize-none text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 resize-none text-sm"
                     />
                   </div>
 
@@ -829,7 +829,7 @@ export default function AddPatientMultiStep() {
                       value={formData.chronicDiseases}
                       onChange={(e) => handleChange('chronicDiseases', e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 resize-none text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 resize-none text-sm"
                     />
                   </div>
 
@@ -840,7 +840,7 @@ export default function AddPatientMultiStep() {
                       value={formData.otherInformation}
                       onChange={(e) => handleChange('otherInformation', e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 resize-none text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 resize-none text-sm"
                     />
                   </div>
                 </div>
@@ -850,7 +850,7 @@ export default function AddPatientMultiStep() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-semibold text-[#1D2939]">5. {t('newPatient.patientForm.observationsStepTitle')}</h2>
-                    <span className="flex items-center gap-0.5 text-xs text-[#3F78D8] font-medium">{t('auth.step')} 5/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 5/5 <ChevronUp className="w-3.5 h-3.5" /></span>
                   </div>
 
                   <div>
@@ -860,7 +860,7 @@ export default function AddPatientMultiStep() {
                       value={formData.internalNotes}
                       onChange={(e) => handleChange('internalNotes', e.target.value)}
                       rows={6}
-                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 resize-none text-sm"
+                      className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 resize-none text-sm"
                     />
                   </div>
                 </div>
@@ -874,7 +874,7 @@ export default function AddPatientMultiStep() {
           <button
             onClick={currentStep === 5 ? handleSubmit : handleNext}
             disabled={submitting || uploadingPhoto || loadingPatient}
-            className="w-full bg-[#3F78D8] hover:bg-[#3F78D8]/90 active:bg-[#3568C0] text-white font-bold text-base py-[15px] rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full bg-primary hover:bg-primary/90 active:bg-[#3568C0] text-white font-bold text-base py-[15px] rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />
             {currentStep === 5
@@ -898,7 +898,7 @@ export default function AddPatientMultiStep() {
               </button>
               <button
                 type="button"
-                className="flex-1 px-4 py-2.5 rounded-full bg-[#3F78D8] text-white font-medium"
+                className="flex-1 px-4 py-2.5 rounded-full bg-primary text-white font-medium"
                 onClick={() => {
                   setConfirmOpen(false);
                   setHasUnsavedChanges(false);

@@ -20,6 +20,7 @@ import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
+import Header from '@/components/Veterinarian/home/Header';
 
 type NotificationItem = {
   id: string;
@@ -244,56 +245,10 @@ export default function VetNotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-6 -mx-4 -mt-4 px-4 pt-4 bg-white">
-      {/* Header */}
-      <header className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
-            {resolvedAvatar ? (
-              <Image
-                width={48}
-                height={48}
-                src={resolvedAvatar}
-                alt={t('common.profile')}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex justify-center items-center w-12 h-12 rounded-full bg-gray-100">
-                <User className="w-5 h-5 text-gray-400" />
-              </div>
-            )}
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 leading-tight">{t('dashboard.welcome')}</p>
-            <h1 className="text-sm font-bold text-[#3F78D8] leading-tight">{resolvedName}</h1>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Saldo pill */}
-          <button
-            type="button"
-            onClick={() => router.push('/Veterinarian/Menu/wallet')}
-            className="flex items-center gap-1 bg-[#EBF2FF] border border-[#BFDBFE] rounded-full pl-2.5 pr-3 py-1.5 shrink-0"
-          >
-            <span className="text-[10px] font-medium text-[#3F78D8] leading-none">Saldo</span>
-            <span className="text-[11px] font-bold text-[#3F78D8] leading-none">{walletBalance}</span>
-          </button>
-
-          {/* Bell icon */}
-          <div className="relative w-10 h-10 bg-[#EBF2FF] rounded-full flex items-center justify-center shrink-0">
-            {unreadCount > 0 ? (
-              <span className="absolute -top-0.5 -right-0.5 inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#EF4444] px-[3px] text-[9px] font-bold leading-none text-white ring-2 ring-white">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            ) : null}
-            <Bell className="w-[18px] h-[18px] text-[#3F78D8]" strokeWidth={2} />
-          </div>
-        </div>
-      </header>
-
+    <div className="pb-6 -mx-4 -mt-4 px-4 pt-4 bg-white">
+      <Header userName={profile?.fullName} />
       {/* Notifications grouped by date */}
-      <div className="space-y-5">
+      <div className="space-y-5 mt-5">
         {loading ? (
           <div className="flex flex-col gap-4">
             <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
@@ -319,8 +274,8 @@ export default function VetNotificationsPage() {
         ) : (
           grouped.map((group) => (
             <div key={group.dateKey}>
-              <h2 className="text-[15px] font-semibold text-gray-800 mb-2.5">{group.label}</h2>
-              <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] overflow-hidden">
+              <h2 className="text-[15px] font-normal text-black/70 mb-2.5">{group.label}</h2>
+              <div className="bg-white rounded-2xl shadow-[0_2px_14px_rgba(0,0,0,0.07)] overflow-hidden">
                 {group.notifications.map((n, idx) => {
                   const Icon = getNotificationIcon(n.type);
                   const isRead = !!n.readAt;
@@ -335,16 +290,16 @@ export default function VetNotificationsPage() {
                         }`}
                     >
                       <div
-                        className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isRead ? 'bg-[#F3F4F6]' : 'bg-[#F0F4F8]'
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isRead ? 'bg-[#F3F4F6]' : 'bg-gray-100'
                           }`}
                       >
                         <Icon
-                          className={`w-5 h-5 ${isRead ? 'text-[#9CA3AF]' : 'text-[#3F78D8]'}`}
+                          className={`w-5 h-5 ${isRead ? 'text-[#9CA3AF]' : 'text-primary'}`}
                           strokeWidth={2}
                         />
                       </div>
                       <p
-                        className={`text-[13px] leading-[18px] font-medium flex-1 min-w-0 truncate ${isRead ? 'text-[#9CA3AF]' : 'text-[#3F78D8]'
+                        className={`text-[12px] leading-[18px] font-medium flex-1 min-w-0 truncate ${isRead ? 'text-[#9CA3AF]' : 'text-primary'
                           }`}
                       >
                         {n.message}

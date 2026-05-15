@@ -33,7 +33,7 @@ function Toggle({
       className={[
         "relative inline-flex items-center shrink-0",
         "w-[51px] h-[31px] rounded-full",
-        checked ? "bg-[#3F78D8]" : "bg-[#78788029]",
+        checked ? "bg-primary" : "bg-[#78788029]",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
         "transition-colors",
       ].join(" ")}
@@ -65,7 +65,7 @@ function SettingCard({
   return (
     <div className="rounded-2xl bg-[#EBEBF0] px-5 py-4 flex items-center justify-between gap-4">
       <div className="min-w-0 flex-1">
-        <div className="text-[15px] leading-[20px] font-semibold text-[#1C1C1E]">
+        <div className="text-[15px] leading-[20px] font-semibold text-black/70">
           {title}
         </div>
         <div className="mt-1 text-[12px] leading-[16px] text-[#8E8E93]">
@@ -197,7 +197,7 @@ export default function NotificationsSettingsPage() {
           ))}
         </div>
 
-        <div className="text-[15px] leading-[20px] font-medium text-[#1C1C1E] mt-6 mb-3">
+        <div className="text-[15px] leading-[20px] font-medium text-black/70 mt-6 mb-3">
           {t("notifications.settings.emailTitle")}
         </div>
 
@@ -218,7 +218,7 @@ export default function NotificationsSettingsPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[52px] w-full rounded-xl bg-[#3F78D8] text-[16px] font-bold text-white disabled:opacity-60"
+            className="h-[52px] w-full rounded-xl bg-primary text-[16px] font-bold text-white disabled:opacity-60"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

@@ -116,7 +116,7 @@ export default function UploadProfilePicturePage() {
           className="w-[36px] h-[36px] rounded-full bg-[#EBEBF0] flex items-center justify-center border-0 cursor-pointer shrink-0"
           aria-label="Back"
         >
-          <ChevronLeft size={20} className="text-[#1C1C1E]" />
+          <ChevronLeft size={20} className="text-black/70" />
         </button>
         <h2 className="text-[18px] font-bold text-primary">Foto de Perfil</h2>
       </div>

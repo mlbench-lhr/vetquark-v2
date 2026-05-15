@@ -34,10 +34,9 @@ const Tabs: React.FC<{ activeTab: string; onTabChange: (t: string) => void }> = 
 }) => {
   const { t } = useTranslation();
   const tabClass = (active: boolean) =>
-    `flex-1 h-[42px] rounded-full text-[14px] font-semibold transition-colors cursor-pointer border-0 ${
-      active
-        ? 'bg-primary text-white shadow-[0_6px_16px_-6px_rgba(63,120,216,0.5)]'
-        : 'bg-white text-[#1C1C1E] border border-[#E5E7EB]'
+    `flex-1 h-[42px] rounded-full text-[14px] font-semibold transition-colors cursor-pointer border-0 ${active
+      ? 'bg-primary text-white shadow-[0_6px_16px_-6px_rgba(63,120,216,0.5)]'
+      : 'bg-white text-black/70 border border-[#E5E7EB]'
     }`;
   return (
     <div className="flex gap-3 px-1 mt-4 mb-4">
@@ -76,7 +75,7 @@ const PatientInfoSection: React.FC<{
       <div className="px-4 pt-4 pb-5 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <h2 className="text-[18px] font-bold text-[#1C1C1E] leading-none truncate">{name || '-'}</h2>
+            <h2 className="text-[18px] font-bold text-black/70 leading-none truncate">{name || '-'}</h2>
             {(species || breed) && (
               <span className="px-3 py-1 rounded-full text-[12px] text-[#6B7280] border border-[#E5E7EB] whitespace-nowrap">
                 {[species, breed].filter(Boolean).join(' - ')}
@@ -97,17 +96,17 @@ const PatientInfoSection: React.FC<{
 
         <div className="space-y-3">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-[14px] font-bold text-[#1C1C1E]">Sexo</span>
+            <span className="text-[14px] font-bold text-black/70">Sexo</span>
             <span className="px-4 py-1.5 rounded-md border border-[#E5E7EB] text-[13px] text-[#6B7280] min-w-[88px] text-center">
               {sex || '-'}
             </span>
-            <span className="text-[14px] font-bold text-[#1C1C1E]">Idade</span>
+            <span className="text-[14px] font-bold text-black/70">Idade</span>
             <span className="px-4 py-1.5 rounded-md border border-[#E5E7EB] text-[13px] text-[#6B7280] min-w-[88px] text-center">
               {age || '-'}
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[14px] font-bold text-[#1C1C1E]">Sexo</span>
+            <span className="text-[14px] font-bold text-black/70">Sexo</span>
             <span className="px-4 py-1.5 rounded-md border border-[#E5E7EB] text-[13px] text-[#6B7280] min-w-[88px] text-center">
               {sex || '-'}
             </span>
@@ -150,7 +149,7 @@ const ReportsHistorySection: React.FC<{
     <div className="rounded-2xl bg-white border border-[#E5E7EB] p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-[16px] font-bold text-[#1C1C1E]">{t('home.reportsHistory')}</h3>
+          <h3 className="text-[16px] font-bold text-black/70">{t('home.reportsHistory')}</h3>
           <p className="text-[13px] text-[#6B7280] mt-1 leading-snug">
             {t('home.viewAllReportsAssociated', { name: petName || '' })}
           </p>
@@ -185,7 +184,7 @@ const ReportsHistorySection: React.FC<{
               key={r.id}
               className="grid grid-cols-[1fr_1.2fr_auto] items-center py-3 border-b border-[#F3F4F6] last:border-b-0"
             >
-              <span className="text-[13px] text-[#1C1C1E]">{formatDate(r.date)}</span>
+              <span className="text-[13px] text-black/70">{formatDate(r.date)}</span>
               <div className="flex justify-center">
                 <StatusPill status={r.status} />
               </div>
@@ -288,11 +287,11 @@ const PatientProfilePage: React.FC = () => {
     const derivedAge =
       dob && !Number.isNaN(dob.getTime())
         ? Math.max(
-            0,
-            now.getFullYear() -
-              dob.getFullYear() -
-              (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0)
-          )
+          0,
+          now.getFullYear() -
+          dob.getFullYear() -
+          (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0)
+        )
         : null;
     const years = explicitAge !== null ? explicitAge : derivedAge;
     return {
@@ -316,7 +315,7 @@ const PatientProfilePage: React.FC = () => {
             aria-label="go-back-to-previous"
             className="w-10 h-10 rounded-full bg-[#F1F2F3] flex items-center justify-center border-0 cursor-pointer shrink-0"
           >
-            <ChevronLeft size={20} className="text-[#1C1C1E]" />
+            <ChevronLeft size={20} className="text-black/70" />
           </button>
           <h1 className="text-[18px] font-bold text-primary leading-none truncate">
             {t('home.patientProfileTitle')}
@@ -328,7 +327,7 @@ const PatientProfilePage: React.FC = () => {
             aria-label="Search"
             className="w-10 h-10 rounded-full bg-[#F1F2F3] flex items-center justify-center border-0 cursor-pointer"
           >
-            <Search size={18} className="text-[#1C1C1E]" />
+            <Search size={18} className="text-black/70" />
           </button>
           <button
             type="button"

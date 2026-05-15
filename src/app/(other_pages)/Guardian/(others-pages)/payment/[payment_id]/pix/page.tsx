@@ -226,7 +226,7 @@ export default function Page() {
           <div className="text-[14px] leading-[18px] text-[#6B7280]">
             Amount to be paid
           </div>
-          <div className="mt-1 text-[36px] font-semibold leading-[40px] tracking-[-0.02em] text-[#3F78D8]">
+          <div className="mt-1 text-[36px] font-semibold leading-[40px] tracking-[-0.02em] text-primary">
             {amountLabel}
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function Page() {
                 type="button"
                 disabled={paying || !paymentId}
                 onClick={createPix}
-                className="mt-4 h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:opacity-60"
+                className="mt-4 h-[52px] w-full rounded-full bg-primary text-[15px] font-medium text-white disabled:opacity-60"
               >
                 {paying ? "Generating..." : "Generate PIX"}
               </button>
@@ -277,7 +277,7 @@ export default function Page() {
           <button
             type="button"
             onClick={checkStatus}
-            className="h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+            className="h-[52px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
           >
             I already paid
           </button>
@@ -313,7 +313,7 @@ export default function Page() {
                       if (typeof window !== "undefined") window.open(boletoUrl, "_blank", "noopener,noreferrer");
                     }}
                     disabled={!boletoUrl}
-                    className="flex-1 rounded-full bg-[#3F78D8] px-4 py-3 text-[14px] font-medium text-white disabled:opacity-60"
+                    className="flex-1 rounded-full bg-primary px-4 py-3 text-[14px] font-medium text-white disabled:opacity-60"
                   >
                     Open boleto
                   </button>

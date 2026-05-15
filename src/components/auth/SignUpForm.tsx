@@ -71,8 +71,8 @@ const getEmptyFormData = (): SignUpFormData => ({
   veterinarianCode: "",
 });
 
-const INPUT_BASE = "w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0";
-const INPUT_ERROR = "w-full px-4 py-[14px] bg-[#FDECEA] rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 text-[#1C1C1E] text-[15px] placeholder-[#C0514A] border-0";
+const INPUT_BASE = "w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-[#8E8E93] border-0";
+const INPUT_ERROR = "w-full px-4 py-[14px] bg-[#FDECEA] rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 text-black/70 text-[15px] placeholder-[#C0514A] border-0";
 
 export default function SignUpForm() {
   const router = useRouter();
@@ -464,7 +464,7 @@ export default function SignUpForm() {
               name="phone" value={formData.phone}
               onChange={(next) => setFormData((prev) => ({ ...prev, phone: next }))}
               defaultCountry="br" required
-              inputClassName="!w-full !h-[48px] !px-11 !py-3 !bg-[#EBEBF0] !rounded-xl !border-0 !text-[#1C1C1E] placeholder:!text-[#8E8E93] focus:!outline-none focus:!ring-2 focus:!ring-primary text-[15px]"
+              inputClassName="!w-full !h-[48px] !px-11 !py-3 !bg-[#EBEBF0] !rounded-xl !border-0 !text-black/70 placeholder:!text-[#8E8E93] focus:!outline-none focus:!ring-2 focus:!ring-primary text-[15px]"
               buttonClassName="!h-[48px] !bg-[#EBEBF0] !border-0 !rounded-xl"
               containerClassName="w-full"
             />
@@ -508,7 +508,7 @@ export default function SignUpForm() {
                       <div className={`w-[14px] h-[14px] rounded-full border flex items-center justify-center shrink-0 ${req.test(formData.password) ? "bg-primary border-primary" : "border-[#C7C7CC]"}`}>
                         {req.test(formData.password) && <Check size={8} className="text-white" strokeWidth={3} />}
                       </div>
-                      <span className={req.test(formData.password) ? "text-[#1C1C1E]" : "text-[#8E8E93]"}>{req.label}</span>
+                      <span className={req.test(formData.password) ? "text-black/70" : "text-[#8E8E93]"}>{req.label}</span>
                     </div>
                   ))}
                 </div>
@@ -573,7 +573,7 @@ export default function SignUpForm() {
                   name="state" value={formData.state}
                   onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
                   required disabled={!formData.country || loadingStates || stateOptions.length === 0}
-                  className={`${INPUT_BASE} appearance-none text-center pr-8 ${formData.state ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}
+                  className={`${INPUT_BASE} appearance-none text-center pr-8 ${formData.state ? "text-black/70" : "text-[#8E8E93]"}`}
                 >
                   <option value="" disabled>Estado</option>
                   {stateOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.text}</option>)}
@@ -584,7 +584,7 @@ export default function SignUpForm() {
                 <select
                   name="city" value={formData.city} onChange={handleInputChange}
                   required disabled={!formData.state || loadingCities}
-                  className={`${INPUT_BASE} appearance-none text-center ${formData.city ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}
+                  className={`${INPUT_BASE} appearance-none text-center ${formData.city ? "text-black/70" : "text-[#8E8E93]"}`}
                 >
                   <option value="" disabled>Cidade</option>
                   {cityOptions.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -615,7 +615,7 @@ export default function SignUpForm() {
       case 4:
         return (
           <form id="signup-step-4" onSubmit={handleStep4Submit} className="px-5 pt-5 pb-4 flex flex-col">
-            <p className="text-[14px] text-[#1C1C1E] mb-8 leading-relaxed">
+            <p className="text-[14px] text-black/70 mb-8 leading-relaxed">
               {t("auth.codeSentToEmail")}<br />{t("auth.enterCodeToActivate")}
             </p>
 
@@ -633,7 +633,7 @@ export default function SignUpForm() {
                     const firstEmpty = otp.findIndex((d) => !d);
                     if (firstEmpty !== -1 && firstEmpty < index) inputRefs.current[firstEmpty]?.focus();
                   }}
-                  className="w-[48px] h-[52px] text-center text-[18px] font-medium bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] border-0"
+                  className="w-[48px] h-[52px] text-center text-[18px] font-medium bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 border-0"
                   maxLength={1} required autoComplete="off"
                 />
               ))}
@@ -699,7 +699,7 @@ export default function SignUpForm() {
         return (
           <form id="signup-step-6" onSubmit={handleStep6Submit} className="px-5 pt-5 pb-4 space-y-4">
             <div>
-              <p className="text-[16px] font-semibold text-[#1C1C1E] mb-3">
+              <p className="text-[16px] font-semibold text-black/70 mb-3">
                 {t("auth.clinicLogo")} <span className="text-[#8E8E93] font-normal text-[14px]">{t("auth.optional")}</span>
               </p>
               <div className="border-2 border-dashed border-[#C7C7CC] rounded-xl p-6 text-center bg-white">
@@ -715,7 +715,7 @@ export default function SignUpForm() {
                   <label className="flex flex-col items-center gap-2 cursor-pointer">
                     <input type="file" accept="image/*" onChange={handleClinicLogoChange} className="hidden" />
                     <ImageIcon size={28} className="text-[#8E8E93]" />
-                    <span className="text-[13px] font-semibold text-[#1C1C1E]">{t("auth.clickToSelect")}</span>
+                    <span className="text-[13px] font-semibold text-black/70">{t("auth.clickToSelect")}</span>
                     <span className="text-[11px] text-[#8E8E93]">{t("auth.supportedFormats")}</span>
                   </label>
                 )}
@@ -723,7 +723,7 @@ export default function SignUpForm() {
             </div>
 
             <div>
-              <label className="block text-[13px] text-[#1C1C1E] mb-1.5">{t("auth.tradeName")}</label>
+              <label className="block text-[13px] text-black/70 mb-1.5">{t("auth.tradeName")}</label>
               <input
                 type="text" name="tradeName" placeholder="Clínica Vet+"
                 value={formData.tradeName} onChange={handleInputChange} required
@@ -732,7 +732,7 @@ export default function SignUpForm() {
             </div>
 
             <div>
-              <label className="block text-[13px] text-[#1C1C1E] mb-1.5">
+              <label className="block text-[13px] text-black/70 mb-1.5">
                 {t("auth.cnpjIe")} <span className="text-[#8E8E93]">{t("auth.optional")}</span>
               </label>
               <input
@@ -745,7 +745,7 @@ export default function SignUpForm() {
             </div>
 
             <div>
-              <label className="block text-[13px] text-[#1C1C1E] mb-1.5">{t("auth.reportHeaderAddress")}</label>
+              <label className="block text-[13px] text-black/70 mb-1.5">{t("auth.reportHeaderAddress")}</label>
               <input
                 type="text" name="reportHeaderAddress" placeholder="Rua, Número, Cidade - UF"
                 value={formData.reportHeaderAddress} onChange={handleInputChange} required
@@ -754,12 +754,12 @@ export default function SignUpForm() {
             </div>
 
             <div>
-              <label className="block text-[13px] text-[#1C1C1E] mb-1.5">{t("auth.reportFooter")}</label>
+              <label className="block text-[13px] text-black/70 mb-1.5">{t("auth.reportFooter")}</label>
               <textarea
                 name="reportFooter" placeholder="CRVM/RT, POP, observações padrão...."
                 value={formData.reportFooter} onChange={handleInputChange}
                 rows={4} required
-                className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 resize-none"
+                className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-[#8E8E93] border-0 resize-none"
               />
               <p className="text-[11px] text-[#8E8E93] mt-1.5">{t("auth.reportFooterHelp")}</p>
             </div>
@@ -780,7 +780,7 @@ export default function SignUpForm() {
             onClick={handleBack}
             className="w-[36px] h-[36px] rounded-full bg-[#EBEBF0] flex items-center justify-center border-0 cursor-pointer shrink-0"
           >
-            <ChevronLeft size={20} className="text-[#1C1C1E]" />
+            <ChevronLeft size={20} className="text-black/70" />
           </button>
           <h2 className="text-[18px] font-bold text-primary leading-none">
             {stepTitle()}

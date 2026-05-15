@@ -114,16 +114,16 @@ export default function MenuPage() {
   );
 
   return (
-    <div className="bg-[#F2F2F7] min-h-screen flex flex-col">
+    <div className=" flex flex-col">
       <Header title={t("menu.menu")} />
       <div className="pt-3">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="h-[52px] w-[52px] overflow-hidden rounded-full bg-[#E8E8EE] flex-shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-[43px] w-[43px] overflow-hidden rounded-full bg-[#E8E8EE] flex-shrink-0">
               <Image width={100} height={100} src={avatarUrl} alt={name} className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[16px] font-bold leading-[20px] text-[#1C1C1E]">
+              <div className="truncate text-[14px] font-semibold leading-[20px] text-black/90">
                 {name}
               </div>
               <div className="truncate text-[13px] leading-[18px] text-[#8E8E93]">
@@ -133,9 +133,9 @@ export default function MenuPage() {
           </div>
           <Link
             href="/Veterinarian/Menu/EditProfile"
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-[#EBEBF0] border border-[#D1D1D6] px-3 text-[12px] font-medium text-[#1C1C1E] flex-shrink-0"
+            className="flex h-5 items-center gap-0.5 rounded-sm bg-secondary px-4 text-[10px] font-medium text-black/70 flex-shrink-0"
           >
-            <Pencil className="h-3 w-3" />
+            <Pencil className="h-2 w-2" />
             {t("menu.edit")}
           </Link>
         </div>
@@ -150,7 +150,7 @@ export default function MenuPage() {
             onClick={() => {
               router.push("/Veterinarian/Menu/wallet")
             }}
-            className="w-full rounded-2xl bg-[#3F78D8] px-5 py-4 text-left transition-colors hover:opacity-95"
+            className="w-full rounded-lg bg-primary px-5 py-2.5 text-left transition-colors hover:opacity-95"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -160,7 +160,7 @@ export default function MenuPage() {
                     {t("wallet.availableBalance")}
                   </span>
                 </div>
-                <p className="text-[26px] font-bold text-white leading-[30px]">
+                <p className="text-[26px] font-bold text-white leading-[20px]">
                   {currency} {balance}
                 </p>
               </div>
@@ -174,15 +174,15 @@ export default function MenuPage() {
         <div className="space-y-0">
           {menuItems.map((item) => {
             const row = (
-              <div className="flex w-full items-start gap-4 py-3">
-                <div className="flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-full bg-[#E5EDF9]">
-                  <item.icon className="h-[20px] w-[20px] text-[#3F78D8]" />
+              <div className="flex w-full items-center gap-2 py-1.5">
+                <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full bg-[#E5EDF9]">
+                  <item.icon className="h-[15px] w-[15px] text-primary" />
                 </div>
-                <div className="min-w-0 flex-1 pt-0.5">
-                  <div className="text-[15px] font-semibold leading-[19px] text-[#1C1C1E]">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-[500] leading-[16px] text-black/70">
                     {item.title}
                   </div>
-                  <div className="mt-0.5 text-[12px] leading-[15px] text-[#8E8E93]">
+                  <div className="text-[10px] leading-[15px] text-black/40">
                     {item.description}
                   </div>
                 </div>
@@ -197,18 +197,19 @@ export default function MenuPage() {
           })}
         </div>
 
-        <div className="my-3 h-px w-full bg-[#D1D1D6]" />
+        <div className="border-t border-secondary w-full mt-3">
 
-        <button
-          type="button"
-          onClick={logout}
-          className="flex items-center gap-4 py-3 text-[#1C1C1E]"
-        >
-          <div className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[#EBEBF0]">
-            <LogOut className="h-[20px] w-[20px] text-[#1C1C1E]" />
-          </div>
-          <div className="text-[15px] font-semibold leading-[19px]">{t("common.logout")}</div>
-        </button>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex items-center gap-2 py-3 text-black/70 "
+          >
+            <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#EBEBF0]">
+              <LogOut className="h-[15px] w-[15px] text-black/70" />
+            </div>
+            <div className="text-[12px] font-semibold leading-[19px]">{t("common.logout")}</div>
+          </button>
+        </div>
       </div>
     </div>
   );

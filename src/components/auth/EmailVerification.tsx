@@ -94,7 +94,7 @@ export default function EmailVerification({
                             className="w-[36px] h-[36px] rounded-full bg-[#EBEBF0] flex items-center justify-center border-0 cursor-pointer shrink-0"
                             onClick={() => router.back()}
                         >
-                            <ChevronLeft size={20} className="text-[#1C1C1E]" />
+                            <ChevronLeft size={20} className="text-black/70" />
                         </button>
                         <h2 className="text-[18px] font-bold text-primary">{displayTitle}</h2>
                     </div>
@@ -152,7 +152,7 @@ export default function EmailVerification({
                         className="w-[36px] h-[36px] rounded-full bg-[#EBEBF0] flex items-center justify-center border-0 cursor-pointer shrink-0"
                         onClick={() => router.back()}
                     >
-                        <ChevronLeft size={20} className="text-[#1C1C1E]" />
+                        <ChevronLeft size={20} className="text-black/70" />
                     </button>
                     <h2 className="text-[18px] font-bold text-primary">{displayTitle}</h2>
                 </div>
@@ -161,7 +161,7 @@ export default function EmailVerification({
                 <h2 className="text-[18px] font-bold text-primary mb-3">{displayTitle}</h2>
             )}
 
-            <p className={mode === "modal" ? "text-[14px] text-[#6C6C70] mb-6" : "text-[14px] text-[#1C1C1E] mb-8 px-5 pt-2"}>
+            <p className={mode === "modal" ? "text-[14px] text-[#6C6C70] mb-6" : "text-[14px] text-black/70 mb-8 px-5 pt-2"}>
                 {t("auth.codeSentToEmail")}
                 <br />
                 {t("auth.enterCodeToActivate")}
@@ -178,7 +178,7 @@ export default function EmailVerification({
                         value={digit}
                         onChange={(e) => handleCodeChange(index, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(index, e)}
-                        className="w-[48px] h-[52px] text-center text-[18px] font-medium bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] border-0"
+                        className="w-[48px] h-[52px] text-center text-[18px] font-medium bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 border-0"
                     />
                 ))}
             </div>

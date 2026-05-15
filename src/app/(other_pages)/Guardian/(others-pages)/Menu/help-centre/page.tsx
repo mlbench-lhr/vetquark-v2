@@ -67,7 +67,7 @@ export default function Page() {
           <button
             type="button"
             onClick={() => router.push("/Guardian/Menu/help-centre/urine-collection-guide")}
-            className="mt-4 h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white"
+            className="mt-4 h-[44px] w-full rounded-full bg-primary text-[14px] font-medium text-white"
           >
             {t("helpCentre.viewStepByStep")}
           </button>
@@ -121,14 +121,14 @@ export default function Page() {
           <button
             type="button"
             onClick={() => router.push("/legal/terms")}
-            className="mt-4 h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white"
+            className="mt-4 h-[44px] w-full rounded-full bg-primary text-[14px] font-medium text-white"
           >
             {t("helpCentre.supportCommonIssuesButton")}
           </button>
           <button
             type="button"
             onClick={() => router.push("/legal/privacy")}
-            className="mt-3 h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white"
+            className="mt-3 h-[44px] w-full rounded-full bg-primary text-[14px] font-medium text-white"
           >
             {t("helpCentre.supportPrivacyAccountButton")}
           </button>
@@ -186,7 +186,7 @@ export default function Page() {
               }
             }}
             disabled={sending || !feedback.trim()}
-            className="mt-4 h-[52px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="mt-4 h-[52px] w-full rounded-full bg-primary text-[15px] font-medium text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {sending ? t("helpCentre.feedbackSending") : t("helpCentre.feedbackSubmit")}
           </button>

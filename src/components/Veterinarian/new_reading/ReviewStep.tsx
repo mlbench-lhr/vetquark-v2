@@ -598,7 +598,7 @@ export default function ReviewStep({
           onChange={(e) => setObservations(e.target.value)}
           placeholder={t('reading.review.observationsPlaceholder')}
           rows={3}
-          className="w-full px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-[14px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-2 focus:ring-[#3F78D8]/20"
+          className="w-full px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-[14px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
@@ -624,7 +624,7 @@ export default function ReviewStep({
             onIssueReport(results)
           }}
           disabled={!canProceed}
-          className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px] disabled:opacity-60 shadow-sm"
+          className="w-full py-4 rounded-full bg-primary text-white font-semibold text-[15px] disabled:opacity-60 shadow-sm"
         >
           {t('reading.review.issueReport')}
         </button>

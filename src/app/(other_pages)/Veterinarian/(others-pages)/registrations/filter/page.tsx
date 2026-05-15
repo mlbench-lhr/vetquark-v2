@@ -7,12 +7,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 type Species =
   | "Dog"
   | "Cat"
-  // | "Small Mammal"
-  // | "Bird"
-  // | "Reptile"
-  // | "Fish"
-  // | "Farm Animal"
-  // | "Other";
+// | "Small Mammal"
+// | "Bird"
+// | "Reptile"
+// | "Fish"
+// | "Farm Animal"
+// | "Other";
 
 type Gender = "Male" | "Female";
 type AgeRange = "1+" | "2+" | "5+" | "10+";
@@ -31,9 +31,8 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`h-[36px] rounded-full px-5 text-[13px] font-medium transition-colors ${
-        active ? "bg-[#3F78D8] text-white" : "bg-[#F5F6F6] text-[#111827]"
-      }`}
+      className={`h-[36px] rounded-full px-5 text-[13px] font-medium transition-colors ${active ? "bg-primary text-white" : "bg-[#F5F6F6] text-[#111827]"
+        }`}
     >
       {label}
     </button>
@@ -200,7 +199,7 @@ function FilterContent() {
         <button
           type="button"
           onClick={() => router.push(`/Veterinarian/registrations${queryString ? `?${queryString}` : ""}`)}
-          className="h-[54px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+          className="h-[54px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
         >
           Show Results
         </button>

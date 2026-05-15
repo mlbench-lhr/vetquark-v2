@@ -38,7 +38,7 @@ export default function PrivacyPage() {
           </div>
           <div className="mt-4 space-y-4">
             {content.sections.map((sec) => (
-              <div key={sec.title} className={`${sec.paragraphs.length>0?"rounded-2xl bg-white p-4":"px-4"}`}>
+              <div key={sec.title} className={`${sec.paragraphs.length > 0 ? "rounded-2xl bg-white p-4" : "px-4"}`}>
                 <div className="text-[14px] font-medium leading-[18px] text-[#111827]">
                   {sec.title}
                 </div>
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
           <div className="mt-5">
             <a
               href="/legal/terms"
-              className="inline-flex h-[44px] px-5 rounded-full bg-[#3F78D8] text-[14px] font-medium text-white items-center justify-center"
+              className="inline-flex h-[44px] px-5 rounded-full bg-primary text-[14px] font-medium text-white items-center justify-center"
             >
               {lang === "pt" ? "Ver Termos de Serviço" : "View Terms of Service"}
             </a>

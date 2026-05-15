@@ -90,7 +90,7 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
           {!isPaid && amountLabel && (
             <div className="text-right flex-shrink-0">
               <div className="text-[11px] text-[#6B7280]">{t('reading.identification.amountToBePaid')}</div>
-              <div className="text-[18px] font-bold text-[#3F78D8] mt-0.5">{amountLabel}</div>
+              <div className="text-[18px] font-bold text-primary mt-0.5">{amountLabel}</div>
             </div>
           )}
         </div>
@@ -100,8 +100,8 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
       <div className="mt-10 flex items-center justify-center relative">
         <div
           className={`w-48 h-48 rounded-full border-[12px] transition-all duration-500 ${isPaid
-            ? 'border-[#EBF2FF] border-t-[#3F78D8] border-r-[#3F78D8]'
-            : 'border-[#EBF2FF] border-t-[#3F78D8] animate-spin'
+            ? 'border-[#EBF2FF] border-t-primary border-r-primary'
+            : 'border-[#EBF2FF] border-t-primary animate-spin'
             }`}
           style={isPaid ? { transform: 'rotate(-45deg)' } : {}}
         />
@@ -120,7 +120,7 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
         {isPaid ? (
           <button
             onClick={onContinue}
-            className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px]"
+            className="w-full py-4 rounded-full bg-primary text-white font-semibold text-[15px]"
           >
             {t('common.continue')}
           </button>
@@ -128,7 +128,7 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
           <button
             onClick={onSend}
             disabled={!!sending}
-            className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px] disabled:opacity-70"
+            className="w-full py-4 rounded-full bg-primary text-white font-semibold text-[15px] disabled:opacity-70"
           >
             {sending ? t('reading.identification.sending') : t('reading.identification.sendBillingLink')}
           </button>

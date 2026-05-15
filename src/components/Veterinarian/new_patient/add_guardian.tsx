@@ -488,12 +488,12 @@ export default function GuardianRegistration() {
         <div className="min-h-[calc(100vh-96px)] p-4 space-y-4 bg-gray-50">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-[#3F78D8]">{t('newPatient.addNewPatientTitle')}</h1>
+                <h1 className="text-xl font-semibold text-primary">{t('newPatient.addNewPatientTitle')}</h1>
                 <div className="flex items-center gap-3">
                     <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <Search className="w-5 h-5 text-[#3F78D8]" />
+                        <Search className="w-5 h-5 text-primary" />
                     </button>
-                    <button className="relative w-10 h-10 rounded-full bg-[#3F78D8] flex items-center justify-center hover:bg-[#3F78D8]/90 transition-colors">
+                    <button className="relative w-10 h-10 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
                         <Bell className="w-5 h-5 text-white" />
                         {unreadCount > 0 && (
                             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
@@ -506,10 +506,10 @@ export default function GuardianRegistration() {
             <div className="relative flex items-start justify-between">
                 {/* Step 1 - Active (Guardian Data) */}
                 <div className="flex flex-col items-center gap-1.5 z-10">
-                    <div className="w-10 h-10 bg-[#3F78D8] rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                         <Folder className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-xs font-semibold text-[#3F78D8]">{t('newPatient.guardianDataStep')}</span>
+                    <span className="text-xs font-semibold text-primary">{t('newPatient.guardianDataStep')}</span>
                 </div>
                 {/* Connecting Line */}
                 <div className="absolute top-5 left-5 right-5 h-px bg-[#E8E8E8] z-0" />
@@ -549,7 +549,7 @@ export default function GuardianRegistration() {
                                     placeholder={t('newPatient.guardian.guardianNamePlaceholder')}
                                     value={formData.fullName}
                                     onChange={(e) => handleChange('fullName', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                    className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
@@ -562,7 +562,7 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.idCardPlaceholder')}
                                         value={formData.idCard}
                                         onChange={(e) => handleChange('idCard', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                     />
                                 </div>
                                 <div>
@@ -574,7 +574,7 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.rgPlaceholder')}
                                         value={formData.rg}
                                         onChange={(e) => handleChange('rg', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                     />
                                 </div>
                             </div>
@@ -588,7 +588,7 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.foreignIdentityPlaceholder')}
                                         value={formData.foreignIdentity}
                                         onChange={(e) => handleChange('foreignIdentity', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                     />
                                 </div>
                                 <div>
@@ -601,7 +601,7 @@ export default function GuardianRegistration() {
                                         max={new Date(new Date().setFullYear(new Date().getFullYear() - 10)).toISOString().slice(0, 10)}
                                         placeholder="dd/mm/yyyy"
                                         required
-                                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm pr-12"
+                                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm pr-12"
                                         iconClassName="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF] cursor-pointer"
                                     />
                                 </div>
@@ -628,7 +628,7 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.landlinePlaceholder')}
                                         value={formData.landline}
                                         onChange={(e) => handleChange('landline', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                     />
                                 </div>
                                 <div>
@@ -641,7 +641,7 @@ export default function GuardianRegistration() {
                                         onChange={(next) => handleChange('mobile', next)}
                                         defaultCountry="br"
                                         required
-                                        inputClassName="!w-full !h-12 !px-11 !py-3 !bg-[#F5F5F5] !border-0 !rounded-xl !text-[#1D2939] placeholder:!text-[#C4C4C4] focus:!outline-none focus:!ring-2 focus:!ring-[#3F78D8]"
+                                        inputClassName="!w-full !h-12 !px-11 !py-3 !bg-[#F5F5F5] !border-0 !rounded-xl !text-[#1D2939] placeholder:!text-[#C4C4C4] focus:!outline-none focus:!ring-2 focus:!ring-primary"
                                         buttonClassName="!h-12 !bg-[#F5F5F5] !border-0 !rounded-l-xl"
                                         containerClassName="w-full"
                                     />
@@ -657,7 +657,7 @@ export default function GuardianRegistration() {
                                     value={formData.email}
                                     onChange={(e) => handleChange('email', e.target.value)}
                                     disabled={isEditing}
-                                    className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm disabled:opacity-50"
+                                    className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm disabled:opacity-50"
                                 />
                             </div>
                         </div>
@@ -682,7 +682,7 @@ export default function GuardianRegistration() {
                                         placeholder={t('auth.enterPostalCode')}
                                         value={formData.postalCode}
                                         onChange={(e) => handleChange('postalCode', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                     />
                                 </div>
                                 <div>
@@ -694,7 +694,7 @@ export default function GuardianRegistration() {
                                         placeholder={t('auth.enterAddress')}
                                         value={formData.address}
                                         onChange={(e) => handleChange('address', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                     />
                                 </div>
                             </div>
@@ -708,7 +708,7 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.numberPlaceholder')}
                                         value={formData.number}
                                         onChange={(e) => handleChange('number', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                     />
                                 </div>
                                 <div>
@@ -720,7 +720,7 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.complementPlaceholder')}
                                         value={formData.complement}
                                         onChange={(e) => handleChange('complement', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                     />
                                 </div>
                             </div>
@@ -734,7 +734,7 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.neighborhoodPlaceholder')}
                                         value={formData.neighborhood}
                                         onChange={(e) => handleChange('neighborhood', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm"
+                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
                                     />
                                 </div>
                                 <div>
@@ -746,7 +746,7 @@ export default function GuardianRegistration() {
                                             value={formData.city}
                                             onChange={(e) => handleChange('city', e.target.value)}
                                             disabled={!formData.state || loadingCities || cityOptions.length === 0}
-                                            className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm disabled:opacity-50"
+                                            className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm disabled:opacity-50"
                                         >
                                             <option value="" disabled>
                                                 {!formData.state ? t('auth.selectStateFirst') : loadingCities ? t('auth.loadingCities') : t('auth.selectCity')}
@@ -762,7 +762,7 @@ export default function GuardianRegistration() {
                                             value={formData.city}
                                             onChange={(e) => handleChange('city', e.target.value)}
                                             disabled={!formData.state}
-                                            className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm disabled:opacity-50"
+                                            className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm disabled:opacity-50"
                                         />
                                     )}
                                 </div>
@@ -774,7 +774,7 @@ export default function GuardianRegistration() {
                                         value={formData.state}
                                         onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
                                         disabled={loadingStates || stateOptions.length === 0}
-                                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] border-0 text-sm disabled:opacity-50"
+                                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm disabled:opacity-50"
                                     >
                                         <option value="" disabled>
                                             {loadingStates ? t('auth.loadingStates') : t('auth.selectState')}
@@ -795,7 +795,7 @@ export default function GuardianRegistration() {
                 <button
                     onClick={handleSubmit}
                     disabled={submitting || loadingGuardian}
-                    className="w-full bg-[#3F78D8] hover:bg-[#3F78D8]/90 active:bg-[#3568C0] text-white font-bold text-base py-[15px] rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full bg-primary hover:bg-primary/90 active:bg-[#3568C0] text-white font-bold text-base py-[15px] rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     <Plus className="w-5 h-5" />
                     {submitting || loadingGuardian ? (isEditing ? t('common.saving') : t('newPatient.guardian.adding')) : (isEditing ? t('common.saveChanges') : t('newPatient.guardian.addGuardianButton'))}

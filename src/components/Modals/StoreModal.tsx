@@ -410,12 +410,12 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4"
+            className="fixed inset-0 bg-black/30 z-150 flex items-center justify-center px-0 sm:px-4"
             style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
             <div
-                className="relative w-full max-w-[400px] bg-[#F8F9FD] rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col"
+                className="relative w-[95%] h-[470px] bg-[#F8F9FD] rounded-[18px] shadow-2xl overflow-hidden flex flex-col"
                 style={{ maxHeight: '92vh' }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -424,20 +424,20 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                     <button
                         type="button"
                         onClick={handleBack}
-                        className="w-10 h-10 rounded-full bg-[#F0F0F0] flex items-center justify-center hover:bg-gray-200 transition-colors"
+                        className="w-8 h-8 rounded-full bg-[#F0F0F0] flex items-center justify-center hover:bg-gray-200 transition-colors"
                     >
-                        <ArrowLeft className="w-5 h-5 text-gray-700" />
+                        <ArrowLeft className="w-4 h-4 text-gray-700" />
                     </button>
-                    <div className="flex items-center gap-2 text-[#3F78D8]">
+                    <div className="flex items-center gap-2 text-primary">
                         <ShoppingCart className="w-5 h-5" />
-                        <span className="text-lg font-semibold">Loja</span>
+                        <span className="text-lg font-normal">Loja</span>
                     </div>
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
+                        className="w-8 h-8 rounded-full border-2 border-gray-300 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
                     >
-                        <X className="w-5 h-5 text-gray-400" />
+                        <X className="w-4 h-4 text-gray-300" />
                     </button>
                 </div>
 
@@ -463,15 +463,15 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="text-sm font-bold text-gray-800 truncate">{product.name}</h3>
+                                                <h3 className="text-sm font-bold text-black/70 truncate">{product.name}</h3>
                                                 <p className="text-[11px] text-gray-400 leading-tight mt-0.5">{product.description}</p>
                                                 <div className="flex items-center justify-between mt-2">
-                                                    <span className="text-sm font-bold text-gray-800">{formatPrice(product.price)}</span>
-                                                    <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-bold text-black/70">{formatPrice(product.price)}</span>
+                                                    <div className="flex items-center gap-2 bg-[#F2F4FF]/90 rounded-full">
                                                         <button
                                                             onClick={() => setCartQuantity(product.id, qtyInCart - 1)}
                                                             disabled={minusDisabled}
-                                                            className={`w-7 h-7 rounded-full bg-[#E8ECFF] flex items-center justify-center transition ${minusDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-100'}`}
+                                                            className={`w-7 h-7 rounded-full bg-[#DFE3FF] flex items-center justify-center transition ${minusDisabled ? 'opacity-100 cursor-not-allowed' : 'hover:bg-blue-100'}`}
                                                         >
                                                             <Minus className="w-3.5 h-3.5 text-primary" />
                                                         </button>
@@ -541,33 +541,35 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                         <div className="space-y-5 pt-2">
                             {/* Delivery Address */}
                             <div>
-                                <h3 className="text-sm font-bold text-gray-800 mb-3">Endereço de entrega</h3>
+                                <h3 className="text-sm font-bold text-black/70 mb-2">Endereço de entrega</h3>
                                 {selectedAddress ? (
                                     <>
-                                        <div className="bg-white rounded-2xl border border-gray-100 p-4 relative">
+                                        <div className="bg-white rounded-lg border border-gray-200 p-4 relative">
                                             <div className="flex items-start gap-3">
-                                                <div className="mt-0.5 w-4 h-4 rounded-full border-[5px] border-primary bg-white flex-shrink-0" />
+                                                <div className="w-4 h-4 rounded-full border-[5px] border-primary bg-white flex-shrink-0" />
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-gray-800">{selectedAddress.name}</p>
+                                                    <p className="text-sm font-normal text-black/70">{selectedAddress.name}</p>
                                                     <p className="text-xs text-gray-400 mt-1">{selectedAddress.phone}</p>
                                                     <p className="text-xs text-gray-400">{selectedAddress.location}</p>
                                                 </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => setStep("change-address")}
-                                                    className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 flex-shrink-0"
+                                                    className="w-fit h-fit flex items-center justify-center text-gray-400 hover:text-gray-600 flex-shrink-0"
                                                 >
-                                                    <Pencil className="w-4 h-4" />
+                                                    <Image src={"/edit icon.svg"} alt="edit icon" width={16} height={16} />
                                                 </button>
                                             </div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep("change-address")}
-                                            className="mt-2 text-xs text-primary font-medium hover:underline"
-                                        >
-                                            + Adicionar novo endereço
-                                        </button>
+                                        <div className="w-full flex justify-end items-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep("change-address")}
+                                                className="mt-2 text-xs text-primary font-medium hover:underline"
+                                            >
+                                                + Adicionar novo endereço
+                                            </button>
+                                        </div>
                                     </>
                                 ) : (
                                     <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
@@ -585,13 +587,13 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
                             {/* Payment Method */}
                             <div>
-                                <h3 className="text-sm font-bold text-gray-800 mb-3">Método de pagamento</h3>
+                                <h3 className="text-sm font-bold text-black/70 mb-2">Método de pagamento</h3>
                                 <div className="space-y-3">
                                     {/* Card */}
-                                    <button
+                                    {/* <button
                                         type="button"
                                         onClick={() => setSelectedPayment("card")}
-                                        className={`w-full bg-white rounded-2xl border p-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'card' ? 'border-primary' : 'border-gray-100'}`}
+                                        className={`w-full bg-white rounded-lg border p-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'card' ? 'border-primary' : 'border-gray-100'}`}
                                     >
                                         <div className="w-10 h-10 rounded-lg bg-white border border-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -604,18 +606,15 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === 'card' ? 'border-primary' : 'border-gray-300'}`}>
                                             {selectedPayment === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                                         </div>
-                                    </button>
+                                    </button> */}
                                     {/* PIX */}
                                     <button
                                         type="button"
                                         onClick={() => setSelectedPayment("pix")}
-                                        className={`w-full bg-white rounded-2xl border p-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'pix' ? 'border-primary' : 'border-gray-100'}`}
+                                        className={`w-full bg-white rounded-lg border py-2 px-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'pix' ? 'border-primary' : 'border-gray-100'}`}
                                     >
-                                        <div className="w-10 h-10 rounded-lg bg-[#E6F9F1] flex items-center justify-center flex-shrink-0">
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                                                <path d="M12 2L2 12l10 10 10-10L12 2z" fill="#32BCAD" />
-                                                <path d="M12 7l-5 5 5 5 5-5-5-5z" fill="#E6F9F1" />
-                                            </svg>
+                                        <div className="w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0">
+                                            <Image src={"/images/pixLogo.svg"} alt="pix" width={20} height={20} />
                                         </div>
                                         <span className="flex-1 text-sm font-medium text-gray-700">PIX</span>
                                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === 'pix' ? 'border-primary' : 'border-gray-300'}`}>

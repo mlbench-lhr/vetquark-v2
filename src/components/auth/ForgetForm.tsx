@@ -235,7 +235,7 @@ export default function ForgetForm() {
                     onClick={handleBack}
                     className="w-[36px] h-[36px] rounded-full bg-[#EBEBF0] flex items-center justify-center border-0 cursor-pointer shrink-0"
                 >
-                    <ChevronLeft size={20} className="text-[#1C1C1E]" />
+                    <ChevronLeft size={20} className="text-black/70" />
                 </button>
                 <h2 className="text-[18px] font-bold text-primary">{getTitle()}</h2>
             </div>
@@ -252,7 +252,7 @@ export default function ForgetForm() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0"
+                            className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-[#8E8E93] border-0"
                         />
                     </form>
                 )}
@@ -272,7 +272,7 @@ export default function ForgetForm() {
                                     onChange={(e) => handleOtpChange(index, e.target.value)}
                                     onKeyDown={(e) => handleKeyDown(index, e)}
                                     onClick={() => handleInputClick(index)}
-                                    className="w-[48px] h-[52px] text-center bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[18px] font-medium text-[#1C1C1E] border-0"
+                                    className="w-[48px] h-[52px] text-center bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[18px] font-medium text-black/70 border-0"
                                     maxLength={1}
                                     autoComplete="off"
                                 />
@@ -310,7 +310,7 @@ export default function ForgetForm() {
                                 onFocus={() => setPasswordFocused(true)}
                                 onBlur={() => setPasswordFocused(false)}
                                 required
-                                className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
+                                className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-[#8E8E93] border-0 pr-12"
                             />
                             <button
                                 type="button"
@@ -336,7 +336,7 @@ export default function ForgetForm() {
                                             <div className={`w-[16px] h-[16px] rounded-full border flex items-center justify-center shrink-0 ${req.test(password) ? "bg-primary border-primary" : "border-[#C7C7CC]"}`}>
                                                 {req.test(password) && <Check size={9} className="text-white" strokeWidth={3} />}
                                             </div>
-                                            <span className={req.test(password) ? "text-[#1C1C1E]" : "text-[#8E8E93]"}>{req.label}</span>
+                                            <span className={req.test(password) ? "text-black/70" : "text-[#8E8E93]"}>{req.label}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -351,7 +351,7 @@ export default function ForgetForm() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
-                                className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
+                                className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-[#8E8E93] border-0 pr-12"
                             />
                             <button
                                 type="button"

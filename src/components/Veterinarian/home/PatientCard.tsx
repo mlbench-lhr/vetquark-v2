@@ -18,7 +18,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, featured, onClickNav
     <div
       className={`flex items-center justify-between py-3 px-6 rounded-lg cursor-pointer transition-all duration-200 group ${featured
         ? 'bg-primary border border-primary'
-        : 'bg-white border border-[#3F78D8]'
+        : 'bg-white border border-primary'
         }`}
       onClick={() => router.push(onClickNavigate || `/Veterinarian/home/patientDetails/${patient.id}`)}
     >

@@ -33,7 +33,7 @@ function Toggle({
       className={[
         "relative inline-flex items-center shrink-0",
         "w-[58px] h-[34px] rounded-full",
-        checked ? "bg-[#3F78D8]" : "bg-[#D1D5DB]",
+        checked ? "bg-primary" : "bg-[#D1D5DB]",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
         "transition-colors",
       ].join(" ")}
@@ -224,7 +224,7 @@ export default function NotificationsSettingsPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+            className="h-[56px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

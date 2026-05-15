@@ -36,7 +36,7 @@ export default function Page() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const profile = useAppSelector((s) => s.userProfile.profile);
-  const { t } = useTranslation();
+    const { t } = useTranslation();
     const [view, setView] = useState<View>("list");
     const [isAddCardOpen, setIsAddCardOpen] = useState(false);
 
@@ -153,7 +153,7 @@ export default function Page() {
                                 </div>
                                 <div className="text-[15px] font-medium leading-[20px] text-[#111827]">Pix</div>
                             </div>
-                            <ChevronRight className="h-5 w-5 text-[#3F78D8]" />
+                            <ChevronRight className="h-5 w-5 text-primary" />
                         </button>
 
                         <button
@@ -163,11 +163,11 @@ export default function Page() {
                         >
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 flex items-center justify-center">
-                                    <CreditCard className="h-6 w-6 text-[#3F78D8]" />
+                                    <CreditCard className="h-6 w-6 text-primary" />
                                 </div>
                                 <div className="text-[15px] font-medium leading-[20px] text-[#111827]">{t("wallet.cardLabel")}</div>
                             </div>
-                            <ChevronRight className="h-5 w-5 text-[#3F78D8]" />
+                            <ChevronRight className="h-5 w-5 text-primary" />
                         </button>
                     </div>
                 </div>
@@ -175,7 +175,7 @@ export default function Page() {
                 <div className="flex min-h-[calc(100dvh-72px)] flex-col px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
                     <div className="rounded-[16px] bg-[#EEF4FF] px-4 py-4">
                         <div className="flex items-center gap-2">
-                            <Zap className="h-4 w-4 text-[#3F78D8]" fill="#3F78D8" />
+                            <Zap className="h-4 w-4 text-primary" fill="#3F78D8" />
                             <div className="text-[14px] font-medium leading-[18px] text-[#111827]">
                                 Faster and with fewer errors.
                             </div>
@@ -191,7 +191,7 @@ export default function Page() {
                             type="button"
                             onClick={() => setPixKeyType("cpf")}
                             className={`h-10 w-[120px] rounded-full text-[14px] font-medium ${pixKeyType === "cpf"
-                                ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                ? "bg-[#EBF2FF] text-primary"
                                 : "bg-[#F5F6F6] text-[#9AA4AF]"
                                 }`}
                         >
@@ -201,7 +201,7 @@ export default function Page() {
                             type="button"
                             onClick={() => setPixKeyType("cnpj")}
                             className={`h-10 w-[120px] rounded-full text-[14px] font-medium ${pixKeyType === "cnpj"
-                                ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                ? "bg-[#EBF2FF] text-primary"
                                 : "bg-[#F5F6F6] text-[#9AA4AF]"
                                 }`}
                         >
@@ -240,7 +240,7 @@ export default function Page() {
                             type="button"
                             onClick={handleSavePix}
                             disabled={saving}
-                            className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+                            className="h-[56px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
                         >
                             {saving ? "Saving..." : "Add account"}
                         </button>
@@ -269,7 +269,7 @@ export default function Page() {
                         <div className="mt-6">
                             <div className="flex items-center justify-between">
                                 <div className="text-[12px] font-medium leading-[16px] text-[#9AA4AF]">Card information</div>
-                                <button type="button" className="flex items-center gap-2 text-[12px] font-medium text-[#3F78D8]">
+                                <button type="button" className="flex items-center gap-2 text-[12px] font-medium text-primary">
                                     <Camera className="h-4 w-4" />
                                     Scan card
                                 </button>
@@ -347,7 +347,7 @@ export default function Page() {
                             <button
                                 type="button"
                                 onClick={() => setIsAddCardOpen(false)}
-                                className="mt-8 h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+                                className="mt-8 h-[56px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
                             >
                                 Add Card
                             </button>

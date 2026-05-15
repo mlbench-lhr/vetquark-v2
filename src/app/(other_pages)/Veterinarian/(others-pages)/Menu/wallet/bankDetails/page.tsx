@@ -149,8 +149,8 @@ export default function Page() {
         }
     };
 
-    const inputCls = "w-full h-[44px] bg-white border border-[#E5E5EA] rounded-lg px-4 text-[14px] text-[#1C1C1E] placeholder:text-[#8E8E93] outline-none focus:ring-2 focus:ring-[#3F78D8]";
-    const labelCls = "block text-[#1C1C1E] text-[14px] font-medium mb-1.5";
+    const inputCls = "w-full h-[44px] bg-white border border-[#E5E5EA] rounded-lg px-4 text-[14px] text-black/70 placeholder:text-[#8E8E93] outline-none focus:ring-2 focus:ring-primary";
+    const labelCls = "block text-black/70 text-[14px] font-medium mb-1.5";
     return (
         <div className="w-full bg-[#F2F2F7] min-h-screen flex flex-col pb-6">
             <Header title={t("wallet.bankDetails") || "Dados Bancários"} />
@@ -160,8 +160,8 @@ export default function Page() {
                 <button
                     onClick={() => setActiveTab("pix")}
                     className={`flex-1 h-[42px] rounded-full text-[14px] font-semibold transition-colors ${activeTab === "pix"
-                            ? "bg-[#3F78D8] text-white"
-                            : "bg-white border border-[#D1D1D6] text-[#1C1C1E]"
+                        ? "bg-primary text-white"
+                        : "bg-white border border-[#D1D1D6] text-black/70"
                         }`}
                 >
                     {t("wallet.pixRecommended") || "PIX (Recomendado)"}
@@ -169,8 +169,8 @@ export default function Page() {
                 <button
                     onClick={() => setActiveTab("bank")}
                     className={`flex-1 h-[42px] rounded-full text-[14px] font-semibold transition-colors ${activeTab === "bank"
-                            ? "bg-[#3F78D8] text-white"
-                            : "bg-white border border-[#D1D1D6] text-[#1C1C1E]"
+                        ? "bg-primary text-white"
+                        : "bg-white border border-[#D1D1D6] text-black/70"
                         }`}
                 >
                     {t("wallet.bankAccountLabel") || "Conta Bancária"}
@@ -181,12 +181,12 @@ export default function Page() {
                 <div className="flex flex-col flex-1">
                     {/* Info Banner */}
                     <div className="bg-[#E5EDF9] rounded-xl px-4 py-3 mb-4 flex items-start gap-3">
-                        <Zap className="w-[18px] h-[18px] text-[#3F78D8] flex-shrink-0 mt-0.5" fill="#3F78D8" />
+                        <Zap className="w-[18px] h-[18px] text-primary flex-shrink-0 mt-0.5" fill="#3F78D8" />
                         <div>
-                            <p className="text-[#3F78D8] text-[14px] font-bold leading-[18px]">
+                            <p className="text-primary text-[14px] font-bold leading-[18px]">
                                 {t("wallet.pixFewerErrors") || "Mais rápido e com menos erros."}
                             </p>
-                            <p className="text-[#3F78D8] text-[12px] mt-0.5 leading-[16px] opacity-80">
+                            <p className="text-primary text-[12px] mt-0.5 leading-[16px] opacity-80">
                                 {t("wallet.pixFastSafeDesc") || "O PIX é o método mais rápido e seguro para receber seus repasses."}
                             </p>
                         </div>
@@ -227,16 +227,16 @@ export default function Page() {
                             <label className={`${labelCls} mb-3`}>{t("wallet.typeOfPerson") || "Tipo de Pessoa"}</label>
                             <div className="flex items-center gap-6">
                                 <label className="flex items-center gap-2 cursor-pointer" onClick={() => setPersonType("individual")}>
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${personType === "individual" ? "border-[#3F78D8]" : "border-[#D1D5DB]"}`}>
-                                        {personType === "individual" && <div className="w-2.5 h-2.5 rounded-full bg-[#3F78D8]" />}
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${personType === "individual" ? "border-primary" : "border-[#D1D5DB]"}`}>
+                                        {personType === "individual" && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                                     </div>
-                                    <span className="text-[14px] text-[#1C1C1E]">{t("wallet.individual") || "Pessoa Física"}</span>
+                                    <span className="text-[14px] text-black/70">{t("wallet.individual") || "Pessoa Física"}</span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer" onClick={() => setPersonType("legal")}>
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${personType === "legal" ? "border-[#3F78D8]" : "border-[#D1D5DB]"}`}>
-                                        {personType === "legal" && <div className="w-2.5 h-2.5 rounded-full bg-[#3F78D8]" />}
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${personType === "legal" ? "border-primary" : "border-[#D1D5DB]"}`}>
+                                        {personType === "legal" && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                                     </div>
-                                    <span className="text-[14px] text-[#1C1C1E]">{t("wallet.legalEntity") || "Pessoa Jurídica"}</span>
+                                    <span className="text-[14px] text-black/70">{t("wallet.legalEntity") || "Pessoa Jurídica"}</span>
                                 </label>
                             </div>
                         </div>
@@ -276,7 +276,7 @@ export default function Page() {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full bg-[#3F78D8] text-white h-[52px] rounded-xl text-[16px] font-bold hover:bg-[#2f68c8] transition-colors disabled:opacity-60"
+                    className="w-full bg-primary text-white h-[52px] rounded-xl text-[16px] font-bold hover:bg-[#2f68c8] transition-colors disabled:opacity-60"
                 >
                     {saving ? t("common.saving") : activeTab === "pix" ? "Salvar Dados Pix" : "Salvar Conta Bancária"}
                 </button>

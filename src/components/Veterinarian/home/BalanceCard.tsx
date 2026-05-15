@@ -31,6 +31,7 @@ const BalanceCard: React.FC = () => {
 
   return (
     <div className="rounded-2xl bg-primary p-5 mt-5 relative overflow-hidden">
+      <StoreModal isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       {/* Top row: label + store button */}
       <div className='w-50 h-50 rounded-full bg-white/5 absolute -top-26 -right-12 flex justify-center items-center'>
         <div className='w-[80%] h-[80%] rounded-full bg-white/10'></div>
@@ -41,8 +42,8 @@ const BalanceCard: React.FC = () => {
         </span>
         <button
           type="button"
-          onClick={() => setStoreOpen(true)}
-          className="flex items-center gap-1.5 bg-white/30 rounded-2xl px-3 py-1.5 cursor-pointer"
+          onClick={() => { setStoreOpen(true) }}
+          className="z-50 flex items-center gap-1.5 bg-white/30 rounded-2xl px-3 py-1.5 cursor-pointer"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="9" cy="21" r="1" />
@@ -76,7 +77,6 @@ const BalanceCard: React.FC = () => {
           {t('dashboard.withdrawalHistory')}
         </Link>
       </div>
-      <StoreModal isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
     </div>
   );
 };

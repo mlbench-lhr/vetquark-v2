@@ -130,11 +130,11 @@ export default function MenuPage() {
           {menuItems.map((item) => {
             const iconNode =
               item.icon.kind === "text" ? (
-                <span className="text-[16px] font-semibold leading-none text-[#3F78D8]">
+                <span className="text-[16px] font-semibold leading-none text-primary">
                   {item.icon.value}
                 </span>
               ) : (
-                <item.icon.Component className="h-5 w-5 text-[#3F78D8]" />
+                <item.icon.Component className="h-5 w-5 text-primary" />
               );
 
             const row = (
@@ -150,7 +150,7 @@ export default function MenuPage() {
                     {item.description}
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 flex-shrink-0 text-[#3F78D8]" />
+                <ChevronRight className="h-5 w-5 flex-shrink-0 text-primary" />
               </div>
             );
 
