@@ -238,7 +238,7 @@ export default function AddPatientGuardian() {
                 {/* Title & Subtitle */}
                 <div>
                     <h2 className="text-lg font-semibold text-gray-900">{t('newPatient.linkGuardianTitle')}</h2>
-                    <p className="text-sm text-[#839297] mt-1">
+                    <p className="text-sm text-black/50 leading-[16px]">
                         {t('newPatient.linkGuardianDesc')}
                     </p>
                 </div>

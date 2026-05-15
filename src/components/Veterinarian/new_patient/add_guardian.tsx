@@ -485,49 +485,46 @@ export default function GuardianRegistration() {
     };
 
     return (
-        <div className="min-h-[calc(100vh-96px)] p-4 space-y-4 bg-gray-50">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-primary">{t('newPatient.addNewPatientTitle')}</h1>
-                <div className="flex items-center gap-3">
-                    <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <Search className="w-5 h-5 text-primary" />
-                    </button>
-                    <button className="relative w-10 h-10 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
-                        <Bell className="w-5 h-5 text-white" />
-                        {unreadCount > 0 && (
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
-                        )}
-                    </button>
-                </div>
-            </div>
+        <div className="">
+            <Header title={"Adicionar novo paciente"} />
+
 
             {/* Progress Stepper */}
-            <div className="relative flex items-start justify-between">
-                {/* Step 1 - Active (Guardian Data) */}
+            <div className="relative flex items-start justify-between w-[60%] mx-auto">
+                {/* Step 1 - Active */}
                 <div className="flex flex-col items-center gap-1.5 z-10">
-                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                        <Folder className="w-5 h-5 text-white" />
+                    <div className="w-10 h-10 rounded-full border border-primary bg-[#f5f6f9] flex items-center justify-center">
+                        <Image
+                            src={"/user icon.svg"}
+                            alt={t('newPatient.guardianIconAlt')}
+                            width={20}
+                            height={20}
+                        />
                     </div>
-                    <span className="text-xs font-semibold text-primary">{t('newPatient.guardianDataStep')}</span>
+                    <span className="text-xs font-normal text-[#9CA3AF]">{t('newPatient.guardianStep')}</span>
                 </div>
                 {/* Connecting Line */}
-                <div className="absolute top-5 left-5 right-5 h-px bg-[#E8E8E8] z-0" />
+                <div className="absolute w-[70%] border border-primary/50 top-5 left-5 right-5 h-px bg-primary/50 z-0" />
                 {/* Step 2 - Inactive */}
                 <div className="flex flex-col items-center gap-1.5 z-10">
-                    <div className="w-10 h-10 rounded-full border-2 border-[#E0E0E0] bg-white flex items-center justify-center">
-                        <PawPrint className="w-5 h-5 text-[#C4C4C4]" />
+                    <div className="w-10 h-10 rounded-full border border-primary bg-[#f5f6f9] flex items-center justify-center">
+                        <Image
+                            src={"/pet footstep.svg"}
+                            alt={t('newPatient.patientIconAlt')}
+                            width={20}
+                            height={20}
+                        />
                     </div>
-                    <span className="text-xs font-medium text-[#9CA3AF]">{t('newPatient.patientDetailsStep')}</span>
+                    <span className="text-xs font-normal text-[#9CA3AF]">{t('newPatient.patientDetailsStep')}</span>
                 </div>
             </div>
 
             {/* White Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-5 space-y-6">
+            <div className="rounded-lg mt-5 shadow-sm p-3 space-y-6">
                 {/* Title & Subtitle */}
                 <div>
-                    <h2 className="text-[22px] font-bold text-[#1D2939]">{isEditing ? t('newPatient.guardian.editGuardianTitle') : t('newPatient.guardian.registrationTitle')}</h2>
-                    <p className="text-sm text-[#8E8E93] mt-1">
+                    <h2 className="text-[18px] font-bold text-black/70">{isEditing ? t('newPatient.guardian.editGuardianTitle') : t('newPatient.guardian.registrationTitle')}</h2>
+                    <p className="text-sm text-black/50 mt-1 leading-[14px]">
                         {t('newPatient.guardian.registrationSubtitle')}
                     </p>
                 </div>
@@ -535,13 +532,13 @@ export default function GuardianRegistration() {
                 {/* Section 1: Identification */}
                 <div>
                     <div className="flex items-center justify-between mb-4 cursor-pointer" onClick={() => toggleSection(1)}>
-                        <h3 className="text-[15px] font-semibold text-[#1D2939]">{t('newPatient.guardian.identificationSectionTitle')}</h3>
+                        <h3 className="text-[12px] font-semibold text-black/60">{t('newPatient.guardian.identificationSectionTitle')}</h3>
                         {openSections[1] ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
                     </div>
                     {openSections[1] && (
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                             <div>
-                                <label className="block text-sm text-[#6B7280] mb-1.5">
+                                <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                     {t('auth.fullName')}<span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -549,24 +546,24 @@ export default function GuardianRegistration() {
                                     placeholder={t('newPatient.guardian.guardianNamePlaceholder')}
                                     value={formData.fullName}
                                     onChange={(e) => handleChange('fullName', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                    className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
-                                        {t('auth.taxId')}
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        {"CPF"}
                                     </label>
                                     <input
                                         type="text"
                                         placeholder={t('newPatient.guardian.idCardPlaceholder')}
                                         value={formData.idCard}
                                         onChange={(e) => handleChange('idCard', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('newPatient.guardian.rgLabel')}
                                     </label>
                                     <input
@@ -574,13 +571,13 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.rgPlaceholder')}
                                         value={formData.rg}
                                         onChange={(e) => handleChange('rg', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('newPatient.guardian.foreignIdentityLabel')}
                                     </label>
                                     <input
@@ -588,21 +585,21 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.foreignIdentityPlaceholder')}
                                         value={formData.foreignIdentity}
                                         onChange={(e) => handleChange('foreignIdentity', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('auth.dateOfBirth')}
                                     </label>
                                     <TypedDateInput
+                                        iconSize={14}
                                         value={formData.dateOfBirth}
                                         onChange={(nextIsoDate) => handleChange('dateOfBirth', nextIsoDate)}
                                         max={new Date(new Date().setFullYear(new Date().getFullYear() - 10)).toISOString().slice(0, 10)}
                                         placeholder="dd/mm/yyyy"
                                         required
-                                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm pr-12"
-                                        iconClassName="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF] cursor-pointer"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                             </div>
@@ -613,14 +610,14 @@ export default function GuardianRegistration() {
                 {/* Section 2: Contact Details */}
                 <div>
                     <div className="flex items-center justify-between mb-4 cursor-pointer" onClick={() => toggleSection(2)}>
-                        <h3 className="text-[15px] font-semibold text-[#1D2939]">{t('newPatient.guardian.contactDetailsSectionTitle')}</h3>
+                        <h3 className="text-[12px] font-semibold text-black/60">{t('newPatient.guardian.contactDetailsSectionTitle')}</h3>
                         {openSections[2] ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
                     </div>
                     {openSections[2] && (
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('newPatient.guardian.landlineLabel')}
                                     </label>
                                     <input
@@ -628,11 +625,11 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.landlinePlaceholder')}
                                         value={formData.landline}
                                         onChange={(e) => handleChange('landline', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('auth.phoneNumber')}
                                     </label>
                                     <PhoneInput
@@ -641,14 +638,14 @@ export default function GuardianRegistration() {
                                         onChange={(next) => handleChange('mobile', next)}
                                         defaultCountry="br"
                                         required
-                                        inputClassName="!w-full !h-12 !px-11 !py-3 !bg-[#F5F5F5] !border-0 !rounded-xl !text-[#1D2939] placeholder:!text-[#C4C4C4] focus:!outline-none focus:!ring-2 focus:!ring-primary"
-                                        buttonClassName="!h-12 !bg-[#F5F5F5] !border-0 !rounded-l-xl"
+                                        inputClassName="w-full! h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! !border !border-[#E5E5EA] !bg-white !text-[12px] !leading-[18px] !text-black/70 placeholder:!text-secondary focus:!outline-none"
+                                        buttonClassName="!h-[26px] !border !border-[#E5E5EA] !border-r-0 !bg-[#F6F6F6]"
                                         containerClassName="w-full"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm text-[#6B7280] mb-1.5">
+                                <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                     {t('auth.email')}
                                 </label>
                                 <input
@@ -667,14 +664,14 @@ export default function GuardianRegistration() {
                 {/* Section 3: Address Details */}
                 <div>
                     <div className="flex items-center justify-between mb-4 cursor-pointer" onClick={() => toggleSection(3)}>
-                        <h3 className="text-[15px] font-semibold text-[#1D2939]">{t('newPatient.guardian.addressDetailsSectionTitle')}</h3>
+                        <h3 className="text-[12px] font-semibold text-black/60">{t('newPatient.guardian.addressDetailsSectionTitle')}</h3>
                         {openSections[3] ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
                     </div>
                     {openSections[3] && (
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('auth.postalCode')}
                                     </label>
                                     <input
@@ -682,11 +679,11 @@ export default function GuardianRegistration() {
                                         placeholder={t('auth.enterPostalCode')}
                                         value={formData.postalCode}
                                         onChange={(e) => handleChange('postalCode', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('auth.address')}
                                     </label>
                                     <input
@@ -694,13 +691,13 @@ export default function GuardianRegistration() {
                                         placeholder={t('auth.enterAddress')}
                                         value={formData.address}
                                         onChange={(e) => handleChange('address', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('newPatient.guardian.numberLabel')}
                                     </label>
                                     <input
@@ -708,11 +705,11 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.numberPlaceholder')}
                                         value={formData.number}
                                         onChange={(e) => handleChange('number', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('newPatient.guardian.complementLabel')}
                                     </label>
                                     <input
@@ -720,13 +717,13 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.complementPlaceholder')}
                                         value={formData.complement}
                                         onChange={(e) => handleChange('complement', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                            <div className="grid grid-cols-8 gap-3">
+                                <div className='col-span-4'>
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('newPatient.guardian.neighborhoodLabel')}
                                     </label>
                                     <input
@@ -734,11 +731,11 @@ export default function GuardianRegistration() {
                                         placeholder={t('newPatient.guardian.neighborhoodPlaceholder')}
                                         value={formData.neighborhood}
                                         onChange={(e) => handleChange('neighborhood', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-100 rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                <div className='col-span-2'>
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('auth.city')}
                                     </label>
                                     {cityOptions.length > 0 ? (
@@ -746,7 +743,7 @@ export default function GuardianRegistration() {
                                             value={formData.city}
                                             onChange={(e) => handleChange('city', e.target.value)}
                                             disabled={!formData.state || loadingCities || cityOptions.length === 0}
-                                            className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm disabled:opacity-50"
+                                            className="h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             <option value="" disabled>
                                                 {!formData.state ? t('auth.selectStateFirst') : loadingCities ? t('auth.loadingCities') : t('auth.selectCity')}
@@ -762,19 +759,19 @@ export default function GuardianRegistration() {
                                             value={formData.city}
                                             onChange={(e) => handleChange('city', e.target.value)}
                                             disabled={!formData.state}
-                                            className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm disabled:opacity-50"
+                                            className="h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     )}
                                 </div>
-                                <div>
-                                    <label className="block text-sm text-[#6B7280] mb-1.5">
+                                <div className='col-span-2'>
+                                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                         {t('auth.state')}
                                     </label>
                                     <select
                                         value={formData.state}
                                         onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
                                         disabled={loadingStates || stateOptions.length === 0}
-                                        className="w-full px-4 py-3 bg-[#F5F5F5] rounded-xl text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm disabled:opacity-50"
+                                        className="h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         <option value="" disabled>
                                             {loadingStates ? t('auth.loadingStates') : t('auth.selectState')}
@@ -795,9 +792,9 @@ export default function GuardianRegistration() {
                 <button
                     onClick={handleSubmit}
                     disabled={submitting || loadingGuardian}
-                    className="w-full bg-primary hover:bg-primary/90 active:bg-[#3568C0] text-white font-bold text-base py-[15px] rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full h-[30px] bg-primary hover:bg-primary/90 active:bg-[#3568C0] text-white font-bold text-[12px] rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="w-3.5 h-3.5" />
                     {submitting || loadingGuardian ? (isEditing ? t('common.saving') : t('newPatient.guardian.adding')) : (isEditing ? t('common.saveChanges') : t('newPatient.guardian.addGuardianButton'))}
                 </button>
             </div>
