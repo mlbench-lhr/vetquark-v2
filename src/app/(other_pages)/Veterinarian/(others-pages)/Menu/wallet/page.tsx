@@ -165,7 +165,7 @@ export default function WalletCard({
     });
 
     return (
-        <div className="bg-[#F2F2F7] min-h-screen">
+        <div className="">
             <Header title={t("wallet.wallet")} />
 
             <div className="pt-3 pb-8 space-y-3">
@@ -173,27 +173,27 @@ export default function WalletCard({
                 {loading ? (
                     <BalanceCardSkeleton />
                 ) : (
-                    <div className="bg-white rounded-2xl border border-[#E5E5EA] px-5 py-4">
-                        <div className="text-[20px] font-bold text-black/70 leading-[26px]">
+                    <div className="bg-white rounded-lg border border-[#E5E5EA] px-3 py-3">
+                        <div className="text-[18px] font-bold text-black/70 leading-[20px]">
                             {t("wallet.availableBalance") || "Saldo Disponível"}
                         </div>
-                        <div className="text-[13px] text-[#8E8E93] mt-0.5 leading-[18px]">
+                        <div className="text-[12px] text-[#8E8E93] leading-[18px]">
                             Valores liberados para saque.
                         </div>
-                        <div className="flex items-end justify-between mt-3">
-                            <div className="text-[28px] font-bold text-primary leading-none">
-                                {currency} {balance}
-                            </div>
-                            <div className="flex gap-2">
+                        <div className="text-[20px] font-normal mt-0.5 text-primary leading-none">
+                            {currency} {balance}
+                        </div>
+                        <div className="flex items-end justify-between -mt-1">
+                            <div className="flex gap-1 justify-end w-full">
                                 <button
                                     onClick={handleWithdraw}
-                                    className="h-[34px] px-4 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-[#2f68c8] transition-colors"
+                                    className="h-[22px] px-2 rounded-[3px] bg-primary text-white/80 text-[10px] font-normal hover:bg-[#2f68c8] transition-colors"
                                 >
                                     {t("wallet.withdraw") || "Sacar"}
                                 </button>
                                 <button
                                     onClick={() => router.push("/Veterinarian/Menu/wallet/bankDetails")}
-                                    className="h-[34px] px-4 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-[#2f68c8] transition-colors"
+                                    className="h-[22px] px-2 rounded-[3px] bg-primary text-white/80 text-[10px] font-normal hover:bg-[#2f68c8] transition-colors"
                                 >
                                     {t("wallet.bankDetails") || "Dados Bancários"}
                                 </button>
@@ -204,10 +204,10 @@ export default function WalletCard({
 
                 {/* Statement Card */}
                 <div className="bg-white rounded-2xl border border-[#E5E5EA] px-5 py-4">
-                    <div className="text-[20px] font-bold text-black/70 leading-[26px]">
+                    <div className="text-[18px] font-bold text-black/70 leading-[20px]">
                         {t("wallet.statement") || "Extrato"}
                     </div>
-                    <div className="text-[13px] text-[#8E8E93] mt-0.5 leading-[18px] mb-3">
+                    <div className="text-[12px] text-[#8E8E93] mt-0.5 leading-[18px] mb-1">
                         Suas movimentações recentes.
                     </div>
 
@@ -217,8 +217,8 @@ export default function WalletCard({
                             <button
                                 key={p}
                                 onClick={() => setPeriod(p)}
-                                className={`h-[30px] px-3 text-[13px] font-medium rounded-lg border transition-colors ${period === p
-                                    ? "bg-[#E5EDF9] border-primary text-primary"
+                                className={`h-[30px] px-3 text-[13px] font-semibold rounded-[3px] border transition-colors ${period === p
+                                    ? "bg-[#3F78D86B] border-transparent text-black/70"
                                     : "bg-white border-[#E5E5EA] text-black/70"
                                     }`}
                             >
@@ -276,8 +276,8 @@ export default function WalletCard({
                             <button
                                 key={f.key}
                                 onClick={() => setFilter(f.key)}
-                                className={`h-[30px] px-4 text-[13px] font-medium rounded-lg border transition-colors ${filter === f.key
-                                    ? "bg-[#E5EDF9] border-primary text-primary"
+                                className={`h-[30px] px-4 text-[13px] font-medium rounded-[3px] border transition-colors ${filter === f.key
+                                    ? "bg-[#3F78D86B] border-transparent text-black/70"
                                     : "bg-white border-[#E5E5EA] text-black/70"
                                     }`}
                             >
