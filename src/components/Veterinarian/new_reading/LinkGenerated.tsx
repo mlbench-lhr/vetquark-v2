@@ -78,7 +78,7 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
       <div className="rounded-[20px] border border-[#E5E7EB] bg-white px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
-            <h2 className="text-[18px] font-bold text-[#111827]">
+            <h2 className="text-[18px] font-bold text-black/70">
               {isPaid ? t('reading.identification.paymentConfirmedTitle') : t('reading.identification.linkGeneratedTitle')}
             </h2>
             <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">
@@ -90,7 +90,7 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
           {!isPaid && amountLabel && (
             <div className="text-right flex-shrink-0">
               <div className="text-[11px] text-[#6B7280]">{t('reading.identification.amountToBePaid')}</div>
-              <div className="text-[18px] font-bold text-[#3F78D8] mt-0.5">{amountLabel}</div>
+              <div className="text-[18px] font-bold text-primary mt-0.5">{amountLabel}</div>
             </div>
           )}
         </div>
@@ -100,8 +100,8 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
       <div className="mt-10 flex items-center justify-center relative">
         <div
           className={`w-48 h-48 rounded-full border-[12px] transition-all duration-500 ${isPaid
-            ? 'border-[#EBF2FF] border-t-[#3F78D8] border-r-[#3F78D8]'
-            : 'border-[#EBF2FF] border-t-[#3F78D8] animate-spin'
+            ? 'border-[#EBF2FF] border-t-primary border-r-primary'
+            : 'border-[#EBF2FF] border-t-primary animate-spin'
             }`}
           style={isPaid ? { transform: 'rotate(-45deg)' } : {}}
         />
@@ -117,52 +117,21 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
       </div>
 
       <div className="mt-10 space-y-3">
-        {!isPaid && (
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={handleCopy}
-              disabled={!safeUrl}
-              className="w-full py-3.5 rounded-full bg-[#F5F6F6] text-[#374151] font-medium text-[14px] disabled:opacity-60"
-            >
-              {t('reading.identification.copyPaymentLink')}
-            </button>
-            <button
-              type="button"
-              onClick={handleShare}
-              disabled={!safeUrl}
-              className="w-full py-3.5 rounded-full bg-[#F5F6F6] text-[#374151] font-medium text-[14px] disabled:opacity-60"
-            >
-              {t('reading.identification.sharePaymentLink')}
-            </button>
-          </div>
-        )}
-
         {isPaid ? (
           <button
             onClick={onContinue}
-            className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px]"
+            className="w-full py-4 rounded-full bg-primary text-white font-semibold text-[15px]"
           >
             {t('common.continue')}
           </button>
         ) : (
-          <>
-            <button
-              onClick={onSend}
-              disabled={!!sending}
-              className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px] disabled:opacity-70"
-            >
-              {sending ? t('reading.identification.sending') : t('reading.identification.sendBillingLink')}
-            </button>
-            {onContinue && (
-              <button
-                onClick={onContinue}
-                className="w-full py-4 rounded-full border border-[#3F78D8] text-[#3F78D8] font-medium text-[15px]"
-              >
-                {t('common.continue')}
-              </button>
-            )}
-          </>
+          <button
+            onClick={onSend}
+            disabled={!!sending}
+            className="w-full py-4 rounded-full bg-primary text-white font-semibold text-[15px] disabled:opacity-70"
+          >
+            {sending ? t('reading.identification.sending') : t('reading.identification.sendBillingLink')}
+          </button>
         )}
 
         <button

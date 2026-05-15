@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, ChevronDown } from "lucide-react";
 import Header from "@/components/common/header";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/userProfileSlice";
@@ -137,26 +137,35 @@ export default function BasePriceCard() {
     };
 
     return (
-        <div className="w-full bg-white min-h-screen flex flex-col px-4">
-            {/* Header */}
-            <Header title="Pricing" />
+        <div className="w-full flex flex-col pb-8">
+            <Header title={t("menu.pricing") || "Precificação"} />
 
-            <div className="mb-4 mt-2">
-                <h1 className="text-[18px] font-semibold text-[#111827] mb-2">Master 360</h1>
-                <p className="text-[14px] text-[#9AA4AF] leading-[1.5]">
-                    This is the amount that the tutor will pay for complete 16-parameter Protocol. The platform will apply a fixed fee of R$ {platformFee.toFixed(2)} on this amount and on specific panels also.
+            {/* Main Card */}
+            <div className="bg- rounded-lg border border-[#E5E7EB] p-3 mt-2">
+                {/* Section Header */}
+                <div className="flex items-start justify-between mb-2">
+                    <h1 className="text-[17px] font-bold text-black/70 leading-[22px]">
+                        {t("pricing.baseExamPrice") || "Preço base por exame"}
+                    </h1>
+                    <ChevronDown className="w-5 h-5 text-[#8E8E93]" />
+                </div>
+                <p className="text-[10px] text-black/90 leading-[1.5] mb-2">
+                    {t("pricing.baseExamDesc") || `Este é o valor que o tutor pagará. A plataforma aplicará a taxa fixa de R$ ${platformFee.toFixed(2)} sobre este valor.`}
                 </p>
-            </div>
 
-            {/* Amount Card */}
-            <div className="bg-[#F5F6F6] rounded-xl p-4 mb-3">
-                <p className="text-[13px] text-[#9AA4AF] mb-1">
-                    Amount For The Tutor
-                </p>
-                <div className="flex items-center gap-2">
+                {/* Value Sub-Card */}
+                <div className="rounded-sm border bg-white border-[#E5E7EB] p-2 mb-2">
+                    <div className="flex items-center justify-between mb-1">
+                        <p className="text-[12px] text-[#8E8E93]">
+                            {t("pricing.amountForTutor") || "Valor ao tutor (R$)"}
+                        </p>
+                        <button onClick={() => setIsEditing(true)} className="p-1">
+                            <Pencil className="w-4 h-4 text-[#8E8E93]" />
+                        </button>
+                    </div>
                     {isEditing ? (
-                        <div className="flex items-center">
-                            <span className="text-[28px] font-semibold text-[#3F78D8]">R$ </span>
+                        <div className="flex items-center gap-1">
+                            <span className="text-[24px] font-bold text-black/70">R$ </span>
                             <input
                                 type="number"
                                 value={amount}
@@ -164,89 +173,84 @@ export default function BasePriceCard() {
                                 onBlur={() => setIsEditing(false)}
                                 autoFocus
                                 step="0.01"
-                                className="text-[28px] font-semibold text-[#3F78D8] bg-transparent border-b-2 border-[#3F78D8] outline-none w-24"
+                                className="text-[24px] font-bold text-black/70 bg-transparent border-b-2 border-primary outline-none w-28"
                             />
                         </div>
                     ) : (
-                        <>
-                            <span className="text-[28px] font-semibold text-[#3F78D8]">
-                                R$ {amount.toFixed(2)}
-                            </span>
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="p-1 hover:bg-white/50 rounded transition-colors"
-                            >
-                                <Pencil className="w-5 h-5 text-[#3F78D8]" />
-                            </button>
-                        </>
+                        <span className="text-[24px] font-bold text-black/70">
+                            R$ {amount.toFixed(2).replace(".", ",")}
+                        </span>
                     )}
                 </div>
-            </div>
 
-            {/* Suggested Range */}
-            <p className="text-[13px] text-[#9AA4AF] mb-4">
-                Suggested range by the platform: R$ {minSuggested.toFixed(2)} – R$ {maxSuggested.toFixed(2)}
-            </p>
-
-            {/* Net Payout Card */}
-            <div className="rounded-xl p-4 bg-[#F0FDF4]">
-                <p className="text-[13px] text-[#9AA4AF] mb-1">
-                    Your net payout per exam will be:
+                {/* Suggested Range */}
+                <p className="text-[10px] text-[#8E8E93] mb-2 px-1">
+                    {t("pricing.suggestedRange") || `Faixa sugerida pela plataforma: R$ ${minSuggested.toFixed(2)} – R$ ${maxSuggested.toFixed(2)}`}
                 </p>
-                <span className="text-[28px] font-semibold text-[#16A34A]">
-                    R$ {netPayout.toFixed(2)}
-                </span>
-            </div>
 
-            <div className="mt-6">
-                <h2 className="text-[16px] font-semibold text-[#111827] mb-3">Panel Pricing</h2>
-                <div className="space-y-5">
-                    {panelDefs.map((p) => (
-                        <div key={p.code}>
-                            <div className="text-[15px] font-medium text-[#111827] mb-2">{p.title}</div>
-                            <div className="bg-[#F5F6F6] rounded-xl px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[16px] font-medium text-[#111827]">R$</span>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={panelPrices[p.code] ?? p.suggested}
-                                        onChange={(e) => {
-                                            const next = parseFloat(e.target.value);
-                                            setPanelPrices((prev) => ({
-                                                ...prev,
-                                                [p.code]: Number.isFinite(next) && next >= 0 ? next : 0,
-                                            }));
-                                        }}
-                                        className="w-full bg-transparent outline-none text-[16px] font-medium text-[#111827]"
-                                    />
-                                </div>
-                            </div>
-                            <div className="mt-2 text-[12px] text-[#9AA4AF] leading-[1.5]">{p.description}</div>
-                        </div>
-                    ))}
+                {/* Net Payout Sub-Card */}
+                <div className="rounded-xl bg-white border border-[#E5E7EB] p-4 mb-3">
+                    <p className="text-[12px] text-[#8E8E93] mb-1">
+                        {t("pricing.netPayoutWillBe") || "Seu repasse líquido por exame será:"}
+                    </p>
+                    <span className="text-[24px] font-bold text-[#22C55E]">
+                        R$ {netPayout.toFixed(2).replace(".", ",")}
+                    </span>
                 </div>
-            </div>
 
-            {/* Spacer */}
-            <div className="flex-1" />
+                {/* Reset link */}
+                <button
+                    onClick={handleReset}
+                    className="w-full text-center text-[13px] text-[#8E8E93] hover:text-black/70 transition-colors mb-3"
+                >
+                    {t("pricing.resetToSuggestion") || "Resetar para Sugestão"}
+                </button>
 
-            {/* Buttons */}
-            <div className="space-y-3 pt-6 pb-6">
+                {/* Save Button */}
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full h-[52px] bg-[#4A7BF7] hover:bg-[#3A6BE7] text-white text-[16px] font-medium rounded-full transition-colors"
+                    className="w-full h-[30px] bg-primary hover:bg-[#2f68c8] text-white text-[12px] font-semibold rounded-sm transition-colors flex items-center justify-center gap-2"
                 >
-                    {saving ? "Saving..." : "Save Changes"}
-                </button>
-                <button
-                    onClick={handleReset}
-                    className="w-full h-[44px] text-[#9AA4AF] text-[15px] font-medium hover:text-[#111827] transition-colors"
-                >
-                    Reset To Suggestion
+                    <Pencil className="w-4 h-4" />
+                    {saving ? t("common.saving") : (t("pricing.savePrice") || "Salvar Preço")}
                 </button>
             </div>
+
+            {/* Panel Pricing */}
+            {panelDefs.length > 0 && (
+                <div className="mt-4 bg-white rounded-2xl border border-[#E5E7EB] p-5">
+                    <h2 className="text-[16px] font-semibold text-black/70 mb-4">
+                        {t("pricing.panelPricing") || "Panel Pricing"}
+                    </h2>
+                    <div className="space-y-5">
+                        {panelDefs.map((p) => (
+                            <div key={p.code}>
+                                <div className="text-[15px] font-medium text-black/70 mb-2">{p.title}</div>
+                                <div className="bg-white border border-[#E5E7EB] rounded-xl px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[16px] font-medium text-black/70">R$</span>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={panelPrices[p.code] ?? p.suggested}
+                                            onChange={(e) => {
+                                                const next = parseFloat(e.target.value);
+                                                setPanelPrices((prev) => ({
+                                                    ...prev,
+                                                    [p.code]: Number.isFinite(next) && next >= 0 ? next : 0,
+                                                }));
+                                            }}
+                                            className="w-full bg-transparent outline-none text-[16px] font-medium text-black/70"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-1 text-[12px] text-[#9AA4AF] leading-[1.5]">{p.description}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

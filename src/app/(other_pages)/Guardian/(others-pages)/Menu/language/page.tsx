@@ -26,9 +26,9 @@ function PageHeader({
         aria-label={backAriaLabel}
         className="absolute left-4 top-6 flex h-10 w-10 items-center justify-center rounded-full"
       >
-        <ChevronLeft className="h-6 w-6 text-[#111827]" />
+        <ChevronLeft className="h-6 w-6 text-black/70" />
       </button>
-      <div className="text-[16px] font-medium leading-[20px] text-[#111827]">{title}</div>
+      <div className="text-[16px] font-medium leading-[20px] text-black/70">{title}</div>
       <div className="absolute right-4 top-6 h-10 w-10" />
     </div>
   );
@@ -106,7 +106,7 @@ export default function Page() {
                 <div className="flex items-center gap-3">
                   <span className="text-[18px] leading-none">{item.flag}</span>
                   <div
-                    className={`text-[16px] font-medium leading-[20px] ${selected ? "text-[#3F78D8]" : "text-[#111827]"
+                    className={`text-[16px] font-medium leading-[20px] ${selected ? "text-primary" : "text-black/70"
                       }`}
                   >
                     {item.label}
@@ -114,7 +114,7 @@ export default function Page() {
                 </div>
 
                 {selected ? (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#3F78D8]">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
                     <Check className="h-4 w-4 text-white" />
                   </div>
                 ) : (
@@ -130,7 +130,7 @@ export default function Page() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+            className="h-[56px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

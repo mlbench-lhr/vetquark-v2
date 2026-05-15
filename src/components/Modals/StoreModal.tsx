@@ -78,7 +78,6 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
     const router = useRouter()
     const { t } = useTranslation();
     const [step, setStep] = useState<StoreStep>('store');
-    const [searchQuery, setSearchQuery] = useState<string>("");
     const [cart, setCart] = useState<Record<string, number>>({});
     const [placingOrder, setPlacingOrder] = useState(false);
     const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -109,12 +108,6 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
     const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0] ?? null;
 
-    const filteredProducts = products.filter((p) => {
-        const q = searchQuery.trim().toLowerCase();
-        if (!q) return true;
-        return `${p.name} ${p.description}`.toLowerCase().includes(q);
-    });
-
     const cartItems = Object.entries(cart)
         .map(([productId, quantity]) => {
             const product = products.find((p) => p.id === productId);
@@ -138,10 +131,6 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
             next[productId] = quantity;
             return next;
         });
-    };
-
-    const addToCart = (productId: string) => {
-        setCart((prev) => ({ ...prev, [productId]: (prev[productId] ?? 0) + 1 }));
     };
 
     const handleProceedToPurchase = async () => {
@@ -203,18 +192,6 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
         }
     };
 
-    const handleViewCart = () => {
-        if (cartQuantity <= 0) {
-            toast.error(t("auth.store.cartEmpty"));
-            return;
-        }
-        setStep('cart');
-    };
-
-    const handleViewOrders = () => {
-        router.push("/Veterinarian/store/orders");
-    };
-
     const handleBack = () => {
         if (step === "success") {
             setLastOrder(null);
@@ -230,7 +207,7 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
             return;
         }
         if (step === "checkout") {
-            setStep("cart");
+            setStep("store");
             return;
         }
         if (step === "cart") {
@@ -433,12 +410,12 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4"
+            className="fixed inset-0 bg-black/30 z-150 flex items-center justify-center px-0 sm:px-4"
             style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
             <div
-                className="relative w-full max-w-[400px] bg-[#F8F9FD] rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col"
+                className="relative w-[95%] h-[470px] bg-[#F8F9FD] rounded-[18px] shadow-2xl overflow-hidden flex flex-col"
                 style={{ maxHeight: '92vh' }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -447,99 +424,71 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                     <button
                         type="button"
                         onClick={handleBack}
-                        className="w-10 h-10 rounded-full bg-[#F0F0F0] flex items-center justify-center hover:bg-gray-200 transition-colors"
+                        className="w-8 h-8 rounded-full bg-[#F0F0F0] flex items-center justify-center hover:bg-gray-200 transition-colors"
                     >
-                        <ArrowLeft className="w-5 h-5 text-gray-700" />
+                        <ArrowLeft className="w-4 h-4 text-gray-700" />
                     </button>
-                    <div className="flex items-center gap-2 text-[#4A7BF7]">
+                    <div className="flex items-center gap-2 text-primary">
                         <ShoppingCart className="w-5 h-5" />
-                        <span className="text-lg font-semibold">Loja</span>
+                        <span className="text-lg font-normal">Loja</span>
                     </div>
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
+                        className="w-8 h-8 rounded-full border-2 border-gray-300 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
                     >
-                        <X className="w-5 h-5 text-gray-400" />
+                        <X className="w-4 h-4 text-gray-300" />
                     </button>
                 </div>
 
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto px-5 pb-4">
                     {step === "store" && (
-                        <div className="space-y-4">
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder={t("auth.store.searchPlaceholder")}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full px-4 py-3 pl-11 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white border border-gray-100 text-sm placeholder:text-gray-400"
-                                />
-                                <svg
-                                    className="w-5 h-5 text-primary absolute left-3.5 top-1/2 -translate-y-1/2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <circle cx="11" cy="11" r="8" strokeWidth="2" />
-                                    <path d="M21 21l-4.35-4.35" strokeWidth="2" strokeLinecap="round" />
-                                </svg>
-                            </div>
-                            <div className="space-y-3">
-                                {filteredProducts.length === 0 ? (
-                                    <div className="py-10 text-center text-sm text-gray-500">
-                                        {t("auth.store.noItemsFound")}
-                                    </div>
-                                ) : (
-                                    filteredProducts.map((product) => {
-                                        const qtyInCart = cart[product.id] ?? 0;
-                                        return (
-                                            <div key={product.id} className="bg-white rounded-2xl p-3 flex items-start gap-3">
-                                                <div className="w-[72px] h-[72px] rounded-xl bg-[#E8F0FE] flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                                    {product.image ? (
-                                                        <Image src={product.image} height={72} width={72} className="w-full h-full object-cover" alt={product.name} />
-                                                    ) : (
-                                                        <span className="text-xs text-primary font-bold">{product.name.slice(0, 2)}</span>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h3 className="text-sm font-bold text-gray-800 truncate">{product.name}</h3>
-                                                    <p className="text-[11px] text-gray-400 leading-tight mt-0.5">{product.description}</p>
-                                                    <div className="flex items-center justify-between mt-2">
-                                                        <span className="text-sm font-bold text-gray-800">{formatPrice(product.price)}</span>
-                                                        {qtyInCart > 0 ? (
-                                                            <div className="flex items-center gap-2">
-                                                                <button
-                                                                    onClick={() => setCartQuantity(product.id, qtyInCart - 1)}
-                                                                    className="w-7 h-7 rounded-full bg-[#E8ECFF] flex items-center justify-center hover:bg-blue-100 transition"
-                                                                >
-                                                                    <Minus className="w-3.5 h-3.5 text-primary" />
-                                                                </button>
-                                                                <span className="text-sm font-semibold text-gray-800 w-4 text-center">{qtyInCart}</span>
-                                                                <button
-                                                                    onClick={() => setCartQuantity(product.id, qtyInCart + 1)}
-                                                                    className="w-7 h-7 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
-                                                                >
-                                                                    <Plus className="w-3.5 h-3.5 text-white" />
-                                                                </button>
-                                                            </div>
-                                                        ) : (
-                                                            <button
-                                                                onClick={() => addToCart(product.id)}
-                                                                className="h-8 px-3 rounded-full bg-primary text-white text-xs font-semibold hover:bg-blue-700 transition flex items-center gap-1"
-                                                            >
-                                                                <Plus className="w-3.5 h-3.5" />
-                                                                {t("auth.store.add")}
-                                                            </button>
-                                                        )}
+                        <div className="space-y-3 pt-1">
+                            {products.length === 0 ? (
+                                <div className="py-10 text-center text-sm text-gray-500">
+                                    {t("auth.store.noItemsFound")}
+                                </div>
+                            ) : (
+                                products.map((product) => {
+                                    const qtyInCart = cart[product.id] ?? 0;
+                                    const minusDisabled = qtyInCart <= 0;
+                                    return (
+                                        <div key={product.id} className="bg-white rounded-2xl p-3 flex items-start gap-3">
+                                            <div className="w-[72px] h-[72px] rounded-xl bg-[#E8F0FE] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                {product.image ? (
+                                                    <Image src={product.image} height={72} width={72} className="w-full h-full object-cover" alt={product.name} />
+                                                ) : (
+                                                    <span className="text-xs text-primary font-bold">{product.name.slice(0, 2)}</span>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="text-sm font-bold text-black/70 truncate">{product.name}</h3>
+                                                <p className="text-[11px] text-gray-400 leading-tight mt-0.5">{product.description}</p>
+                                                <div className="flex items-center justify-between mt-2">
+                                                    <span className="text-sm font-bold text-black/70">{formatPrice(product.price)}</span>
+                                                    <div className="flex items-center gap-2 bg-[#F2F4FF]/90 rounded-full">
+                                                        <button
+                                                            onClick={() => setCartQuantity(product.id, qtyInCart - 1)}
+                                                            disabled={minusDisabled}
+                                                            className={`w-7 h-7 rounded-full bg-[#DFE3FF] flex items-center justify-center transition ${minusDisabled ? 'opacity-100 cursor-not-allowed' : 'hover:bg-blue-100'}`}
+                                                        >
+                                                            <Minus className="w-3.5 h-3.5 text-primary" />
+                                                        </button>
+                                                        <span className="text-sm font-semibold text-gray-800 w-4 text-center">{qtyInCart}</span>
+                                                        <button
+                                                            onClick={() => setCartQuantity(product.id, qtyInCart + 1)}
+                                                            className="w-7 h-7 rounded-full bg-primary flex items-center justify-center hover:bg-blue-700 transition"
+                                                        >
+                                                            <Plus className="w-3.5 h-3.5 text-white" />
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        );
-                                    })
-                                )}
-                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
                         </div>
                     )}
 
@@ -592,33 +541,35 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                         <div className="space-y-5 pt-2">
                             {/* Delivery Address */}
                             <div>
-                                <h3 className="text-sm font-bold text-gray-800 mb-3">Endereço de entrega</h3>
+                                <h3 className="text-sm font-bold text-black/70 mb-2">Endereço de entrega</h3>
                                 {selectedAddress ? (
                                     <>
-                                        <div className="bg-white rounded-2xl border border-gray-100 p-4 relative">
+                                        <div className="bg-white rounded-lg border border-gray-200 p-4 relative">
                                             <div className="flex items-start gap-3">
-                                                <div className="mt-0.5 w-4 h-4 rounded-full border-[5px] border-primary bg-white flex-shrink-0" />
+                                                <div className="w-4 h-4 rounded-full border-[5px] border-primary bg-white flex-shrink-0" />
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-gray-800">{selectedAddress.name}</p>
+                                                    <p className="text-sm font-normal text-black/70">{selectedAddress.name}</p>
                                                     <p className="text-xs text-gray-400 mt-1">{selectedAddress.phone}</p>
                                                     <p className="text-xs text-gray-400">{selectedAddress.location}</p>
                                                 </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => setStep("change-address")}
-                                                    className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 flex-shrink-0"
+                                                    className="w-fit h-fit flex items-center justify-center text-gray-400 hover:text-gray-600 flex-shrink-0"
                                                 >
-                                                    <Pencil className="w-4 h-4" />
+                                                    <Image src={"/edit icon.svg"} alt="edit icon" width={16} height={16} />
                                                 </button>
                                             </div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep("change-address")}
-                                            className="mt-2 text-xs text-primary font-medium hover:underline"
-                                        >
-                                            + Adicionar novo endereço
-                                        </button>
+                                        <div className="w-full flex justify-end items-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep("change-address")}
+                                                className="mt-2 text-xs text-primary font-medium hover:underline"
+                                            >
+                                                + Adicionar novo endereço
+                                            </button>
+                                        </div>
                                     </>
                                 ) : (
                                     <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
@@ -636,13 +587,13 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
 
                             {/* Payment Method */}
                             <div>
-                                <h3 className="text-sm font-bold text-gray-800 mb-3">Método de pagamento</h3>
+                                <h3 className="text-sm font-bold text-black/70 mb-2">Método de pagamento</h3>
                                 <div className="space-y-3">
                                     {/* Card */}
-                                    <button
+                                    {/* <button
                                         type="button"
                                         onClick={() => setSelectedPayment("card")}
-                                        className={`w-full bg-white rounded-2xl border p-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'card' ? 'border-primary' : 'border-gray-100'}`}
+                                        className={`w-full bg-white rounded-lg border p-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'card' ? 'border-primary' : 'border-gray-100'}`}
                                     >
                                         <div className="w-10 h-10 rounded-lg bg-white border border-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -655,18 +606,15 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === 'card' ? 'border-primary' : 'border-gray-300'}`}>
                                             {selectedPayment === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                                         </div>
-                                    </button>
+                                    </button> */}
                                     {/* PIX */}
                                     <button
                                         type="button"
                                         onClick={() => setSelectedPayment("pix")}
-                                        className={`w-full bg-white rounded-2xl border p-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'pix' ? 'border-primary' : 'border-gray-100'}`}
+                                        className={`w-full bg-white rounded-lg border py-2 px-3.5 flex items-center gap-3 text-left transition ${selectedPayment === 'pix' ? 'border-primary' : 'border-gray-100'}`}
                                     >
-                                        <div className="w-10 h-10 rounded-lg bg-[#E6F9F1] flex items-center justify-center flex-shrink-0">
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                                                <path d="M12 2L2 12l10 10 10-10L12 2z" fill="#32BCAD" />
-                                                <path d="M12 7l-5 5 5 5 5-5-5-5z" fill="#E6F9F1" />
-                                            </svg>
+                                        <div className="w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0">
+                                            <Image src={"/images/pixLogo.svg"} alt="pix" width={20} height={20} />
                                         </div>
                                         <span className="flex-1 text-sm font-medium text-gray-700">PIX</span>
                                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedPayment === 'pix' ? 'border-primary' : 'border-gray-300'}`}>
@@ -916,26 +864,23 @@ const StoreModal: React.FC<Props> = ({ isOpen, onClose, onUpdated }) => {
                     <div className="px-5 pb-6 pt-3 bg-[#F8F9FD] border-t border-gray-100 shrink-0 space-y-3">
                         {step === "store" && (
                             <>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-500">Valor Total</span>
+                                    <span className="font-bold text-gray-800">{formatPrice(cartTotal)}</span>
+                                </div>
                                 <button
                                     type="button"
-                                    onClick={handleViewOrders}
-                                    className="w-full h-11 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition flex items-center justify-center gap-2"
-                                >
-                                    {t("auth.store.viewMyOrders")}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleViewCart}
+                                    onClick={() => {
+                                        if (cartQuantity <= 0) {
+                                            toast.error(t("auth.store.cartEmpty"));
+                                            return;
+                                        }
+                                        setStep("checkout");
+                                    }}
                                     disabled={cartQuantity <= 0}
-                                    className={`w-full h-11 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition flex items-center justify-between px-4 ${cartQuantity <= 0 ? 'opacity-50 pointer-events-none' : ''}`}
+                                    className={`w-full h-11 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition ${cartQuantity <= 0 ? 'opacity-50 pointer-events-none' : ''}`}
                                 >
-                                    <span className="flex items-center gap-2">
-                                        <span className="text-primary h-6 w-6 rounded-full bg-white flex justify-center items-center text-xs font-bold">
-                                            {cartQuantity}
-                                        </span>
-                                        {t("auth.store.viewYourCart")}
-                                    </span>
-                                    <span className="text-sm font-bold">{formatPrice(cartTotal)}</span>
+                                    Seguir para compra
                                 </button>
                             </>
                         )}

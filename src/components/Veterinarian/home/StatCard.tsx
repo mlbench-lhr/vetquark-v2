@@ -1,4 +1,6 @@
 // components/StatCard.tsx
+import { ChevronDown, ChevronUp, FlaskConical, FlaskRound } from 'lucide-react';
+import Image from 'next/image';
 import React from 'react';
 
 interface StatCardProps {
@@ -28,8 +30,8 @@ const StatCard: React.FC<StatCardProps> = ({ number, label, sublabel, variant = 
   return (
     <div className="rounded-2xl border border-primary/20 bg-white p-4 flex flex-col gap-1 relative overflow-hidden">
       {/* Icon in top-right */}
-      <div className="absolute top-3 right-3 opacity-80">
-        {variant === 'primary' ? <ExamIcon /> : <PatientIcon />}
+      <div className="absolute top-3 right-3 w-6.5 h-6.5 bg-[#EEF3FC] rounded-md flex justify-center items-center">
+        {variant === 'primary' ? <Image src={"/flask icon.svg"} alt="flask icon" width={11} height={11} /> : <Image src={"/pet footstep.svg"} alt="patient icon" width={14} height={14} />}
       </div>
 
       {/* Label */}
@@ -38,16 +40,14 @@ const StatCard: React.FC<StatCardProps> = ({ number, label, sublabel, variant = 
       </span>
 
       {/* Number */}
-      <span className="text-[32px] font-bold text-gray-900 leading-none mt-0.5">
+      <span className="text-[32px] font-bold text-gray-600 leading-none mt-0.5">
         {number}
       </span>
 
       {/* Sublabel */}
       {sublabel && (
-        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-600 bg-green-50 rounded-full px-2.5 py-0.5 w-fit mt-1.5">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M5 8V2M5 2L2 5M5 2L8 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-600 bg-[#DCFCE7] rounded-full px-2.5 py-1 w-fit mt-1.5">
+          <ChevronUp size={14} strokeWidth={3.5} />
           {sublabel}
         </span>
       )}

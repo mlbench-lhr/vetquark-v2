@@ -71,8 +71,10 @@ function isNormalByRule(ruleByKey: Record<string, NormalRule | undefined>, key: 
 
 type DotOption = {
   topLabel: string
+  topLabelKey?: string
   topSubLabel?: string
   bottomLabel?: string
+  bottomLabelKey?: string
   color: string
   showStain?: boolean
 }
@@ -96,10 +98,10 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     defaultIndex: 2,
     options: [
       { topLabel: 'Neg', color: 'white' },
-      { topLabel: '15', color: '#CC93BA', bottomLabel: "Trace" },
-      { topLabel: '70', color: '#966D94', bottomLabel: "Low" },
-      { topLabel: '125', color: '#8F678C', bottomLabel: "Moderate" },
-      { topLabel: '500', color: '#845883', bottomLabel: "High" },
+      { topLabel: '15', color: '#CC93BA', bottomLabelKey: 'reading.review.optionLabels.trace' },
+      { topLabel: '70', color: '#966D94', bottomLabelKey: 'reading.review.optionLabels.low' },
+      { topLabel: '125', color: '#8F678C', bottomLabelKey: 'reading.review.optionLabels.moderate' },
+      { topLabel: '500', color: '#845883', bottomLabelKey: 'reading.review.optionLabels.high' },
     ],
   },
   {
@@ -110,7 +112,7 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     defaultIndex: 1,
     options: [
       { topLabel: 'Neg', color: 'white' },
-      { topLabel: 'Positive', color: '#E780AF' },
+      { topLabel: 'Positive', topLabelKey: 'reading.review.positiveLabel', color: '#E780AF' },
     ],
   },
   {
@@ -166,11 +168,11 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     defaultIndex: 2,
     options: [
       { topLabel: 'Neg', color: '#F9CD8A' },
-      { topLabel: '10', color: '#CFC69D', bottomLabel: "Non-hemolyzed", showStain: true },
-      { topLabel: '10', color: '#B0B99B', bottomLabel: "Hemolyzed" },
-      { topLabel: '25', color: '#708E85' },
-      { topLabel: '80', color: '#5C8075' },
-      { topLabel: '200', color: '#336F73' },
+      { topLabel: '10', color: '#CFC69D', bottomLabelKey: 'reading.review.optionLabels.nonHemolyzed', showStain: true },
+      { topLabel: '10', color: '#B0B99B', bottomLabelKey: 'reading.review.optionLabels.hemolyzed' },
+      { topLabel: '25', color: '#708E85', bottomLabelKey: 'reading.review.optionLabels.low' },
+      { topLabel: '80', color: '#5C8075', bottomLabelKey: 'reading.review.optionLabels.moderate' },
+      { topLabel: '200', color: '#336F73', bottomLabelKey: 'reading.review.optionLabels.high' },
     ],
   },
   {
@@ -211,10 +213,10 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     defaultIndex: 1,
     options: [
       { topLabel: 'Neg', color: '#FAE0C7' },
-      { topLabel: '0.5', bottomLabel: "Trace", color: '#F5C7BD' },
-      { topLabel: '1.5', bottomLabel: "Small", color: '#E9B0B0' },
-      { topLabel: '4.0', bottomLabel: "Moderate", color: '#DC99A2' },
-      { topLabel: '8.0', bottomLabel: "High", color: '#C9728E' },
+      { topLabel: '0.5', bottomLabelKey: 'reading.review.optionLabels.trace', color: '#F5C7BD' },
+      { topLabel: '1.5', bottomLabelKey: 'reading.review.optionLabels.small', color: '#E9B0B0' },
+      { topLabel: '4.0', bottomLabelKey: 'reading.review.optionLabels.moderate', color: '#DC99A2' },
+      { topLabel: '8.0', bottomLabelKey: 'reading.review.optionLabels.high', color: '#C9728E' },
       { topLabel: '16', color: '#861459' },
     ],
   },
@@ -226,9 +228,9 @@ export const RESULT_ROWS: ResultRowConfig[] = [
     defaultIndex: 1,
     options: [
       { topLabel: 'Neg', color: 'white' },
-      { topLabel: '17', color: '#F8DFEC', bottomLabel: "Small" },
-      { topLabel: '50', color: '#EFAFCE', bottomLabel: "Moderate" },
-      { topLabel: '100', color: '#E780AF', bottomLabel: "Large" },
+      { topLabel: '17', color: '#F8DFEC', bottomLabelKey: 'reading.review.optionLabels.small' },
+      { topLabel: '50', color: '#EFAFCE', bottomLabelKey: 'reading.review.optionLabels.moderate' },
+      { topLabel: '100', color: '#E780AF', bottomLabelKey: 'reading.review.optionLabels.large' },
     ],
   },
   {
@@ -371,60 +373,68 @@ function ResultRow({
   }, [normalRuleByKey, row.key, row.options, selectedIndex])
   const translatedLabel = translateUrinalysisParameterLabel(t, row.key, row.label)
   return (
-    <div className={`py-4 px-3 ${editing ? 'bg-[#F5F6F6] rounded-xl' : ''}`}>
-      <div className="flex items-center opa justify-between">
-        <div className="text-[14px] leading-[18px] font-medium text-[#111827]">{translatedLabel}</div>
-        <div className="flex items-center gap-1">
-          {editing ? (
-            <>
-              <span className='text-xs text-muted-foreground me-1'>
-                {t('reading.review.selectValue')}
-              </span>
-              <button
-                type="button"
-                className="p-1 rounded-full border text-gray-700"
-                onClick={handleCancel}
-                aria-label={t('common.cancel')}
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                className="p-1 rounded-full bg-primary text-white"
-                onClick={handleSave}
-                aria-label={t('common.save')}
-              >
-                <Check className="h-4 w-4" />
-              </button>
-            </>
-          ) : (
+    <div className={`relative rounded-2xl border border-[#EEF0F2] bg-white px-3 py-4 ${editing ? 'bg-[#F5F6F6]' : ''}`}>
+      {/* Edit / Save / Cancel controls — absolute top-left, subtle */}
+      <div className="absolute left-3 top-3 flex items-center gap-1">
+        {editing ? (
+          <>
             <button
               type="button"
-              className="p-1 text-primary text-[12px] leading-[14px]"
-              onClick={handleStartEdit}
+              className="p-1 rounded-full border border-[#E5E7EB] text-gray-700 bg-white"
+              onClick={handleCancel}
+              aria-label={t('common.cancel')}
             >
-              <Pencil size={14} />
+              <X className="h-3.5 w-3.5" />
             </button>
-          )}
-          <StatusPill status={computedStatus} />
-        </div>
+            <button
+              type="button"
+              className="p-1 rounded-full bg-primary text-white"
+              onClick={handleSave}
+              aria-label={t('common.save')}
+            >
+              <Check className="h-3.5 w-3.5" />
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            className="p-1 text-[#9CA3AF] hover:text-primary"
+            onClick={handleStartEdit}
+            aria-label={t('reading.review.selectValue')}
+          >
+            <Pencil size={13} />
+          </button>
+        )}
+      </div>
+
+      {/* Status pill — absolute top-right */}
+      <div className="absolute right-3 top-3">
+        <StatusPill status={computedStatus} />
+      </div>
+
+      {/* Centered parameter label */}
+      <div className="text-center text-[14px] leading-[18px] font-semibold text-black/70">
+        {translatedLabel}
       </div>
 
       <div
-        className="mt-3 grid gap-"
+        className="mt-3 grid gap-1"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
         {row.options.map((opt, idx) => {
           const active = idx === selectedIndex
           return (
-            <div key={`${row.key}-${idx}`} className="flex flex-col items-center justify-start">
-              <div className="text-[10px] leading-[12px] text-[#9CA3AF]">{opt.topLabel}</div>
-              {
-                opt.topSubLabel &&
-                <div className={`text-[8px] leading-[8px] ${opt.topSubLabel === "0" ? "text-transparent" : "text-[#839297]"}`}>({opt.topSubLabel})</div>
-              }
+            <div key={`${row.key}-${idx}`} className={`flex flex-col items-center justify-start px-0.5 pt-1 pb-1 rounded-xl transition-colors ${active ? 'bg-[#F0F2F5]' : ''}`}>
+              <div className="text-[10px] leading-[12px] text-[#9CA3AF] text-center">
+                {opt.topLabelKey
+                  ? t(opt.topLabelKey)
+                  : (opt.topSubLabel && opt.topSubLabel !== '0'
+                    ? `${opt.topLabel}(${opt.topSubLabel})`
+                    : opt.topLabel)
+                }
+              </div>
               <div
-                className={`mt-2 h-7 ${opt.topLabel === "Positive" ? " w-[200px] " : " w-7 "} relative rounded-full ${opt.topLabel === "Neg" ? "border" : ""} ${active ? 'border-3 border-primary ring- ring-primary ring-offset-2 ring-offset-white shadow-theme-xs scale-[1.03] transition-transform' : ''} ${editing ? 'cursor-pointer' : ''}`}
+                className={`mt-1.5 h-10 ${opt.topLabel === "Positive" ? " w-full " : " w-10 "} relative rounded-full ${opt.topLabel === "Neg" ? "border border-[#E5E7EB]" : ""} ${active ? 'border-2 border-primary ring-2 ring-primary ring-offset-2 ring-offset-white shadow-sm scale-[1.05] transition-transform' : ''} ${editing ? 'cursor-pointer' : ''}`}
                 style={{ background: opt.topLabel === "Positive" ? "linear-gradient(180deg, #F7E9EE 0%, #E780AF 100%)" : opt.color }}
                 onClick={() => {
                   if (!editing) return
@@ -464,19 +474,20 @@ function ResultRow({
                   )
                 )}
               </div>
-              {
-                opt.bottomLabel &&
-                <div className="text-[10px] leading-[12px] text-[#9CA3AF] mt-1">{opt.bottomLabel}</div>
-              }
+              {(opt.bottomLabelKey || opt.bottomLabel) && (
+                <div className="text-[9px] leading-[11px] text-[#9CA3AF] mt-0.5 text-center">
+                  {opt.bottomLabelKey
+                    ? t(opt.bottomLabelKey).split('\n').map((line, i) => <div key={i}>{line}</div>)
+                    : opt.bottomLabel
+                  }
+                </div>
+              )}
             </div>
           )
         })}
         {row.unit ?
-          <div className="border-l mt-2 flex justify-end gap-1 items-center pb-2 flex-col text-[10px] leading-[12px] text-[#9CA3AF]">{row.unit}
-            {row.subUnit && (
-              <div className="text-[8px] leading-[10px] text-[#9CA3AF]">({row.subUnit})
-              </div>
-            )}
+          <div className="border-l mt-2 flex justify-end items-center pb-2 flex-col text-[10px] leading-[12px] text-[#9CA3AF] gap-0.5 pl-1">
+            {row.subUnit ? `${row.unit} (${row.subUnit})` : row.unit}
           </div>
           : null}
       </div>
@@ -573,12 +584,14 @@ export default function ReviewStep({
 
   return (
     <div className="">
-      <h2 className="text-[20px] font-bold text-[#111827]">{t('reading.review.title')}</h2>
-      <p className="mt-1 text-[13px] leading-[18px] text-[#6B7280]">
-        {t('reading.review.desc')}
-      </p>
+      <div>
+        <h2 className="text-[20px] leading-[24px] font-bold text-black/80">{t('reading.review.title')}</h2>
+        <p className="mt-1 text-[13px] leading-[18px] text-[#6B7280]">
+          {t('reading.review.desc')}
+        </p>
+      </div>
 
-      <div className="mt-5 divide-y divide-[#F1F5F9] border border-[#F1F5F9] rounded-[16px] shadow-2xs">
+      <div className="mt-5 space-y-3">
         {visibleRows.map((row) => (
           <ResultRow
             key={row.key}
@@ -592,17 +605,17 @@ export default function ReviewStep({
 
       {/* Observations textarea */}
       <div className="mt-5">
-        <div className="text-[14px] font-semibold text-[#111827] mb-2">{t('reading.review.observationsLabel')}</div>
+        <div className="text-[14px] font-semibold text-black/70 mb-2">{t('reading.review.observationsLabel')}</div>
         <textarea
           value={observations}
           onChange={(e) => setObservations(e.target.value)}
           placeholder={t('reading.review.observationsPlaceholder')}
           rows={3}
-          className="w-full px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-[14px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-2 focus:ring-[#3F78D8]/20"
+          className="w-full px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-[14px] text-[#374151] placeholder-[#9CA3AF] resize-none border-0 outline-none focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-5 space-y-2">
         <button
           onClick={() => {
             const results: ReviewResultDraft[] = RESULT_ROWS.map((row) => {
@@ -624,13 +637,13 @@ export default function ReviewStep({
             onIssueReport(results)
           }}
           disabled={!canProceed}
-          className="w-full py-4 rounded-full bg-[#3F78D8] text-white font-semibold text-[15px] disabled:opacity-60 shadow-sm"
+          className="w-full py-[15px] rounded-xl bg-primary text-white font-bold text-[16px] disabled:opacity-60 shadow-[0_8px_24px_-8px_rgba(63,120,216,0.5)]"
         >
           {t('reading.review.issueReport')}
         </button>
         <button
           onClick={onBack}
-          className="w-full py-4 rounded-full border border-[#E5E7EB] bg-white text-[#374151] font-medium text-[15px]"
+          className="w-full py-[15px] rounded-xl bg-transparent text-[#1C1C1E] font-medium text-[15px]"
         >
           {t('reading.review.redo')}
         </button>

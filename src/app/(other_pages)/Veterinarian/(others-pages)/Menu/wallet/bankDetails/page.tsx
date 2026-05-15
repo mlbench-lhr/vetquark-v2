@@ -19,6 +19,7 @@ type BankData = {
     type: "bank";
     personType: "individual" | "legal";
     bankName: string;
+    accountType: "current" | "savings";
     agency: string;
     account: string;
     holderCpfCnpj: string;
@@ -46,10 +47,12 @@ export default function Page() {
         }
         if (pm.type === "bank") {
             const personType = pm.personType === "legal" ? "legal" : "individual";
+            const accountType = pm.accountType === "savings" ? "savings" : "current";
             return {
                 type: "bank",
                 personType,
                 bankName: typeof pm.bankName === "string" ? pm.bankName : "",
+                accountType,
                 agency: typeof pm.agency === "string" ? pm.agency : "",
                 account: typeof pm.account === "string" ? pm.account : "",
                 holderCpfCnpj: typeof pm.holderCpfCnpj === "string" ? pm.holderCpfCnpj : "",
@@ -69,6 +72,7 @@ export default function Page() {
         payoutMethod?.type === "pix" ? payoutMethod.holderCpfCnpj : ""
     );
     const [bankName, setBankName] = useState(payoutMethod?.type === "bank" ? payoutMethod.bankName : "");
+    const [accountType, setAccountType] = useState<"current" | "savings">(payoutMethod?.type === "bank" ? payoutMethod.accountType : "current");
     const [agency, setAgency] = useState(payoutMethod?.type === "bank" ? payoutMethod.agency : "");
     const [account, setAccount] = useState(payoutMethod?.type === "bank" ? payoutMethod.account : "");
     const [bankHolderCpfCnpj, setBankHolderCpfCnpj] = useState(
@@ -86,6 +90,7 @@ export default function Page() {
         } else if (payoutMethod?.type === "bank") {
             setPersonType(payoutMethod.personType);
             setBankName(payoutMethod.bankName);
+            setAccountType(payoutMethod.accountType);
             setAgency(payoutMethod.agency);
             setAccount(payoutMethod.account);
             setBankHolderCpfCnpj(payoutMethod.holderCpfCnpj);
@@ -106,6 +111,7 @@ export default function Page() {
                     type: "bank",
                     personType,
                     bankName,
+                    accountType,
                     agency,
                     account,
                     holderCpfCnpj: bankHolderCpfCnpj,
@@ -143,209 +149,136 @@ export default function Page() {
         }
     };
 
+    const inputCls = "";
+    const labelCls = "";
     return (
-        <div className="w-full mx-auto bg-white flex flex-col pb-6">
+        <div className="w-full bg-[#F2F2F7] min-h-screen flex flex-col pb-6">
+            <Header title={t("wallet.bankDetails") || "Dados Bancários"} />
+
             {/* Tab Selector */}
-            <Header title={t("wallet.bankDetails")} />
-            <div className="flex gap-2 mb-6 mt-4 px-4">
+            <div className="flex gap-2 mb-4 mt-3">
                 <button
                     onClick={() => setActiveTab("pix")}
-                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "pix"
-                        ? "bg-[#EBF2FF] text-[#3F78D8]"
-                        : "bg-[#F5F6F6] text-[#111827]"
+                    className={`flex-1 h-[42px] rounded-full text-[14px] font-semibold transition-colors ${activeTab === "pix"
+                        ? "bg-primary text-white"
+                        : "bg-white border border-[#D1D1D6] text-black/70"
                         }`}
                 >
-                    {t("wallet.pixRecommended")}
+                    {t("wallet.pixRecommended") || "PIX (Recomendado)"}
                 </button>
                 <button
                     onClick={() => setActiveTab("bank")}
-                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "bank"
-                        ? "bg-[#EBF2FF] text-[#3F78D8]"
-                        : "bg-[#F5F6F6] text-[#111827]"
+                    className={`flex-1 h-[42px] rounded-full text-[14px] font-semibold transition-colors ${activeTab === "bank"
+                        ? "bg-primary text-white"
+                        : "bg-white border border-[#D1D1D6] text-black/70"
                         }`}
                 >
-                    {t("wallet.bankAccountLabel")}
+                    {t("wallet.bankAccountLabel") || "Conta Bancária"}
                 </button>
             </div>
 
             {activeTab === "pix" ? (
                 <div className="flex flex-col flex-1">
-                    {/* Info Box */}
-                    <div className="bg-[#EEF4FF] rounded-xl p-4 mb-6 mx-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Zap className="w-4 h-4 text-[#4A7BF7]" fill="#4A7BF7" />
-                            <span className="text-[#111827] text-sm font-medium">
-                                {t("wallet.pixFewerErrors")}
-                            </span>
-                        </div>
-                        <p className="text-[#9AA4AF] text-xs pl-6">
-                            {t("wallet.pixFastSafeDesc")}
-                        </p>
-                    </div>
-
-                    {/* Key Type */}
-                    <div className="mb-5 mx-4">
-                        <label className="block text-[#111827] text-sm font-medium mb-3">
-                            {t("wallet.keyType")}
-                        </label>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setKeyType("cpf")}
-                                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${keyType === "cpf"
-                                    ? "bg-[#EBF2FF] text-[#3F78D8]"
-                                    : "bg-[#F5F6F6] text-[#9AA4AF]"
-                                    }`}
-                            >
-                                {t("wallet.cpf")}
-                            </button>
-                            <button
-                                onClick={() => setKeyType("cnpj")}
-                                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${keyType === "cnpj"
-                                    ? "bg-[#EBF2FF] text-[#3F78D8]"
-                                    : "bg-[#F5F6F6] text-[#9AA4AF]"
-                                    }`}
-                            >
-                                {t("wallet.cnpj")}
-                            </button>
+                    {/* Info Banner */}
+                    <div className="bg-[#E5EDF9] rounded-xl px-4 py-3 mb-4 flex items-start gap-3">
+                        <Zap className="w-[18px] h-[18px] text-primary flex-shrink-0 mt-0.5" fill="#3F78D8" />
+                        <div>
+                            <p className="text-primary text-[14px] font-bold leading-[18px]">
+                                {t("wallet.pixFewerErrors") || "Mais rápido e com menos erros."}
+                            </p>
+                            <p className="text-primary text-[12px] mt-0.5 leading-[16px] opacity-80">
+                                {t("wallet.pixFastSafeDesc") || "O PIX é o método mais rápido e seguro para receber seus repasses."}
+                            </p>
                         </div>
                     </div>
 
-                    {/* PIX Key */}
-                    <div className="mb-5 mx-4">
-                        <label className="block text-[#111827] text-sm font-medium mb-2">
-                            {t("wallet.pixKey")}
-                        </label>
-                        <input
-                            type="text"
-                            value={pixKey}
-                            onChange={(e) => setPixKey(e.target.value)}
-                            placeholder={t("wallet.egCpfCnpj")}
-                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
-                        />
-                    </div>
-
-                    {/* Account Holder Name */}
-                    <div className="mb-5 mx-4">
-                        <label className="block text-[#111827] text-sm font-medium mb-2">
-                            {t("wallet.holderName")}
-                        </label>
-                        <input
-                            type="text"
-                            value={pixHolderName}
-                            onChange={(e) => setPixHolderName(e.target.value)}
-                            placeholder={t("wallet.egHolderName")}
-                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
-                        />
-                    </div>
-
-                    {/* Account Holder's CPF/CNPJ */}
-                    <div className="mb-5 mx-4">
-                        <label className="block text-[#111827] text-sm font-medium mb-2">
-                            {t("wallet.holderCpfCnpj")}
-                        </label>
-                        <input
-                            type="text"
-                            value={pixHolderCpfCnpj}
-                            onChange={(e) => setPixHolderCpfCnpj(e.target.value)}
-                            placeholder={t("wallet.egCpfCnpj")}
-                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
-                        />
+                    {/* Form Card */}
+                    <div className="bg-white rounded-2xl border border-[#E5E5EA] p-4 space-y-4">
+                        <div>
+                            <label className={labelCls}>{t("wallet.keyType") || "Tipo de Chave"}</label>
+                            <select
+                                value={keyType}
+                                onChange={(e) => setKeyType(e.target.value as "cpf" | "cnpj")}
+                                className={`${inputCls} appearance-none pr-10`}
+                                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
+                            >
+                                <option value="cpf">CPF/CNPJ</option>
+                                <option value="cnpj">CNPJ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelCls}>{t("wallet.pixKey") || "Chave PIX"}</label>
+                            <input type="text" value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="111.222.333-44" className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>{t("wallet.holderName") || "Nome do Titular"}</label>
+                            <input type="text" value={pixHolderName} onChange={(e) => setPixHolderName(e.target.value)} placeholder="Dr. Vet" className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>{t("wallet.holderCpfCnpj") || "CPF/CNPJ do Titular"}</label>
+                            <input type="text" value={pixHolderCpfCnpj} onChange={(e) => setPixHolderCpfCnpj(e.target.value)} placeholder="111.222.333-44" className={inputCls} />
+                        </div>
                     </div>
                 </div>
             ) : (
                 <div className="flex flex-col flex-1">
-                    {/* Type Of Person */}
-                    <div className="mb-5 mx-4">
-                        <label className="block text-[#111827] text-sm font-medium mb-3">
-                            {t("wallet.typeOfPerson")}
-                        </label>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setPersonType("individual")}
-                                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${personType === "individual"
-                                    ? "bg-[#EBF2FF] text-[#3F78D8]"
-                                    : "bg-[#F5F6F6] text-[#9AA4AF]"
-                                    }`}
-                            >
-                                {t("wallet.individual")}
-                            </button>
-                            <button
-                                onClick={() => setPersonType("legal")}
-                                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${personType === "legal"
-                                    ? "bg-[#EBF2FF] text-[#3F78D8]"
-                                    : "bg-[#F5F6F6] text-[#9AA4AF]"
-                                    }`}
-                            >
-                                {t("wallet.legalEntity")}
-                            </button>
+                    <div className="bg-white rounded-2xl border border-[#E5E5EA] p-4 space-y-4">
+                        <div>
+                            <label className={`${labelCls} mb-3`}>{t("wallet.typeOfPerson") || "Tipo de Pessoa"}</label>
+                            <div className="flex items-center gap-6">
+                                <label className="flex items-center gap-2 cursor-pointer" onClick={() => setPersonType("individual")}>
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${personType === "individual" ? "border-primary" : "border-[#D1D5DB]"}`}>
+                                        {personType === "individual" && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                                    </div>
+                                    <span className="text-[14px] text-black/70">{t("wallet.individual") || "Pessoa Física"}</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer" onClick={() => setPersonType("legal")}>
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${personType === "legal" ? "border-primary" : "border-[#D1D5DB]"}`}>
+                                        {personType === "legal" && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                                    </div>
+                                    <span className="text-[14px] text-black/70">{t("wallet.legalEntity") || "Pessoa Jurídica"}</span>
+                                </label>
+                            </div>
                         </div>
-                    </div>
-
-                    {/* Bank Name */}
-                    <div className="mb-5 mx-4">
-                        <label className="block text-[#111827] text-sm font-medium mb-2">
-                            {t("wallet.bankName")}
-                        </label>
-                        <input
-                            type="text"
-                            value={bankName}
-                            onChange={(e) => setBankName(e.target.value)}
-                            placeholder={t("wallet.egBankName")}
-                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
-                        />
-                    </div>
-
-                    {/* Agency */}
-                    <div className="mb-5 mx-4">
-                        <label className="block text-[#111827] text-sm font-medium mb-2">
-                            {t("wallet.agencyWithDigit")}
-                        </label>
-                        <input
-                            type="text"
-                            value={agency}
-                            onChange={(e) => setAgency(e.target.value)}
-                            placeholder={t("wallet.egAgency")}
-                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
-                        />
-                    </div>
-
-                    {/* Account */}
-                    <div className="mb-5 mx-4">
-                        <label className="block text-[#111827] text-sm font-medium mb-2">
-                            {t("wallet.accountWithDigit")}
-                        </label>
-                        <input
-                            type="text"
-                            value={account}
-                            onChange={(e) => setAccount(e.target.value)}
-                            placeholder={t("wallet.egAccount")}
-                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA3AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
-                        />
-                    </div>
-
-                    {/* Holder's CPF/CNPJ */}
-                    <div className="mb-5 mx-4">
-                        <label className="block text-[#111827] text-sm font-medium mb-2">
-                            {t("wallet.holderCpfCnpj")}
-                        </label>
-                        <input
-                            type="text"
-                            value={bankHolderCpfCnpj}
-                            onChange={(e) => setBankHolderCpfCnpj(e.target.value)}
-                            placeholder={t("wallet.egCpfCnpj")}
-                            className="w-full bg-[#F5F6F6] rounded-xl px-4 py-3.5 text-sm text-[#111827] placeholder:text-[#9AA4AF] outline-none focus:ring-2 focus:ring-[#4A7BF7]/20"
-                        />
+                        <div>
+                            <label className={labelCls}>{t("wallet.bankName") || "Banco"}</label>
+                            <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="260" className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>{t("wallet.accountType") || "Tipo de Conta"}</label>
+                            <select
+                                value={accountType}
+                                onChange={(e) => setAccountType(e.target.value as "current" | "savings")}
+                                className={`${inputCls} appearance-none pr-10`}
+                                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
+                            >
+                                <option value="current">Conta Corrente</option>
+                                <option value="savings">Conta Poupança</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelCls}>{t("wallet.agencyWithDigit") || "Agência (com dígito)"}</label>
+                            <input type="text" value={agency} onChange={(e) => setAgency(e.target.value)} placeholder="0001" className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>{t("wallet.accountWithDigit") || "Conta (com dígito)"}</label>
+                            <input type="text" value={account} onChange={(e) => setAccount(e.target.value)} placeholder="123456-7" className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>{t("wallet.holderCpfCnpj") || "CPF/CNPJ do Titular"}</label>
+                            <input type="text" value={bankHolderCpfCnpj} onChange={(e) => setBankHolderCpfCnpj(e.target.value)} placeholder="111.222.333-44" className={inputCls} />
+                        </div>
                     </div>
                 </div>
             )}
 
-            <div className="mt-auto pt-6 px-4">
+            <div className="mt-5">
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full bg-[#4A7BF7] text-white py-4 rounded-full text-base font-semibold hover:bg-[#3A6BE7] transition-colors disabled:opacity-60"
+                    className="w-full bg-primary text-white h-[52px] rounded-xl text-[16px] font-bold hover:bg-[#2f68c8] transition-colors disabled:opacity-60"
                 >
-                    {saving ? t("common.saving") : t("common.saveChanges")}
+                    {saving ? t("common.saving") : activeTab === "pix" ? "Salvar Dados Pix" : "Salvar Conta Bancária"}
                 </button>
             </div>
         </div>

@@ -31,7 +31,7 @@ function StatusPill({ status }: { status: ReportStatus }) {
   const { t } = useTranslation();
   const label = status === "signed" ? t("history.signed") : t("history.pending");
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-3 py-1.5 text-[13px] font-medium text-[#3F78D8]">
+    <span className="inline-flex items-center gap-2 rounded-full bg-[#EBF2FF] px-3 py-1.5 text-[13px] font-medium text-primary">
       <Check className="h-4 w-4" />
       {label}
     </span>
@@ -60,7 +60,7 @@ function ReportCard({
             <Image width={200} height={200} src={item.avatarSrc} alt="" className="h-full w-full object-cover" />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-[14px] font-medium leading-[18px] text-[#111827]">
+            <div className="truncate text-[14px] font-medium leading-[18px] text-black/70">
               {item.title}
             </div>
             <div className="mt-1 text-[12px] leading-[16px] text-[#9CA3AF]">{item.dateLabel}</div>
@@ -74,7 +74,7 @@ function ReportCard({
           <button
             type="button"
             disabled={item.status === "pending"}
-            className={`inline-flex h-[34px] items-center gap-2 rounded-full px-4 text-[13px] font-medium ${item.status === "pending" ? "bg-[#9CA3AF] text-white cursor-not-allowed" : "bg-[#3F78D8] text-white"}`}
+            className={`inline-flex h-[34px] items-center gap-2 rounded-full px-4 text-[13px] font-medium ${item.status === "pending" ? "bg-[#9CA3AF] text-white cursor-not-allowed" : "bg-primary text-white"}`}
             onClick={() => onDownloadPdf(item.id)}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17" fill="none">
@@ -94,7 +94,7 @@ function ReportCard({
         ) : (
           <Link
             href={`/Guardian/history/detail/${item.id}`}
-            className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-[#3F78D8]"
+            className="inline-flex h-[34px] items-center justify-center rounded-full bg-[#EBF2FF] px-5 text-[13px] font-medium text-primary"
           >
             {t("history.details")}
           </Link>
@@ -205,7 +205,7 @@ function PageContent() {
     <div className="h-[100dvh w-full bg-white">
       <div className="mx-auto w-full h-full pb-6 -[calc(env(safe-area-inset-top)+20px)]">
         <div className="px-">
-          <h1 className="text-[22px] font-semibold leading-[28px] text-[#111827]">
+          <h1 className="text-[22px] font-semibold leading-[28px] text-black/70">
             {t("history.examinationHistory")}
           </h1>
           <p className="mt-1 text-[15px] leading-[20px] text-[#9CA3AF]">
@@ -243,7 +243,7 @@ function PageContent() {
                 <span className="h-8 w-8 overflow-hidden rounded-full bg-white">
                   <Image width={200} height={200} src={pet.avatarSrc} alt="" className="h-full w-full object-cover" />
                 </span>
-                <span className={`text-[14px] font-medium ${active ? "text-[#3F78D8]" : "text-[#111827]"}`}>
+                <span className={`text-[14px] font-medium ${active ? "text-primary" : "text-black/70"}`}>
                   {pet.name}
                 </span>
               </button>

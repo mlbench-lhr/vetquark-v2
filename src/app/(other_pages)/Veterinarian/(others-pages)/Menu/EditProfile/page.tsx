@@ -16,7 +16,7 @@ import Image from "next/image";
 export default function EditProfileCard() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const profile = useAppSelector((s) => s.userProfile.profile);
+    const profile = useAppSelector((s) => (s as any).userProfile.profile);
 
     const fullName = profile?.fullName ?? "";
     const email = profile?.email ?? "";
@@ -178,16 +178,18 @@ export default function EditProfileCard() {
         }
     };
 
+    const inputCls = "";
+    const labelCls = "";
     return (
-        <div className="min-h-screen bg-white flex flex-col px-4">
-            <Header title={t("menu.edit")} />
+        <div className=" flex flex-col">
+            <Header title={t("menu.editProfile")} />
             {/* Avatar Section */}
-            <div className="flex justify-center pt-8 pb-8">
+            <div className="flex justify-center pt-2 pb-4">
                 <div className="relative">
-                    <div className="w-28 h-28 rounded-full overflow-hidden ring-2 ring-[#F5F6F6]">
+                    <div className="w-[200px] h-[200px] rounded-full overflow-hidden bg-[#E8E8EE]">
                         <Image
-                            width={200}
-                            height={200}
+                            width={400}
+                            height={400}
                             src={avatarUrl}
                             alt={t('profile.profile')}
                             className="w-full h-full object-cover"
@@ -204,40 +206,42 @@ export default function EditProfileCard() {
                         type="button"
                         onClick={handleAvatarClick}
                         disabled={uploadingAvatar}
-                        className="absolute bottom-0 right-0 w-8 h-8 bg-[#4A7BF7] rounded-full flex items-center justify-center shadow-lg hover:bg-[#3A6BE7] transition-colors"
+                        className="absolute bottom-2 right-2 w-11 h-11 bg-primary rounded-full flex items-center justify-center shadow-md hover:bg-[#2f68c8] transition-colors"
                     >
-                        <Camera className="h-4 w-4 text-white" />
+                        <Camera className="h-5 w-5 text-white" />
                     </button>
                 </div>
             </div>
 
             {/* Form Fields */}
-            <div className="flex-1 space-y-5">
+            <div className="flex-1 space-y-2">
                 <div>
-                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
-                        {t('menu.fullName')}
+                    <Label className={labelCls}>
+                        {t('menu.fullName')}<span className="text-black/70">*</span>
                     </Label>
                     <Input
                         value={localFullName}
                         onChange={(e) => setLocalFullName(e.target.value)}
-                        className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
+                        placeholder="Jackson Miro"
+                        className={inputCls}
                     />
                 </div>
 
                 <div>
-                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
+                    <Label className={labelCls}>
                         {t('menu.email')}
                     </Label>
                     <Input
                         type="email"
                         value={localEmail}
                         disabled
-                        className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] placeholder:text-[#9AA4AF] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
+                        placeholder="email@address.com"
+                        className={`${inputCls} opacity-70`}
                     />
                 </div>
 
                 <div>
-                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
+                    <Label className={labelCls}>
                         {t('menu.phoneNumber')}
                     </Label>
                     <PhoneInput
@@ -246,25 +250,26 @@ export default function EditProfileCard() {
                         onChange={setLocalPhone}
                         defaultCountry="br"
                         containerClassName="w-full"
-                        inputClassName="!w-full !h-[56px] !rounded-[16px] !border-0 !bg-[#F5F6F6] !px-11 !text-[16px] !leading-[20px] !text-[#111827] placeholder:!text-[#9AA4AF] focus:!outline-none md:!text-[16px]"
-                        buttonClassName="!h-[56px] !border-0 !bg-[#F5F6F6] !rounded-[16px]"
+                        inputClassName="w-full! h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! !border !border-[#E5E5EA] !bg-white !text-[12px] !leading-[18px] !text-black/70 placeholder:!text-secondary focus:!outline-none"
+                        buttonClassName="!h-[26px] !border !border-[#E5E5EA] !border-r-0 !bg-[#F6F6F6]"
                     />
                 </div>
 
                 <div>
-                    <Label className="text-[14px] font-medium leading-[18px] text-[#111827] mb-3">
+                    <Label className={labelCls}>
                         {t("menu.veterinarianUniqueCode")}
                     </Label>
                     <div className="flex gap-2">
                         <Input
                             value={localVetCode}
                             readOnly
-                            className="h-[56px] w-full rounded-[16px] border-0 bg-[#F5F6F6] px-4 text-[16px] leading-[20px] text-[#111827] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 md:text-[16px]"
+                            placeholder="QF3GLAS38"
+                            className={`${inputCls} flex-1 min-w-0`}
                         />
                         <Button
                             type="button"
                             onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success(t("menu.copied")); }}
-                            className="h-[56px] rounded-full bg-[#4A7BF7] text-white px-4 text-[14px] font-medium hover:bg-[#3A6BE7]"
+                            className="h-[26px] rounded-[4px] bg-primary text-white/80 px-4 text-[10px] font-normal hover:bg-[#2f68c8] shadow-none"
                         >
                             {t("menu.copy")}
                         </Button>
@@ -272,7 +277,7 @@ export default function EditProfileCard() {
                             type="button"
                             onClick={handleRegenerateCode}
                             disabled={saving}
-                            className="h-[56px] rounded-full bg-[#F5F6F6] text-[#111827] px-4 text-[14px] font-medium hover:bg-[#E5E7EB]"
+                            className="h-[26px] rounded-[4px] bg-primary text-white/80 px-4 text-[10px] font-normal hover:bg-[#2f68c8] whitespace-nowrap shadow-none"
                         >
                             {t("menu.regenerate")}
                         </Button>
@@ -281,11 +286,11 @@ export default function EditProfileCard() {
             </div>
 
             {/* Save Button */}
-            <div className="py-6">
+            <div className="pb-8 pt-4">
                 <Button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full h-[52px] rounded-full bg-[#4A7BF7] hover:bg-[#3A6BE7] text-white font-medium text-[16px]"
+                    className="w-full h-[32px]! rounded-md bg-primary hover:bg-[#2f68c8] text-white font-normal text-[12px] shadow-none"
                 >
                     {saving ? t('menu.saving') : t('menu.saveChanges')}
                 </Button>

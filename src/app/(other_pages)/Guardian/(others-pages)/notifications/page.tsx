@@ -101,9 +101,9 @@ export default function GuardianNotificationsPage() {
       <div className="px- pt-[calc(env(safe-area-inset-top)+14px) pb-4">
         <div className="relative flex items-center justify-center">
           <button type="button" onClick={() => router.back()} className="absolute left-0 top-1/2 -translate-y-1/2 p-1">
-            <ChevronLeft className="h-6 w-6 text-[#111827]" />
+            <ChevronLeft className="h-6 w-6 text-black/70" />
           </button>
-          <div className="text-[16px] leading-[20px] font-medium text-[#111827]">{t("notifications.title")}</div>
+          <div className="text-[16px] leading-[20px] font-medium text-black/70">{t("notifications.title")}</div>
         </div>
       </div>
 
@@ -144,7 +144,7 @@ export default function GuardianNotificationsPage() {
                   <CreditCard className="h-5 w-5" style={{ color: n.readAt ? "#6B7280" : "#22C55E" }} />
                 </div>
                 <div className="flex-1 min-w-0 pr-2">
-                  <div className="text-[14px] leading-[18px] font-semibold text-[#111827] truncate">{n.title}</div>
+                  <div className="text-[14px] leading-[18px] font-semibold text-black/70 truncate">{n.title}</div>
                   <div className="mt-1 text-[12px] leading-[16px] text-[#9CA3AF]">{n.message}</div>
                 </div>
                 <div className="text-[12px] leading-[16px] text-[#9CA3AF] flex-shrink-0 pt-0.5">{timeLabel(n.createdAt)}</div>

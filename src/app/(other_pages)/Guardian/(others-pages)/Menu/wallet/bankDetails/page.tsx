@@ -24,9 +24,9 @@ function PaymentHeader({ title, onBack }: { title: string; onBack: () => void })
                 aria-label="Back"
                 className="absolute left-4 top-6 flex h-10 w-10 items-center justify-center rounded-full"
             >
-                <ChevronLeft className="h-6 w-6 text-[#111827]" />
+                <ChevronLeft className="h-6 w-6 text-black/70" />
             </button>
-            <div className="text-[16px] font-medium leading-[20px] text-[#111827]">{title}</div>
+            <div className="text-[16px] font-medium leading-[20px] text-black/70">{title}</div>
             <div className="absolute right-4 top-6 h-10 w-10" />
         </div>
     );
@@ -36,7 +36,7 @@ export default function Page() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const profile = useAppSelector((s) => s.userProfile.profile);
-  const { t } = useTranslation();
+    const { t } = useTranslation();
     const [view, setView] = useState<View>("list");
     const [isAddCardOpen, setIsAddCardOpen] = useState(false);
 
@@ -133,13 +133,13 @@ export default function Page() {
                                 <Image src="/images/pixLogo.svg" alt="" width={28} height={28} />
                             </div>
                             <div className="min-w-0">
-                                <div className="text-[15px] font-medium leading-[18px] text-[#111827]">{t("wallet.pixCpfCnpj")}</div>
+                                <div className="text-[15px] font-medium leading-[18px] text-black/70">{t("wallet.pixCpfCnpj")}</div>
                                 <div className="mt-1 text-[14px] leading-[18px] text-[#9AA4AF]">{maskedPix}</div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-6 text-[16px] font-semibold leading-[20px] text-[#111827]">{t("wallet.addNewPaymentMethod")}</div>
+                    <div className="mt-6 text-[16px] font-semibold leading-[20px] text-black/70">{t("wallet.addNewPaymentMethod")}</div>
 
                     <div className="mt-4 space-y-3">
                         <button
@@ -151,9 +151,9 @@ export default function Page() {
                                 <div className="h-10 w-10 flex items-center justify-center">
                                     <Image src="/images/pixLogo.svg" alt="" width={26} height={26} />
                                 </div>
-                                <div className="text-[15px] font-medium leading-[20px] text-[#111827]">Pix</div>
+                                <div className="text-[15px] font-medium leading-[20px] text-black/70">Pix</div>
                             </div>
-                            <ChevronRight className="h-5 w-5 text-[#3F78D8]" />
+                            <ChevronRight className="h-5 w-5 text-primary" />
                         </button>
 
                         <button
@@ -163,11 +163,11 @@ export default function Page() {
                         >
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 flex items-center justify-center">
-                                    <CreditCard className="h-6 w-6 text-[#3F78D8]" />
+                                    <CreditCard className="h-6 w-6 text-primary" />
                                 </div>
-                                <div className="text-[15px] font-medium leading-[20px] text-[#111827]">{t("wallet.cardLabel")}</div>
+                                <div className="text-[15px] font-medium leading-[20px] text-black/70">{t("wallet.cardLabel")}</div>
                             </div>
-                            <ChevronRight className="h-5 w-5 text-[#3F78D8]" />
+                            <ChevronRight className="h-5 w-5 text-primary" />
                         </button>
                     </div>
                 </div>
@@ -175,8 +175,8 @@ export default function Page() {
                 <div className="flex min-h-[calc(100dvh-72px)] flex-col px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
                     <div className="rounded-[16px] bg-[#EEF4FF] px-4 py-4">
                         <div className="flex items-center gap-2">
-                            <Zap className="h-4 w-4 text-[#3F78D8]" fill="#3F78D8" />
-                            <div className="text-[14px] font-medium leading-[18px] text-[#111827]">
+                            <Zap className="h-4 w-4 text-primary" fill="#3F78D8" />
+                            <div className="text-[14px] font-medium leading-[18px] text-black/70">
                                 Faster and with fewer errors.
                             </div>
                         </div>
@@ -185,13 +185,13 @@ export default function Page() {
                         </div>
                     </div>
 
-                    <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">Key Type</div>
+                    <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">Key Type</div>
                     <div className="mt-4 flex gap-3">
                         <button
                             type="button"
                             onClick={() => setPixKeyType("cpf")}
                             className={`h-10 w-[120px] rounded-full text-[14px] font-medium ${pixKeyType === "cpf"
-                                ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                ? "bg-[#EBF2FF] text-primary"
                                 : "bg-[#F5F6F6] text-[#9AA4AF]"
                                 }`}
                         >
@@ -201,7 +201,7 @@ export default function Page() {
                             type="button"
                             onClick={() => setPixKeyType("cnpj")}
                             className={`h-10 w-[120px] rounded-full text-[14px] font-medium ${pixKeyType === "cnpj"
-                                ? "bg-[#EBF2FF] text-[#3F78D8]"
+                                ? "bg-[#EBF2FF] text-primary"
                                 : "bg-[#F5F6F6] text-[#9AA4AF]"
                                 }`}
                         >
@@ -209,30 +209,30 @@ export default function Page() {
                         </button>
                     </div>
 
-                    <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">PIX Key</div>
+                    <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">PIX Key</div>
                     <input
                         value={pixKey}
                         onChange={(e) => setPixKey(e.target.value)}
                         placeholder="e.g. 111.222.333-44"
-                        className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] text-[#111827] placeholder:text-[#9AA4AF] outline-none"
+                        className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] text-black/70 placeholder:text-[#9AA4AF] outline-none"
                     />
 
-                    <div className="mt-5 text-[14px] font-medium leading-[18px] text-[#111827]">Account Holder Name</div>
+                    <div className="mt-5 text-[14px] font-medium leading-[18px] text-black/70">Account Holder Name</div>
                     <input
                         value={pixHolderName}
                         onChange={(e) => setPixHolderName(e.target.value)}
                         placeholder="e.g. Dr Vet"
-                        className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] text-[#111827] placeholder:text-[#9AA4AF] outline-none"
+                        className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] text-black/70 placeholder:text-[#9AA4AF] outline-none"
                     />
 
-                    <div className="mt-5 text-[14px] font-medium leading-[18px] text-[#111827]">
+                    <div className="mt-5 text-[14px] font-medium leading-[18px] text-black/70">
                         Account Holder&apos;s CPF/CNPJ
                     </div>
                     <input
                         value={pixHolderCpfCnpj}
                         onChange={(e) => setPixHolderCpfCnpj(e.target.value)}
                         placeholder="e.g. 111.222.333-44"
-                        className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] text-[#111827] placeholder:text-[#9AA4AF] outline-none"
+                        className="mt-3 h-[56px] w-full rounded-[16px] bg-[#F5F6F6] px-4 text-[16px] text-black/70 placeholder:text-[#9AA4AF] outline-none"
                     />
 
                     <div className="mt-auto pt-10">
@@ -240,7 +240,7 @@ export default function Page() {
                             type="button"
                             onClick={handleSavePix}
                             disabled={saving}
-                            className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+                            className="h-[56px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
                         >
                             {saving ? "Saving..." : "Add account"}
                         </button>
@@ -260,16 +260,16 @@ export default function Page() {
                                 aria-label="Back"
                                 className="absolute left-0 flex h-10 w-10 items-center justify-center rounded-full"
                             >
-                                <ChevronLeft className="h-6 w-6 text-[#111827]" />
+                                <ChevronLeft className="h-6 w-6 text-black/70" />
                             </button>
-                            <div className="text-[24px] font-semibold leading-[28px] text-[#111827]">Add card</div>
+                            <div className="text-[24px] font-semibold leading-[28px] text-black/70">Add card</div>
                             <div className="absolute right-0 h-10 w-10" />
                         </div>
 
                         <div className="mt-6">
                             <div className="flex items-center justify-between">
                                 <div className="text-[12px] font-medium leading-[16px] text-[#9AA4AF]">Card information</div>
-                                <button type="button" className="flex items-center gap-2 text-[12px] font-medium text-[#3F78D8]">
+                                <button type="button" className="flex items-center gap-2 text-[12px] font-medium text-primary">
                                     <Camera className="h-4 w-4" />
                                     Scan card
                                 </button>
@@ -279,7 +279,7 @@ export default function Page() {
                                 <div className="flex items-center gap-3 px-4 py-3">
                                     <input
                                         placeholder="Card number"
-                                        className="w-full bg-transparent text-[16px] text-[#111827] placeholder:text-[#9AA4AF] outline-none"
+                                        className="w-full bg-transparent text-[16px] text-black/70 placeholder:text-[#9AA4AF] outline-none"
                                     />
                                     <div className="flex items-center gap-1">
                                         <Image
@@ -310,13 +310,13 @@ export default function Page() {
                                     <div className="px-4 py-3">
                                         <input
                                             placeholder="MM / YY"
-                                            className="w-full bg-transparent text-[16px] text-[#111827] placeholder:text-[#9AA4AF] outline-none"
+                                            className="w-full bg-transparent text-[16px] text-black/70 placeholder:text-[#9AA4AF] outline-none"
                                         />
                                     </div>
                                     <div className="flex items-center justify-between gap-2 border-l border-[#E5E7EB] px-4 py-3">
                                         <input
                                             placeholder="CVC"
-                                            className="w-full bg-transparent text-[16px] text-[#111827] placeholder:text-[#9AA4AF] outline-none"
+                                            className="w-full bg-transparent text-[16px] text-black/70 placeholder:text-[#9AA4AF] outline-none"
                                         />
                                         <div className="h-5 w-8 rounded bg-[#E5E7EB]" />
                                     </div>
@@ -329,7 +329,7 @@ export default function Page() {
                                 <div className="flex items-center justify-between px-4 py-3">
                                     <div>
                                         <div className="text-[12px] leading-[16px] text-[#9AA4AF]">Country or region</div>
-                                        <div className="mt-1 text-[14px] font-medium leading-[18px] text-[#111827]">
+                                        <div className="mt-1 text-[14px] font-medium leading-[18px] text-black/70">
                                             United States
                                         </div>
                                     </div>
@@ -339,7 +339,7 @@ export default function Page() {
                                 <div className="px-4 py-3">
                                     <input
                                         placeholder="ZIP"
-                                        className="w-full bg-transparent text-[16px] text-[#111827] placeholder:text-[#9AA4AF] outline-none"
+                                        className="w-full bg-transparent text-[16px] text-black/70 placeholder:text-[#9AA4AF] outline-none"
                                     />
                                 </div>
                             </div>
@@ -347,7 +347,7 @@ export default function Page() {
                             <button
                                 type="button"
                                 onClick={() => setIsAddCardOpen(false)}
-                                className="mt-8 h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+                                className="mt-8 h-[56px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
                             >
                                 Add Card
                             </button>

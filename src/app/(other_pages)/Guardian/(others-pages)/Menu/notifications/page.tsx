@@ -33,7 +33,7 @@ function Toggle({
       className={[
         "relative inline-flex items-center shrink-0",
         "w-[58px] h-[34px] rounded-full",
-        checked ? "bg-[#4A7BF7]" : "bg-[#D1D5DB]",
+        checked ? "bg-primary" : "bg-[#D1D5DB]",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
         "transition-colors",
       ].join(" ")}
@@ -65,7 +65,7 @@ function SettingCard({
   return (
     <div className="rounded-2xl bg-[#F3F4F6] px-5 py-4 flex items-start justify-between gap-4">
       <div className="min-w-0">
-        <div className="text-[16px] leading-[22px] font-semibold text-[#111827]">
+        <div className="text-[16px] leading-[22px] font-semibold text-black/70">
           {title}
         </div>
         <div className="mt-1 text-[13px] leading-[18px] text-[#6B7280]">
@@ -185,7 +185,7 @@ export default function NotificationsSettingsPage() {
       <Header title={t("menu.notifications")} />
 
       <div className="px-4 pb-10 pt-2">
-        <div className="text-[18px] leading-[26px] font-normal text-[#111827] mb-3">
+        <div className="text-[18px] leading-[26px] font-normal text-black/70 mb-3">
           {t("notifications.settings.pushTitle")}
         </div>
 
@@ -203,7 +203,7 @@ export default function NotificationsSettingsPage() {
 
         <div className="h-8" />
 
-        <div className="text-[18px] leading-[26px] font-normal text-[#111827] mb-3">
+        <div className="text-[18px] leading-[26px] font-normal text-black/70 mb-3">
           {t("notifications.settings.emailTitle")}
         </div>
 
@@ -224,7 +224,7 @@ export default function NotificationsSettingsPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[56px] w-full rounded-full bg-[#4A7BF7] text-[15px] font-medium text-white"
+            className="h-[56px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

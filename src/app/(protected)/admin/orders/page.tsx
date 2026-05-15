@@ -304,7 +304,7 @@ export default function Dashboard() {
                           <div className="px-5 pt-5">
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex items-start gap-3 min-w-0">
-                                <div className="h-10 w-10 rounded-full bg-[#3F78D8] flex items-center justify-center shrink-0">
+                                <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center shrink-0">
                                   <Package className="text-white" size={18} />
                                 </div>
                                 <div className="min-w-0">

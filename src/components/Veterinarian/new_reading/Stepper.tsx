@@ -77,22 +77,22 @@ export default function Stepper({ active }: Props) {
               <div className="flex flex-col items-center gap-1.5 shrink-0">
                 <div
                   className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isDone
-                      ? 'bg-[#3F78D8]'
-                      : isActive
-                        ? 'bg-white border-2 border-[#3F78D8]'
-                        : 'bg-white border-2 border-[#D1D5DB]'
+                    ? 'bg-primary'
+                    : isActive
+                      ? 'bg-white border border-primary'
+                      : 'bg-white border border-[#D1D5DB]'
                     }`}
                 >
                   {isDone ? (
                     <Check className="w-5 h-5 text-white" strokeWidth={2.5} />
                   ) : (
                     <s.Icon
-                      className={`w-5 h-5 ${isActive ? 'text-[#3F78D8]' : 'text-[#9CA3AF]'}`}
+                      className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-[#9CA3AF]'}`}
                     />
                   )}
                 </div>
                 <span
-                  className={`text-[10px] leading-[12px] whitespace-nowrap font-medium ${isActive ? 'text-[#111827]' : isDone ? 'text-[#3F78D8]' : 'text-[#9CA3AF]'
+                  className={`text-[10px] leading-[12px] whitespace-nowrap font-medium ${isActive ? 'text-black/70' : isDone ? 'text-primary' : 'text-[#9CA3AF]'
                     }`}
                 >
                   {s.label}
@@ -101,7 +101,7 @@ export default function Stepper({ active }: Props) {
 
               {idx !== steps.length - 1 && (
                 <div
-                  className={`h-[2px] flex-1 mb-4 mx-1 rounded-full transition-all ${idx < activeIndex ? 'bg-[#3F78D8]' : 'bg-[#E5E7EB]'
+                  className={`h-[2px] flex-1 mb-4 mx-1 rounded-full transition-all ${idx < activeIndex ? 'bg-primary' : 'bg-[#E5E7EB]'
                     }`}
                 />
               )}

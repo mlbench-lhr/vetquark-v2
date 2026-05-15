@@ -192,7 +192,7 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
     );
 };
 
-const ProgressView = ({ patientId }: { patientId?: string }) => {
+const ProgressView = ({ patientId, variant = "default" }: { patientId?: string; variant?: "default" | "evolution" }) => {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<ReadingItem[]>([]);
@@ -451,6 +451,21 @@ const ProgressView = ({ patientId }: { patientId?: string }) => {
             <div className="text-[14px] text-gray-500 px-4">{t("reading.progress.noProgressYet")}</div>
         )
     }
+    if (variant === "evolution") {
+        return (
+            <div className="space-y-4">
+                <ParameterProgress
+                    dataByParameter={seriesByKey}
+                    patientId={patientId}
+                    dateRange={dateRange}
+                    onDateRangeChange={setDateRange}
+                    normalLabelByKey={normalLabelByKey}
+                    normalRuleByKey={normalRuleByKey}
+                    variant="evolution"
+                />
+            </div>
+        );
+    }
     return (
         <div className="space-y-4 px-">
             {/* Header */}
@@ -587,6 +602,8 @@ import {
     YAxis,
     Tooltip,
     ResponsiveContainer,
+    ReferenceLine,
+    CartesianGrid,
 } from "recharts";
 
 type ViewMode = "graph" | "table";
@@ -608,6 +625,20 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
+const EvolutionTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="relative">
+                <div className="bg-[#3D3A6A] text-white px-3 py-1.5 rounded-md text-[13px] font-semibold shadow-lg">
+                    {Number(payload[0].value).toFixed(0)}%
+                </div>
+                <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 rotate-45 bg-[#3D3A6A]" />
+            </div>
+        );
+    }
+    return null;
+};
+
 export function ParameterProgress({
     dataByParameter = {},
     patientId,
@@ -615,6 +646,7 @@ export function ParameterProgress({
     onDateRangeChange,
     normalLabelByKey = {},
     normalRuleByKey = {},
+    variant = "default",
 }: {
     dataByParameter?: Record<string, Array<{ date: Date; value: number; valueLabel: string; unit: string; label: string }>>;
     patientId?: string;
@@ -622,7 +654,9 @@ export function ParameterProgress({
     onDateRangeChange?: (range: { from: Date | undefined; to: Date | undefined }) => void;
     normalLabelByKey?: Record<string, string>;
     normalRuleByKey?: Record<string, NormalRule | undefined>;
+    variant?: "default" | "evolution";
 }) {
+    const isEvolution = variant === "evolution";
     const { t } = useTranslation();
     const [viewMode, setViewMode] = useState<ViewMode>("graph");
     const [tempRange, setTempRange] = useState<{ from: Date | undefined; to: Date | undefined }>(dateRange || { from: undefined, to: undefined });
@@ -677,6 +711,195 @@ export function ParameterProgress({
         URL.revokeObjectURL(url);
     };
 
+    const datePicker = (
+        <Popover open={pickerOpen} onOpenChange={(o) => { setPickerOpen(o); if (o) setTempRange(dateRange || { to: undefined, from: undefined }); }}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    className={isEvolution
+                        ? "justify-between rounded-lg border border-gray-200 bg-white text-[13px] font-normal text-gray-700 h-9 px-3 gap-2"
+                        : "w-full justify-between rounded-xl border border-gray-200 bg-white text-sm font-normal text-gray-600 h-10"}
+                >
+                    <div className="flex items-center gap-2">
+                        <Calendar className={isEvolution ? "h-3.5 w-3.5 text-gray-500" : "h-4 w-4 text-primary"} />
+                        <span>
+                            {dateRange?.from && dateRange.to
+                                ? `${format(dateRange.from, "d MMM, yyyy")} - ${format(dateRange.to, "d MMM, yyyy")}`
+                                : t("reading.progress.selectDates")}
+                        </span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-lg z-50" align="start">
+                <CalendarComponent
+                    mode="range"
+                    selected={{ from: tempRange.from, to: tempRange.to }}
+                    onSelect={(range) =>
+                        setTempRange({ from: range?.from, to: range?.to })
+                    }
+                    numberOfMonths={2}
+                />
+                <div className="flex items-center justify-end gap-2 p-2">
+                    <Button
+                        variant="secondary"
+                        className="rounded-md"
+                        onClick={() => { setPickerOpen(false); }}
+                    >
+                        {t("reading.progress.cancel")}
+                    </Button>
+                    <Button
+                        className="rounded-md"
+                        disabled={!tempRange.from || !tempRange.to}
+                        onClick={() => { if (tempRange?.from && tempRange?.to && onDateRangeChange) { onDateRangeChange(tempRange); setPickerOpen(false); } }}
+                    >
+                        {t("reading.progress.apply")}
+                    </Button>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+
+    const renderChartCard = (param: typeof allParameters[number]) => {
+        const values = param.data.map((d) => d.value);
+        const maxV = values.length ? Math.max(...values) : undefined;
+        const peakIdx = values.length ? values.indexOf(maxV as number) : -1;
+        const peakLabel = peakIdx >= 0 ? param.data[peakIdx].label : undefined;
+        const stroke = isEvolution ? "#7B7DDB" : param.color;
+        return (
+            <div key={param.key} className={isEvolution
+                ? "rounded-2xl border border-gray-200 bg-white p-4"
+                : "rounded-2xl border border-gray-100 bg-white p-4"}>
+                <div className="flex items-start justify-between mb-3">
+                    <div>
+                        <h3 className={isEvolution ? "text-[18px] font-extrabold text-gray-900" : "text-sm font-bold text-gray-900"}>{param.name}</h3>
+                        <p className={isEvolution ? "text-[13px] text-gray-500 mt-0.5" : "text-xs text-gray-500"}>
+                            {t("reading.progress.normalColon")} {param.normalValue}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => handleExport(param)}
+                        className={isEvolution
+                            ? "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                            : "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-blue-50 rounded-full hover:bg-blue-100 transition-colors"}
+                    >
+                        <Download className="h-3.5 w-3.5" />
+                        {t("reading.progress.export")}
+                    </button>
+                </div>
+
+                {viewMode === "graph" ? (
+                    <div className={isEvolution ? "h-56" : "h-48"}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart
+                                data={param.data.map((d) => ({ ...d, month: d.label }))}
+                                margin={{ top: 18, right: 10, left: isEvolution ? -10 : -20, bottom: 0 }}
+                            >
+                                {isEvolution ? (
+                                    <CartesianGrid strokeDasharray="0" stroke="#F1F2F4" vertical={false} />
+                                ) : null}
+                                <XAxis
+                                    dataKey="month"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                                    tickFormatter={(value) => value.slice(0, 3)}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                                    domain={isEvolution ? [0, "dataMax + 5"] : ["dataMin - 1", "dataMax + 1"]}
+                                    tickFormatter={isEvolution ? (v) => (v < 10 ? `0${v}` : `${v}`) : undefined}
+                                />
+                                {isEvolution && maxV !== undefined ? (
+                                    <ReferenceLine y={maxV} stroke="#7B7DDB" strokeDasharray="4 4" strokeOpacity={0.7} />
+                                ) : null}
+                                {isEvolution && peakLabel ? (
+                                    <ReferenceLine x={peakLabel} stroke="#7B7DDB" strokeDasharray="4 4" strokeOpacity={0.7} />
+                                ) : null}
+                                <Tooltip content={isEvolution ? <EvolutionTooltip /> : <CustomTooltip />} cursor={false} />
+                                <Line
+                                    type="monotone"
+                                    dataKey="value"
+                                    stroke={stroke}
+                                    strokeWidth={isEvolution ? 2.2 : 2.5}
+                                    dot={false}
+                                    activeDot={{
+                                        r: 5,
+                                        fill: stroke,
+                                        stroke: "#fff",
+                                        strokeWidth: 2,
+                                    }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                ) : (
+                    <div className="overflow-hidden">
+                        <div className="flex justify-between text-xs text-gray-400 border-b border-gray-100 pb-2 mb-1">
+                            <span>{t("reading.progress.month")}</span>
+                            <span>{t("reading.progress.value")}</span>
+                        </div>
+                        <div className="divide-y divide-gray-50">
+                            {param.data.map((item) => (
+                                <div
+                                    key={item.label}
+                                    className="flex justify-between py-2.5 text-sm text-gray-700"
+                                >
+                                    <span>{item.label}</span>
+                                    <span className="font-medium">{item.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    if (isEvolution) {
+        return (
+            <div className="w-full space-y-4">
+                {/* Header card */}
+                <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                    <h2 className="text-[20px] font-extrabold text-gray-900 leading-tight">
+                        {t("reading.progress.parameterEvolution")}
+                    </h2>
+                    <p className="text-[13px] text-gray-500 mt-1 leading-snug">
+                        {t("reading.progress.parameterEvolutionDesc")}
+                    </p>
+                    <div className="flex items-center justify-between gap-3 mt-3">
+                        <div className="flex-1 min-w-0">{datePicker}</div>
+                        <div className="flex items-center gap-3 text-[13px]">
+                            <button
+                                onClick={() => setViewMode("graph")}
+                                className={viewMode === "graph"
+                                    ? "text-primary underline underline-offset-2 font-medium"
+                                    : "text-gray-700"}
+                            >
+                                {t("reading.progress.graph")}
+                            </button>
+                            <button
+                                onClick={() => setViewMode("table")}
+                                className={viewMode === "table"
+                                    ? "text-primary underline underline-offset-2 font-medium"
+                                    : "text-gray-700"}
+                            >
+                                {t("reading.progress.table")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Chart cards */}
+                <div className="space-y-4">
+                    {allParameters.map((param) => renderChartCard(param))}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             {/* Header */}
@@ -690,52 +913,7 @@ export function ParameterProgress({
             </div>
 
             {/* Date Range Picker */}
-            <div className="mb-4">
-                <Popover open={pickerOpen} onOpenChange={(o) => { setPickerOpen(o); if (o) setTempRange(dateRange || { to: undefined, from: undefined }); }}>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className="w-full justify-between rounded-xl border border-gray-200 bg-white text-sm font-normal text-gray-600 h-10"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-primary" />
-                                <span>
-                                    {dateRange?.from && dateRange.to
-                                        ? `${format(dateRange.from, "d MMM, yyyy")} - ${format(dateRange.to, "d MMM, yyyy")}`
-                                        : t("reading.progress.selectDates")}
-                                </span>
-                            </div>
-                            <ChevronDown className="h-4 w-4 text-gray-400" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-lg z-50" align="start">
-                        <CalendarComponent
-                            mode="range"
-                            selected={{ from: tempRange.from, to: tempRange.to }}
-                            onSelect={(range) =>
-                                setTempRange({ from: range?.from, to: range?.to })
-                            }
-                            numberOfMonths={2}
-                        />
-                        <div className="flex items-center justify-end gap-2 p-2">
-                            <Button
-                                variant="secondary"
-                                className="rounded-md"
-                                onClick={() => { setPickerOpen(false); }}
-                            >
-                                {t("reading.progress.cancel")}
-                            </Button>
-                            <Button
-                                className="rounded-md"
-                                disabled={!tempRange.from || !tempRange.to}
-                                onClick={() => { if (tempRange?.from && tempRange?.to && onDateRangeChange) { onDateRangeChange(tempRange); setPickerOpen(false); } }}
-                            >
-                                {t("reading.progress.apply")}
-                            </Button>
-                        </div>
-                    </PopoverContent>
-                </Popover>
-            </div>
+            <div className="mb-4">{datePicker}</div>
 
             {/* View Mode Toggle */}
             <div className="flex gap-4 mb-5 border-b border-gray-200">
@@ -761,84 +939,7 @@ export function ParameterProgress({
 
             {/* Individual Parameter Cards */}
             <div className="space-y-4">
-                {allParameters.map((param) => (
-                    <div key={param.key} className="rounded-2xl border border-gray-100 bg-white p-4">
-                        {/* Parameter Header */}
-                        <div className="flex items-start justify-between mb-3">
-                            <div>
-                                <h3 className="text-sm font-bold text-gray-900">{param.name}</h3>
-                                <p className="text-xs text-gray-500">
-                                    {t("reading.progress.normalColon")} {param.normalValue}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => handleExport(param)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-blue-50 rounded-full hover:bg-blue-100 transition-colors"
-                            >
-                                <Download className="h-3.5 w-3.5" />
-                                {t("reading.progress.export")}
-                            </button>
-                        </div>
-
-                        {/* Chart or Table */}
-                        {viewMode === "graph" ? (
-                            <div className="h-48">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart
-                                        data={param.data.map((d) => ({ ...d, month: d.label }))}
-                                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                                    >
-                                        <XAxis
-                                            dataKey="month"
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fontSize: 11, fill: "#9CA3AF" }}
-                                            tickFormatter={(value) => value.slice(0, 3)}
-                                        />
-                                        <YAxis
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fontSize: 11, fill: "#9CA3AF" }}
-                                            domain={["dataMin - 1", "dataMax + 1"]}
-                                        />
-                                        <Tooltip content={<CustomTooltip />} cursor={false} />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="value"
-                                            stroke={param.color}
-                                            strokeWidth={2.5}
-                                            dot={false}
-                                            activeDot={{
-                                                r: 5,
-                                                fill: param.color,
-                                                stroke: "#fff",
-                                                strokeWidth: 2,
-                                            }}
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        ) : (
-                            <div className="overflow-hidden">
-                                <div className="flex justify-between text-xs text-gray-400 border-b border-gray-100 pb-2 mb-1">
-                                    <span>{t("reading.progress.month")}</span>
-                                    <span>{t("reading.progress.value")}</span>
-                                </div>
-                                <div className="divide-y divide-gray-50">
-                                    {param.data.map((item) => (
-                                        <div
-                                            key={item.label}
-                                            className="flex justify-between py-2.5 text-sm text-gray-700"
-                                        >
-                                            <span>{item.label}</span>
-                                            <span className="font-medium">{item.value}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                ))}
+                {allParameters.map((param) => renderChartCard(param))}
             </div>
         </div>
     );

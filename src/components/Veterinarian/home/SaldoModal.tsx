@@ -16,8 +16,8 @@ function maskPixKey(payoutMethod: any, fallback = '***222.***-00'): string {
     typeof payoutMethod.pixKey === 'string'
       ? payoutMethod.pixKey
       : typeof payoutMethod.holderCpfCnpj === 'string'
-      ? payoutMethod.holderCpfCnpj
-      : '';
+        ? payoutMethod.holderCpfCnpj
+        : '';
   const digits = raw.replace(/\D/g, '');
   if (digits.length >= 6) return `***${digits.slice(3, 6)}.***-${digits.slice(-2)}`;
   return raw ? '***' : fallback;
@@ -40,8 +40,8 @@ const SaldoModal: React.FC<SaldoModalProps> = ({ isOpen, onClose }) => {
     payoutMethod?.type === 'pix'
       ? `PIX (CPF/CNPJ): ${maskPixKey(payoutMethod)}`
       : payoutMethod?.type === 'bank'
-      ? `Banco: ${payoutMethod.bankName || ''}`
-      : 'PIX (CPF/CNPJ): ***222.***-00';
+        ? `Banco: ${payoutMethod.bankName || ''}`
+        : 'PIX (CPF/CNPJ): ***222.***-00';
 
   const fetchBalance = useCallback(async () => {
     try {
@@ -144,7 +144,7 @@ const SaldoModal: React.FC<SaldoModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      className="fixed inset-0 z-150 flex items-center justify-center px-4"
       style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
       onClick={handleBackdropClick}
     >

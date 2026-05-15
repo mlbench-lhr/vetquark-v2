@@ -30,16 +30,20 @@ const BalanceCard: React.FC = () => {
   }, []);
 
   return (
-    <div className="rounded-2xl bg-primary p-5 mt-5">
+    <div className="rounded-2xl bg-primary p-5 mt-5 relative overflow-hidden">
+      <StoreModal isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       {/* Top row: label + store button */}
+      <div className='w-50 h-50 rounded-full bg-white/5 absolute -top-26 -right-12 flex justify-center items-center'>
+        <div className='w-[80%] h-[80%] rounded-full bg-white/10'></div>
+      </div>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-semibold tracking-wider text-white/80 uppercase">
+        <span className="text-[10px] font-semibold tracking-wider text-white uppercase">
           {t('dashboard.availableBalance')}
         </span>
         <button
           type="button"
-          onClick={() => setStoreOpen(true)}
-          className="flex items-center gap-1.5 bg-white/20 rounded-lg px-3 py-1.5 cursor-pointer"
+          onClick={() => { setStoreOpen(true) }}
+          className="z-50 flex items-center gap-1.5 bg-white/30 rounded-2xl px-3 py-1.5 cursor-pointer"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="9" cy="21" r="1" />
@@ -52,7 +56,7 @@ const BalanceCard: React.FC = () => {
 
       {/* Balance amount */}
       <div className="flex items-baseline gap-1.5 mb-4">
-        <span className="text-white/70 text-sm font-medium">R$</span>
+        <span className="text-white text-sm font-medium">R$</span>
         <span className="text-white text-[36px] font-bold leading-none tracking-tight">
           {walletBalance.replace('R$', '').replace('R$ ', '').trim()}
         </span>
@@ -62,18 +66,17 @@ const BalanceCard: React.FC = () => {
       <div className="flex gap-3">
         <Link
           href="/Veterinarian/wallet"
-          className="flex-1 bg-white text-primary font-semibold text-sm py-2.5 rounded-xl text-center"
+          className="flex-1 bg-white text-primary font-semibold text-sm py-3 rounded-2xl text-center"
         >
           {t('dashboard.withdraw')}
         </Link>
         <Link
           href="/Veterinarian/wallet"
-          className="flex-1 bg-white/20 text-white font-semibold text-sm py-2.5 rounded-xl text-center"
+          className="flex-1 bg-transparent border border-white font-medium text-sm text-white py-3 rounded-2xl text-center"
         >
           {t('dashboard.withdrawalHistory')}
         </Link>
       </div>
-      <StoreModal isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
     </div>
   );
 };

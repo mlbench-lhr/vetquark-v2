@@ -107,7 +107,7 @@ export default function MenuPage() {
               <Image width={100} height={100} src={avatarUrl} alt={name} className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[20px] font-semibold leading-[24px] text-[#111827]">
+              <div className="truncate text-[20px] font-semibold leading-[24px] text-black/70">
                 {name}
               </div>
               <div className="truncate text-[14px] leading-[18px] text-[#9AA4AF]">
@@ -117,7 +117,7 @@ export default function MenuPage() {
           </div>
           <Link
             href="/Guardian/Menu/EditProfile"
-            className="flex h-10 items-center gap-2 rounded-full bg-[#F5F6F6] px-5 text-[14px] font-medium text-[#111827]"
+            className="flex h-10 items-center gap-2 rounded-full bg-[#F5F6F6] px-5 text-[14px] font-medium text-black/70"
           >
             <Pencil className="h-4 w-4" />
             {t("menu.edit")}
@@ -130,11 +130,11 @@ export default function MenuPage() {
           {menuItems.map((item) => {
             const iconNode =
               item.icon.kind === "text" ? (
-                <span className="text-[16px] font-semibold leading-none text-[#3F78D8]">
+                <span className="text-[16px] font-semibold leading-none text-primary">
                   {item.icon.value}
                 </span>
               ) : (
-                <item.icon.Component className="h-5 w-5 text-[#3F78D8]" />
+                <item.icon.Component className="h-5 w-5 text-primary" />
               );
 
             const row = (
@@ -143,14 +143,14 @@ export default function MenuPage() {
                   {iconNode}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[16px] font-medium leading-[20px] text-[#111827]">
+                  <div className="truncate text-[16px] font-medium leading-[20px] text-black/70">
                     {item.title}
                   </div>
                   <div className="mt-1 truncate text-[13px] leading-[16px] text-[#9AA4AF]">
                     {item.description}
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 flex-shrink-0 text-[#3F78D8]" />
+                <ChevronRight className="h-5 w-5 flex-shrink-0 text-primary" />
               </div>
             );
 

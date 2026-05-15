@@ -54,10 +54,10 @@ export default function Page() {
   );
 
   return (
-    <div className=" bg-white">
+    <div className="">
       <Header title={t("settings.languageTitle")} />
 
-      <div className="flex min-h-[calc(100dvh-72px)] flex-col  pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
+      <div className="flex min-h-[calc(100dvh-72px)] flex-col pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div className="space-y-3">
           {items.map((item) => {
             const selected = item.id === lang;
@@ -70,37 +70,34 @@ export default function Page() {
                   i18n.changeLanguage(item.id);
                   if (typeof window !== "undefined") window.localStorage.setItem("ui_language_v1", item.id);
                 }}
-                className={`flex h-[56px] w-full items-center justify-between rounded-[16px] px-4 ${selected ? "bg-[#EEF4FF]" : "bg-[#F5F6F6]"
+                className={`flex h-[40px] w-full items-center justify-between rounded-lg px-4 transition-colors ${selected ? "bg-[#E5EDF9]" : "bg-[#EBEBF0]"
                   }`}
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-[18px] leading-none">{item.flag}</span>
-                  <div
-                    className={`text-[16px] font-medium leading-[20px] ${selected ? "text-[#3F78D8]" : "text-[#111827]"
-                      }`}
-                  >
-                    {item.label}
-                  </div>
+                <div
+                  className={`text-[12px] font-medium leading-[20px] ${selected ? "text-primary" : "text-black/70"
+                    }`}
+                >
+                  {item.label}
                 </div>
 
                 {selected ? (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#3F78D8]">
-                    <Check className="h-4 w-4 text-white" />
+                  <div className="flex h-[20px] w-[20px] items-center justify-center rounded-full bg-primary">
+                    <Check className="h-[14px] w-[14px] text-white" strokeWidth={3} />
                   </div>
                 ) : (
-                  <div className="h-6 w-6" />
+                  <div className="h-[20px] w-[20px]" />
                 )}
               </button>
             );
           })}
         </div>
 
-        <div className="mt-auto pt-10">
+        <div className="mt-5">
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[56px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+            className="h-[30px] w-full rounded-md bg-primary text-[12px] font-bold text-white disabled:opacity-60"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

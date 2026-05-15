@@ -734,159 +734,176 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
   return (
     <div className="">
-      <h2 className="text-[20px] font-bold text-[#111827]">{t('reading.timer.title')}</h2>
-      <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">{t('reading.timer.desc')}</p>
+      {/* Title + Camera card — single white rounded card */}
+      <div className="bg-white rounded-[20px] border border-[#E5E7EB] shadow-sm overflow-hidden">
+        {/* Title section */}
+        <div className="px-5 pt-5 pb-3">
+          <h2 className="text-[22px] font-bold text-black/80 leading-tight">{t('reading.timer.title')}</h2>
+          <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">{t('reading.timer.desc')}</p>
+        </div>
 
-      {/* Camera view */}
-      <div className="mt-4 relative rounded-[20px] overflow-hidden bg-black" style={{ aspectRatio: '3/4' }}>
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className={`h-full w-full object-cover transition ${analyzing ? 'opacity-70 blur-[1px]' : ''}`}
-        />
-        <canvas ref={canvasRef} className="hidden" />
+        {/* Camera view — fills card, no extra gap */}
+        <div className="relative bg-black" style={{ aspectRatio: '4/5' }}>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`h-full w-full object-cover transition ${analyzing ? 'opacity-70 blur-[1px]' : ''}`}
+          />
+          <canvas ref={canvasRef} className="hidden" />
 
-        {/* Strip guide overlay */}
-        {cameraReady && (
-          <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
-            <div className="w-10 h-[88%] rounded-xl border-2 border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]" />
-          </div>
-        )}
-
-        {/* Camera not ready */}
-        {!cameraReady && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center">
-            <span className="text-sm text-white/80 px-4 text-center">
-              {cameraError || t('reading.timer.startingCamera')}
-            </span>
-          </div>
-        )}
-
-        {/* Tap to play */}
-        {needsTap && (
-          <button
-            type="button"
-            onClick={() => videoRef.current?.play()}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/60 rounded-full text-white text-sm"
-          >
-            {t('reading.timer.tapToStartCamera')}
-          </button>
-        )}
-
-        {/* Quality / camera status badge */}
-        {cameraReady && !analyzing && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
-            <div className={`px-4 py-2 rounded-full text-[13px] font-semibold ${qualityOk ? 'bg-[#F5A623] text-white' : 'bg-black/60 text-white/90'}`}>
-              {qualityOk
-                ? t('reading.timer.cameraReadyPosition')
-                : cameraError
-                  ? cameraError
-                  : qualityMessage}
+          {/* Strip guide overlay */}
+          {cameraReady && (
+            <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+              <div className="w-10 h-[88%] rounded-xl border-2 border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.40)]" />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Analyzing overlay */}
-        {analyzing && (
-          <div className="absolute inset-0 z-30 flex items-end p-3">
-            <div className="w-full rounded-2xl bg-black/55 backdrop-blur-sm border border-white/10 px-4 py-3">
-              <div className="flex items-center gap-2 text-white">
-                <div className="h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
-                <div className="text-sm font-medium">{t('reading.timer.analyzing')}</div>
-              </div>
-              <div className="mt-2 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-                <div className="progress-bar h-full bg-white/60 rounded-full" />
+          {/* Camera not ready */}
+          {!cameraReady && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center">
+              <span className="text-sm text-white/80 px-4 text-center">
+                {cameraError || t('reading.timer.startingCamera')}
+              </span>
+            </div>
+          )}
+
+          {/* Tap to play */}
+          {needsTap && (
+            <button
+              type="button"
+              onClick={() => videoRef.current?.play()}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/60 rounded-full text-white text-sm"
+            >
+              {t('reading.timer.tapToStartCamera')}
+            </button>
+          )}
+
+          {/* Quality / camera status badge — amber pill */}
+          {cameraReady && !analyzing && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
+              <div className={`px-5 py-[9px] rounded-full text-[13px] font-semibold text-white text-center leading-tight ${qualityOk ? 'bg-[#F5A623]' : 'bg-[#F5A623]/80'}`}>
+                {qualityOk
+                  ? t('reading.timer.cameraReadyPosition')
+                  : cameraError
+                    ? cameraError
+                    : qualityMessage}
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+
+          {/* Analyzing overlay */}
+          {analyzing && (
+            <div className="absolute inset-0 z-30 flex items-end p-3">
+              <div className="w-full rounded-2xl bg-black/55 backdrop-blur-sm border border-white/10 px-4 py-3">
+                <div className="flex items-center gap-2 text-white">
+                  <div className="h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
+                  <div className="text-sm font-medium">{t('reading.timer.analyzing')}</div>
+                </div>
+                <div className="mt-2 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className="progress-bar h-full bg-white/60 rounded-full" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>{/* end white card */}
 
       {/* Timer row: circle + start button */}
       <div className="mt-4 flex items-center gap-3">
         {/* Circular timer display */}
-        <div className="w-[72px] h-[72px] rounded-full border-2 border-[#E5E7EB] bg-white flex flex-col items-center justify-center flex-shrink-0 shadow-sm">
-          <div className="flex items-end gap-0.5">
-            <span className="text-[22px] font-bold text-[#111827] leading-none">{displayElapsed}</span>
-            <span className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">s</span>
+        <div className="w-[82px] h-[82px] rounded-full border border-[#E5E7EB] bg-white flex flex-col items-center justify-center flex-shrink-0 ">
+          <div className="flex items-end gap-[2px] leading-none">
+            <span className="text-[26px] font-bold text-black/80 leading-none">{displayElapsed}</span>
+            <span className="text-[13px] font-semibold text-black/80 mb-[3px]">s</span>
           </div>
-          <div className="text-[9px] text-[#9CA3AF] font-medium uppercase tracking-wide">
-            DE {selectedSeconds}S
+          <div className="text-[10px] text-[#9CA3AF] font-medium uppercase tracking-wide mt-[1px]">
+            DE
+          </div>
+          <div className="text-[10px] text-[#9CA3AF] font-medium uppercase tracking-wide leading-none">
+            {selectedSeconds}S
           </div>
         </div>
+        <div className="w-[calc(100%-86px)] mt-4 flex flex-col items-center gap-">
 
-        {/* Start / pause button */}
-        <button
-          onClick={handlePrimaryClick}
-          disabled={analysisFailed || (!started && !cameraReady)}
-          className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-full font-semibold text-[15px] transition-all ${analysisFailed || (!started && !cameraReady)
-            ? 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
-            : 'bg-[#3F78D8] text-white shadow-sm'
-            }`}
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-            <path d="M7 2L20 12L7 22V2Z" />
-          </svg>
-          {primaryButtonLabel}
-        </button>
+          {/* Start / pause button */}
+          <button
+            onClick={handlePrimaryClick}
+            disabled={analysisFailed || (!started && !cameraReady)}
+            className={`w-full flex-1 flex items-center justify-center gap-2 py-[15px] rounded-xl font-bold text-[16px] transition-all ${analysisFailed || (!started && !cameraReady)
+              ? 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+              : 'bg-primary text-white -[0_4px_16px_-4px_rgba(63,120,216,0.5)]'
+              }`}
+          >
+            {/* Lightning bolt icon */}
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path d="M13 2L4.5 13.5H11L10 22L20.5 10H14L13 2Z" />
+            </svg>
+            {primaryButtonLabel}
+          </button>
+          {/* Time chips */}
+          <div className="w-full mt-3 flex gap-2 justify-center">
+            {marks.map((m) => {
+              const isAutoCaptureMark = autoCaptureAtSeconds.includes(m)
+              const isCaptured = isAutoCaptureMark && captureProgress.captured.has(m)
+              const isSelected = m === selectedSeconds
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => !started && onChangeSelectedSeconds(m)}
+                  disabled={started}
+                  className={`px-4 py-[6px] rounded-full text-[13px] font-medium border transition-all ${isCaptured
+                    ? 'bg-primary border-primary text-white'
+                    : isSelected && !started
+                      ? 'border-primary text-primary bg-white'
+                      : 'bg-white border-[#E5E7EB] text-[#6B7280]'
+                    }`}
+                >
+                  {m}s
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
-      {/* Time chips */}
-      <div className="mt-3 flex gap-2 justify-center">
-        {marks.map((m) => {
-          const isAutoCaptureMark = autoCaptureAtSeconds.includes(m)
-          const isCaptured = isAutoCaptureMark && captureProgress.captured.has(m)
-          const isSelected = m === selectedSeconds
-          return (
-            <button
-              key={m}
-              type="button"
-              onClick={() => !started && onChangeSelectedSeconds(m)}
-              disabled={started}
-              className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${isCaptured
-                ? 'bg-[#3F78D8] border-[#3F78D8] text-white'
-                : isSelected && !started
-                  ? 'bg-white border-[#3F78D8] text-[#3F78D8]'
-                  : 'bg-white border-[#E5E7EB] text-[#6B7280]'
-                }`}
-            >
-              {m}s
-            </button>
-          )
-        })}
-      </div>
 
+
+      {/* Action buttons */}
       <div className="mt-5 space-y-3">
+        {/* Analisar e Avançar */}
         <button
           onClick={handleAnalyze}
           disabled={!captureProgress.allDone || analyzing}
-          className={`w-full py-4 rounded-full font-semibold text-[15px] transition-all ${captureProgress.allDone && !analyzing
-            ? 'bg-[#3F78D8] text-white shadow-sm'
-            : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+          className={`w-full py-[15px] rounded-xl font-bold text-[16px] transition-all shadow-[0_4px_16px_-4px_rgba(63,120,216,0.4)] ${captureProgress.allDone && !analyzing
+            ? 'bg-primary text-white'
+            : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed shadow-none'
             }`}
         >
           {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
         </button>
 
+        {/* Reiniciar — shown when started/done/failed */}
         {(captureProgress.allDone || analysisFailed || started) && (
           <button
             onClick={handleRetry}
             disabled={analyzing}
-            className={`w-full py-4 rounded-full font-medium text-[15px] border border-[#E5E7EB] bg-white text-[#374151] transition-all ${analyzing ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+            className={`w-full py-[15px] rounded-xl font-semibold text-[16px] bg-[#EEF1F5] text-[#374151] transition-all ${analyzing ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {t('reading.timer.reiniciar')}
           </button>
         )}
 
+        {/* Cancelar */}
         <button
           onClick={onBack}
-          className="w-full py-4 rounded-full border border-[#E5E7EB] bg-white text-[#374151] font-medium text-[15px]"
+          className="w-full mb-4 py-[15px] rounded-xl border border-[#E5E7EB] bg-white text-[#374151] font-semibold text-[16px]"
         >
-          {t('reading.timer.cancel')}
-        </button>
+          {/* {t('reading.timer.cancel')} */}
+
+          Cancelar        </button>
       </div>
     </div>
   )

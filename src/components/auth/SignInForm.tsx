@@ -1,223 +1,23 @@
-// 'use client'
-// import React, { useState } from 'react';
-// import { Shield, User } from 'lucide-react';
-// import Image from 'next/image';
-// import { useRouter } from 'next/navigation';
-
-// type ProfileType = 'veterinarian' | 'tutor';
-
-// export default function SignInForm() {
-//   const router = useRouter();
-//   const [profile, setProfile] = useState<ProfileType>('veterinarian');
-//   const [email, setEmail] = useState('');
-//   const [password, setPassword] = useState('');
-
-//   const handleSubmit = () => {
-//     console.log('Login attempt:', { profile, email, password });
-//     router.push('/Guardian/home');
-//     // Add your login logic here
-//   };
-
-//   return (
-//     // <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-//     <div className="w-full  bg-white rounded-2xl">
-//       {/* Logo */}
-//       {/* <div className="text-center relative pb-3 overflow-hidden" style={{ height: '184px' }}>
-//         <svg
-//           className="absolute inset-0"
-//           style={{ top: '0', width: '100%', height: '184px' }}
-//           viewBox="0 0 1000 184"
-//           preserveAspectRatio="none"
-//         >
-//           <g>
-//             <path
-//               d="M 0 0 A 500 160 0 0 0 1000 0"
-//               stroke="none"
-//               fill="none"
-//             />
-//             <path
-//               d="M 0 0 A 500 160 0 0 0 1000 0"
-//               stroke="rgba(0,0,0,0.18)"
-//               strokeWidth="2"
-//               fill="none"
-//               transform="translate(0,0)"
-//               style={{ filter: 'blur(2px)' }}
-//             />
-//           </g>
-//         </svg>
-//         <div className="absolute inset-0 flex items-center justify-center z-10">
-//           <Image
-//             src="/images/vertrix.svg"
-//             alt="VetQuark"
-//             width={130}
-//             height={48}
-//             priority
-//           />
-//         </div>
-//       </div> */}
-
-//       <div className="px-4">
-//         {/* Welcome Section */}
-//         <div className="text-center mb-4">
-//           <h2 className="text-4xl font-bold text-primary mb-2">
-//             Welcome
-//           </h2>
-//           <p className="text-gray-600">
-//             Select your profile
-//             <br />
-//             and access your account
-//           </p>
-//         </div>
-
-//         {/* Profile Selection */}
-//         <div className="flex gap-3 mb-6">
-//           <button
-//             type="button"
-//             onClick={() => setProfile('veterinarian')}
-//             className={`flex-1 py-1 px-4 rounded-full border-2 transition-all flex items-center justify-center gap-2 ${profile === 'veterinarian'
-//               ? 'border-primary  text-primary'
-//               : 'border-gray-300 text-gray-600 hover:border-gray-400'
-//               }`}
-//           >
-//             {profile === 'veterinarian' ? (
-//               <Image
-//                 src="/images/auth/sheild-active.svg"
-//                 alt="user"
-//                 width={16}
-//                 height={16} />
-//             ) : (
-//               <Image
-//                 src="/images/auth/shield.svg"
-//                 alt="user"
-//                 width={16}
-//                 height={16} />
-//             )}
-//             <span className="font-medium">Veterinarian</span>
-//           </button>
-//           <button
-//             type="button"
-//             onClick={() => setProfile('tutor')}
-//             className={`flex-1 py-1 px-4 rounded-full border-2 transition-all flex items-center justify-center gap-2 ${profile === 'tutor'
-//               ? 'border-primary  text-primary'
-//               : 'border-gray-300 text-gray-600 hover:border-gray-400'
-//               }`}
-//           >
-//             {profile === 'tutor' ? (
-//               <Image
-//                 src="/images/auth/user-active.svg"
-//                 alt="user"
-//                 width={16}
-//                 height={16} />
-//             ) : (
-//               <Image
-//                 src="/images/auth/user.svg"
-//                 alt="user"
-//                 width={16}
-//                 height={16} />
-//             )}
-
-//             <span className="font-medium">Tutor</span>
-//           </button>
-//         </div>
-
-//         {/* Login Form */}
-//         <div className="space-y-2">
-//           <div>
-//             <input
-//               type="email"
-//               placeholder="Email"
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
-//               className="w-full px-4 py-4 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
-//             />
-//           </div>
-
-//           <div>
-//             <input
-//               type="password"
-//               placeholder="Password"
-//               value={password}
-//               onChange={(e) => setPassword(e.target.value)}
-//               className="w-full px-4 py-4 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
-//             />
-//           </div>
-
-//           <div className="text-center">
-//             <button
-//               onClick={() => console.log('Forgot password')}
-//               className="text-primary hover:text-blue-700 text-sm font-medium bg-transparent border-0 cursor-pointer"
-//             >
-//               Forgot your password?
-//             </button>
-//           </div>
-
-//           <button
-//             onClick={handleSubmit}
-//             className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors shadow-md cursor-pointer border-0"
-//           >
-//             Log In
-//           </button>
-//         </div>
-
-//         {/* Create Account Link */}
-//         <div className="text-center mt-3">
-//           <button
-//             onClick={() => router.push('/signup')}
-//             className="text-primary hover:text-blue-700 font-medium bg-transparent border-0 cursor-pointer"
-//           >
-//             Create Account
-//           </button>
-//         </div>
-
-//         {/* Footer Links */}
-//         <div className="text-center mt-4 text-sm text-gray-500">
-//           <button
-//             onClick={() => console.log('Terms')}
-//             className="hover:text-gray-700 bg-transparent border-0 cursor-pointer"
-//           >
-//             Terms of Service
-//           </button>
-//           <span className="mx-2">•</span>
-//           <button
-//             onClick={() => console.log('Privacy')}
-//             className="hover:text-gray-700 bg-transparent border-0 cursor-pointer"
-//           >
-//             Privacy Policy
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//     // </div>
-//   );
-// }
-
-
-
 "use client";
 import React, { useState } from "react";
-import { Eye } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useAppDispatch } from "@/store/hooks";
 import { setProfile as setUserProfile } from "@/store/userProfileSlice";
 import { useTranslation } from "react-i18next";
-import i18n, { isAppLanguage, type AppLanguage } from "@/i18n/i18n";
 import { Modal } from "@/components/ui/modal";
 import EmailVerification from "@/components/auth/EmailVerification";
 import Link from "next/link";
-
-type ProfileType = "veterinarian";
+import Image from "next/image";
 
 export default function SignInForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const [profile] = useState<ProfileType>("veterinarian");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
-  const [language, setLanguage] = useState<AppLanguage>(() => (isAppLanguage(i18n.language) ? i18n.language : "en"));
   const [twoFARequired, setTwoFARequired] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
@@ -233,13 +33,12 @@ export default function SignInForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role: profile }),
+        body: JSON.stringify({ email, password, role: "veterinarian" }),
         credentials: "include",
       });
       const data = await res.json();
       if (!res.ok) {
         toast.error(typeof data.error === "string" ? data.error : t("auth.loginFailed"));
-        console.error("Login error:", data.error || data);
         return;
       }
       if (data?.twoFactorRequired) {
@@ -307,55 +106,40 @@ export default function SignInForm() {
     }
   };
 
-  const handleSignUp = () => {
-    router.push("/signup");
-  };
-  const handleForgotPassword = () => {
-    router.push("/forget-password");
-  };
-
   return (
-    <div className="min-h-[calc(100dvh-32px)] flex flex-col bg-white">
-      {/* Language Selector */}
-      <div className="flex items-center justify-end px-6 pt-4">
-        <select
-          value={language}
-          onChange={(e) => {
-            const next = String(e.target.value || "").trim();
-            if (!isAppLanguage(next)) return;
-            setLanguage(next);
-            i18n.changeLanguage(next);
-            if (typeof window !== "undefined") window.localStorage.setItem("ui_language_v1", next);
-          }}
-          className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg transition-colors border-0 cursor-pointer text-gray-700 text-sm"
-        >
-          <option value="en">🇬🇧 {t("common.english")}</option>
-          <option value="pt">{"\u{1F1E7}\u{1F1F7}"} {t("common.portuguese")}</option>
-        </select>
-      </div>
+    <div className="min-h-[100dvh] flex flex-col bg-[#F2F2F7]">
+      <div className="flex-1 flex flex-col px-5 pb-10">
+        {/* Logo with circular backdrop */}
+        <div className=" flex items-center justify-center h-[180px] overflow-hidden mb-4">
+          <div className="absolute -top-[17%] left-1/2 -translate-x-1/2 w-[100vw]"  >
+            <Image src={"/Ellipse 5.svg"} alt="edit icon" className="w-[100vw] h-[100vw]" width={100} height={100} />
 
-      <div className="flex-1 flex flex-col px-6 pt-6 pb-8">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <span className="text-3xl font-bold text-gray-700 tracking-tight">
-            VetQuark<sup className="text-sm font-normal">™</sup>
+          </div>
+          <span className="relative text-[32px] font-bold text-black/70 tracking-tight leading-none mt-6">
+            VetQuark<sup className="text-[13px] font-normal align-super">™</sup>
           </span>
         </div>
 
         {/* Welcome */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-[700] text-primary mb-3">{t("auth.welcome")}</h1>
-          <p className="text-gray-500 text-base">{t("auth.accountTypePrompt")}</p>
+        <div className="text-center mb-8">
+          <h1 className="text-[38px] font-bold text-primary leading-tight mb-2">
+            {t("auth.welcome")}
+          </h1>
+          <p className="text-[#6C6C70] text-[15px] leading-[16px] max-w-[220px] mx-auto">
+            {/* {t("auth.accountTypePrompt")} */}
+            Selecione seu perfil <br />
+            e acesse sua conta
+          </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="email"
             placeholder={t("auth.email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500"
+            className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-black/70! border-0"
           />
 
           <div className="relative">
@@ -364,22 +148,23 @@ export default function SignInForm() {
               placeholder={t("auth.password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-5 py-4 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-gray-800 placeholder-gray-500 pr-12"
+              className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-black/70 text-[15px] placeholder-black/70! border-0 pr-12"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer p-1"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93] bg-transparent border-0 cursor-pointer p-0"
             >
-              <Eye size={20} />
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
+          {/* Forgot password - centered */}
           <div className="text-center pt-1">
             <button
               type="button"
-              onClick={handleForgotPassword}
-              className="text-primary hover:text-blue-700 text-sm font-medium bg-transparent border-0 cursor-pointer"
+              onClick={() => router.push("/forget-password")}
+              className="text-primary text-[14px] font-bold bg-transparent border-0 cursor-pointer"
             >
               {t("auth.forgotPassword")}
             </button>
@@ -388,18 +173,13 @@ export default function SignInForm() {
           <button
             type="submit"
             disabled={verifying}
-            className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-colors cursor-pointer border-0 mt-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-primary text-white font-bold text-[16px] py-[15px] rounded-lg transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed mt-1 shadow-[0_8px_24px_-8px_rgba(63,120,216,0.5)]"
           >
             {verifying ? (
               <span className="inline-flex items-center justify-center gap-2">
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
                 {t("auth.login")}
               </span>
@@ -409,23 +189,23 @@ export default function SignInForm() {
           </button>
         </form>
 
-        {/* Create Account */}
-        <div className="text-center mt-6">
+        {/* Create Account - underlined */}
+        <div className="text-center mt-7">
           <button
-            onClick={handleSignUp}
-            className="text-primary hover:text-blue-700 font-medium bg-transparent border-0 cursor-pointer"
+            onClick={() => router.push("/signup")}
+            className="text-primary text-[15px] font-medium underline underline-offset-2 bg-transparent border-0 cursor-pointer"
           >
             {t("auth.createAccount")}
           </button>
         </div>
 
         {/* Footer */}
-        <div className="mt-auto pt-10 text-center text-sm">
-          <Link href="/legal/terms" className="text-primary hover:text-blue-700">
+        <div className="mt-auto pt-12 text-center text-[12px]">
+          <Link href="/legal/terms" className="text-primary underline underline-offset-1">
             {t("auth.termsOfService")}
           </Link>
-          <span className="mx-2 text-primary">•</span>
-          <Link href="/legal/privacy" className="text-primary hover:text-blue-700">
+          <span className="mx-1 text-primary">•</span>
+          <Link href="/legal/privacy" className="text-primary underline underline-offset-1">
             {t("auth.privacyPolicyFooter")}
           </Link>
         </div>

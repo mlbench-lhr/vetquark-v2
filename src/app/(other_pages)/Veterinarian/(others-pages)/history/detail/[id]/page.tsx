@@ -77,24 +77,47 @@ function normalizePanelCode(value?: string | null) {
   return code ? code : "VETQ_MASTER_360";
 }
 
+const STRIP_COLORS: Record<string, string[]> = {
+  leukocytes: ["white", "#CC93BA", "#966D94", "#8F678C", "#845883"],
+  nitrite: ["white", "#E780AF"],
+  urobilinogen: ["#FBE8D4", "#F8D5CA", "#F6CECE", "#F3BAC3", "#EE9FA4"],
+  protein: ["#FFF6AD", "#F5F2AC", "#E5EAAC", "#C1DDBC", "#9BCEC2", "#7DBBBF"],
+  ph: ["#F6B641", "#F9C551", "#FCD469", "#EDD56B", "#C3C474", "#B0B872", "#8FA971"],
+  blood: ["#F9CD8A", "#CFC69D", "#B0B99B", "#708E85", "#5C8075", "#336F73"],
+  "specific-gravity": ["#3C7F9D", "#899264", "#AAA661", "#B9B062", "#C9B64F", "#D3B94F", "#DAB54C"],
+  "ascorbic-acid": ["#0098BF", "#6FB6CD", "#A7D2D8", "#D3E4D4", "#FDFAD4"],
+  "ketone-bodies": ["#FAE0C7", "#F5C7BD", "#E9B0B0", "#DC99A2", "#C9728E", "#861459"],
+  bilirubin: ["white", "#F8DFEC", "#EFAFCE", "#E780AF"],
+  glucose: ["#B4DDE7", "#ADD4BA", "#BDDAB2", "#C3DAA0", "#CED292", "#BFA471"],
+  microalbumin: ["#CCE6E2", "#B4DCDF", "#9AD1DC", "#7FC7D9"],
+  creatine: ["#E9DF9D", "#D4D39A", "#BDC597", "#AABD96", "#9EB995"],
+  calcium: ["#A7C5D9", "#919FC7", "#7679AE", "#828BBA"],
+  magnesium: ["#0077AB", "#4378A8", "#78578D", "#45669B", "#A85288", "#B6558A"],
+  "ammonium-chloride": ["#4E3122", "#724C36", "#8F6549", "#A27E63", "#B59A80", "#C9B6A0", "#DDD1C2"],
+};
+
+function getStripColor(key: string, selectedIndex: number): string {
+  const colors = STRIP_COLORS[key];
+  if (!colors || colors.length === 0) return "#D1D5DB";
+  const color = colors[Math.min(Math.max(0, selectedIndex), colors.length - 1)];
+  return color === "white" ? "#F3F4F6" : (color || "#D1D5DB");
+}
+
 function ResultRow({ item }: { item: ReadingResult }) {
   const { t } = useTranslation();
-  const isNormal = item.status === "Normal";
-  const dotColor = isNormal ? "#10B981" : "#F59E0B";
+  const dotColor = getStripColor(item.key, item.selectedIndex);
   const value = item.unit ? `${item.valueLabel} ${item.unit}` : item.valueLabel;
   const translatedLabel = translateUrinalysisParameterLabel(t, item.key, item.label);
   return (
-    <div className="bg-white py-4 border-t px-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: dotColor }} />
-          <div className="min-w-0">
-            <p className="truncate text-[14px] font-medium text-gray-900">{translatedLabel}</p>
-            <p className="truncate text-[12px] text-gray-400">{value}</p>
-          </div>
-        </div>
-        <div className="shrink-0" />
+    <div className="flex items-center justify-between py-3 px-4 border-b border-[#F3F4F6] last:border-0">
+      <div className="flex items-center gap-3 min-w-0">
+        <div
+          className="w-[28px] h-[28px] rounded-full flex-shrink-0 border border-black/5"
+          style={{ backgroundColor: dotColor }}
+        />
+        <span className="text-[14px] font-medium text-black/70 truncate">{translatedLabel}</span>
       </div>
+      <span className="text-[13px] text-[#6B7280] flex-shrink-0 ml-2">{value}</span>
     </div>
   );
 }
@@ -412,217 +435,217 @@ export default function ReportDetailsPage() {
   }, [readingId, sendingUpgrade, upgradeProductCode, t]);
 
   return (
-    <div className="min-h-[100dvh w-full bg-white">
-      <div className="mx-auto w-full pb-6">
-        <div className="flex items-center justify-between px-">
+    <div className="min-h-[100dvh] w-full pb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between py-1">
+        <div className="flex items-center gap-3">
           <button
             aria-label={t("history.back")}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="w-9 h-9 rounded-full bg-[#EBEBF0] flex items-center justify-center flex-shrink-0"
             onClick={() => router.back()}
           >
-            <ChevronLeft className="w-6 h-6 text-gray-700" />
+            <ChevronLeft className="w-5 h-5 text-[#374151]" />
           </button>
-          <h1 className="text-base font-medium text-gray-900">{t("history.details")}</h1>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label={t("history.downloadPdfAria")}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#EBF2FF]"
-              onClick={handleDownloadPdf}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="17" viewBox="0 0 14 17" fill="none">
-                <path d="M6.66667 0L6.76417 0.00583331C6.95018 0.0277699 7.12338 0.111733 7.25582 0.244176C7.38827 0.376619 7.47223 0.549819 7.49417 0.735833L7.5 0.833333V4.16667L7.50417 4.29167C7.53399 4.68848 7.7048 5.06152 7.98572 5.34336C8.26664 5.62519 8.63912 5.79722 9.03583 5.82833L9.16667 5.83333H12.5L12.5975 5.83917C12.7835 5.8611 12.9567 5.94507 13.0892 6.07751C13.2216 6.20995 13.3056 6.38315 13.3275 6.56917L13.3333 6.66667V14.1667C13.3334 14.8043 13.0897 15.4179 12.6523 15.8819C12.2148 16.3458 11.6166 16.6251 10.98 16.6625L10.8333 16.6667H2.5C1.86232 16.6667 1.24874 16.4231 0.784783 15.9856C0.320828 15.5481 0.0415771 14.9499 0.00416677 14.3133L3.88371e-09 14.1667V2.5C-3.55181e-05 1.86232 0.243604 1.24874 0.68107 0.784783C1.11854 0.320828 1.71676 0.0415771 2.35333 0.00416676L2.5 0H6.66667ZM6.66667 6.66667C6.44565 6.66667 6.23369 6.75446 6.07741 6.91074C5.92113 7.06702 5.83333 7.27899 5.83333 7.5V10.4875L5.1725 9.8275C5.02901 9.68402 4.83809 9.59783 4.63557 9.58509C4.43305 9.57236 4.23284 9.63396 4.0725 9.75833L3.99417 9.8275C3.83794 9.98377 3.75018 10.1957 3.75018 10.4167C3.75018 10.6376 3.83794 10.8496 3.99417 11.0058L6.0775 13.0892L6.11417 13.1242L6.17083 13.17L6.2625 13.2292L6.3575 13.2742L6.445 13.3033L6.57 13.3283L6.66667 13.3333L6.76417 13.3275L6.86167 13.3108L6.95167 13.2833L7.01917 13.255L7.10083 13.2117L7.1775 13.1583L7.25583 13.0892L9.33917 11.0058C9.49539 10.8496 9.58315 10.6376 9.58315 10.4167C9.58315 10.1957 9.49539 9.98377 9.33917 9.8275L9.26083 9.75833C9.1005 9.63396 8.90029 9.57236 8.69777 9.58509C8.49524 9.59783 8.30433 9.68402 8.16083 9.8275L7.5 10.4867V7.5C7.49997 7.29589 7.42504 7.09889 7.2894 6.94636C7.15377 6.79383 6.96688 6.69638 6.76417 6.6725L6.66667 6.66667ZM9.16583 0.8325L12.5 4.16667H9.16667L9.16583 0.8325Z" fill="#3F78D8" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              aria-label={t("history.shareAria")}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F3FFEB]"
-              onClick={handleShare}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10.0003 4.16634V11.2497M12.5003 5.83301L10.0003 3.33301L7.50033 5.83301M4.16699 9.99967V14.1663C4.16699 14.6084 4.34259 15.0323 4.65515 15.3449C4.96771 15.6574 5.39163 15.833 5.83366 15.833H14.167C14.609 15.833 15.0329 15.6574 15.3455 15.3449C15.6581 15.0323 15.8337 14.6084 15.8337 14.1663V9.99967" stroke="#3E9306" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            {isVeterinarian ? (
-              <button
-                type="button"
-                aria-label={t("history.inviteToUpgrade")}
-                className="inline-flex h-9 items-center justify-center rounded-full bg-[#EBF2FF] px-3 text-[13px] font-medium text-[#3F78D8]"
-                onClick={() => {
-                  setUpgradeOpen(true);
-                  setUpgradeProductCode("");
-                }}
-                disabled={!reading || accessKeys === null}
-              >
-                {t("history.inviteToUpgrade")}
-              </button>
-            ) : null}
-          </div>
+          <span className="text-[22px] font-bold text-primary leading-tight">{t("history.details")}</span>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={t("history.downloadPdfAria")}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-[#EBF2FF]"
+            onClick={handleDownloadPdf}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 16L7 11M12 16L17 11M12 16V4M6 20H18" stroke="#3F78D8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            aria-label={t("history.shareAria")}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-[#EBF2FF]"
+            onClick={handleShare}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12M16 6L12 2M12 2L8 6M12 2V15" stroke="#3F78D8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          {isVeterinarian ? (
+            <button
+              type="button"
+              aria-label={t("history.inviteToUpgrade")}
+              className="inline-flex h-9 items-center justify-center rounded-full bg-[#EBF2FF] px-3 text-[13px] font-medium text-primary"
+              onClick={() => { setUpgradeOpen(true); setUpgradeProductCode(""); }}
+              disabled={!reading || accessKeys === null}
+            >
+              {t("history.inviteToUpgrade")}
+            </button>
+          ) : null}
+        </div>
+      </div>
 
-        {loading ? (
-          <div className="mt-6 px- text-[14px] text-gray-500">{t("history.loading")}</div>
-        ) : !reading ? (
-          <div className="mt-6 px- text-[14px] text-gray-500">{t("history.noExamsFound")}</div>
-        ) : (
-          <>
-            <div className="mt-5 px-">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#F5F6F6]">
-                  <Image
-                    width={100}
-                    height={100}
-                    src={reading.patient.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
-                    alt={reading.patient.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate text-[16px] font-medium text-[#111827]">{reading.patient.name}</div>
-                  <div className="truncate text-[13px] text-[#9AA4AF]">{reading.guardian.fullName}</div>
-                  <div className="truncate text-[13px] text-[#9AA4AF]">{panelTitleForCode(reading.productCode)}</div>
-                </div>
-              </div>
+      {loading ? (
+        <div className="mt-8 text-center text-[14px] text-[#6B7280]">{t("history.loading")}</div>
+      ) : !reading ? (
+        <div className="mt-8 text-center text-[14px] text-[#6B7280]">{t("history.noExamsFound")}</div>
+      ) : (
+        <>
+          {/* Patient card */}
+          <div className="mt-5 flex items-center gap-4">
+            <div className="w-14 h-14 shrink-0 overflow-hidden rounded-full bg-[#F5F6F6] border border-[#E5E7EB]">
+              <Image
+                width={56}
+                height={56}
+                src={reading.patient.photo || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"}
+                alt={reading.patient.name}
+                className="h-full w-full object-cover"
+              />
             </div>
+            <div className="min-w-0">
+              <div className="text-[18px] font-bold text-black/70 truncate">{reading.patient.name}</div>
+              <div className="text-[13px] text-[#6B7280] mt-0.5 truncate">{reading.guardian.fullName}</div>
+              <div className="text-[13px] text-[#6B7280] truncate">{panelTitleForCode(reading.productCode)}</div>
+            </div>
+          </div>
 
-            {physicalResults.length > 0 ? (
-              <div className="mt-5 rounded-[16px] bg-[#F5F6F6]">
-                <h1 className="px-4 pt-4 text-base font-medium text-gray-900 mb-2">{t("history.physicalParameters")}</h1>
+          {/* Physical parameters */}
+          {physicalResults.length > 0 ? (
+            <div className="mt-5">
+              <div className="text-[14px] font-semibold text-black/70 mb-2">{t("history.physicalParameters")}</div>
+              <div className="bg-white rounded-[16px] border border-[#F3F4F6] overflow-hidden">
                 {physicalResults.map((r) => (
                   <ResultRow key={r.key} item={r} />
                 ))}
               </div>
-            ) : null}
+            </div>
+          ) : null}
 
-            {chemicalResults.length > 0 ? (
-              <div className="mt-2 rounded-[16px] bg-[#F5F6F6]">
-                <h1 className="px-4 pt-4 text-base font-medium text-gray-900 mb-2">{t("history.chemicalParameters")}</h1>
+          {/* Chemical parameters */}
+          {chemicalResults.length > 0 ? (
+            <div className="mt-4">
+              <div className="text-[14px] font-semibold text-black/70 mb-2">{t("history.chemicalParameters")}</div>
+              <div className="bg-white rounded-[16px] border border-[#F3F4F6] overflow-hidden">
                 {chemicalResults.map((r) => (
                   <ResultRow key={r.key} item={r} />
                 ))}
               </div>
-            ) : null}
+            </div>
+          ) : null}
 
-            {microscopicResults.length > 0 ? (
-              <div className="mt-2 rounded-[16px] bg-[#F5F6F6]">
-                <h1 className="px-4 pt-4 text-base font-medium text-gray-900 mb-2">{t("history.microscopicParameters")}</h1>
-                {microscopicResults.map((r) => (
-                  <ResultRow key={r.key} item={r} />
-                ))}
-              </div>
-            ) : null}
-
-            <div className="w-full flex justify-start items-start flex-col gap-0 px-4 mt-5">
-              <h1 className="text-[18px] font-medium">{t("history.veterinaryReport")}</h1>
-              <h2 className="text-[14px] font-normal">{t("reading.report.summaryInterpretation")}</h2>
-              <p className="text-[14px] font-normal text-black/60">
-                {reading.report?.summaryAndInterpretation || reading.timer?.analysis?.summary || t("history.notAvailable")}
-              </p>
-              <p className="text-[14px] font-normal">
-                {t("reading.report.disclaimerNote")}
-              </p>
-              <span className="text-[14px] font-normal mt-3">{t("reading.report.otherInformation")}</span>
-              <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">
-                {reading.report?.otherInformation || t("history.notAvailable")}
-              </div>
-              <span className="text-[14px] font-normal mt-3">{t("reading.report.veterinarianNotes")}</span>
-              <div className="w-full text-[16px] font-normal bg-[#F5F6F6] rounded-[12px] p-4 mt-1">
-                {reading.report?.veterinarianNotes || t("history.notAvailable")}
-              </div>
-              {reading.signatureImageUrl ? (
-                <div className="w-full mt-4">
-                  <div className="text-[14px] font-normal mb-1">{t("reading.report.signature")}</div>
-                  <div className="rounded-[12px] bg-[#F5F6F6] p-4">
-                    <div className="w-full h-24 bg-white rounded-md flex items-center justify-center overflow-hidden">
-                      <img
-                        src={reading.signatureImageUrl}
-                        alt="Veterinarian signature"
-                        className="max-h-24 w-auto object-contain"
-                      />
-                    </div>
-                  </div>
+          {/* Veterinary report */}
+          <div className="mt-5">
+            <div className="text-[14px] font-semibold text-black/70 mb-2">{t("history.veterinaryReport")}</div>
+            <div className="bg-white rounded-[16px] border border-[#F3F4F6] px-4 py-4 space-y-3">
+              {(reading.report?.summaryAndInterpretation || reading.timer?.analysis?.summary) ? (
+                <div>
+                  <div className="text-[13px] font-bold text-black/70 mb-1">{t("reading.report.summaryInterpretation")}</div>
+                  <p className="text-[13px] text-[#374151] leading-[19px]">
+                    {reading.report?.summaryAndInterpretation || reading.timer?.analysis?.summary}
+                  </p>
+                  <p className="mt-2 text-[11px] text-[#9CA3AF] leading-[15px] italic">
+                    {t("reading.report.disclaimerNote")}
+                  </p>
                 </div>
               ) : null}
             </div>
+          </div>
 
-            <div className="bg-[#F5F6F6] w-full h-4 mt-4" />
-            <div className="w-full flex justify-start items-center flex-col gap-0 px-4">
-              <h1 className="text-[18px] font-medium">{reading.veterinarian.fullName}</h1>
-              <h2 className="text-[14px] font-normal">
-                {reading.veterinarian.crmvState && reading.veterinarian.crmv
-                  ? `${t("history.crmvLabel")}-${reading.veterinarian.crmvState} ${reading.veterinarian.crmv}`
-                  : t("history.crmvLabel")}
-              </h2>
-              <p className="text-[14px] font-normal text-black/60">
-                {generatedAtLabel ? `${t("reading.report.generatedOnPrefix")} ${generatedAtLabel}` : ""}
-              </p>
+          {/* Other information */}
+          <div className="mt-4">
+            <div className="text-[13px] font-semibold text-black/70 mb-1.5">{t("reading.report.otherInformation")}</div>
+            <div className="bg-[#F5F6F6] rounded-[14px] px-4 py-3 text-[13px] text-[#374151]">
+              {reading.report?.otherInformation || t("history.notAvailable")}
             </div>
-          </>
-        )}
-      </div>
+          </div>
 
-      {isVeterinarian && upgradeOpen ? (
-        <div className="fixed inset-0 z-50">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/30"
-            onClick={() => {
-              setUpgradeOpen(false);
-              setUpgradeProductCode("");
-            }}
-            aria-label="Close"
-          />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 shadow-xl">
-            <div className="text-center">
-              <div className="text-[16px] font-semibold text-[#111827]">{t("history.inviteToUpgrade")}</div>
-              <div className="mt-1 text-[13px] text-[#6B7280]">{t("history.inviteToUpgradeDesc")}</div>
+          {/* Veterinarian notes */}
+          <div className="mt-4">
+            <div className="text-[13px] font-semibold text-black/70 mb-1.5">{t("reading.report.veterinarianNotes")}</div>
+            <div className="bg-[#F5F6F6] rounded-[14px] px-4 py-3 text-[13px] text-[#374151]">
+              {reading.report?.veterinarianNotes || t("history.notAvailable")}
             </div>
+          </div>
 
-            <div className="mt-4 space-y-3">
-              {upgradeOptions.map((p) => {
-                const selected = upgradeProductCode === p.code;
-                const disabled = p.disabled;
-                return (
-                  <button
-                    key={p.code}
-                    type="button"
-                    className={`w-full rounded-2xl px-4 py-3 text-left ${disabled ? "bg-gray-100 opacity-60" : "bg-[#F5F6F6]"}`}
-                    onClick={() => {
-                      if (disabled) return;
-                      setUpgradeProductCode(p.code);
-                    }}
-                    disabled={disabled}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-[15px] font-medium text-[#111827]">{p.title}</div>
-                        <div className="mt-1 text-[12px] text-[#3F78D8]">
-                          {p.subtitle} - {priceLabelFor(p.code, p.suggestedPriceBRL)}
-                        </div>
-                      </div>
-                      <div
-                        className={`h-6 w-10 rounded-full p-1 transition-colors ${selected ? "bg-[#3F78D8]" : "bg-gray-300"}`}
-                      >
-                        <div className={`h-4 w-4 rounded-full bg-white transition-transform ${selected ? "translate-x-4" : "translate-x-0"}`} />
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+          {/* Signature */}
+          <div className="mt-4">
+            <div className="text-[13px] font-semibold text-black/70 mb-1.5">{t("reading.report.signature")}</div>
+            <div className="bg-white rounded-[14px] border border-[#E5E7EB] px-4 py-4 min-h-[80px] flex items-center justify-center">
+              {reading.signatureImageUrl ? (
+                <img
+                  src={reading.signatureImageUrl}
+                  alt="Veterinarian signature"
+                  className="max-h-20 w-auto object-contain"
+                />
+              ) : (
+                <span className="text-[12px] text-[#9CA3AF]">{t("history.notAvailable")}</span>
+              )}
             </div>
+          </div>
+        </>
+      )}
 
+      {
+        isVeterinarian && upgradeOpen ? (
+          <div className="fixed inset-0 z-50">
             <button
               type="button"
-              className="mt-5 w-full rounded-full bg-[#3F78D8] py-4 text-[15px] font-medium text-white disabled:opacity-60"
-              onClick={handleSendUpgradeInvite}
-              disabled={!upgradeProductCode || sendingUpgrade}
-            >
-              {sendingUpgrade ? t("history.sending") : t("history.sendInvite")}
-            </button>
+              className="absolute inset-0 bg-black/30"
+              onClick={() => {
+                setUpgradeOpen(false);
+                setUpgradeProductCode("");
+              }}
+              aria-label="Close"
+            />
+            <div className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 shadow-xl">
+              <div className="text-center">
+                <div className="text-[16px] font-semibold text-black/70">{t("history.inviteToUpgrade")}</div>
+                <div className="mt-1 text-[13px] text-[#6B7280]">{t("history.inviteToUpgradeDesc")}</div>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {upgradeOptions.map((p) => {
+                  const selected = upgradeProductCode === p.code;
+                  const disabled = p.disabled;
+                  return (
+                    <button
+                      key={p.code}
+                      type="button"
+                      className={`w-full rounded-2xl px-4 py-3 text-left ${disabled ? "bg-gray-100 opacity-60" : "bg-[#F5F6F6]"}`}
+                      onClick={() => {
+                        if (disabled) return;
+                        setUpgradeProductCode(p.code);
+                      }}
+                      disabled={disabled}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-[15px] font-medium text-black/70">{p.title}</div>
+                          <div className="mt-1 text-[12px] text-primary">
+                            {p.subtitle} - {priceLabelFor(p.code, p.suggestedPriceBRL)}
+                          </div>
+                        </div>
+                        <div
+                          className={`h-6 w-10 rounded-full p-1 transition-colors ${selected ? "bg-primary" : "bg-gray-300"}`}
+                        >
+                          <div className={`h-4 w-4 rounded-full bg-white transition-transform ${selected ? "translate-x-4" : "translate-x-0"}`} />
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                className="mt-5 w-full rounded-full bg-primary py-4 text-[15px] font-medium text-white disabled:opacity-60"
+                onClick={handleSendUpgradeInvite}
+                disabled={!upgradeProductCode || sendingUpgrade}
+              >
+                {sendingUpgrade ? t("history.sending") : t("history.sendInvite")}
+              </button>
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null
+      }
     </div>
   );
 }

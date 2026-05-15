@@ -594,7 +594,7 @@ export default function NewReadingWizard() {
               </svg>
             </button>
           )}
-          <span className="text-[22px] font-bold text-[#3F78D8] leading-tight">
+          <span className="text-[22px] font-bold text-primary leading-tight">
             {t('reading.wizard.pageTitle')}
           </span>
         </div>
@@ -605,9 +605,9 @@ export default function NewReadingWizard() {
               <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
-          <div className="relative w-9 h-9 bg-[#3F78D8] rounded-full flex items-center justify-center">
+          <div className="relative w-9 h-9 bg-primary rounded-full flex items-center justify-center">
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-white border border-[#3F78D8] text-[#3F78D8] text-[9px] font-bold flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-white border border-primary text-primary text-[9px] font-bold flex items-center justify-center">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}

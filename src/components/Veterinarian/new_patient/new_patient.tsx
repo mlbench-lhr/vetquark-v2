@@ -1,6 +1,6 @@
 'use client'
-import { useCallback, useEffect, useState, ChangeEvent } from 'react';
-import { RefreshCw, Upload, ChevronDown, ChevronLeft, Pencil, Folder, PawPrint } from 'lucide-react';
+import { useCallback, useEffect, useState, ChangeEvent, useRef } from 'react';
+import { RefreshCw, Upload, ChevronDown, ChevronUp, Pencil, Folder, PawPrint, Search, Bell, User, ChevronLeft, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -8,11 +8,10 @@ import { asNonEmptyTrimmedString, isMongoObjectId } from '@/lib/utils';
 import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslation } from 'react-i18next';
-import Header from '@/components/common/header';
 import { Modal } from '@/components/ui/modal';
 import TypedDateInput from '@/components/form/input/TypedDateInput';
+import Header from '@/components/common/header';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -89,6 +88,10 @@ export default function AddPatientMultiStep() {
   });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [tempPhotoUrl, setTempPhotoUrl] = useState<string | null>(null);
+  const [tempPhotoFile, setTempPhotoFile] = useState<File | null>(null);
+  const [showCropPreview, setShowCropPreview] = useState(false);
+  const changeImageInputRef = useRef<HTMLInputElement>(null);
 
   const refreshUnread = useCallback(async () => {
     try {
@@ -297,42 +300,43 @@ export default function AddPatientMultiStep() {
     setHasUnsavedChanges(true);
   };
 
-  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
-    if (!CLOUD_NAME || !API_KEY) {
-      toast.error(t('newPatient.patientForm.photoUploadNotConfigured'));
-      console.error('Cloudinary env not set: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_API_KEY');
-      return;
-    }
-
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
       toast.error(t('newPatient.patientForm.fileTooLarge'));
-      console.error('File too large (max 10MB)');
       return;
     }
+    const objectUrl = URL.createObjectURL(file);
+    setTempPhotoUrl(objectUrl);
+    setTempPhotoFile(file);
+    setShowCropPreview(true);
+    e.target.value = '';
+  };
 
+  const handleCropConfirm = async () => {
+    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+    if (!CLOUD_NAME || !API_KEY) {
+      toast.error(t('newPatient.patientForm.photoUploadNotConfigured'));
+      return;
+    }
+    if (!tempPhotoFile) return;
     setUploadingPhoto(true);
-
     try {
       const signRes = await fetch(`/api/cloudinary/upload?folder=patients`);
       const signJson = await signRes.json();
       if (!signRes.ok) {
         toast.error(t('newPatient.patientForm.failedToPreparePhotoUpload'));
-        console.error('Failed to get Cloudinary signature:', signJson);
         return;
       }
       const { timestamp, signature } = signJson;
-
       const data = new FormData();
-      data.append('file', file);
+      data.append('file', tempPhotoFile);
       data.append('api_key', API_KEY);
       data.append('timestamp', String(timestamp));
       data.append('signature', signature);
       data.append('folder', 'patients');
-
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
         method: 'POST',
         body: data,
@@ -340,7 +344,6 @@ export default function AddPatientMultiStep() {
       const json = await res.json();
       if (!res.ok) {
         toast.error(t('newPatient.patientForm.photoUploadFailed'));
-        console.error('Cloudinary upload failed:', json);
         return;
       }
       const url = json.secure_url || json.url;
@@ -348,12 +351,30 @@ export default function AddPatientMultiStep() {
         setFormData(prev => ({ ...prev, photo: url }));
         setHasUnsavedChanges(true);
       }
+      if (tempPhotoUrl) URL.revokeObjectURL(tempPhotoUrl);
+      setShowCropPreview(false);
+      setTempPhotoUrl(null);
+      setTempPhotoFile(null);
     } catch (err) {
       toast.error(t('newPatient.patientForm.photoUploadFailed'));
-      console.error('Cloudinary error:', err);
     } finally {
       setUploadingPhoto(false);
     }
+  };
+
+  const handleCancelCrop = () => {
+    if (tempPhotoUrl) URL.revokeObjectURL(tempPhotoUrl);
+    setTempPhotoUrl(null);
+    setTempPhotoFile(null);
+    setShowCropPreview(false);
+  };
+
+  const handleChangeImage = () => {
+    if (tempPhotoUrl) URL.revokeObjectURL(tempPhotoUrl);
+    setTempPhotoUrl(null);
+    setTempPhotoFile(null);
+    setShowCropPreview(false);
+    changeImageInputRef.current?.click();
   };
 
   const handleNext = () => {
@@ -417,128 +438,162 @@ export default function AddPatientMultiStep() {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <Header
-        title={patientId ? t('newPatient.editPatientTitle') : t('newPatient.addNewPatientTitle')}
-        onBack={() => {
-          if (hasUnsavedChanges) {
-            setConfirmOpen(true);
-          } else {
-            router.back();
-          }
-        }}
-      />
+    <div className=" space-y-4">
+      {/* Hidden file input for change image */}
+      <input ref={changeImageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
 
-      {/* Progress Stepper */}
-      <div className="relative">
-        <div className="flex items-center justify-between relative z-10">
-          {/* Step 1 - Completed (Guardian) */}
-          <div className="flex items-center gap-2 bg-white pr-2">
-            <div className="w-10 h-10 bg-[#3F78D8] rounded-full flex items-center justify-center">
-              <Folder className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-sm font-semibold text-[#3F78D8]">{t('newPatient.guardianDataStep')}</span>
+      {/* Fullscreen Crop Preview Overlay — Image 5 */}
+      {showCropPreview && tempPhotoUrl && (
+        <div className="fixed inset-0 z-[100] flex flex-col">
+          <div className="absolute inset-0 overflow-hidden">
+            <img src={tempPhotoUrl} alt="preview" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/60" />
           </div>
-          {/* Step 2 - Active (Patient) */}
-          <div className="flex items-center gap-2 bg-white pl-2">
-            <div className="w-10 h-10 bg-[#3F78D8] rounded-full flex items-center justify-center">
-              <PawPrint className="w-5 h-5 text-white" />
+          <button
+            onClick={handleCancelCrop}
+            className="absolute top-14 left-4 z-10 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
+          >
+            <ChevronLeft className="w-5 h-5 text-white" />
+          </button>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-72 h-72 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+              <img src={tempPhotoUrl} alt="crop" className="w-full h-full object-cover" />
             </div>
-            <span className="text-sm font-semibold text-[#3F78D8]">{t('newPatient.patientDetailsStep')}</span>
+          </div>
+          <div className="absolute bottom-12 left-4 right-4 space-y-3">
+            <button
+              onClick={handleCropConfirm}
+              disabled={uploadingPhoto}
+              className="w-full bg-primary text-white font-bold text-base py-[15px] rounded-2xl disabled:opacity-60 transition-colors"
+            >
+              {uploadingPhoto ? t('auth.uploading') : 'Concluir'}
+            </button>
+            <button
+              onClick={handleChangeImage}
+              disabled={uploadingPhoto}
+              className="w-full bg-white text-[#1D2939] font-bold text-base py-[15px] rounded-2xl border border-[#E8E8E8] disabled:opacity-60 transition-colors"
+            >
+              Alterar imagem
+            </button>
           </div>
         </div>
+      )}
+
+      <Header title={"Adicionar novo paciente"} />
+
+
+      {/* Progress Stepper */}
+      <div className="relative flex items-start justify-between w-[60%] mx-auto">
+        {/* Step 1 - Active */}
+        <div className="flex flex-col items-center gap-1.5 z-10">
+          <div className="w-10 h-10 rounded-full border border-primary bg-[#f5f6f9] flex items-center justify-center">
+            <Image
+              src={"/user icon.svg"}
+              alt={t('newPatient.guardianIconAlt')}
+              width={20}
+              height={20}
+            />
+          </div>
+          <span className="text-xs font-normal text-primary">{t('newPatient.guardianStep')}</span>
+        </div>
         {/* Connecting Line */}
-        <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 z-0">
-          <div className="h-0.5 bg-[#3F78D8] mx-5"></div>
+        <div className="absolute w-[70%] border border-primary/50 top-5 left-5 right-5 h-px bg-primary/50 z-0" />
+        {/* Step 2 - Inactive */}
+        <div className="flex flex-col items-center gap-1.5 z-10">
+          <div className="w-10 h-10 rounded-full border border-primary bg-[#f5f6f9] flex items-center justify-center">
+            <Image
+              src={"/pet footstep.svg"}
+              alt={t('newPatient.patientIconAlt')}
+              width={20}
+              height={20}
+            />
+          </div>
+          <span className="text-xs font-normal text-primary">{t('newPatient.patientDetailsStep')}</span>
         </div>
       </div>
 
-      {/* Guardian Info */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between bg-white border border-[#E8E8E8] p-3 rounded-2xl">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={linkedGuardian?.imageUrl || ''} alt={linkedGuardian?.fullName || t('auth.guardian')} />
-              <AvatarFallback className="bg-[#EBF2FF] text-[#3F78D8]">
-                {(linkedGuardian?.fullName || 'G').slice(0, 1).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+      {/* White Card */}
+      <div className="bg-white rounded-2xl shadow-sm p-5 space-y-5">
+        {/* Responsável Vinculado */}
+        <div className="flex items-start justify-between bg-[#ebebee] rounded-xl p-3">
+          <div className="flex items-start gap-2">
+            <User className="w-4 h-4 text-black/70" />
             <div>
-              <p className="font-semibold text-sm text-[#1D2939]">{linkedGuardian?.fullName ?? t('guardianHome.notAvailable')}</p>
-              <p className="text-xs text-[#839297]">{t('profile.nationalId')}: {linkedGuardian?.taxId || t('guardianHome.notAvailable')}</p>
+              <p className="text-[12px] text-black/70">{t('newPatient.patientForm.linkedGuardian')}</p>
+              <span className="inline-flex items-center border border-primary text-[#1D2939] text-xs font-medium px-2 py-0.5 rounded-xl">
+                {linkedGuardian?.fullName ?? t('guardianHome.notAvailable')}
+              </span>
+              <p className="text-xs text-black/70 mt-1">CPF: {linkedGuardian?.taxId || t('guardianHome.notAvailable')}</p>
             </div>
           </div>
           {!patientId && (
-            <button className="flex items-center gap-1 text-[#3F78D8] text-sm font-medium" onClick={() => router.push('/Veterinarian/patient')}>
-              <RefreshCw className="w-4 h-4" />
+            <button
+              className="flex items-center gap-1 bg-[#A7A9AD] border border-[#A7A9AD] text-white text-xs font-medium px-2 py-0.5 rounded-sm hover:bg-gray-50 shrink-0"
+              onClick={() => router.push('/Veterinarian/patient')}
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
               {t('common.change')}
             </button>
           )}
         </div>
 
-        <div className="flex items-center justify-between bg-white border border-[#E8E8E8] p-3 rounded-2xl">
+        {/* Status do Animal */}
+        <div className="flex items-center justify-between border border-[#E8E8E8] rounded-md p-2">
           <div>
-            <p className="font-semibold text-sm text-[#1D2939]">{t('newPatient.patientForm.animalStatusTitle')}</p>
-            <p className="text-xs text-[#839297]">{t('newPatient.patientForm.animalAliveQuestion')}</p>
+            <p className="font-normal text-sm text-[#1D2939]">{t('newPatient.patientForm.animalStatusTitle')}</p>
+            <p className="text-xs text-[#9CA3AF]">{t('newPatient.patientForm.animalAliveQuestion')}</p>
           </div>
           <button
             onClick={() => setIsAlive(!isAlive)}
-            className={`relative w-12 h-7 rounded-full transition-colors ${isAlive ? 'bg-[#3F78D8]' : 'bg-gray-300'
-              }`}
+            className={`relative w-12 h-7 rounded-full transition-colors ${isAlive ? 'bg-primary' : 'bg-gray-300'}`}
           >
             <span
-              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${isAlive ? 'translate-x-5' : 'translate-x-0'
-                }`}
+              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${isAlive ? 'translate-x-5' : 'translate-x-0'}`}
             />
           </button>
         </div>
-      </div>
 
-      {/* Form Content */}
-      <div className="p">
-        {loadingPatient ? (
-          <div className="text-sm text-gray-500 py-6">{t('newPatient.patientForm.loadingPatient')}</div>
-        ) : (
-          <>
-            {currentStep === 1 && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">{t('newPatient.patientForm.identificationsTitle')}</h2>
-                  <span className="text-sm text-[#3F78D8] font-medium">{t('auth.step')} 1/5</span>
-                </div>
+        {/* Form Steps */}
+        <div className="space-y-4">
+          {loadingPatient ? (
+            <div className="text-sm text-gray-500 py-6">{t('newPatient.patientForm.loadingPatient')}</div>
+          ) : (
+            <>
+              {currentStep === 1 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-semibold text-[#1D2939]">1. {t('newPatient.patientForm.identificationsTitle')}</h2>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 1/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                  </div>
 
-                <div className="space-y-4">
-                  <div className="bg-white border-2 border-dashed border-[#E8E8E8] rounded-xl p-4 text-center">
+                  <div>
                     {formData.photo ? (
-                      <div className="flex w-full h-[200px] flex-col relative items-center gap-3">
-                        <Image width={200} height={200} src={formData.photo} alt={t('common.patient')} className="w-full h-full object-contain rounded-lg bg-white" />
-                        <label className="inline-block absolute -top-2 -right-2">
-                          <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                          {uploadingPhoto ? <span className="px-3 py-2 bg-[#3F78D8] text-white rounded-lg cursor-pointer text-sm"> {t('auth.uploading')}
-                          </span>
-                            : <div className="p-2 bg-[#3F78D8] rounded-full shadow-sm">
-                              <Pencil color="white" size={16} />
-                            </div>}
-                        </label>
+                      <div className="flex justify-center py-2">
+                        <div className="relative">
+                          <div className="w-[120px] h-[120px] rounded-full overflow-hidden border-2 border-[#E8E8E8] shadow-sm">
+                            <Image width={120} height={120} src={formData.photo} alt={t('common.patient')} className="w-full h-full object-cover" />
+                          </div>
+                          <label className="absolute bottom-0.5 right-0.5 cursor-pointer">
+                            <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-md">
+                              <Pencil className="w-4 h-4 text-white" />
+                            </div>
+                          </label>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center gap-2 py-2">
-                        <Upload className="w-8 h-8 text-[#3F78D8] mx-auto" />
-                        <p className="text-sm text-gray-700">{t('newPatient.patientForm.dragDropPhoto')}</p>
-                        <label className="inline-block">
-                          <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                          <span className="px-4 py-2.5 bg-[#3F78D8] text-white rounded-xl cursor-pointer text-sm font-medium">
-                            {uploadingPhoto ? t('auth.uploading') : t('newPatient.patientForm.selectPhoto')}
-                          </span>
-                        </label>
-                        <p className="text-xs text-gray-500">{t('newPatient.patientForm.photoFormatsHint')}</p>
-                      </div>
+                      <label className="w-[166px] mx-auto h-[166px] flex flex-col items-center justify-center gap-0 py-8 cursor-pointer border-2 border-dashed border-[#E0E0E0] rounded-full bg-[#FAFAFA]">
+                        <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                        <Image src={"/upload.svg"} alt="edit icon" width={20} height={20} />
+
+                        <p className="text-[8px] text-[#6B7280] text-center px-4 leading-snug">{t('newPatient.patientForm.dragDropPhoto')}</p>
+                        <p className="text-[8px] text-[#9CA3AF]">{t('newPatient.patientForm.photoFormatsHint')}</p>
+                      </label>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {t('newPatient.patientForm.animalNameLabel')}<span className="text-red-500">*</span>
                     </label>
                     <input
@@ -546,83 +601,78 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.animalNamePlaceholder')}
                       value={formData.animalName}
                       onChange={(e) => handleChange('animalName', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.microchipLabel')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.microchipLabel')}</label>
                     <input
-                      type="number"
+                      type="text"
                       placeholder={t('newPatient.patientForm.microchipPlaceholder')}
                       value={formData.microchip}
                       onChange={(e) => handleChange('microchip', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.speciesLabel')}<span className="text-red-500">*</span></label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.speciesLabel')}<span className="text-red-500">*</span></label>
                     <div className="relative">
                       <select
                         value={formData.species}
                         onChange={(e) => handleChange('species', e.target.value)}
-                        className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <option value="">{t('auth.selectOption')}</option>
                         <option value="dog">{t('newPatient.speciesDog')}</option>
                         <option value="cat">{t('newPatient.speciesCat')}</option>
-                        {/* <option value="bird">{t('newPatient.speciesBird')}</option> */}
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#3F78D8] pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.breedLabel')}<span className="text-red-500">*</span></label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.breedLabel')}</label>
                     <input
                       type="text"
                       placeholder={t('newPatient.patientForm.breedPlaceholder')}
                       value={formData.breed}
                       onChange={(e) => handleChange('breed', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.sexLabel')}<span className="text-red-500">*</span></label>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleChange('sex', 'Male')}
-                        className={`flex-1 py-3 rounded-xl font-medium transition-colors border ${formData.sex === 'Male' ? 'bg-[#EBF2FF] text-[#3F78D8] border-[#3F78D8]' : 'bg-white text-gray-700 border-[#E8E8E8]'
-                          }`}
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.sexLabel')}<span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <select
+                        value={formData.sex}
+                        onChange={(e) => handleChange('sex', e.target.value as 'Male' | 'Female' | '')}
+                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {t('common.male')}
-                      </button>
-                      <button
-                        onClick={() => handleChange('sex', 'Female')}
-                        className={`flex-1 py-3 rounded-xl font-medium transition-colors border ${formData.sex === 'Female' ? 'bg-[#EBF2FF] text-[#3F78D8] border-[#3F78D8]' : 'bg-white text-gray-700 border-[#E8E8E8]'
-                          }`}
-                      >
-                        {t('common.female')}
-                      </button>
+                        <option value="">{t('auth.selectOption')}</option>
+                        <option value="Male">{t('common.male')}</option>
+                        <option value="Female">{t('common.female')}</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('profile.dateOfBirth')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('profile.dateOfBirth')}</label>
                     <TypedDateInput
                       value={formData.dateOfBirth}
                       onChange={(nextIsoDate) => handleChange('dateOfBirth', nextIsoDate)}
                       max={new Date().toISOString().slice(0, 10)}
                       placeholder="dd/mm/yyyy"
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent pr-12 text-sm"
-                      iconClassName="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      iconSize={12}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.ageYearsLabel')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.ageYearsLabel')}</label>
                     <input
                       type="number"
                       min={0}
@@ -630,246 +680,232 @@ export default function AddPatientMultiStep() {
                       placeholder={t('newPatient.patientForm.ageYearsPlaceholder')}
                       value={formData.ageYears}
                       onChange={(e) => handleChange('ageYears', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
-                    <p className="mt-1 text-xs text-gray-500">
-                      {t('newPatient.patientForm.ageYearsHint')}
-                    </p>
+                    <p className="mt-1 text-xs text-[#9CA3AF]">{t('newPatient.patientForm.ageYearsHint')}</p>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {currentStep === 2 && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">{t('newPatient.patientForm.additionalInfoTitle')}</h2>
-                  <span className="text-sm text-[#3F78D8] font-medium">{t('auth.step')} 2/5</span>
-                </div>
+              {currentStep === 2 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-semibold text-[#1D2939]">2. {t('newPatient.patientForm.additionalInfoTitle')}</h2>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 2/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                  </div>
 
-                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.temperamentLabel')}<span className="text-red-500">*</span></label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.temperamentLabel')}</label>
                     <input
                       type="text"
                       placeholder={t('newPatient.patientForm.temperamentPlaceholder')}
                       value={formData.temperament}
                       onChange={(e) => handleChange('temperament', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.sizeLabel')}<span className="text-red-500">*</span></label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.sizeLabel')}</label>
                     <input
                       type="text"
                       placeholder={t('newPatient.patientForm.sizePlaceholder')}
                       value={formData.size}
                       onChange={(e) => handleChange('size', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.coatLabel')}<span className="text-red-500">*</span></label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.coatLabel')}</label>
                     <input
                       type="text"
                       placeholder={t('newPatient.patientForm.coatPlaceholder')}
                       value={formData.coat}
                       onChange={(e) => handleChange('coat', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.neuteredLabel')}<span className="text-red-500">*</span></label>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleChange('neutered', 'Yes')}
-                        className={`flex-1 py-3 rounded-xl font-medium transition-colors border ${formData.neutered === 'Yes' ? 'bg-[#EBF2FF] text-[#3F78D8] border-[#3F78D8]' : 'bg-white text-gray-700 border-[#E8E8E8]'
-                          }`}
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.neuteredLabel')}</label>
+                    <div className="relative">
+                      <select
+                        value={formData.neutered}
+                        onChange={(e) => handleChange('neutered', e.target.value as 'Yes' | 'No' | '')}
+                        className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {t('common.yes')}
-                      </button>
-                      <button
-                        onClick={() => handleChange('neutered', 'No')}
-                        className={`flex-1 py-3 rounded-xl font-medium transition-colors border ${formData.neutered === 'No' ? 'bg-[#EBF2FF] text-[#3F78D8] border-[#3F78D8]' : 'bg-white text-gray-700 border-[#E8E8E8]'
-                          }`}
-                      >
-                        {t('common.no')}
-                      </button>
+                        <option value="">{t('auth.selectOption')}</option>
+                        <option value="Yes">{t('common.yes')}</option>
+                        <option value="No">{t('common.no')}</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary pointer-events-none" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.rgaLabel')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.rgaLabel')}</label>
                     <input
                       type="text"
                       placeholder={t('newPatient.patientForm.rgaPlaceholder')}
                       value={formData.rga}
                       onChange={(e) => handleChange('rga', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {currentStep === 3 && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">{t('newPatient.patientForm.healthPlanTitle')}</h2>
-                  <span className="text-sm text-[#3F78D8] font-medium">{t('auth.step')} 3/5</span>
-                </div>
+              {currentStep === 3 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-semibold text-[#1D2939]">3. {t('newPatient.patientForm.healthPlanTitle')}</h2>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 3/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                  </div>
 
-                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.healthPlanNameLabel')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.healthPlanNameLabel')}</label>
                     <input
                       type="text"
                       placeholder={t('newPatient.patientForm.healthPlanNamePlaceholder')}
                       value={formData.planName}
                       onChange={(e) => handleChange('planName', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.planCardNumberLabel')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.planCardNumberLabel')}</label>
                     <input
-                      type="number"
+                      type="text"
                       placeholder={t('newPatient.patientForm.planCardNumberPlaceholder')}
                       value={formData.cardNumber}
                       onChange={(e) => handleChange('cardNumber', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent text-sm"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.cardValidityLabel')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.cardValidityLabel')}</label>
                     <TypedDateInput
                       value={formData.cardValidity}
                       onChange={(nextIsoDate) => handleChange('cardValidity', nextIsoDate)}
                       min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
                       placeholder="dd/mm/yyyy"
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent pr-12 text-sm"
-                      iconClassName="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer"
+                      className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      iconSize={12}
                     />
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {currentStep === 4 && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">{t('newPatient.patientForm.clinicalInfoTitle')}</h2>
-                  <span className="text-sm text-[#3F78D8] font-medium">{t('auth.step')} 4/5</span>
-                </div>
-
+              {currentStep === 4 && (
                 <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-semibold text-[#1D2939]">4. {t('newPatient.patientForm.clinicalInfoTitle')}</h2>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 4/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                  </div>
+
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.allergiesLabel')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.allergiesLabel')}</label>
                     <textarea
                       placeholder={t('newPatient.patientForm.allergiesPlaceholder')}
                       value={formData.allergies}
                       onChange={(e) => handleChange('allergies', e.target.value)}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent resize-none text-sm"
+                      rows={4}
+                      className="flex w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-[#BEBDBD] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.chronicDiseasesLabel')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.chronicDiseasesLabel')}</label>
                     <textarea
                       placeholder={t('newPatient.patientForm.chronicDiseasesPlaceholder')}
                       value={formData.chronicDiseases}
                       onChange={(e) => handleChange('chronicDiseases', e.target.value)}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent resize-none text-sm"
+                      rows={4}
+                      className="flex w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-[#BEBDBD] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.otherInformationLabel')}</label>
+                    <label className="text-[12px] font-medium text-black/90 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('newPatient.patientForm.otherInformationLabel')}</label>
                     <textarea
                       placeholder={t('newPatient.patientForm.otherInformationPlaceholder')}
                       value={formData.otherInformation}
                       onChange={(e) => handleChange('otherInformation', e.target.value)}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent resize-none text-sm"
+                      rows={4}
+                      className="flex w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-[#BEBDBD] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
-
                 </div>
-              </div>
-            )}
+              )}
 
-            {currentStep === 5 && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">{t('newPatient.patientForm.observationsStepTitle')}</h2>
-                  <span className="text-sm text-[#3F78D8] font-medium">{t('auth.step')} 5/5</span>
-                </div>
+              {currentStep === 5 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-semibold text-[#1D2939]">5. {t('newPatient.patientForm.observationsStepTitle')}</h2>
+                    <span className="flex items-center gap-0.5 text-xs text-primary font-medium">{t('auth.step')} 5/5 <ChevronUp className="w-3.5 h-3.5" /></span>
+                  </div>
 
-                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-900 mb-2">{t('newPatient.patientForm.internalNotesLabel')}</label>
+                    <p className="text-sm text-[#6B7280] mb-1.5">{t('newPatient.patientForm.internalNotesLabel')}</p>
                     <textarea
                       placeholder={t('newPatient.patientForm.internalNotesPlaceholder')}
                       value={formData.internalNotes}
                       onChange={(e) => handleChange('internalNotes', e.target.value)}
                       rows={6}
-                      className="w-full px-4 py-3 bg-white border border-[#E8E8E8] rounded-xl text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#3F78D8] focus:border-transparent resize-none text-sm"
+                      className="flex w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-[#BEBDBD] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
                 </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Fixed Bottom Buttons */}
-      <div className="pb-4">
-        <button
-          onClick={currentStep === 5 ? handleSubmit : handleNext}
-          disabled={submitting || uploadingPhoto || loadingPatient}
-          className="w-full bg-[#3F78D8] hover:bg-[#3F78D8]/90 text-white font-semibold py-4 rounded-2xl transition-colors shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          {currentStep === 5
-            ? (submitting
-              ? (patientId ? t('common.saving') : t('auth.creating'))
-              : (patientId ? t('common.saveChanges') : t('newPatient.patientForm.addAnimalButton')))
-            : t('auth.next')}
-        </button>
-      </div>
-      <Modal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} className="max-w-md rounded-2xl p-6">
-        <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-900">{t('common.unsavedChanges')}</h3>
-          <p className="mt-2 text-sm text-gray-600">{t('common.unsavedChangesDesc')}</p>
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              type="button"
-              className="flex-1 px-4 py-2.5 rounded-full bg-[#F3F4F6] text-gray-800 font-medium"
-              onClick={() => setConfirmOpen(false)}
-            >
-              {t('common.keepEditing')}
-            </button>
-            <button
-              type="button"
-              className="flex-1 px-4 py-2.5 rounded-full bg-[#3F78D8] text-white font-medium"
-              onClick={() => {
-                setConfirmOpen(false);
-                setHasUnsavedChanges(false);
-                router.back();
-              }}
-            >
-              {t('common.discardChanges')}
-            </button>
-          </div>
+              )}
+            </>
+          )}
         </div>
-      </Modal>
+
+        {/* Bottom Button */}
+        <div className="pb-2">
+          <button
+            onClick={currentStep === 5 ? handleSubmit : handleNext}
+            disabled={submitting || uploadingPhoto || loadingPatient}
+            className="h-[30px] w-full bg-primary hover:bg-primary/90 active:bg-[#3568C0] text-white font-bold text-[13px] rounded-md flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <Plus className="w-3 h-3" />
+            {currentStep === 5
+              ? (submitting
+                ? (patientId ? t('common.saving') : t('auth.creating'))
+                : (patientId ? t('common.saveChanges') : t('newPatient.patientForm.addAnimalButton')))
+              : t('auth.next')}
+          </button>
+        </div>
+        <Modal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} className="max-w-md rounded-2xl p-6">
+          <div className="p-4">
+            <h3 className="text-lg font-semibold text-gray-900">{t('common.unsavedChanges')}</h3>
+            <p className="mt-2 text-sm text-gray-600">{t('common.unsavedChangesDesc')}</p>
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                type="button"
+                className="flex-1 px-4 py-2.5 rounded-full bg-[#F3F4F6] text-gray-800 font-medium"
+                onClick={() => setConfirmOpen(false)}
+              >
+                {t('common.keepEditing')}
+              </button>
+              <button
+                type="button"
+                className="flex-1 px-4 py-2.5 rounded-full bg-primary text-white font-medium"
+                onClick={() => {
+                  setConfirmOpen(false);
+                  setHasUnsavedChanges(false);
+                  router.back();
+                }}
+              >
+                {t('common.discardChanges')}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      </div>
     </div>
   );
 }

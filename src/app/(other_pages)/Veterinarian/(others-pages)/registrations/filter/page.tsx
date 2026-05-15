@@ -7,12 +7,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 type Species =
   | "Dog"
   | "Cat"
-  // | "Small Mammal"
-  // | "Bird"
-  // | "Reptile"
-  // | "Fish"
-  // | "Farm Animal"
-  // | "Other";
+// | "Small Mammal"
+// | "Bird"
+// | "Reptile"
+// | "Fish"
+// | "Farm Animal"
+// | "Other";
 
 type Gender = "Male" | "Female";
 type AgeRange = "1+" | "2+" | "5+" | "10+";
@@ -31,9 +31,8 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`h-[36px] rounded-full px-5 text-[13px] font-medium transition-colors ${
-        active ? "bg-[#3F78D8] text-white" : "bg-[#F5F6F6] text-[#111827]"
-      }`}
+      className={`h-[36px] rounded-full px-5 text-[13px] font-medium transition-colors ${active ? "bg-primary text-white" : "bg-[#F5F6F6] text-black/70"
+        }`}
     >
       {label}
     </button>
@@ -113,16 +112,16 @@ function FilterContent() {
           className="flex h- w- items-center justify-center rounded-full"
           aria-label="Back"
         >
-          <ChevronLeft className="h-6 w-6 text-[#111827]" />
+          <ChevronLeft className="h-6 w-6 text-black/70" />
         </button>
-        <h1 className="text-[16px] font-medium leading-[20px] text-[#111827]">
+        <h1 className="text-[16px] font-medium leading-[20px] text-black/70">
           Filter
         </h1>
         <div className="h-10 w-10" />
       </div>
 
       <div className="px- pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)]">
-        <div className="text-[14px] font-medium leading-[18px] text-[#111827]">
+        <div className="text-[14px] font-medium leading-[18px] text-black/70">
           Select Species
         </div>
         <div className="mt-3 flex flex-wrap gap-3">
@@ -152,7 +151,7 @@ function FilterContent() {
           /> */}
         </div>
 
-        <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">
+        <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">
           Gender
         </div>
         <div className="mt-3 flex gap-3">
@@ -164,7 +163,7 @@ function FilterContent() {
           />
         </div>
 
-        <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">
+        <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">
           Age (in years)
         </div>
         <div className="mt-3 flex gap-3">
@@ -174,7 +173,7 @@ function FilterContent() {
           <Chip label="10+" active={age === "10+"} onClick={() => setAge("10+")} />
         </div>
 
-        <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">
+        <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">
           Last Exam
         </div>
         <div className="mt-3 flex gap-3">
@@ -200,7 +199,7 @@ function FilterContent() {
         <button
           type="button"
           onClick={() => router.push(`/Veterinarian/registrations${queryString ? `?${queryString}` : ""}`)}
-          className="h-[54px] w-full rounded-full bg-[#3F78D8] text-[15px] font-medium text-white"
+          className="h-[54px] w-full rounded-full bg-primary text-[15px] font-medium text-white"
         >
           Show Results
         </button>

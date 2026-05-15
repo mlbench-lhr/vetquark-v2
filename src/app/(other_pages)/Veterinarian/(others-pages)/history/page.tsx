@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { Check, Eye, FileText, Upload, Search, Bell } from "lucide-react";
+import { Check, Clock, Eye, FileText, Upload, Search, Bell } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -49,20 +49,44 @@ function formatDateLabel(value: string) {
   return d.toLocaleDateString("en-GB");
 }
 
-function StatusPill({ signed }: { signed: boolean }) {
+function StatusPill({ isSigned, paymentStatus }: { isSigned: boolean; paymentStatus: PaymentStatus | null }) {
   const { t } = useTranslation();
-  if (!signed) {
+
+  if (isSigned) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-[11px] font-medium text-gray-500">
-        <span className="h-2 w-2 rounded-full bg-gray-400" />
-        {t("history.notSigned")}
+      <span className="inline-flex items-center gap-[5px] rounded-full bg-[#3C3C3C] px-3 py-[3px] text-[11px] font-semibold text-white">
+        <span className="inline-flex h-[10px] w-[10px] shrink-0 items-center justify-center rounded-full bg-[#22C55E]">
+          <Check className="h-[8px] w-[8px] text-white" strokeWidth={3} />
+        </span>
+        {t("history.signed")}
       </span>
     );
   }
+
+  if (paymentStatus === "pending") {
+    return (
+      <span className="inline-flex items-center gap-[5px] rounded-full bg-[#C4B5FD] px-3 py-[3px] text-[11px] font-semibold text-white">
+        <span className="inline-flex h-[10px] w-[10px] shrink-0 items-center justify-center rounded-full bg-[#7C3AED]">
+          <Clock className="h-[9px] w-[9px] text-white" strokeWidth={3} />
+        </span>
+        {t("history.signed")}
+      </span>
+    );
+  }
+
+  if (paymentStatus === "expired") {
+    return (
+      <span className="inline-flex items-center gap-[5px] rounded-full bg-red-50 px-3 py-[3px] text-[11px] font-semibold text-red-600">
+        <span className="h-2 w-2 shrink-0 rounded-full bg-red-400" />
+        {t("history.paymentExpired")}
+      </span>
+    );
+  }
+
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#6B7280] px-3 py-1 text-[11px] font-medium text-white">
-      <Check className="h-3 w-3" />
-      {t("history.signed")}
+    <span className="inline-flex items-center gap-[5px] rounded-full bg-gray-100 px-3 py-[3px] text-[11px] font-semibold text-gray-500">
+      <span className="h-2 w-2 shrink-0 rounded-full bg-gray-400" />
+      {t("history.notSigned")}
     </span>
   );
 }
@@ -83,10 +107,10 @@ function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; on
   };
 
   return (
-    <div className="rounded-[16px] bg-white px-4 py-4 border border-gray-100/80 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-[16px] px-2 py-2 border border-black/20">
+      <div className="flex items-start justify-between gap-2 relative">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-gray-200">
+          <div className="h-[46px] w-[46px] shrink-0 overflow-hidden rounded-full bg-gray-200">
             <Image
               width={100}
               height={100}
@@ -95,42 +119,47 @@ function ReportCard({ item, onDownload, onShare }: { item: ReportHistoryItem; on
               className="h-full w-full object-cover"
             />
           </div>
-          <div className="min-w-0 pt-0.5">
-            <p className="truncate text-[15px] font-semibold text-gray-900">
+          <div className="min-w-0">
+            <p className="truncate text-[15px] font-bold text-black/70 leading-tight">
               {item.patientName}
             </p>
-            <p className="truncate text-[12px] text-gray-400 mt-0.5">
-              {t("common.guardian")}: {item.guardianName} | {t("common.date")}: {item.dateLabel}
+            <p className="text-[12px] mt-[4px] leading-snug">
+              <span className="text-gray-400">Tutor: </span>
+              <span className="font-bold text-gray-600">{item.guardianName}</span>
+              <span className="text-gray-400"> | {t("common.date")}: </span>
+              <span className="font-bold text-gray-600">{item.dateLabel}</span>
             </p>
-            <div className="mt-2">
-              <StatusPill signed={item.isSigned} />
+            <div className="w-full flex justify-center ">
+              <div className="-translate-x-6">
+                <StatusPill isSigned={item.isSigned} paymentStatus={item.paymentStatus} />
+              </div>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0 pt-1">
+        <div className="absolute right-1 top-1 flex items-center gap-[6px] shrink-0">
           <button
             type="button"
             onClick={handleView}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#EBF2FF] text-[#3F78D8]"
+            className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-[#D1DEFF]"
             aria-label={t("history.details")}
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-[10px] w-[10px]" />
           </button>
           <button
             type="button"
             onClick={onDownload}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#EBF2FF] text-[#3F78D8]"
+            className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-[#D1DEFF]"
             aria-label={t("history.download")}
           >
-            <FileText className="h-4 w-4" />
+            <FileText className="h-[10px] w-[10px]" />
           </button>
           <button
             type="button"
             onClick={onShare}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#EBF2FF] text-[#3F78D8]"
+            className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-[#D1DEFF]"
             aria-label={t("common.share")}
           >
-            <Upload className="h-4 w-4" />
+            <Upload className="h-[10px] w-[10px]" />
           </button>
         </div>
       </div>
@@ -252,27 +281,30 @@ function PageContent() {
   }, [t]);
 
   return (
-    <div className="w-full bg-white">
+    <div className="w-full ">
       {/* Page Header */}
       <div className="flex items-center justify-between px-2 pt-1 pb-2">
-        <h1 className="text-[22px] font-bold text-[#3F78D8]">
+        <h1 className="text-[22px] font-bold text-primary">
           {t("history.laudosTitle")}
         </h1>
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setSearchOpen((v) => !v)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 transition-colors"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white border border-black/20 hover:bg-gray-50 transition-colors"
             aria-label={t("common.search")}
           >
-            <Search className="h-5 w-5 text-gray-500" />
+            <Search className="h-[18px] w-[18px] text-[#6B7280]" />
           </button>
           <Link
             href="/Veterinarian/notifications"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#3F78D8] text-white"
+            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white"
             aria-label={t("common.notifications")}
           >
-            <Bell className="h-4 w-4" />
+            <Bell className="h-[16px] w-[16px]" />
+            <span className="absolute -top-1 -right-1 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#EF4444] px-[4px] text-[10px] font-bold leading-none text-white ring-[1.5px] ring-white">
+              1
+            </span>
           </Link>
         </div>
       </div>
@@ -287,20 +319,20 @@ function PageContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("dashboard.searchPlaceholder")}
-              className="w-full rounded-full bg-[#F5F6F6] pl-9 pr-4 py-2.5 text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#3F78D8]/20"
+              className="w-full rounded-full bg-[#F5F6F6] pl-9 pr-4 py-2.5 text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-primary/20"
               autoFocus
             />
           </div>
         </div>
       )}
 
-      {/* Gray Container Card */}
-      <div className="mt-2 rounded-[20px] bg-[#F5F6F6] p-4 pb-6">
-        <div className="mb-4">
-          <h2 className="text-[18px] font-bold text-gray-900">
+      {/* Container Card */}
+      <div className="mt-2 rounded-lg p-4 pb-5 border border-black/20">
+        <div className="mb-4 px-1">
+          <h2 className="text-[18px] font-bold text-black/70 leading-tight">
             {t("history.laudosTitle")}
           </h2>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <p className="text-[12px] text-[#6B7280]">
             {t("history.manageLaudos")}
           </p>
         </div>
@@ -328,7 +360,7 @@ function PageContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="w-full bg-white" />}>
+    <Suspense fallback={<div className="w-full" />}>
       <PageContent />
     </Suspense>
   );

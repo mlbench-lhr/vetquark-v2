@@ -23,7 +23,7 @@ function MobileOnly({ children }: { children: React.ReactNode }) {
 
   if (!isMobile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-0">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">{t("mobileOnly.title")}</h2>
           <p className="text-gray-600">
@@ -53,7 +53,7 @@ export default function Layout({
         'button[aria-label="Back"]'
       ) || !!document.querySelector(
         'button[aria-label="Voltar"]'
-      )) && pathname!=="/Guardian/pets";
+      )) && pathname !== "/Guardian/pets" && pathname !== "/Veterinarian/registrations";
       setHasBackButton((prev) =>
         prev === nextHasBackButton ? prev : nextHasBackButton
       );
@@ -74,7 +74,7 @@ export default function Layout({
 
   return (
     <MobileOnly>
-      <div className="h-[100dvh] flex flex-col bg-white">
+      <div className="h-[100dvh] flex flex-col bg-[#FAFAFF]">
         {/* Main Content Area - with padding for bottom nav */}
         <main className={`flex-1 pt-4 px-4 overflow-y-auto scroll-fix relative ${hasBackButton ? "" : "pb-20"}`}>
           {children}

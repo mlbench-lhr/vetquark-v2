@@ -114,35 +114,35 @@ export default function MenuPage() {
   );
 
   return (
-    <div className="bg-white min-h-screen flex flex-col">
+    <div className=" flex flex-col">
       <Header title={t("menu.menu")} />
-      <div className="px-4 pt-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-14 w-14 overflow-hidden rounded-full bg-[#F5F6F6]">
+      <div className="pt-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-[43px] w-[43px] overflow-hidden rounded-full bg-[#E8E8EE] flex-shrink-0">
               <Image width={100} height={100} src={avatarUrl} alt={name} className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[20px] font-semibold leading-[24px] text-[#111827]">
+              <div className="truncate text-[14px] font-semibold leading-[20px] text-black/90">
                 {name}
               </div>
-              <div className="truncate text-[14px] leading-[18px] text-[#9AA4AF]">
+              <div className="truncate text-[13px] leading-[18px] text-[#8E8E93]">
                 {email}
               </div>
             </div>
           </div>
           <Link
             href="/Veterinarian/Menu/EditProfile"
-            className="flex h-10 items-center gap-2 rounded-full bg-[#F5F6F6] px-5 text-[14px] font-medium text-[#111827]"
+            className="flex h-5 items-center gap-0.5 rounded-sm bg-secondary px-4 text-[10px] font-medium text-black/70 flex-shrink-0"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-2 w-2" />
             {t("menu.edit")}
           </Link>
         </div>
       </div>
 
       {/* Balance Card */}
-      <div className="mx-4 pt-5 pb-2">
+      <div className="pt-4">
         {walletLoading ? (
           <BalanceCardSkeleton />
         ) : (
@@ -150,45 +150,42 @@ export default function MenuPage() {
             onClick={() => {
               router.push("/Veterinarian/Menu/wallet")
             }}
-            className="w-full rounded-2xl bg-[#4A7BF7] p-4 text-left transition-colors hover:bg-[#3A6BE7]"
+            className="w-full rounded-lg bg-primary px-5 py-2.5 text-left transition-colors hover:opacity-95"
           >
             <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="flex h-5 w-5 items-center justify-center rounded bg-white/20">
-                    <Wallet className="h-3 w-3 text-white" />
-                  </div>
-                  <span className="text-[13px] text-white/80">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Wallet className="h-[14px] w-[14px] text-white" />
+                  <span className="text-[13px] font-medium text-white">
                     {t("wallet.availableBalance")}
                   </span>
                 </div>
-                <p className="text-[24px] font-bold text-white">
+                <p className="text-[26px] font-bold text-white leading-[20px]">
                   {currency} {balance}
                 </p>
               </div>
-              <ChevronRight className="h-5 w-5 text-white" />
+              <ChevronRight className="h-6 w-6 text-white" />
             </div>
           </button>
         )}
       </div>
 
-      <div className="flex-1 px-4 pt-5">
-        <div className="space-y-2">
+      <div className="flex-1 pt-5">
+        <div className="space-y-0">
           {menuItems.map((item) => {
             const row = (
-              <div className="flex w-full items-center gap-4 rounded-2xl px-4 py-3 transition-colors hover:bg-[#F5F6F6]">
-                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#EAF1FF]">
-                  <item.icon className="h-5 w-5 text-[#3F78D8]" />
+              <div className="flex w-full items-center gap-2 py-1.5">
+                <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full bg-[#E5EDF9]">
+                  <item.icon className="h-[15px] w-[15px] text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[16px] font-medium leading-[20px] text-[#111827]">
+                  <div className="text-[12px] font-[500] leading-[16px] text-black/70">
                     {item.title}
                   </div>
-                  <div className="mt-1 truncate text-[13px] leading-[16px] text-[#9AA4AF]">
+                  <div className="text-[10px] leading-[15px] text-black/40">
                     {item.description}
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 flex-shrink-0 text-[#3F78D8]" />
               </div>
             );
 
@@ -200,18 +197,19 @@ export default function MenuPage() {
           })}
         </div>
 
-        <div className="my-5 h-px w-full bg-[#E5E7EB]" />
+        <div className="border-t border-secondary w-full mt-3">
 
-        <button
-          type="button"
-          onClick={logout}
-          className="flex items-center gap-4 rounded-2xl px-4 py-3 text-[#9AA4AF] transition-colors hover:bg-[#F5F6F6]"
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F5F6F6]">
-            <LogOut className="h-5 w-5 text-[#9AA4AF]" />
-          </div>
-          <div className="text-[16px] font-medium leading-[20px]">{t("common.logout")}</div>
-        </button>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex items-center gap-2 py-3 text-black/70 "
+          >
+            <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#EBEBF0]">
+              <LogOut className="h-[15px] w-[15px] text-black/70" />
+            </div>
+            <div className="text-[12px] font-semibold leading-[19px]">{t("common.logout")}</div>
+          </button>
+        </div>
       </div>
     </div>
   );

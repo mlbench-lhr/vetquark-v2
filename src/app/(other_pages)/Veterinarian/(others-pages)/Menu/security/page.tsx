@@ -2,7 +2,7 @@
 
 import React from "react";
 import Header from "@/components/common/header";
-import { Laptop, Monitor, Smartphone, Eye, EyeOff } from "lucide-react";
+import { Laptop, Monitor, Smartphone, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
@@ -74,13 +74,13 @@ export default function SecurityPage() {
   }, [t]);
 
   return (
-    <div className="bg-[#F5F6F6]">
+    <div className="">
       <Header title={t("menu.security")} />
 
       <div className="pt-4 pb-10">
         <div className="space-y-3">
-          <div className="rounded-2xl bg-white px-4 py-4 flex items-center justify-between">
-            <div className="text-[15px] text-[#111827] font-medium">{t("security.twoFactorAuth")}</div>
+          <div className="rounded-lg bg-secondary px-5 py-[18px] flex items-center justify-between">
+            <div className="text-[12px] text-black/70 font-medium">{t("security.twoFactorAuth")}</div>
             <button
               type="button"
               onClick={async () => {
@@ -103,136 +103,136 @@ export default function SecurityPage() {
                   toast.error(t("security.networkErrorUpdating2fa"));
                 }
               }}
-              className="h-10 px-6 rounded-full bg-[#4A7BF7] text-white text-[14px] font-medium"
+              className="h-[34px] px-5 rounded-3xl bg-primary text-white text-[10px] font-normal"
             >
               {twoFactorEnabled ? "Deactivate" : t("security.activate")}
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white px-4 py-4 flex items-center justify-between">
-            <div className="text-[15px] text-[#111827] font-medium">{t("security.changePassword")}</div>
+          <div className="rounded-lg bg-secondary px-5 py-[18px] flex items-center justify-between">
+            <div className="text-[12px] text-black/70 font-medium">{t("security.changePassword")}</div>
             <button
               type="button"
               onClick={() => setChangeOpen(true)}
-              className="h-10 px-6 rounded-full bg-[#4A7BF7] text-white text-[14px] font-medium"
+              className="h-[34px] px-5 rounded-3xl bg-primary text-white text-[10px] font-normal"
             >
               {t("security.change")}
             </button>
           </div>
+        </div>
 
-          <div className="rounded-3xl bg-white px-4 pt-4 pb-5">
-            <div className="text-[15px] text-[#111827] font-semibold mb-3">{t("security.activeSessions")}</div>
+        <div className="mt-7">
+          <div className="text-[15px] text-black/70 font-medium mb-3">{t("security.activeSessions")}</div>
 
-            <div className="rounded-2xl bg-[#F5F6F6] p-2 space-y-2">
-              {sessions.map((s) => (
-                <div key={s.id} className="rounded-xl bg-white px-3 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg border border-[#4A7BF7] flex items-center justify-center bg-white">
-                      {s.icon.type === "smartphone" && <Smartphone className="w-5 h-5 text-[#4A7BF7]" />}
-                      {s.icon.type === "laptop" && <Laptop className="w-5 h-5 text-[#4A7BF7]" />}
-                      {s.icon.type === "monitor" && <Monitor className="w-5 h-5 text-[#4A7BF7]" />}
-                      {s.icon.type === "google" && <span className="text-[14px] font-semibold text-[#4A7BF7]">G</span>}
-                    </div>
-                    <div className="text-[15px] text-[#111827] font-medium">{s.label}</div>
-                  </div>
-
-                  {s.rightLabel ? (
-                    <div className="text-[14px] font-medium text-[#4A7BF7]">{s.rightLabel}</div>
-                  ) : (
-                    <div className="w-20" />
-                  )}
+          <div className="space-y-3">
+            {sessions.map((s) => (
+              <div key={s.id} className="rounded-lg bg-secondary px-4 py-[14px] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {s.icon.type === "smartphone" && <Smartphone className="w-[22px] h-[22px] text-primary" />}
+                  {s.icon.type === "laptop" && <Laptop className="w-[22px] h-[22px] text-primary" />}
+                  {s.icon.type === "monitor" && <Monitor className="w-[22px] h-[22px] text-primary" />}
+                  {s.icon.type === "google" && <span className="text-[14px] font-semibold text-primary">G</span>}
+                  <div className="text-[12px] text-black/70 font-medium">{s.label}</div>
                 </div>
-              ))}
-            </div>
 
-            {/* <button
-              type="button"
-              className="w-full mt-4 text-center text-[15px] font-medium text-[#EF4444]"
-            >
-              {t("security.disconnectAllDevices")}
-            </button> */}
+                {s.rightLabel ? (
+                  <div className="text-[12px] font-medium text-primary">{s.rightLabel}</div>
+                ) : null}
+              </div>
+            ))}
           </div>
+
+          <button
+            type="button"
+            className="w-full mt-6 text-center text-[14px] font-medium text-black/70 hover:text-[#EF4444] transition-colors"
+            onClick={async () => {
+              try {
+                const res = await fetch("/api/user/sessions", { method: "DELETE", credentials: "include" });
+                if (res.ok) { toast.success(t("security.disconnectedAllDevices")); setSessions([]); }
+                else { toast.error(t("security.failedToDisconnect")); }
+              } catch { toast.error(t("security.networkError")); }
+            }}
+          >
+            {t("security.disconnectAllDevices")}
+          </button>
         </div>
       </div>
 
       {changeOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
-          <div className="w-full max-w-md rounded-3xl bg-white p-5">
-            <div className="text-[16px] font-semibold text-[#111827]">{t("security.changePassword")}</div>
+        <div className="fixed inset-0 z-50 flex items-center px-4 justify-center bg-black/50 pb-0">
+          <div className="w-full rounded-3xl bg-[#F9F9FE] px-5 pt-5 pb-10 shadow-2xl">
+            <div className="flex items-center gap-2 mb-6">
+              <button
+                type="button"
+                onClick={() => { setChangeOpen(false); setCurrentPassword(""); setNewPassword(""); setConfirmPassword(""); }}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary"
+              >
+                <ArrowLeft size={12} />
+              </button>
+              <div className="text-[12px] font-semibold text-black/70">{t("security.changePassword")}</div>
+            </div>
 
-            <div className="mt-4 space-y-3">
+            <div className="space-y-2">
               <div>
-                <div className="text-[14px] font-medium text-[#111827]">{t("security.currentPassword")}</div>
-                <div className="relative mt-2">
+                <div className="text-[13px] font-medium text-black/70 mb-1.5">{t("security.currentPassword")}</div>
+                <div className="relative">
                   <input
                     placeholder={t("security.enterCurrentPassword")}
                     type={showCurrentPassword ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                    className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93]"
                   >
-                    {showCurrentPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showCurrentPassword ? <EyeOff className="w-[16px] h-[16px]" /> : <Eye className="w-[16px] h-[16px]" />}
                   </button>
                 </div>
               </div>
               <div>
-                <div className="text-[14px] font-medium text-[#111827]">{t("security.newPassword")}</div>
-                <div className="relative mt-2">
+                <div className="text-[13px] font-medium text-black/70 mb-1.5">{t("security.newPassword")}</div>
+                <div className="relative">
                   <input
                     placeholder={t("security.enterNewPassword")}
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                    className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93]"
                   >
-                    {showNewPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showNewPassword ? <EyeOff className="w-[16px] h-[16px]" /> : <Eye className="w-[16px] h-[16px]" />}
                   </button>
                 </div>
               </div>
               <div>
-                <div className="text-[14px] font-medium text-[#111827]">{t("security.confirmNewPassword")}</div>
-                <div className="relative mt-2">
+                <div className="text-[13px] font-medium text-black/70 mb-1.5">{t("security.confirmNewPassword")}</div>
+                <div className="relative">
                   <input
                     placeholder={t("security.confirmNewPasswordPlaceholder")}
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-[14px] bg-[#F5F6F6] px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                    className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93]"
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showConfirmPassword ? <EyeOff className="w-[16px] h-[16px]" /> : <Eye className="w-[16px] h-[16px]" />}
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-6">
               <button
                 type="button"
                 disabled={saving}
@@ -267,21 +267,9 @@ export default function SecurityPage() {
                     setSaving(false);
                   }
                 }}
-                className="h-[52px] w-full rounded-full bg-[#4A7BF7] text-[15px] font-medium text-white disabled:opacity-60"
+                className="w-full h-[32px]! rounded-md bg-primary hover:bg-[#2f68c8] text-white font-normal text-[12px] shadow-none"
               >
                 {saving ? t("common.saving") : t("common.save")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setChangeOpen(false);
-                  setCurrentPassword("");
-                  setNewPassword("");
-                  setConfirmPassword("");
-                }}
-                className="h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-[#111827]"
-              >
-                {t("common.cancel")}
               </button>
             </div>
           </div>

@@ -25,11 +25,11 @@ function Step({
   return (
     <div className="rounded-2xl bg-[#F5F6F6] px-4 py-4">
       <div className="flex items-start gap-3">
-        <div className="h-9 w-9 flex items-center justify-center rounded-full bg-[#3F78D8] text-white text-[14px] font-semibold">
+        <div className="h-9 w-9 flex items-center justify-center rounded-full bg-primary text-white text-[14px] font-semibold">
           {index}
         </div>
         <div className="w-[calc(100%-36px)]">
-          <div className="text-[15px] font-semibold leading-[20px] text-[#111827]">{title}</div>
+          <div className="text-[15px] font-semibold leading-[20px] text-black/70">{title}</div>
           <div className="mt-1 text-[13px] leading-[18px] text-[#9AA4AF]">{body}</div>
         </div>
       </div>
@@ -165,7 +165,7 @@ export default function Page() {
 
       <div className="mx-auto w-full px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div>
-          <div className="text-[22px] font-semibold leading-[26px] text-[#111827]">
+          <div className="text-[22px] font-semibold leading-[26px] text-black/70">
             {t("helpCentre.urineGuideHowToTitle")}
           </div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
@@ -176,7 +176,7 @@ export default function Page() {
         <div className="mt-4 h-[1px] w-full bg-[#E5E7EB]" />
 
         <div className="pt-5">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t("helpCentre.stepByStepTitle")}</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-black/70">{t("helpCentre.stepByStepTitle")}</div>
           <div className="mt-3 space-y-3">
             <Step
               index={1}
@@ -243,16 +243,16 @@ export default function Page() {
               </svg>
             </div>
             <div className="w-[calc(100%-36px)]">
-              <div className="text-[15px] font-semibold leading-[20px] text-[#111827]">Storage Instructions</div>
+              <div className="text-[15px] font-semibold leading-[20px] text-black/70">Storage Instructions</div>
               <div className="mt-1 text-[13px] leading-[18px] text-[#9AA4AF]">
-                The sample should be taken to the clinic within <span className="font-semibold text-[#111827]">2 hours</span>. If this is not possible, refrigerate it in the fridge for a maximum of 12 hours.
+                The sample should be taken to the clinic within <span className="font-semibold text-black/70">2 hours</span>. If this is not possible, refrigerate it in the fridge for a maximum of 12 hours.
               </div>
             </div>
           </div>
         </div>
 
         <div className="mt-5 rounded-2xl bg-[#EBF2FF] px-4 py-4">
-          <div className="text-[15px] font-semibold leading-[20px] text-[#111827]">Useful Tips</div>
+          <div className="text-[15px] font-semibold leading-[20px] text-black/70">Useful Tips</div>
           <div className="mt-3 space-y-2">
             {[
               "Have everything ready before starting",
@@ -262,8 +262,8 @@ export default function Page() {
               "If collection fails, contact your veterinarian for alternatives",
             ].map((tip) => (
               <div key={tip} className="flex items-start gap-2">
-                <Check className="mt-[2px] h-4 w-4 text-[#3F78D8]" />
-                <div className="text-[13px] leading-[18px] text-[#111827]">{tip}</div>
+                <Check className="mt-[2px] h-4 w-4 text-primary" />
+                <div className="text-[13px] leading-[18px] text-black/70">{tip}</div>
               </div>
             ))}
           </div>
@@ -284,8 +284,8 @@ export default function Page() {
               </defs>
             </svg>
             <div className="min-w-0">
-              <div className="text-[15px] font-semibold leading-[20px] text-[#111827]">Important</div>
-              <div className="mt-1 text-[13px] leading-[18px] text-[#111827]">
+              <div className="text-[15px] font-semibold leading-[20px] text-black/70">Important</div>
+              <div className="mt-1 text-[13px] leading-[18px] text-black/70">
                 This guide is for informational purposes only. Always follow your veterinarian’s instructions.
               </div>
               <div className="mt-1 text-[13px] leading-[18px] text-[#9AA4AF]">If unsure, contact your clinic.</div>
@@ -296,7 +296,7 @@ export default function Page() {
         <div className="mt-6">
           <button
             type="button"
-            className="h-[44px] w-full rounded-full bg-[#3F78D8] text-[14px] font-medium text-white flex items-center justify-center gap-2"
+            className="h-[44px] w-full rounded-full bg-primary text-[14px] font-medium text-white flex items-center justify-center gap-2"
             onClick={handleDownloadPdf}
           >
             <Download className="h-5 w-5" />
