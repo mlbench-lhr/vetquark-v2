@@ -2,7 +2,7 @@
 
 import React from "react";
 import Header from "@/components/common/header";
-import { Laptop, Monitor, Smartphone, Eye, EyeOff } from "lucide-react";
+import { Laptop, Monitor, Smartphone, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
@@ -74,13 +74,13 @@ export default function SecurityPage() {
   }, [t]);
 
   return (
-    <div className="bg-[#F2F2F7] min-h-screen">
+    <div className="">
       <Header title={t("menu.security")} />
 
       <div className="pt-4 pb-10">
         <div className="space-y-3">
-          <div className="rounded-2xl bg-[#EBEBF0] px-5 py-[18px] flex items-center justify-between">
-            <div className="text-[15px] text-black/70 font-medium">{t("security.twoFactorAuth")}</div>
+          <div className="rounded-lg bg-secondary px-5 py-[18px] flex items-center justify-between">
+            <div className="text-[12px] text-black/70 font-medium">{t("security.twoFactorAuth")}</div>
             <button
               type="button"
               onClick={async () => {
@@ -103,18 +103,18 @@ export default function SecurityPage() {
                   toast.error(t("security.networkErrorUpdating2fa"));
                 }
               }}
-              className="h-[34px] px-5 rounded-xl bg-primary text-white text-[13px] font-semibold"
+              className="h-[34px] px-5 rounded-3xl bg-primary text-white text-[10px] font-normal"
             >
               {twoFactorEnabled ? "Deactivate" : t("security.activate")}
             </button>
           </div>
 
-          <div className="rounded-2xl bg-[#EBEBF0] px-5 py-[18px] flex items-center justify-between">
-            <div className="text-[15px] text-black/70 font-medium">{t("security.changePassword")}</div>
+          <div className="rounded-lg bg-secondary px-5 py-[18px] flex items-center justify-between">
+            <div className="text-[12px] text-black/70 font-medium">{t("security.changePassword")}</div>
             <button
               type="button"
               onClick={() => setChangeOpen(true)}
-              className="h-[34px] px-5 rounded-xl bg-primary text-white text-[13px] font-semibold"
+              className="h-[34px] px-5 rounded-3xl bg-primary text-white text-[10px] font-normal"
             >
               {t("security.change")}
             </button>
@@ -126,13 +126,13 @@ export default function SecurityPage() {
 
           <div className="space-y-3">
             {sessions.map((s) => (
-              <div key={s.id} className="rounded-2xl bg-[#EBEBF0] px-4 py-[14px] flex items-center justify-between">
+              <div key={s.id} className="rounded-lg bg-secondary px-4 py-[14px] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {s.icon.type === "smartphone" && <Smartphone className="w-[22px] h-[22px] text-primary" />}
                   {s.icon.type === "laptop" && <Laptop className="w-[22px] h-[22px] text-primary" />}
                   {s.icon.type === "monitor" && <Monitor className="w-[22px] h-[22px] text-primary" />}
                   {s.icon.type === "google" && <span className="text-[14px] font-semibold text-primary">G</span>}
-                  <div className="text-[15px] text-black/70 font-medium">{s.label}</div>
+                  <div className="text-[12px] text-black/70 font-medium">{s.label}</div>
                 </div>
 
                 {s.rightLabel ? (
@@ -159,20 +159,20 @@ export default function SecurityPage() {
       </div>
 
       {changeOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 pb-0">
-          <div className="w-full rounded-t-3xl bg-white px-5 pt-5 pb-10 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6">
+        <div className="fixed inset-0 z-50 flex items-center px-4 justify-center bg-black/50 pb-0">
+          <div className="w-full rounded-3xl bg-[#F9F9FE] px-5 pt-5 pb-10 shadow-2xl">
+            <div className="flex items-center gap-2 mb-6">
               <button
                 type="button"
                 onClick={() => { setChangeOpen(false); setCurrentPassword(""); setNewPassword(""); setConfirmPassword(""); }}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-[#EBEBF0]"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                <ArrowLeft size={12} />
               </button>
-              <div className="text-[18px] font-bold text-black/70">{t("security.changePassword")}</div>
+              <div className="text-[12px] font-semibold text-black/70">{t("security.changePassword")}</div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div>
                 <div className="text-[13px] font-medium text-black/70 mb-1.5">{t("security.currentPassword")}</div>
                 <div className="relative">
@@ -181,14 +181,14 @@ export default function SecurityPage() {
                     type={showCurrentPassword ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-xl border border-[#E5E5EA] bg-white px-4 pr-12 text-[15px] text-black/70 outline-none placeholder:text-[#8E8E93] focus:ring-2 focus:ring-primary"
+                    className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93]"
                   >
-                    {showCurrentPassword ? <EyeOff className="w-[20px] h-[20px]" /> : <Eye className="w-[20px] h-[20px]" />}
+                    {showCurrentPassword ? <EyeOff className="w-[16px] h-[16px]" /> : <Eye className="w-[16px] h-[16px]" />}
                   </button>
                 </div>
               </div>
@@ -200,14 +200,14 @@ export default function SecurityPage() {
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-xl border border-[#E5E5EA] bg-white px-4 pr-12 text-[15px] text-black/70 outline-none placeholder:text-[#8E8E93] focus:ring-2 focus:ring-primary"
+                    className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93]"
                   >
-                    {showNewPassword ? <EyeOff className="w-[20px] h-[20px]" /> : <Eye className="w-[20px] h-[20px]" />}
+                    {showNewPassword ? <EyeOff className="w-[16px] h-[16px]" /> : <Eye className="w-[16px] h-[16px]" />}
                   </button>
                 </div>
               </div>
@@ -219,14 +219,14 @@ export default function SecurityPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-xl border border-[#E5E5EA] bg-white px-4 pr-12 text-[15px] text-black/70 outline-none placeholder:text-[#8E8E93] focus:ring-2 focus:ring-primary"
+                    className="flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93]"
                   >
-                    {showConfirmPassword ? <EyeOff className="w-[20px] h-[20px]" /> : <Eye className="w-[20px] h-[20px]" />}
+                    {showConfirmPassword ? <EyeOff className="w-[16px] h-[16px]" /> : <Eye className="w-[16px] h-[16px]" />}
                   </button>
                 </div>
               </div>
@@ -267,7 +267,7 @@ export default function SecurityPage() {
                     setSaving(false);
                   }
                 }}
-                className="h-[52px] w-full rounded-xl bg-primary text-[16px] font-bold text-white disabled:opacity-60"
+                className="w-full h-[32px]! rounded-md bg-primary hover:bg-[#2f68c8] text-white font-normal text-[12px] shadow-none"
               >
                 {saving ? t("common.saving") : t("common.save")}
               </button>

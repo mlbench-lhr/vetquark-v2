@@ -32,7 +32,7 @@ function Toggle({
       onClick={() => onChange(!checked)}
       className={[
         "relative inline-flex items-center shrink-0",
-        "w-[51px] h-[31px] rounded-full",
+        "w-[37px] h-[20px] rounded-full",
         checked ? "bg-primary" : "bg-[#78788029]",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
         "transition-colors",
@@ -41,9 +41,9 @@ function Toggle({
       <span
         className={[
           "absolute top-[2px] left-[2px]",
-          "w-[27px] h-[27px] rounded-full bg-white",
+          "w-[16px] h-[16px] rounded-full bg-white",
           "shadow-[0_3px_8px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.16)]",
-          checked ? "translate-x-[20px]" : "translate-x-0",
+          checked ? "translate-x-[17px]" : "translate-x-0",
           "transition-transform",
         ].join(" ")}
       />
@@ -63,16 +63,16 @@ function SettingCard({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <div className="rounded-2xl bg-[#EBEBF0] px-5 py-4 flex items-center justify-between gap-4">
+    <div className="rounded-lg bg-secondary px-5 py-3 flex items-center justify-between gap-4">
       <div className="min-w-0 flex-1">
-        <div className="text-[15px] leading-[20px] font-semibold text-black/70">
+        <div className="text-[12px] leading-[16px] font-semibold text-black/70">
           {title}
         </div>
-        <div className="mt-1 text-[12px] leading-[16px] text-[#8E8E93]">
+        <div className="text-[10px] leading-[16px] text-[#8E8E93]">
           {description}
         </div>
       </div>
-      <div className="shrink-0">
+      <div className="shrink-0 flex justify-center items-center">
         <Toggle checked={checked} onChange={onChange} />
       </div>
     </div>
@@ -181,7 +181,7 @@ export default function NotificationsSettingsPage() {
   };
 
   return (
-    <div className="bg-[#F2F2F7] min-h-screen">
+    <div className="">
       <Header title={t("menu.notifications")} />
 
       <div className="pb-10 pt-4">
@@ -213,12 +213,12 @@ export default function NotificationsSettingsPage() {
           ))}
         </div>
 
-        <div className="mt-8">
+        <div className="mt-4">
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[52px] w-full rounded-xl bg-primary text-[16px] font-bold text-white disabled:opacity-60"
+            className="h-[30px] w-full rounded-md bg-primary text-[12px] font-bold text-white disabled:opacity-60"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>

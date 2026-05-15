@@ -54,7 +54,7 @@ export default function Page() {
   );
 
   return (
-    <div className="bg-[#F2F2F7] min-h-screen">
+    <div className="">
       <Header title={t("settings.languageTitle")} />
 
       <div className="flex min-h-[calc(100dvh-72px)] flex-col pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
@@ -70,22 +70,22 @@ export default function Page() {
                   i18n.changeLanguage(item.id);
                   if (typeof window !== "undefined") window.localStorage.setItem("ui_language_v1", item.id);
                 }}
-                className={`flex h-[52px] w-full items-center justify-between rounded-2xl px-4 transition-colors ${selected ? "bg-[#E5EDF9]" : "bg-[#EBEBF0]"
+                className={`flex h-[40px] w-full items-center justify-between rounded-lg px-4 transition-colors ${selected ? "bg-[#E5EDF9]" : "bg-[#EBEBF0]"
                   }`}
               >
                 <div
-                  className={`text-[15px] font-medium leading-[20px] ${selected ? "text-primary" : "text-black/70"
+                  className={`text-[12px] font-medium leading-[20px] ${selected ? "text-primary" : "text-black/70"
                     }`}
                 >
                   {item.label}
                 </div>
 
                 {selected ? (
-                  <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-primary">
+                  <div className="flex h-[20px] w-[20px] items-center justify-center rounded-full bg-primary">
                     <Check className="h-[14px] w-[14px] text-white" strokeWidth={3} />
                   </div>
                 ) : (
-                  <div className="h-[26px] w-[26px]" />
+                  <div className="h-[20px] w-[20px]" />
                 )}
               </button>
             );
@@ -97,7 +97,7 @@ export default function Page() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="h-[52px] w-full rounded-xl bg-primary text-[16px] font-bold text-white disabled:opacity-60"
+            className="h-[30px] w-full rounded-md bg-primary text-[12px] font-bold text-white disabled:opacity-60"
           >
             {saving ? t("common.saving") : t("common.saveChanges")}
           </button>
