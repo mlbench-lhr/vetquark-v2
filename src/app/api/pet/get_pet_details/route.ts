@@ -25,18 +25,28 @@ export async function GET(req: NextRequest) {
 
     await connectMongo();
 
-    const guardian = await User.findById(guardianId).select("_id role profileImageUrl taxId fullName").lean();
-    if (!guardian || guardian.role !== "Guardian") {
+    const currentUser = await User.findById(guardianId).select("_id role profileImageUrl taxId fullName").lean();
+    if (!currentUser || (currentUser.role !== "Guardian" && currentUser.role !== "Veterinarian")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const doc = await Patient.findOne({ _id: petId, guardian: guardianId })
+    const petQuery: Record<string, unknown> = { _id: petId };
+    if (currentUser.role === "Guardian") {
+      petQuery.guardian = guardianId;
+    }
+
+    const doc = await Patient.findOne(petQuery)
       .populate("veterinarian", "fullName tradeName email")
+      .populate("guardian", "_id role profileImageUrl taxId fullName")
       .lean();
 
     if (!doc) {
       return NextResponse.json({ error: "Pet not found" }, { status: 404 });
     }
+
+    const guardianData = currentUser.role === "Guardian"
+      ? currentUser
+      : (doc.guardian as any) ?? null;
 
     const item = {
       id: String(doc._id),
@@ -69,7 +79,7 @@ export async function GET(req: NextRequest) {
           email: (doc.veterinarian as any).email ?? "",
         }
         : null,
-      guardian: guardian,
+      guardian: guardianData,
       createdAt: doc.createdAt ?? null,
       updatedAt: doc.updatedAt ?? null,
     };

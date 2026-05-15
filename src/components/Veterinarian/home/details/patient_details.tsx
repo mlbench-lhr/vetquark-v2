@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import ProgressView from './Progress';
+import Header from '@/components/common/header';
 
 type ReportRow = {
   id: string;
@@ -306,39 +307,8 @@ const PatientProfilePage: React.FC = () => {
 
   return (
     <div className="pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3 min-w-0">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            aria-label="go-back-to-previous"
-            className="w-10 h-10 rounded-full bg-[#F1F2F3] flex items-center justify-center border-0 cursor-pointer shrink-0"
-          >
-            <ChevronLeft size={20} className="text-black/70" />
-          </button>
-          <h1 className="text-[18px] font-bold text-primary leading-none truncate">
-            {t('home.patientProfileTitle')}
-          </h1>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            aria-label="Search"
-            className="w-10 h-10 rounded-full bg-[#F1F2F3] flex items-center justify-center border-0 cursor-pointer"
-          >
-            <Search size={18} className="text-black/70" />
-          </button>
-          <button
-            type="button"
-            aria-label="Notifications"
-            onClick={() => router.push('/Veterinarian/notifications')}
-            className="w-10 h-10 rounded-full bg-primary flex items-center justify-center border-0 cursor-pointer"
-          >
-            <Bell size={18} className="text-white" fill="white" />
-          </button>
-        </div>
-      </div>
+      <Header title={"Perfil do Paciente"} />
+
 
       {/* Tabs */}
       <Tabs activeTab={activeTab} onTabChange={(v) => setActiveTab(v as 'information' | 'progress')} />

@@ -10,24 +10,40 @@ interface FAQItem {
     answer: string;
 }
 
-function AccordionSection({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+function Section({
+    title,
+    children,
+    defaultOpen = true,
+    noBorderTop = false,
+}: {
+    title: string;
+    children: React.ReactNode;
+    defaultOpen?: boolean;
+    noBorderTop?: boolean;
+}) {
     const [open, setOpen] = useState(defaultOpen);
     return (
-        <div className="b rounded-lg border border-[#E5E7EB] overflow-hidden">
+        <div className={` px-4 pt-4 ${noBorderTop ? "" : "border-t border-[#E5E5EA]"}`}>
             <button
+                type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="w-full flex items-center justify-between px-3 py-2 text-left"
+                className="w-full flex items-center justify-between pb-4 text-left"
             >
-                <span className="text-[16px] font-bold text-black/70">{title}</span>
+                <span className="text-[17px] font-bold text-[#1C1C1E] leading-tight pr-3">
+                    {title}
+                </span>
                 <ChevronDown
-                    className={`w-5 h-5 text-[#8E8E93] transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`}
+                    className={`w-5 h-5 text-[#8E8E93] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
                 />
             </button>
-            {open && (
-                <div className="px-5 pb-5">
-                    {children}
+            <div
+                className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                    }`}
+            >
+                <div className="overflow-hidden">
+                    <div className="pb-5">{children}</div>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
@@ -35,27 +51,40 @@ function AccordionSection({ title, children, defaultOpen = false }: { title: str
 export default function FeesAndPayoutsPage() {
     const router = useRouter();
     const { t } = useTranslation();
-    const [openFAQ, setOpenFAQ] = useState<number | null>(0);
+    const [openFAQ, setOpenFAQ] = useState<number | null>(null);
     const [platformFee, setPlatformFee] = useState(33.0);
     const [minWithdrawal, setMinWithdrawal] = useState(20.0);
-    const [exampleCharge] = useState(89.90);
+    const [exampleCharge] = useState(89.9);
+
+    const formatBRL = (n: number) =>
+        `R$ ${n.toFixed(2).replace(".", ",")}`;
 
     const faqItems: FAQItem[] = [
         {
-            question: t("feePayouts.faqCanIChargeBelow") || "Posso cobrar abaixo de R$ 33,00?",
-            answer: t("feePayouts.faqCanIChargeBelowAnswer") || "Não é recomendado; abaixo disso, seu repasse será R$ 0,00 ou negativo.",
+            question:
+                t("feePayouts.faqCanIChargeBelow") ||
+                `Posso cobrar abaixo de ${formatBRL(platformFee)}?`,
+            answer:
+                t("feePayouts.faqCanIChargeBelowAnswer") ||
+                "Não é recomendado; abaixo disso, seu repasse será R$ 0,00 ou negativo.",
         },
         {
             question: t("feePayouts.faqWhenSeeMoneyQ") || "Quando vejo o dinheiro?",
-            answer: t("feePayouts.faqWhenSeeMoneyA") || "Após a confirmação do pagamento, o valor líquido fica disponível na sua Carteira imediatamente.",
+            answer:
+                t("feePayouts.faqWhenSeeMoneyA") ||
+                "Após a confirmação do pagamento, o valor líquido fica disponível na sua Carteira em D+2 dias úteis.",
         },
         {
             question: t("feePayouts.faqPixOrBankQ") || "PIX ou conta?",
-            answer: t("feePayouts.faqPixOrBankA") || "Você pode escolher PIX ou conta bancária para saques. Ambos são suportados sem taxas adicionais da plataforma.",
+            answer:
+                t("feePayouts.faqPixOrBankA") ||
+                "Você pode escolher PIX ou conta bancária para saques. Ambos são suportados sem taxas adicionais da plataforma.",
         },
         {
             question: t("feePayouts.faqTutorNoPayQ") || "E se o tutor não pagar?",
-            answer: t("feePayouts.faqTutorNoPayA") || "Se um pagamento do tutor for estornado, o valor é debitado do seu saldo. A plataforma cuida de todas as disputas.",
+            answer:
+                t("feePayouts.faqTutorNoPayA") ||
+                "Se um pagamento do tutor for estornado, o valor é debitado do seu saldo. A plataforma cuida de todas as disputas.",
         },
     ];
 
@@ -63,107 +92,160 @@ export default function FeesAndPayoutsPage() {
         let mounted = true;
         (async () => {
             try {
-                const res = await fetch("/api/platform/settings", { credentials: "include" });
+                const res = await fetch("/api/platform/settings", {
+                    credentials: "include",
+                });
                 const data = await res.json().catch(() => null);
                 if (!mounted) return;
                 if (res.ok && data) {
-                    const fee = typeof data.platformFee === "number" ? data.platformFee : 33.0;
-                    const minW = typeof data.minWithdrawal === "number" ? data.minWithdrawal : 20.0;
+                    const fee =
+                        typeof data.platformFee === "number" ? data.platformFee : 33.0;
+                    const minW =
+                        typeof data.minWithdrawal === "number"
+                            ? data.minWithdrawal
+                            : 20.0;
                     setPlatformFee(fee);
                     setMinWithdrawal(minW);
                 }
-            } catch {
-            }
+            } catch { }
         })();
-        return () => { mounted = false; };
+        return () => {
+            mounted = false;
+        };
     }, []);
 
-    return (
-        <div className="w-full bg-[#F4F5FA] min-h-screen pb-8">
-            <Header title={t("menu.feePayouts") || "Taxas e Repasse"} />
+    const repasse = exampleCharge - platformFee;
 
-            <div className="pt-3 space-y-3">
-                {/* How the charging works */}
-                <AccordionSection title={t("feePayouts.howChargingWorks") || "Como funciona a cobrança"} defaultOpen>
-                    <div className="text-[14px] text-[#9AA4AF] leading-[1.7] space-y-1.5 mb-4">
-                        <p>Taxa fixa por exame: <span className="text-[#111827] font-medium">R$ {platformFee.toFixed(2)}</span> (cobrada pela plataforma no momento do pagamento do tutor).</p>
-                        <p>Preço ao tutor: definido por você em Precificação.</p>
-                        <p>Repasse ao veterinário: Preço ao tutor – R$ {platformFee.toFixed(2)}.</p>
-                    </div>
-                    <div className="bg-[#E5EDF9] rounded-xl px-4 py-3">
-                        <p className="text-[13px] text-primary leading-[1.5]">
-                            <span className="font-semibold">Exemplo rápido:</span> Se você cobra R$ {exampleCharge.toFixed(2)}, retemos R$ {platformFee.toFixed(2)} e você recebe R$ {(exampleCharge - platformFee).toFixed(2)}.
+    return (
+        <div className="w-full pb-10">
+            <div className="px-4">
+                <Header title={t("menu.feePayouts") || "Taxas e Repasse"} />
+            </div>
+
+            <div className="mt-3 border  rounded-lg overflow-hidden mx-4">
+                {/* Como funciona a cobrança */}
+                <Section
+                    noBorderTop
+                    title={t("feePayouts.howChargingWorks") || "Como funciona a cobrança"}
+                >
+                    <div className="text-[14px] text-[#3C3C43] leading-[1.6] space-y-[6px]">
+                        <p>
+                            <span className="font-bold text-[#1C1C1E]">Taxa fixa por exame:</span>{" "}
+                            R$ 33,00 (cobrada pela plataforma no momento do pagamento do tutor).
+                        </p>
+                        <p>
+                            <span className="font-bold text-[#1C1C1E]">Preço ao tutor:</span>{" "}
+                            definido por você em Precificação.
+                        </p>
+                        <p>
+                            <span className="font-bold text-[#1C1C1E]">Repasse ao veterinário:</span>{" "}
+                            Preço ao tutor – {formatBRL(platformFee)}.
                         </p>
                     </div>
-                </AccordionSection>
-
-                {/* Flow of Money */}
-                <AccordionSection title={t("feePayouts.flowOfMoney") || "Fluxo do dinheiro"}>
-                    <div className="text-[14px] text-[#9AA4AF] leading-[1.7] space-y-1.5">
-                        <p><span className="text-[#111827] font-medium">1.</span> O tutor paga pelo exame (link/QR).</p>
-                        <p><span className="text-[#111827] font-medium">2.</span> A plataforma retém R$ {platformFee.toFixed(2)}.</p>
-                        <p><span className="text-[#111827] font-medium">3.</span> O valor líquido entra na sua Carteira e fica disponível imediatamente.</p>
-                        <p><span className="text-[#111827] font-medium">4.</span> Você pode sacar seu saldo disponível a qualquer momento via PIX ou banco.</p>
+                    <div className="mt-3 bg-white rounded-md border px-4 py-3">
+                        <p className="text-[13px] text-[#3C3C43] leading-[1.55]">
+                            <span className="font-semibold text-[#1C1C1E]">Exemplo rápido:</span>{" "}
+                            Se você cobra {formatBRL(exampleCharge)}, retemos {formatBRL(platformFee)} e você recebe{" "}
+                            <span className="font-bold text-primary">{formatBRL(repasse)}</span>.
+                        </p>
                     </div>
-                </AccordionSection>
+                </Section>
 
-                {/* Transparency of Fees */}
-                <AccordionSection title={t("feePayouts.transparencyOfFees") || "Transparência das taxas"}>
-                    <div className="text-[14px] text-[#9AA4AF] leading-[1.7] space-y-1.5">
-                        <p>Plataforma: <span className="text-[#111827] font-medium">R$ {platformFee.toFixed(2)}</span> por exame.</p>
-                        <p>Métodos de pagamento: Custos já incluídos na taxa da plataforma.</p>
-                        <p>Saque: Sem taxa adicional da plataforma (exceto tarifas bancárias externas, se aplicável).</p>
+                {/* Fluxo do dinheiro */}
+                <Section title={t("feePayouts.flowOfMoney") || "Fluxo do dinheiro"}>
+                    <div className="text-[14px] text-[#3C3C43] leading-[1.7] space-y-[2px]">
+                        <p>1. Tutor paga o exame (link/QR).</p>
+                        <p>2. A plataforma retém R$ 33,00.</p>
+                        <p>3. O valor líquido entra na sua <span className="font-bold text-[#1C1C1E]">Carteira</span> como crédito agendado.</p>
+                        <p>4. Liberação do crédito em D+2 úteis após confirmação do pagamento.</p>
+                        <p>5. Valor liberado compõe seu <span className="font-bold text-[#1C1C1E]">saldo disponível</span> (apto a saque).</p>
                     </div>
-                </AccordionSection>
+                </Section>
 
-                {/* Quick Questions */}
-                <AccordionSection title={t("feePayouts.quickQuestions") || "Perguntas rápidas"}>
-                    <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
-                        {faqItems.map((item, index) => (
-                            <div
-                                key={index}
-                                className={index !== faqItems.length - 1 ? "border-b border-[#E5E7EB]" : ""}
-                            >
-                                <button
-                                    onClick={() => setOpenFAQ(openFAQ === index ? null : index)}
-                                    className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-[#F5F6F6]/50 transition-colors"
-                                >
-                                    <span className="text-[14px] font-medium text-[#111827] pr-3">{item.question}</span>
-                                    <ChevronDown
-                                        className={`w-5 h-5 text-[#9AA4AF] flex-shrink-0 transition-transform duration-200 ${openFAQ === index ? "rotate-180" : ""}`}
-                                    />
-                                </button>
-                                <div className={`overflow-hidden transition-all duration-200 ${openFAQ === index ? "max-h-40" : "max-h-0"}`}>
-                                    <p className="px-4 pb-4 text-[13px] text-[#9AA4AF] leading-[1.5]">{item.answer}</p>
+                {/* Transparência das taxas */}
+                <Section
+                    title={t("feePayouts.transparencyOfFees") || "Transparência das taxas"}
+                >
+                    <div className="text-[14px] text-[#3C3C43] leading-[1.7] space-y-[6px]">
+                        <p>
+                            <span className="font-bold text-[#1C1C1E]">Plataforma:</span>{" "}
+                            {formatBRL(platformFee)} por exame.
+                        </p>
+                        <p>
+                            <span className="font-bold text-[#1C1C1E]">Meios de pagamento:</span>{" "}
+                            Custos já embutidos na taxa da plataforma.
+                        </p>
+                        <p>
+                            <span className="font-bold text-[#1C1C1E]">Saque:</span>{" "}
+                            Sem tarifa adicional pela plataforma (salvo tarifas bancárias externas, se houver).
+                        </p>
+                    </div>
+                </Section>
+
+                {/* Perguntas rápidas */}
+                <Section
+                    title={t("feePayouts.quickQuestions") || "Perguntas rápidas"}
+                >
+                    <div className="-mx-4 divide-y divide-[#E5E5EA] border-t border-[#E5E5EA]">
+                        {faqItems.map((item, index) => {
+                            const isOpen = openFAQ === index;
+                            return (
+                                <div key={index} className="px-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setOpenFAQ(isOpen ? null : index)}
+                                        className="w-full flex items-center justify-between gap-3 py-[14px] text-left"
+                                    >
+                                        <span className="text-[14px] text-[#1C1C1E] leading-[1.4] font-medium">
+                                            {item.question}
+                                        </span>
+                                        <ChevronDown
+                                            className={`w-5 h-5 text-[#8E8E93] flex-shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                                        />
+                                    </button>
+                                    <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                                        <div className="overflow-hidden">
+                                            <p className="pb-3 text-[13px] text-[#6C6C70] leading-[1.55]">{item.answer}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
-                </AccordionSection>
+                </Section>
 
-                {/* Withdrawals and Refunds */}
-                <AccordionSection title={t("feePayouts.withdrawalsAndRefunds") || "Saques e Reembolsos"}>
-                    <div className="text-[14px] text-[#9AA4AF] leading-[1.7] space-y-1.5 mb-5">
-                        <p>Os saques são solicitados na tela da Carteira para seu método de pagamento cadastrado.</p>
-                        <p>O valor mínimo para saque é <span className="text-[#111827] font-medium">R$ {minWithdrawal.toFixed(2)}</span>.</p>
-                        <p>O prazo de recebimento é de até 1 dia útil.</p>
+                {/* Saques e Reembolsos */}
+                <Section
+                    title={t("feePayouts.withdrawalsAndRefunds") || "Saques e Reembolsos"}
+                >
+                    <div className="text-[14px] text-[#3C3C43] leading-[1.7] space-y-[6px]">
+                        <p>
+                            Saques são solicitados na tela <span className="font-bold text-[#1C1C1E]">Carteira</span> para seu método de pagamento cadastrado.
+                        </p>
+                        <p>
+                            O valor mínimo para saque é <span className="font-bold text-[#1C1C1E]">R$ {minWithdrawal.toFixed(2).replace(".", ",")}</span>.
+                        </p>
+                        <p>O prazo de recebimento é de até <span className="font-bold text-[#1C1C1E]">1 dia útil</span>.</p>
                         <p>Se um pagamento do tutor for estornado, o valor é debitado do seu saldo.</p>
                     </div>
                     <button
+                        type="button"
                         onClick={() => router.push("/Veterinarian/Menu/wallet")}
-                        className="w-full h-[44px] bg-primary text-white text-[14px] font-semibold rounded-lg hover:bg-[#2f68c8] transition-colors flex items-center justify-center gap-2"
+                        className="mt-4 w-full h-[48px] bg-primary text-white text-[15px] font-bold rounded-xl flex items-center justify-center gap-2 shadow-[0_4px_16px_-4px_rgba(63,120,216,0.5)] active:opacity-90 transition-opacity"
                     >
-                        <Wallet className="w-4 h-4" />
+                        <Wallet className="w-[18px] h-[18px]" />
                         {t("feePayouts.goToWallet") || "Ir para a Carteira"}
                     </button>
-                </AccordionSection>
+                </Section>
 
-                {/* Taxes and Notes */}
-                <AccordionSection title={t("feePayouts.taxesAndNotes") || "Impostos e Notas"}>
-                    <p className="text-[14px] text-[#9AA4AF] leading-[1.6]">
-                        A taxa de R$ {platformFee.toFixed(2)} não inclui impostos do seu CNPJ/CPF. Consulte seu contador sobre a emissão de nota fiscal ao tutor, se aplicável.
+                {/* Impostos e Notas */}
+                <Section
+                    title={t("feePayouts.taxesAndNotes") || "Impostos e Notas"}
+                >
+                    <p className="text-[14px] text-[#3C3C43] leading-[1.65]">
+                        A taxa de {formatBRL(platformFee)} não inclui impostos do seu CNPJ/CPF. Consulte seu contador sobre a emissão de nota fiscal ao tutor, se aplicável.
                     </p>
-                </AccordionSection>
+                </Section>
             </div>
         </div>
     );

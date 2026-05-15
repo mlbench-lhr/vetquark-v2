@@ -69,18 +69,18 @@ export default function DropdownSelect({
         <button
           type="button"
           onClick={() => !disabled && setOpen((v) => !v)}
-          className={`w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary border-0 text-[15px] ${value ? "text-black/70" : "text-[#8E8E93]"} pr-12 text-left ${className}`}
+          className={`h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border! border-input w-full px-2 bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary border-0 text-[12px] ${value ? "text-black/70" : "text-[#8E8E93]"} pr-12 text-left ${className}`}
         >
           {selectedLabel || placeholder || t("common.selectOption")}
         </button>
         <svg
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-primary pointer-events-none"
           width="20"
           height="20"
           viewBox="0 0 20 20"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1"
         >
           <path d="M5 7.5l5 5 5-5" />
         </svg>

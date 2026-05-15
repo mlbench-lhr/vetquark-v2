@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import TypedDateInput from "@/components/form/input/TypedDateInput";
 import { ChevronDown, Pencil } from "lucide-react";
+import Label from "@/components/form/Label";
 
 type TaxProfileFormData = {
   taxId: string;
@@ -169,30 +170,30 @@ export default function TaxInfoAndProfessionalProfilePage() {
     }
   };
 
-  const inputCls = "";
-  const labelCls = "";
+  const inputCls = "flex h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input px-2 py-1 text-[12px]! shadow-none transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+  const labelCls = "block text-[15px] font-semibold text-[#1C1C1E] mb-[6px]";
 
   return (
-    <div className="w-full bg-[#F2F2F7] min-h-screen flex flex-col">
+    <div className="w-full flex flex-col">
       <Header title={t("menu.settings") || "Ajustes"} />
 
       <div className="flex-1 overflow-y-auto pt-2 pb-8">
-        <div className="bg-white rounded-2xl border border-[#E5E5EA] p-5">
+        <div className=" rounded-lg border border-[#E5E5EA] p-3">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-[18px] font-bold text-black/70 leading-[24px]">
                 {t("menu.professionalProfile") || "Perfil Profissional"}
               </h2>
-              <p className="text-[13px] text-[#8E8E93] mt-1 leading-[18px]">
+              <p className="text-[13px] text-[#8E8E93] mt-[3px] leading-[18px]">
                 {t("menu.professionalProfileDesc") || "Seus dados de identificação e assinatura."}
               </p>
             </div>
-            <ChevronDown className="w-5 h-5 text-[#8E8E93]" />
+            <ChevronDown className="w-5 h-5 text-[#8E8E93] mt-1 flex-shrink-0" />
           </div>
 
           <form ref={formRef} onSubmit={handleSubmit} className="mt-5 space-y-4">
             <div>
-              <label className={labelCls}>{t("menu.fullName")}</label>
+              <Label >{t("menu.fullName") || "Nome Completo"}</Label>
               <DropdownSelect
                 options={operateOptions}
                 value={formData.operateHow}
@@ -202,9 +203,9 @@ export default function TaxInfoAndProfessionalProfilePage() {
               />
             </div>
 
-            <div className="grid grid-cols-[1fr_120px] gap-3">
+            <div className="grid grid-cols-[1fr_100px] gap-3">
               <div>
-                <label className={labelCls}>CRMV</label>
+                <Label >CRMV</Label>
                 <input
                   type="text"
                   name="crmv"
@@ -215,7 +216,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
                 />
               </div>
               <div>
-                <label className={labelCls}>UF</label>
+                <Label >UF</Label>
                 <input
                   type="text"
                   name="crmvState"
@@ -228,7 +229,7 @@ export default function TaxInfoAndProfessionalProfilePage() {
             </div>
 
             <div>
-              <label className={labelCls}>Telefone/WhatsApp</label>
+              <Label >Telefone/WhatsApp</Label>
               <input
                 type="text"
                 name="taxId"
@@ -240,32 +241,33 @@ export default function TaxInfoAndProfessionalProfilePage() {
             </div>
 
             <div>
-              <label className={labelCls}>{t("profile.dateOfBirth")}</label>
+              <Label >{t("profile.dateOfBirth") || "Data de Nascimento"}</Label>
               <TypedDateInput
+                iconSize={12}
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={(nextIsoDate) => setFormData((prev) => ({ ...prev, dateOfBirth: nextIsoDate }))}
                 placeholder="dd/mm/aaaa"
-                className="w-full h-[44px] px-4 bg-white border border-[#E5E5EA] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-[14px] text-black/70 placeholder:text-[#8E8E93] pr-11"
-                iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E8E93] cursor-pointer"
+                className="h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border! border-input w-full px-2 bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary border-0 text-[12px]!  w-full px-2! py-[14px] bg-secondary rounded-xl focus:outline-none focus:ring-2 focus:ring-primary border-0 text-[15px] text-[#1C1C1E] placeholder-[#8E8E93] pr-12"
+                iconClassName="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8E93] cursor-pointer"
               />
             </div>
 
             <div>
-              <label className={labelCls}>E-mail (somente leitura)</label>
+              <Label >E-mail (somente leitura)</Label>
               <input
                 type="text"
                 placeholder="vet@stripscan.app"
                 value={profile?.email || ""}
                 readOnly
-                className={`${inputCls} opacity-80`}
+                className={`${inputCls} opacity-70 cursor-default`}
               />
             </div>
 
             <div>
-              <label className={labelCls}>Assinatura Digital</label>
-              <button type="button" className="h-[40px] rounded-lg bg-[#3D3D45] text-white px-4 text-[13px] font-semibold inline-flex items-center gap-1.5">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" /></svg>
+              <Label >Assinatura Digital</Label>
+              <button type="button" className="h-[34px] rounded-sm bg-[#4F5464] text-white px-5 text-[15px] font-semibold inline-flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" /></svg>
                 Enviar nova
               </button>
             </div>
@@ -290,9 +292,9 @@ export default function TaxInfoAndProfessionalProfilePage() {
             type="button"
             onClick={() => formRef.current?.requestSubmit()}
             disabled={saving}
-            className="w-full h-[52px] mt-5 bg-primary hover:bg-[#2f68c8] text-white text-[16px] font-bold rounded-xl inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full h-[32px] mt-3 bg-primary hover:bg-[#2f68c8] text-white text-[12px] font-bold rounded-lg inline-flex items-center justify-center gap-2 disabled:opacity-60 shadow-[0_4px_16px_-4px_rgba(63,120,216,0.45)]"
           >
-            <Pencil className="w-[18px] h-[18px]" />
+            <Pencil className="w-[12px] h-[12px]" />
             {saving ? t("common.saving") : (t("menu.saveProfile") || "Salvar perfil")}
           </button>
         </div>

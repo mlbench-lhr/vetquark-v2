@@ -133,7 +133,7 @@ export default function ClinicReportsPage() {
   };
 
   return (
-    <div className="w-full bg-white min-h-screen flex flex-col">
+    <div className="w-full flex flex-col">
       <Header title={t("menu.clinicReports")} />
 
       <div className="flex-1 overflow-y-auto px-4 pb-28">

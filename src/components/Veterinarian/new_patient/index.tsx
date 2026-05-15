@@ -12,6 +12,7 @@ import { useAppSelector } from '@/store/hooks';
 import type { RootState } from '@/store/store';
 import Pusher from 'pusher-js';
 import { useTranslation } from 'react-i18next';
+import Header from '@/components/common/header';
 
 interface Guardian {
     id: string;
@@ -197,50 +198,38 @@ export default function AddPatientGuardian() {
     );
 
     return (
-        <div className="min-h-[calc(100vh-96px)] p-4 space-y-4 bg-gray-50">
+        <div className="space-y-4">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-primary">{t('newPatient.addNewPatientTitle')}</h1>
-                <div className="flex items-center gap-3">
-                    <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <Search className="w-5 h-5 text-primary" />
-                    </button>
-                    <button className="relative w-10 h-10 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
-                        <Bell className="w-5 h-5 text-white" />
-                        {unreadCount > 0 && (
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
-                        )}
-                    </button>
-                </div>
-            </div>
+            <Header title={"Adicionar novo paciente"} />
+
 
             {/* Progress Stepper */}
-            <div className="relative flex items-start justify-between">
+            <div className="relative flex items-start justify-between w-[60%] mx-auto">
                 {/* Step 1 - Active */}
                 <div className="flex flex-col items-center gap-1.5 z-10">
-                    <div className="w-10 h-10 rounded-full border-2 border-primary bg-white flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full border border-primary bg-[#f5f6f9] flex items-center justify-center">
                         <Image
-                            src={"/images/new_patient/user-active.svg"}
+                            src={"/user icon.svg"}
                             alt={t('newPatient.guardianIconAlt')}
                             width={20}
                             height={20}
                         />
                     </div>
-                    <span className="text-xs font-semibold text-primary">{t('newPatient.guardianStep')}</span>
+                    <span className="text-xs font-normal text-primary">{t('newPatient.guardianStep')}</span>
                 </div>
                 {/* Connecting Line */}
-                <div className="absolute top-5 left-5 right-5 h-px bg-[#E0E0E0] z-0" />
+                <div className="absolute w-[70%] border border-primary/50 top-5 left-5 right-5 h-px bg-primary/50 z-0" />
                 {/* Step 2 - Inactive */}
                 <div className="flex flex-col items-center gap-1.5 z-10">
-                    <div className="w-10 h-10 rounded-full border-2 border-[#E0E0E0] bg-white flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full border border-primary bg-[#f5f6f9] flex items-center justify-center">
                         <Image
-                            src={"/images/new_patient/paw.svg"}
+                            src={"/pet footstep.svg"}
                             alt={t('newPatient.patientIconAlt')}
                             width={20}
                             height={20}
                         />
                     </div>
-                    <span className="text-xs font-medium text-[#9CA3AF]">{t('newPatient.patientDetailsStep')}</span>
+                    <span className="text-xs font-normal text-[#9CA3AF]">{t('newPatient.patientDetailsStep')}</span>
                 </div>
             </div>
 
@@ -255,8 +244,8 @@ export default function AddPatientGuardian() {
                 </div>
 
                 {/* Search Box */}
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary" />
+                <div className="relative h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! border border-input">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-black/60" />
                     <input
                         type="text"
                         placeholder={t('newPatient.searchPlaceholder')}
@@ -266,7 +255,7 @@ export default function AddPatientGuardian() {
                             setSearchQuery(v);
                             setPage(1);
                         }}
-                        className="w-full pl-12 pr-4 py-3.5 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-2 focus:ring-primary border-0 text-sm"
+                        className="w-full pl-6 pr-4 bg-[#F5F5F5] rounded-xl text-[#1D2939] placeholder-[#C4C4C4] focus:outline-none focus:ring-none border-0 text-[12px]"
                     />
                 </div>
 
