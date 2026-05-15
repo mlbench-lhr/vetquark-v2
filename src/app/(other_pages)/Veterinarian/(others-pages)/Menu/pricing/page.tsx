@@ -137,11 +137,11 @@ export default function BasePriceCard() {
     };
 
     return (
-        <div className="w-full bg-[#F4F5FA] min-h-screen flex flex-col pb-8">
+        <div className="w-full flex flex-col pb-8">
             <Header title={t("menu.pricing") || "Precificação"} />
 
             {/* Main Card */}
-            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 mt-2">
+            <div className="bg- rounded-lg border border-[#E5E7EB] p-3 mt-2">
                 {/* Section Header */}
                 <div className="flex items-start justify-between mb-2">
                     <h1 className="text-[17px] font-bold text-black/70 leading-[22px]">
@@ -149,12 +149,12 @@ export default function BasePriceCard() {
                     </h1>
                     <ChevronDown className="w-5 h-5 text-[#8E8E93]" />
                 </div>
-                <p className="text-[13px] text-[#8E8E93] leading-[1.5] mb-4">
+                <p className="text-[10px] text-black/90 leading-[1.5] mb-2">
                     {t("pricing.baseExamDesc") || `Este é o valor que o tutor pagará. A plataforma aplicará a taxa fixa de R$ ${platformFee.toFixed(2)} sobre este valor.`}
                 </p>
 
                 {/* Value Sub-Card */}
-                <div className="rounded-xl border border-[#E5E7EB] p-4 mb-2">
+                <div className="rounded-sm border bg-white border-[#E5E7EB] p-2 mb-2">
                     <div className="flex items-center justify-between mb-1">
                         <p className="text-[12px] text-[#8E8E93]">
                             {t("pricing.amountForTutor") || "Valor ao tutor (R$)"}
@@ -184,12 +184,12 @@ export default function BasePriceCard() {
                 </div>
 
                 {/* Suggested Range */}
-                <p className="text-[12px] text-[#8E8E93] mb-2 px-1">
+                <p className="text-[10px] text-[#8E8E93] mb-2 px-1">
                     {t("pricing.suggestedRange") || `Faixa sugerida pela plataforma: R$ ${minSuggested.toFixed(2)} – R$ ${maxSuggested.toFixed(2)}`}
                 </p>
 
                 {/* Net Payout Sub-Card */}
-                <div className="rounded-xl border border-[#E5E7EB] p-4 mb-3">
+                <div className="rounded-xl bg-white border border-[#E5E7EB] p-4 mb-3">
                     <p className="text-[12px] text-[#8E8E93] mb-1">
                         {t("pricing.netPayoutWillBe") || "Seu repasse líquido por exame será:"}
                     </p>
@@ -210,7 +210,7 @@ export default function BasePriceCard() {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full h-[44px] bg-primary hover:bg-[#2f68c8] text-white text-[14px] font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full h-[30px] bg-primary hover:bg-[#2f68c8] text-white text-[12px] font-semibold rounded-sm transition-colors flex items-center justify-center gap-2"
                 >
                     <Pencil className="w-4 h-4" />
                     {saving ? t("common.saving") : (t("pricing.savePrice") || "Salvar Preço")}

@@ -13,10 +13,10 @@ interface FAQItem {
 function AccordionSection({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
     const [open, setOpen] = useState(defaultOpen);
     return (
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden">
+        <div className="b rounded-lg border border-[#E5E7EB] overflow-hidden">
             <button
                 onClick={() => setOpen((v) => !v)}
-                className="w-full flex items-center justify-between px-5 py-4 text-left"
+                className="w-full flex items-center justify-between px-3 py-2 text-left"
             >
                 <span className="text-[16px] font-bold text-black/70">{title}</span>
                 <ChevronDown
