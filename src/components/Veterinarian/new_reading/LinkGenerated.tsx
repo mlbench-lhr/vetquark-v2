@@ -78,7 +78,7 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
       <div className="rounded-[20px] border border-[#E5E7EB] bg-white px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
-            <h2 className="text-[18px] font-bold text-[#111827]">
+            <h2 className="text-[18px] font-bold text-black/70">
               {isPaid ? t('reading.identification.paymentConfirmedTitle') : t('reading.identification.linkGeneratedTitle')}
             </h2>
             <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">

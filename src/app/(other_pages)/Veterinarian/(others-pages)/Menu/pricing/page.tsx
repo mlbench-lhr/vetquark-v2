@@ -220,16 +220,16 @@ export default function BasePriceCard() {
             {/* Panel Pricing */}
             {panelDefs.length > 0 && (
                 <div className="mt-4 bg-white rounded-2xl border border-[#E5E7EB] p-5">
-                    <h2 className="text-[16px] font-semibold text-[#111827] mb-4">
+                    <h2 className="text-[16px] font-semibold text-black/70 mb-4">
                         {t("pricing.panelPricing") || "Panel Pricing"}
                     </h2>
                     <div className="space-y-5">
                         {panelDefs.map((p) => (
                             <div key={p.code}>
-                                <div className="text-[15px] font-medium text-[#111827] mb-2">{p.title}</div>
+                                <div className="text-[15px] font-medium text-black/70 mb-2">{p.title}</div>
                                 <div className="bg-white border border-[#E5E7EB] rounded-xl px-4 py-3">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[16px] font-medium text-[#111827]">R$</span>
+                                        <span className="text-[16px] font-medium text-black/70">R$</span>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -241,7 +241,7 @@ export default function BasePriceCard() {
                                                     [p.code]: Number.isFinite(next) && next >= 0 ? next : 0,
                                                 }));
                                             }}
-                                            className="w-full bg-transparent outline-none text-[16px] font-medium text-[#111827]"
+                                            className="w-full bg-transparent outline-none text-[16px] font-medium text-black/70"
                                         />
                                     </div>
                                 </div>

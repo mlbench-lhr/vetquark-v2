@@ -115,7 +115,7 @@ function ResultRow({ item }: { item: ReadingResult }) {
           className="w-[28px] h-[28px] rounded-full flex-shrink-0 border border-black/5"
           style={{ backgroundColor: dotColor }}
         />
-        <span className="text-[14px] font-medium text-[#111827] truncate">{translatedLabel}</span>
+        <span className="text-[14px] font-medium text-black/70 truncate">{translatedLabel}</span>
       </div>
       <span className="text-[13px] text-[#6B7280] flex-shrink-0 ml-2">{value}</span>
     </div>
@@ -501,7 +501,7 @@ export default function ReportDetailsPage() {
               />
             </div>
             <div className="min-w-0">
-              <div className="text-[18px] font-bold text-[#111827] truncate">{reading.patient.name}</div>
+              <div className="text-[18px] font-bold text-black/70 truncate">{reading.patient.name}</div>
               <div className="text-[13px] text-[#6B7280] mt-0.5 truncate">{reading.guardian.fullName}</div>
               <div className="text-[13px] text-[#6B7280] truncate">{panelTitleForCode(reading.productCode)}</div>
             </div>
@@ -510,7 +510,7 @@ export default function ReportDetailsPage() {
           {/* Physical parameters */}
           {physicalResults.length > 0 ? (
             <div className="mt-5">
-              <div className="text-[14px] font-semibold text-[#111827] mb-2">{t("history.physicalParameters")}</div>
+              <div className="text-[14px] font-semibold text-black/70 mb-2">{t("history.physicalParameters")}</div>
               <div className="bg-white rounded-[16px] border border-[#F3F4F6] overflow-hidden">
                 {physicalResults.map((r) => (
                   <ResultRow key={r.key} item={r} />
@@ -522,7 +522,7 @@ export default function ReportDetailsPage() {
           {/* Chemical parameters */}
           {chemicalResults.length > 0 ? (
             <div className="mt-4">
-              <div className="text-[14px] font-semibold text-[#111827] mb-2">{t("history.chemicalParameters")}</div>
+              <div className="text-[14px] font-semibold text-black/70 mb-2">{t("history.chemicalParameters")}</div>
               <div className="bg-white rounded-[16px] border border-[#F3F4F6] overflow-hidden">
                 {chemicalResults.map((r) => (
                   <ResultRow key={r.key} item={r} />
@@ -533,11 +533,11 @@ export default function ReportDetailsPage() {
 
           {/* Veterinary report */}
           <div className="mt-5">
-            <div className="text-[14px] font-semibold text-[#111827] mb-2">{t("history.veterinaryReport")}</div>
+            <div className="text-[14px] font-semibold text-black/70 mb-2">{t("history.veterinaryReport")}</div>
             <div className="bg-white rounded-[16px] border border-[#F3F4F6] px-4 py-4 space-y-3">
               {(reading.report?.summaryAndInterpretation || reading.timer?.analysis?.summary) ? (
                 <div>
-                  <div className="text-[13px] font-bold text-[#111827] mb-1">{t("reading.report.summaryInterpretation")}</div>
+                  <div className="text-[13px] font-bold text-black/70 mb-1">{t("reading.report.summaryInterpretation")}</div>
                   <p className="text-[13px] text-[#374151] leading-[19px]">
                     {reading.report?.summaryAndInterpretation || reading.timer?.analysis?.summary}
                   </p>
@@ -551,7 +551,7 @@ export default function ReportDetailsPage() {
 
           {/* Other information */}
           <div className="mt-4">
-            <div className="text-[13px] font-semibold text-[#111827] mb-1.5">{t("reading.report.otherInformation")}</div>
+            <div className="text-[13px] font-semibold text-black/70 mb-1.5">{t("reading.report.otherInformation")}</div>
             <div className="bg-[#F5F6F6] rounded-[14px] px-4 py-3 text-[13px] text-[#374151]">
               {reading.report?.otherInformation || t("history.notAvailable")}
             </div>
@@ -559,7 +559,7 @@ export default function ReportDetailsPage() {
 
           {/* Veterinarian notes */}
           <div className="mt-4">
-            <div className="text-[13px] font-semibold text-[#111827] mb-1.5">{t("reading.report.veterinarianNotes")}</div>
+            <div className="text-[13px] font-semibold text-black/70 mb-1.5">{t("reading.report.veterinarianNotes")}</div>
             <div className="bg-[#F5F6F6] rounded-[14px] px-4 py-3 text-[13px] text-[#374151]">
               {reading.report?.veterinarianNotes || t("history.notAvailable")}
             </div>
@@ -567,7 +567,7 @@ export default function ReportDetailsPage() {
 
           {/* Signature */}
           <div className="mt-4">
-            <div className="text-[13px] font-semibold text-[#111827] mb-1.5">{t("reading.report.signature")}</div>
+            <div className="text-[13px] font-semibold text-black/70 mb-1.5">{t("reading.report.signature")}</div>
             <div className="bg-white rounded-[14px] border border-[#E5E7EB] px-4 py-4 min-h-[80px] flex items-center justify-center">
               {reading.signatureImageUrl ? (
                 <img
@@ -597,7 +597,7 @@ export default function ReportDetailsPage() {
             />
             <div className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 shadow-xl">
               <div className="text-center">
-                <div className="text-[16px] font-semibold text-[#111827]">{t("history.inviteToUpgrade")}</div>
+                <div className="text-[16px] font-semibold text-black/70">{t("history.inviteToUpgrade")}</div>
                 <div className="mt-1 text-[13px] text-[#6B7280]">{t("history.inviteToUpgradeDesc")}</div>
               </div>
 
@@ -618,7 +618,7 @@ export default function ReportDetailsPage() {
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="text-[15px] font-medium text-[#111827]">{p.title}</div>
+                          <div className="text-[15px] font-medium text-black/70">{p.title}</div>
                           <div className="mt-1 text-[12px] text-primary">
                             {p.subtitle} - {priceLabelFor(p.code, p.suggestedPriceBRL)}
                           </div>

@@ -208,14 +208,14 @@ export default function Page() {
           className="flex h-0 w-fit items-center justify-center rounded-full"
           aria-label="Back"
         >
-          <ChevronLeft className="h-6 w-6 text-[#111827]" />
+          <ChevronLeft className="h-6 w-6 text-black/70" />
         </button>
-        <h1 className="text-[16px] font-medium leading-[20px] text-[#111827]">{title}</h1>
+        <h1 className="text-[16px] font-medium leading-[20px] text-black/70">{title}</h1>
         <div className="h-0 w-10" />
       </div>
 
       <div className="pt-5">
-        <div className="text-[20px] font-semibold leading-[24px] text-[#111827]">
+        <div className="text-[20px] font-semibold leading-[24px] text-black/70">
           Pay with PIX
         </div>
         <div className="mt-2 max-w-[320px] text-[14px] leading-[18px] text-[#9AA4AF]">
@@ -239,7 +239,7 @@ export default function Page() {
                 type="button"
                 onClick={() => copyText(pixCode, "PIX code")}
                 disabled={!pixCode}
-                className="mt-4 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[14px] font-medium text-[#111827] disabled:opacity-60"
+                className="mt-4 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[14px] font-medium text-black/70 disabled:opacity-60"
               >
                 <Copy className="h-4 w-4" />
                 Copy PIX code
@@ -284,12 +284,12 @@ export default function Page() {
           <button
             type="button"
             onClick={() => router.push(`/Guardian/payment/${encodeURIComponent(paymentId)}/card`)}
-            className="mt-4 h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-[#111827]"
+            className="mt-4 h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-black/70"
           >
             Pay with Card instead
           </button>
           <div className="mt-8 border-t border-[#E5E7EB] pt-6">
-            <div className="text-[16px] font-medium text-[#111827]">Prefer boleto?</div>
+            <div className="text-[16px] font-medium text-black/70">Prefer boleto?</div>
             {boletoUrl || boletoBarcode ? (
               <div className="mt-3">
                 {boletoBarcode ? (
@@ -302,7 +302,7 @@ export default function Page() {
                     type="button"
                     onClick={() => copyText(boletoBarcode, "Boleto barcode")}
                     disabled={!boletoBarcode}
-                    className="flex-1 rounded-full bg-[#F5F6F6] px-4 py-3 text-[14px] font-medium text-[#111827] disabled:opacity-60"
+                    className="flex-1 rounded-full bg-[#F5F6F6] px-4 py-3 text-[14px] font-medium text-black/70 disabled:opacity-60"
                   >
                     Copy barcode
                   </button>
@@ -327,7 +327,7 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={createBoleto}
-                  className="mt-4 h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-[#111827]"
+                  className="mt-4 h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-black/70"
                 >
                   Generate boleto
                 </button>

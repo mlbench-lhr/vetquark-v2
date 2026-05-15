@@ -737,7 +737,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       {/* Title + Camera card */}
       <div className="bg-white rounded-[20px] border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 pt-5 pb-4">
-          <h2 className="text-[20px] font-bold text-[#111827]">{t('reading.timer.title')}</h2>
+          <h2 className="text-[20px] font-bold text-black/70">{t('reading.timer.title')}</h2>
           <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">{t('reading.timer.desc')}</p>
         </div>
 
@@ -814,7 +814,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         {/* Circular timer display */}
         <div className="w-[72px] h-[72px] rounded-full border-2 border-[#E5E7EB] bg-white flex flex-col items-center justify-center flex-shrink-0 shadow-sm">
           <div className="flex items-end gap-0.5">
-            <span className="text-[22px] font-bold text-[#111827] leading-none">{displayElapsed}</span>
+            <span className="text-[22px] font-bold text-black/70 leading-none">{displayElapsed}</span>
             <span className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">s</span>
           </div>
           <div className="text-[9px] text-[#9CA3AF] font-medium uppercase tracking-wide">

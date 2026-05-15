@@ -18,15 +18,15 @@ function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
         aria-label="Back"
         className="absolute left-4 top-6 flex h-10 w-10 items-center justify-center rounded-full"
       >
-        <ChevronLeft className="h-6 w-6 text-[#111827]" />
+        <ChevronLeft className="h-6 w-6 text-black/70" />
       </button>
-      <div className="text-[16px] font-medium leading-[20px] text-[#111827]">{title}</div>
+      <div className="text-[16px] font-medium leading-[20px] text-black/70">{title}</div>
       <button
         type="button"
         aria-label="Notifications"
         className="absolute right-4 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-[#F5F6F6]"
       >
-        <Bell className="h-5 w-5 text-[#111827]" />
+        <Bell className="h-5 w-5 text-black/70" />
       </button>
     </div>
   );
@@ -57,7 +57,7 @@ export default function Page() {
 
       <div className="px- pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div>
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">
+          <div className="text-[16px] font-semibold leading-[20px] text-black/70">
             {t("helpCentre.urineGuideTitle")}
           </div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
@@ -76,7 +76,7 @@ export default function Page() {
         <div className="mt-5 h-[8px] w-full bg-[#F5F6F6]" />
 
         <div className="pt-5">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t("helpCentre.quickQuestionsTitle")}</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-black/70">{t("helpCentre.quickQuestionsTitle")}</div>
 
           <div className="mt-4 space-y-3">
             {faqs.map((item, idx) => {
@@ -93,7 +93,7 @@ export default function Page() {
                   className="w-full rounded-[12px] bg-[#F5F6F6] px-4 py-3 text-left"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="text-[14px] font-medium leading-[18px] text-[#111827]">
+                    <div className="text-[14px] font-medium leading-[18px] text-black/70">
                       {item.q}
                     </div>
                     {open ? (
@@ -113,7 +113,7 @@ export default function Page() {
         </div>
 
         <div className="mt-6">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t("helpCentre.supportTitle")}</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-black/70">{t("helpCentre.supportTitle")}</div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
             {t("helpCentre.supportStatusOnline")}
           </div>
@@ -139,7 +139,7 @@ export default function Page() {
         </div>
 
         <div className="mt-6">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t("helpCentre.feedbackTitle")}</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-black/70">{t("helpCentre.feedbackTitle")}</div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
             {t("helpCentre.feedbackSubtitle")}
           </div>
@@ -148,7 +148,7 @@ export default function Page() {
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             placeholder={t("helpCentre.feedbackPlaceholder")}
-            className="mt-4 h-[120px] w-full resize-none rounded-[16px] bg-[#F5F6F6] px-4 py-4 text-[14px] leading-[18px] text-[#111827] placeholder:text-[#9AA4AF] outline-none"
+            className="mt-4 h-[120px] w-full resize-none rounded-[16px] bg-[#F5F6F6] px-4 py-4 text-[14px] leading-[18px] text-black/70 placeholder:text-[#9AA4AF] outline-none"
           />
 
           <button

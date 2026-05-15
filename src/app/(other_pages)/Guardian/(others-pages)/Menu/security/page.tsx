@@ -79,7 +79,7 @@ export default function SecurityPage() {
       <div className="px-4 pt-4 pb-10">
         <div className="space-y-3">
           <div className="rounded-2xl bg-white px-4 py-4 flex items-center justify-between">
-            <div className="text-[15px] text-[#111827] font-medium">{t("security.twoFactorAuth")}</div>
+            <div className="text-[15px] text-black/70 font-medium">{t("security.twoFactorAuth")}</div>
             <button
               type="button"
               onClick={async () => {
@@ -109,7 +109,7 @@ export default function SecurityPage() {
           </div>
 
           <div className="rounded-2xl bg-white px-4 py-4 flex items-center justify-between">
-            <div className="text-[15px] text-[#111827] font-medium">{t("security.changePassword")}</div>
+            <div className="text-[15px] text-black/70 font-medium">{t("security.changePassword")}</div>
             <button
               type="button"
               onClick={() => setChangeOpen(true)}
@@ -120,7 +120,7 @@ export default function SecurityPage() {
           </div>
 
           <div className="rounded-3xl bg-white px-4 pt-4 pb-5">
-            <div className="text-[15px] text-[#111827] font-semibold mb-3">{t("security.activeSessions")}</div>
+            <div className="text-[15px] text-black/70 font-semibold mb-3">{t("security.activeSessions")}</div>
 
             <div className="rounded-2xl bg-[#F5F6F6] p-2 space-y-2">
               {sessions.map((s) => (
@@ -132,7 +132,7 @@ export default function SecurityPage() {
                       {s.icon.type === "monitor" && <Monitor className="w-5 h-5 text-primary" />}
                       {s.icon.type === "google" && <span className="text-[14px] font-semibold text-primary">G</span>}
                     </div>
-                    <div className="text-[15px] text-[#111827] font-medium">{s.label}</div>
+                    <div className="text-[15px] text-black/70 font-medium">{s.label}</div>
                   </div>
 
                   {s.rightLabel ? (
@@ -157,17 +157,17 @@ export default function SecurityPage() {
       {changeOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
           <div className="w-full rounded-3xl bg-white p-5">
-            <div className="text-[16px] font-semibold text-[#111827]">{t("security.changePassword")}</div>
+            <div className="text-[16px] font-semibold text-black/70">{t("security.changePassword")}</div>
 
             <div className="mt-4 space-y-3">
               <div>
-                <div className="text-[14px] font-medium text-[#111827]">{t("security.currentPassword")}</div>
+                <div className="text-[14px] font-medium text-black/70">{t("security.currentPassword")}</div>
                 <div className="relative mt-2">
                   <input
                     type={showCurrentPassword ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                    className="h-[48px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[15px] text-black/70 outline-none"
                   />
                   <button
                     type="button"
@@ -183,13 +183,13 @@ export default function SecurityPage() {
                 </div>
               </div>
               <div>
-                <div className="text-[14px] font-medium text-[#111827]">{t("security.newPassword")}</div>
+                <div className="text-[14px] font-medium text-black/70">{t("security.newPassword")}</div>
                 <div className="relative mt-2">
                   <input
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                    className="h-[48px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[15px] text-black/70 outline-none"
                   />
                   <button
                     type="button"
@@ -205,13 +205,13 @@ export default function SecurityPage() {
                 </div>
               </div>
               <div>
-                <div className="text-[14px] font-medium text-[#111827]">{t("security.confirmNewPassword")}</div>
+                <div className="text-[14px] font-medium text-black/70">{t("security.confirmNewPassword")}</div>
                 <div className="relative mt-2">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-[48px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[15px] text-[#111827] outline-none"
+                    className="h-[48px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[15px] text-black/70 outline-none"
                   />
                   <button
                     type="button"
@@ -275,7 +275,7 @@ export default function SecurityPage() {
                   setNewPassword("");
                   setConfirmPassword("");
                 }}
-                className="h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-[#111827]"
+                className="h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-black/70"
               >
                 {t("common.cancel")}
               </button>

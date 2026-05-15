@@ -80,9 +80,9 @@ export default function Page() {
             aria-label="Back"
             className="absolute left-0 top-1/2 -translate-y-1/2 p-1"
           >
-            <ChevronLeft className="h-6 w-6 text-[#111827]" />
+            <ChevronLeft className="h-6 w-6 text-black/70" />
           </button>
-          <div className="text-[16px] leading-[20px] font-medium text-[#111827]">{t('dashboard.allPatientsTitle')}</div>
+          <div className="text-[16px] leading-[20px] font-medium text-black/70">{t('dashboard.allPatientsTitle')}</div>
         </div>
 
         <div className="relative mt-4">
@@ -94,7 +94,7 @@ export default function Page() {
               setPage(1)
             }}
             placeholder={t('dashboard.searchPlaceholder')}
-            className="h-[48px] w-full rounded-2xl bg-[#F3F4F6] pl-12 pr-4 text-[14px] leading-[18px] text-[#111827] placeholder:text-[#9CA3AF] outline-none"
+            className="h-[48px] w-full rounded-2xl bg-[#F3F4F6] pl-12 pr-4 text-[14px] leading-[18px] text-black/70 placeholder:text-[#9CA3AF] outline-none"
           />
         </div>
 
@@ -119,7 +119,7 @@ export default function Page() {
                         <Image width={200} height={200} src={p.image || "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"} alt={p.name} className="h-10 w-10 object-cover" />
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-[14px] leading-[18px] font-medium text-[#111827]">{p.name}</div>
+                        <div className="truncate text-[14px] leading-[18px] font-medium text-black/70">{p.name}</div>
                         <div className="mt-1 truncate text-[12px] leading-[16px] text-[#9CA3AF]">{p.owner}</div>
                         <div className="mt-0.5 truncate text-[12px] leading-[16px] text-[#9CA3AF]">{t('registrations.idLabel')}: {p.id}</div>
                       </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Calendar, ChevronDown } from 'lucide-react'
+import { Calendar, ChevronDown, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import LinkGenerated from './LinkGenerated'
 import { IdentificationDraft, PatientListItem } from './types'
@@ -265,22 +265,22 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
   }
 
   return (
-    <div className="">
-      <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 px-5 py-5">
-        <h2 className="text-[20px] font-bold text-[#111827]">{t("reading.identification.title")}</h2>
+    <div className="mb-6">
+      <div className="bg- rounded-xl border border-secondary px-5 py-5">
+        <h2 className="text-[20px] font-bold text-black/70">{t("reading.identification.title")}</h2>
         <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">{t("reading.identification.desc")}</p>
 
-        <div className="mt-5 space-y-5">
+        <div className="mt-5 space-y-3">
           {/* Patient */}
           <div>
-            <div className="text-[14px] font-semibold text-[#111827] mb-2">{t("reading.identification.patient")}</div>
+            <div className="text-[14px] font-semibold text-black/70 mb-1.5">{t("reading.identification.patient")}</div>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => router.push(`/Veterinarian/new-reading/select-patient${value.patientId ? `?selected=${encodeURIComponent(value.patientId)}` : ''}`)}
-                className="flex-1 relative px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-left"
+                className="flex-1 relative px-4 py-3.5 bg-[#F5F6F6] rounded-xl text-left"
               >
-                <span className={`text-[14px] ${value.patientId ? 'text-[#111827]' : 'text-[#9CA3AF]'}`}>
+                <span className={`text-[14px] ${value.patientId ? 'text-black/70' : 'text-[#9CA3AF]'}`}>
                   {value.patientId
                     ? (() => {
                       const p = patients.find((x) => x.id === value.patientId)
@@ -288,25 +288,21 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
                     })()
                     : t("reading.identification.selectPatient")}
                 </span>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-black/50" />
               </button>
               <button
                 type="button"
                 onClick={() => router.push('/Veterinarian/patient')}
-                className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-[#EBF2FF] rounded-2xl"
+                className="w-13 h-13 flex-shrink-0 flex items-center justify-center bg-[#EBF2FF] rounded-xl text-primary"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <path d="M16 11C17.66 11 18.99 9.66 18.99 8C18.99 6.34 17.66 5 16 5C14.34 5 13 6.34 13 8C13 9.66 14.34 11 16 11ZM8 11C9.66 11 10.99 9.66 10.99 8C10.99 6.34 9.66 5 8 5C6.34 5 5 6.34 5 8C5 9.66 6.34 11 8 11ZM8 13C5.67 13 1 14.17 1 16.5V19H15V16.5C15 14.17 10.33 13 8 13ZM16 13C15.71 13 15.38 13.02 15.03 13.05C16.19 13.89 17 15.02 17 16.5V19H23V16.5C23 14.17 18.33 13 16 13Z" fill="#3F78D8" />
-                  <circle cx="19" cy="19" r="5" fill="#3F78D8" />
-                  <path d="M19 16.5V21.5M16.5 19H21.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+                <Plus />
               </button>
             </div>
           </div>
 
           {/* Collection Method */}
           <div>
-            <div className="text-[14px] font-semibold text-[#111827] mb-3">{t("reading.identification.collectionMethod")}</div>
+            <div className="text-[14px] font-semibold text-black/70 mb-3">{t("reading.identification.collectionMethod")}</div>
             <div className="grid grid-cols-2 gap-2">
               {collectionMethods.map((m) => {
                 const isSelected = value.collectionMethod === m.key
@@ -315,9 +311,9 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
                     key={m.key}
                     type="button"
                     onClick={() => onChange({ collectionMethod: m.key })}
-                    className={`py-3.5 px-3 rounded-2xl text-[14px] font-medium text-center border transition-all ${isSelected
+                    className={`py-3.5 px-3 rounded-lg text-[10px] font-medium text-center border transition-all ${isSelected
                       ? 'border-primary bg-[#EBF2FF] text-primary'
-                      : 'border-[#E5E7EB] bg-white text-[#374151]'
+                      : 'border-[#E5E7EB] bg-white text-black/80'
                       }`}
                   >
                     {m.label}
@@ -328,10 +324,10 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
           </div>
 
           {/* Jejum Toggle */}
-          <div className="rounded-2xl border border-[#E5E7EB] px-4 py-3.5">
+          <div className="rounded-lg border border-[#E5E7EB] px-4 py-3.5">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[14px] font-semibold text-[#111827]">{t("reading.identification.jejumQuestion")}</div>
+                <div className="text-[14px] font-semibold text-black/70">{t("reading.identification.jejumQuestion")}</div>
                 <div className="text-[12px] text-[#6B7280] mt-0.5">{t("reading.identification.jejumHint")}</div>
               </div>
               <button
@@ -348,19 +344,19 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
 
           {/* Collection Date & Time */}
           <div>
-            <div className="text-[14px] font-semibold text-[#111827] mb-2">{t("reading.identification.collectionDateTime")}</div>
+            <div className="text-[14px] font-semibold text-black/70 mb-1.5">{t("reading.identification.collectionDateTime")}</div>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => collectionRef.current?.showPicker?.()}
-                className="flex-1 relative flex items-center gap-3 px-4 py-3.5 bg-[#F5F6F6] rounded-2xl text-left"
+                className="flex-1 relative flex items-center gap-3 px-4 py-3.5 bg-[#F5F6F6] rounded-xl text-left"
               >
                 <Calendar className="w-5 h-5 text-[#9CA3AF] flex-shrink-0" />
-                <span className={`text-[14px] ${value.collectionAt ? 'text-[#111827]' : 'text-[#9CA3AF]'}`}>
+                <span className={`text-[14px] ${value.collectionAt ? 'text-black/70' : 'text-[#9CA3AF]'}`}>
                   {formattedCollectionDate || t("reading.identification.collectionDateTime")}
                 </span>
               </button>
-              <div className="relative w-12 h-12 flex-shrink-0 flex items-center justify-center bg-[#EBF2FF] rounded-2xl overflow-hidden">
+              <div className="relative w-12 h-12 flex-shrink-0 flex items-center justify-center bg-[#EBF2FF] rounded-xl overflow-hidden">
                 <Calendar className="w-5 h-5 text-primary pointer-events-none" />
                 <input
                   ref={collectionRef}
@@ -381,7 +377,7 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
         <button
           onClick={handleProceed}
           disabled={!canProceed || generating}
-          className={`w-full py-4 rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all ${canProceed && !generating
+          className={`w-full py-4 rounded-xl font-semibold text-[15px] flex items-center justify-center gap-2 transition-all ${canProceed && !generating
             ? 'bg-primary text-white shadow-sm'
             : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
             }`}
@@ -431,7 +427,7 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
                       }}
                       className={`w-full rounded-[14px] px-4 py-3 text-left ${selected ? "bg-[#EEF4FF]" : "bg-[#F5F6F6]"}`}
                     >
-                      <div className="text-[15px] font-medium leading-[18px] text-[#111827]">
+                      <div className="text-[15px] font-medium leading-[18px] text-black/70">
                         {p.title}{p.description ? ` (${p.description})` : ""}
                       </div>
                       {p.params ? (

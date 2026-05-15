@@ -142,7 +142,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
   return (
     <div className="">
       {/* Page header */}
-      <h2 className="text-[20px] font-bold text-[#111827]">Pré-visualização e Edição Final do Laudo</h2>
+      <h2 className="text-[20px] font-bold text-black/70">Pré-visualização e Edição Final do Laudo</h2>
       <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">Revise e edite o laudo abaixo. Após a assinatura, ele não poderá ser alterado.</p>
 
       {/* Formal Report Preview Card */}
@@ -159,11 +159,11 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
               className="mx-auto object-contain mb-1"
             />
           ) : (
-            <div className="text-[20px] font-bold italic text-[#111827] tracking-[0.18em]">
+            <div className="text-[20px] font-bold italic text-black/70 tracking-[0.18em]">
               {veterinarian?.tradeName || 'XE IL XTE'}
             </div>
           )}
-          <div className="mt-1 text-[13px] font-bold text-[#111827]">
+          <div className="mt-1 text-[13px] font-bold text-black/70">
             {veterinarian?.tradeName || 'StripScan - Laboratório Veterinário'}
           </div>
           {veterinarian?.reportHeaderAddress ? (
@@ -186,7 +186,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
               ] as [string, string][]
             ).map(([label, value]) => (
               <div key={label} className="flex items-start text-[12px] leading-[17px]">
-                <span className="font-bold text-[#111827] min-w-[80px] flex-shrink-0">{label}:</span>
+                <span className="font-bold text-black/70 min-w-[80px] flex-shrink-0">{label}:</span>
                 <span className="text-[#374151]">{value}</span>
               </div>
             ))}
@@ -196,7 +196,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
         {/* Certification line */}
         <div className="px-5 py-3 border-b border-[#F3F4F6]">
           <div className="h-px bg-[#D1D5DB] mb-3" />
-          <div className="text-[11px] font-bold text-[#111827]">Conferido, liberado e assinado:</div>
+          <div className="text-[11px] font-bold text-black/70">Conferido, liberado e assinado:</div>
           <div className="mt-1 text-[10px] leading-[14px] text-[#6B7280] italic">
             A interpretação dos exames laboratoriais deverá ser realizada pelo médico veterinário responsável, mediante a sintomatologia clínica do animal.
           </div>
@@ -204,7 +204,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
 
         {/* Observations section */}
         <div className="px-5 py-4 border-b border-[#F3F4F6]">
-          <div className="text-[14px] font-bold text-[#111827] mb-3">Observações e Interpretação</div>
+          <div className="text-[14px] font-bold text-black/70 mb-3">Observações e Interpretação</div>
 
           <div className="mb-3">
             <div className="text-[12px] text-[#374151] mb-1.5">{t('reading.report.veterinarianNotes')}:</div>
@@ -266,7 +266,7 @@ export default function ReportStep({ patientPreview, collectionAt, report, onCha
           </div>
 
           <div className="text-center">
-            <div className="text-[14px] font-bold text-[#111827]">{veterinarian?.fullName || 'Dr. Vet'}</div>
+            <div className="text-[14px] font-bold text-black/70">{veterinarian?.fullName || 'Dr. Vet'}</div>
             <div className="text-[12px] text-[#6B7280] mt-0.5">
               {veterinarian?.crmvState && veterinarian?.crmv
                 ? `CRMV-${veterinarian.crmvState} ${veterinarian.crmv}`

@@ -126,9 +126,9 @@ export default function Page() {
           className="flex h-0 w-fit items-center justify-center rounded-full"
         // aria-label="Back"
         >
-          <ChevronLeft className="h-6 w-6 text-[#111827]" />
+          <ChevronLeft className="h-6 w-6 text-black/70" />
         </button>
-        <h1 className="text-[16px] font-medium leading-[20px] text-[#111827]">
+        <h1 className="text-[16px] font-medium leading-[20px] text-black/70">
           Payment History
         </h1>
         <div className="h-0 w-10" />
@@ -175,7 +175,7 @@ export default function Page() {
                         />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-[15px] font-medium leading-[18px] text-[#111827]">
+                        <div className="text-[15px] font-medium leading-[18px] text-black/70">
                           {item.petName}
                         </div>
                         <div className="mt-1 text-[12px] leading-[14px] text-[#9AA4AF]">
@@ -206,7 +206,7 @@ export default function Page() {
                         />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-[14px] font-semibold leading-[16px] text-[#111827]">
+                        <div className="text-[14px] font-semibold leading-[16px] text-black/70">
                           {item.vetName}
                         </div>
                         <div className="mt-1 text-[12px] leading-[14px] text-[#9AA4AF]">

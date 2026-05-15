@@ -60,7 +60,7 @@ function ReportCard({
             <Image width={200} height={200} src={item.avatarSrc} alt="" className="h-full w-full object-cover" />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-[14px] font-medium leading-[18px] text-[#111827]">
+            <div className="truncate text-[14px] font-medium leading-[18px] text-black/70">
               {item.title}
             </div>
             <div className="mt-1 text-[12px] leading-[16px] text-[#9CA3AF]">{item.dateLabel}</div>
@@ -205,7 +205,7 @@ function PageContent() {
     <div className="h-[100dvh w-full bg-white">
       <div className="mx-auto w-full h-full pb-6 -[calc(env(safe-area-inset-top)+20px)]">
         <div className="px-">
-          <h1 className="text-[22px] font-semibold leading-[28px] text-[#111827]">
+          <h1 className="text-[22px] font-semibold leading-[28px] text-black/70">
             {t("history.examinationHistory")}
           </h1>
           <p className="mt-1 text-[15px] leading-[20px] text-[#9CA3AF]">
@@ -243,7 +243,7 @@ function PageContent() {
                 <span className="h-8 w-8 overflow-hidden rounded-full bg-white">
                   <Image width={200} height={200} src={pet.avatarSrc} alt="" className="h-full w-full object-cover" />
                 </span>
-                <span className={`text-[14px] font-medium ${active ? "text-primary" : "text-[#111827]"}`}>
+                <span className={`text-[14px] font-medium ${active ? "text-primary" : "text-black/70"}`}>
                   {pet.name}
                 </span>
               </button>

@@ -53,7 +53,7 @@ export default function Layout({
         'button[aria-label="Back"]'
       ) || !!document.querySelector(
         'button[aria-label="Voltar"]'
-      )) && pathname !== "/Guardian/pets";
+      )) && pathname !== "/Guardian/pets" && pathname !== "/Veterinarian/registrations";
       setHasBackButton((prev) =>
         prev === nextHasBackButton ? prev : nextHasBackButton
       );
@@ -74,7 +74,7 @@ export default function Layout({
 
   return (
     <MobileOnly>
-      <div className="h-[100dvh] flex flex-col bg-[#F4F6F9]">
+      <div className="h-[100dvh] flex flex-col bg-[#FAFAFF]">
         {/* Main Content Area - with padding for bottom nav */}
         <main className={`flex-1 pt-4 px-4 overflow-y-auto scroll-fix relative ${hasBackButton ? "" : "pb-20"}`}>
           {children}

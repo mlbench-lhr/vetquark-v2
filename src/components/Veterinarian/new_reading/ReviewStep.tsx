@@ -373,7 +373,7 @@ function ResultRow({
   return (
     <div className={`py-4 px-3 ${editing ? 'bg-[#F5F6F6] rounded-xl' : ''}`}>
       <div className="flex items-center opa justify-between">
-        <div className="text-[14px] leading-[18px] font-medium text-[#111827]">{translatedLabel}</div>
+        <div className="text-[14px] leading-[18px] font-medium text-black/70">{translatedLabel}</div>
         <div className="flex items-center gap-1">
           {editing ? (
             <>
@@ -573,7 +573,7 @@ export default function ReviewStep({
 
   return (
     <div className="">
-      <h2 className="text-[20px] font-bold text-[#111827]">{t('reading.review.title')}</h2>
+      <h2 className="text-[20px] font-bold text-black/70">{t('reading.review.title')}</h2>
       <p className="mt-1 text-[13px] leading-[18px] text-[#6B7280]">
         {t('reading.review.desc')}
       </p>
@@ -592,7 +592,7 @@ export default function ReviewStep({
 
       {/* Observations textarea */}
       <div className="mt-5">
-        <div className="text-[14px] font-semibold text-[#111827] mb-2">{t('reading.review.observationsLabel')}</div>
+        <div className="text-[14px] font-semibold text-black/70 mb-2">{t('reading.review.observationsLabel')}</div>
         <textarea
           value={observations}
           onChange={(e) => setObservations(e.target.value)}

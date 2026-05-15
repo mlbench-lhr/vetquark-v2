@@ -79,8 +79,8 @@ export default function Stepper({ active }: Props) {
                   className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${isDone
                     ? 'bg-primary'
                     : isActive
-                      ? 'bg-white border-2 border-primary'
-                      : 'bg-white border-2 border-[#D1D5DB]'
+                      ? 'bg-white border border-primary'
+                      : 'bg-white border border-[#D1D5DB]'
                     }`}
                 >
                   {isDone ? (
@@ -92,7 +92,7 @@ export default function Stepper({ active }: Props) {
                   )}
                 </div>
                 <span
-                  className={`text-[10px] leading-[12px] whitespace-nowrap font-medium ${isActive ? 'text-[#111827]' : isDone ? 'text-primary' : 'text-[#9CA3AF]'
+                  className={`text-[10px] leading-[12px] whitespace-nowrap font-medium ${isActive ? 'text-black/70' : isDone ? 'text-primary' : 'text-[#9CA3AF]'
                     }`}
                 >
                   {s.label}

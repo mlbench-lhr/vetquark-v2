@@ -58,9 +58,9 @@ function PageHeader({
         aria-label={backAriaLabel}
         className="absolute left-4 top-6 flex h-10 w-10 items-center justify-center rounded-full"
       >
-        <ChevronLeft className="h-6 w-6 text-[#111827]" />
+        <ChevronLeft className="h-6 w-6 text-black/70" />
       </button>
-      <div className="text-[16px] font-medium leading-[20px] text-[#111827]">{title}</div>
+      <div className="text-[16px] font-medium leading-[20px] text-black/70">{title}</div>
       <div className="absolute right-4 top-6 h-10 w-10" />
     </div>
   );
@@ -152,7 +152,7 @@ export default function Page() {
 
       <div className="flex min-h-[calc(100dvh-72px)] flex-col px- pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div>
-          <div className="text-[14px] font-medium leading-[18px] text-[#111827]">{t("profile.nationalId")}</div>
+          <div className="text-[14px] font-medium leading-[18px] text-black/70">{t("profile.nationalId")}</div>
           <input
             value={nationalIdDisplay}
             onChange={(e) => {
@@ -162,7 +162,7 @@ export default function Page() {
             placeholder={t("profile.egNationalId")}
             inputMode="numeric"
             pattern="[0-9]*"
-            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-black/70 outline-none"
           />
           {nationalIdDigits.length > 0 && !idValid && (
             <div className="mt-2 text-[12px] leading-[16px] text-[#EF4444]">
@@ -170,25 +170,25 @@ export default function Page() {
             </div>
           )}
 
-          <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("profile.dateOfBirth")}</div>
+          <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">{t("profile.dateOfBirth")}</div>
           <TypedDateInput
             value={dateOfBirth}
             onChange={(nextIsoDate) => setDateOfBirth(nextIsoDate)}
             placeholder="dd/mm/yyyy"
             containerClassName="relative mt-3"
-            className="h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 pr-12 text-[16px] leading-[20px] text-black/70 outline-none"
             iconClassName="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#9AA4AF] cursor-pointer"
           />
 
-          <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("profile.address")}</div>
+          <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">{t("profile.address")}</div>
           <input
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder={t("profile.egAddress")}
-            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-black/70 outline-none"
           />
 
-          <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("auth.country")}</div>
+          <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">{t("auth.country")}</div>
           <select
             value={country}
             onChange={(e) => {
@@ -197,7 +197,7 @@ export default function Page() {
               setStateValue("");
               setCity("");
             }}
-            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-black/70 outline-none"
           >
             <option value="" disabled>
               {t("auth.selectCountry")}
@@ -209,7 +209,7 @@ export default function Page() {
             ))}
           </select>
 
-          <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("auth.state")}</div>
+          <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">{t("auth.state")}</div>
           <select
             value={stateValue}
             onChange={(e) => {
@@ -217,7 +217,7 @@ export default function Page() {
               setCity("");
             }}
             disabled={!country}
-            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none disabled:opacity-60"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-black/70 outline-none disabled:opacity-60"
           >
             <option value="" disabled>
               {!country ? t("auth.selectCountryFirst") : t("auth.selectState")}
@@ -232,13 +232,13 @@ export default function Page() {
             ))}
           </select>
 
-          <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("auth.city")}</div>
+          <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">{t("auth.city")}</div>
           {cityOptions.length > 0 ? (
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
               disabled={!stateValue}
-              className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none disabled:opacity-60"
+              className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-black/70 outline-none disabled:opacity-60"
             >
               <option value="" disabled>
                 {!stateValue ? t("auth.selectStateFirst") : t("auth.selectCity")}
@@ -256,17 +256,17 @@ export default function Page() {
               onChange={(e) => setCity(e.target.value)}
               placeholder={t("auth.enterCity")}
               disabled={!stateValue}
-              className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none disabled:opacity-60"
+              className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-black/70 outline-none disabled:opacity-60"
             />
           )}
 
-          <div className="mt-6 text-[14px] font-medium leading-[18px] text-[#111827]">{t("auth.postalCode")}</div>
+          <div className="mt-6 text-[14px] font-medium leading-[18px] text-black/70">{t("auth.postalCode")}</div>
           <input
             value={postalCode}
             onChange={(e) => setPostalCode(e.target.value)}
             placeholder={t("auth.enterPostalCode")}
             inputMode="numeric"
-            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-[#111827] outline-none"
+            className="mt-3 h-[56px] w-full rounded-xl border border-[#E5E7EB] bg-white px-4 text-[16px] leading-[20px] text-black/70 outline-none"
           />
         </div>
 

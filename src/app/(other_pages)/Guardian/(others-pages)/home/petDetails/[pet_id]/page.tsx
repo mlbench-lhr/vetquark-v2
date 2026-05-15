@@ -208,7 +208,7 @@ export default function Page() {
     return (
       <div className="px-4 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">{t('dashboard.examsLabel')}</div>
+          <div className="text-[16px] font-semibold leading-[20px] text-black/70">{t('dashboard.examsLabel')}</div>
           <Link
             href={`/Guardian/history?petId=${encodeURIComponent(String(petId || ""))}`}
             className="text-[13px] font-medium leading-[18px] text-primary"
@@ -231,7 +231,7 @@ export default function Page() {
                       <Image width={200} height={200} src={r.avatarSrc} alt="" className="h-full w-full object-cover" />
                     </div>
                     <div className="min-w-0">
-                      <div className="truncate text-[14px] font-medium leading-[18px] text-[#111827]">
+                      <div className="truncate text-[14px] font-medium leading-[18px] text-black/70">
                         {t('history.urinalysisReport')}
                       </div>
                       <div className="mt-1 text-[12px] leading-[16px] text-[#9CA3AF]">{formatDateLabel(r.date)}</div>

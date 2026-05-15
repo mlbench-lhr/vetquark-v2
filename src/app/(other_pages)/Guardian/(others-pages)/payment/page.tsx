@@ -61,7 +61,7 @@ export default function Page() {
     <div className="min-h-scree bg-white px">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-[20px] font-semibold leading-[24px] text-[#111827]">
+          <h1 className="text-[20px] font-semibold leading-[24px] text-black/70">
             Payments
           </h1>
           <p className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
@@ -99,7 +99,7 @@ export default function Page() {
                 <div className="rounded-[16px] bg-[#F5F6F6] px-4 py-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <div className="text-[16px] font-medium leading-[20px] text-[#111827]">
+                      <div className="text-[16px] font-medium leading-[20px] text-black/70">
                         {item.petName}
                       </div>
                       <div className="mt-1 text-[13px] leading-[16px] text-[#9AA4AF]">

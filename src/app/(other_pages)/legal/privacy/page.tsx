@@ -17,29 +17,29 @@ export default function PrivacyPage() {
       <div className="px- pt-2 pb-[calc(env(safe-area-inset-bottom)+18px)]">
         <div className="rounded-3xl bg-[#F5F6F6] p-4">
           <div className="rounded-2xl bg-white p-4">
-            <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">
+            <div className="text-[16px] font-semibold leading-[20px] text-black/70">
               {content.title}
             </div>
             <div className="mt-2 text-[12px] leading-[16px] text-[#9AA4AF]">
               {updatedLabel} {content.lastUpdated}
             </div>
-            <div className="mt-3 text-[13px] leading-[18px] text-[#111827]">
+            <div className="mt-3 text-[13px] leading-[18px] text-black/70">
               {content.controllerOperator}
             </div>
-            <div className="mt-1 text-[13px] leading-[18px] text-[#111827]">
+            <div className="mt-1 text-[13px] leading-[18px] text-black/70">
               {content.dpoEmail}
             </div>
-            <div className="mt-1 text-[13px] leading-[18px] text-[#111827]">
+            <div className="mt-1 text-[13px] leading-[18px] text-black/70">
               {content.address}
             </div>
-            <div className="mt-3 text-[13px] leading-[18px] text-[#111827]">
+            <div className="mt-3 text-[13px] leading-[18px] text-black/70">
               {content.intro}
             </div>
           </div>
           <div className="mt-4 space-y-4">
             {content.sections.map((sec) => (
               <div key={sec.title} className={`${sec.paragraphs.length > 0 ? "rounded-2xl bg-white p-4" : "px-4"}`}>
-                <div className="text-[14px] font-medium leading-[18px] text-[#111827]">
+                <div className="text-[14px] font-medium leading-[18px] text-black/70">
                   {sec.title}
                 </div>
                 <div className="mt-2 space-y-2">

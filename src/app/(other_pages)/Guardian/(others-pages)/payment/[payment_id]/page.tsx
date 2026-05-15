@@ -93,9 +93,9 @@ export default function Page() {
           className="flex h-0 w-fit items-center justify-center rounded-full"
           aria-label="Back"
         >
-          <ChevronLeft className="h-6 w-6 text-[#111827]" />
+          <ChevronLeft className="h-6 w-6 text-black/70" />
         </button>
-        <h1 className="text-[16px] font-medium leading-[20px] text-[#111827]">
+        <h1 className="text-[16px] font-medium leading-[20px] text-black/70">
           Payment Details
         </h1>
         <div className="h-0 w-10" />
@@ -115,7 +115,7 @@ export default function Page() {
               />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[16px] font-medium leading-[20px] text-[#111827]">
+              <div className="truncate text-[16px] font-medium leading-[20px] text-black/70">
                 {safePayment.petName}
               </div>
             </div>
@@ -123,7 +123,7 @@ export default function Page() {
         </div>
 
         <div className="mt-6">
-          <div className="text-[20px] font-semibold leading-[24px] text-[#111827]">
+          <div className="text-[20px] font-semibold leading-[24px] text-black/70">
             Link Generated
           </div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
@@ -154,7 +154,7 @@ export default function Page() {
             />
           </div>
           <div className="min-w-0">
-            <div className="text-[16px] font-semibold leading-[20px] text-[#111827]">
+            <div className="text-[16px] font-semibold leading-[20px] text-black/70">
               {safePayment.vetName}
             </div>
             <div className="mt-1 text-[13px] leading-[16px] text-[#9AA4AF]">
@@ -168,7 +168,7 @@ export default function Page() {
         <div className="mt-4 text-[14px] font-medium leading-[18px] text-[#9AA4AF]">
           Invoice Date
         </div>
-        <div className="mt-2 text-[16px] font-semibold leading-[20px] text-[#111827]">
+        <div className="mt-2 text-[16px] font-semibold leading-[20px] text-black/70">
           {safePayment.invoiceDate}
         </div>
       </div>

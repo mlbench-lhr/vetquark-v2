@@ -140,7 +140,7 @@ export default function ClinicReportsPage() {
         <form ref={formRef} onSubmit={handleSubmit} className="pt-2">
           <div className="space-y-4">
             <div>
-              <label className="block text-[#111827] font-medium mb-2">
+              <label className="block text-black/70 font-medium mb-2">
                 {t("menu.uploadClinicLogo")} <span className="text-[#9AA4AF] font-normal">{t("menu.optionalSuffix")}</span>
               </label>
               <div className="bg-[#F5F6F6] border-2 border-dashed border-[#E5E7EB] rounded-xl p-4 text-center">
@@ -181,7 +181,7 @@ export default function ClinicReportsPage() {
             </div>
 
             <div>
-              <label className="block text-[#111827] font-medium mb-2">{t("menu.tradeNameLabel")}</label>
+              <label className="block text-black/70 font-medium mb-2">{t("menu.tradeNameLabel")}</label>
               <input
                 type="text"
                 name="tradeName"
@@ -189,12 +189,12 @@ export default function ClinicReportsPage() {
                 value={formData.tradeName}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
+                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl focus:outline-none text-black/70 placeholder-[#9AA4AF]"
               />
             </div>
 
             <div>
-              <label className="block text-[#111827] font-medium mb-2">
+              <label className="block text-black/70 font-medium mb-2">
                 {t("menu.cnpjIeLabel")} <span className="text-[#9AA4AF] font-normal">{t("menu.optionalSuffix")}</span>
               </label>
               <input
@@ -205,12 +205,12 @@ export default function ClinicReportsPage() {
                 onChange={(e) => setFormData((prev) => ({ ...prev, cnpjIe: e.target.value.replace(/\D/g, "") }))}
                 inputMode="numeric"
                 pattern="[0-9]*"
-                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
+                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl focus:outline-none text-black/70 placeholder-[#9AA4AF]"
               />
             </div>
 
             <div>
-              <label className="block text-[#111827] font-medium mb-2">{t("menu.addressHeaderLabel")}</label>
+              <label className="block text-black/70 font-medium mb-2">{t("menu.addressHeaderLabel")}</label>
               <input
                 type="text"
                 name="reportHeaderAddress"
@@ -218,12 +218,12 @@ export default function ClinicReportsPage() {
                 value={formData.reportHeaderAddress}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF]"
+                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl focus:outline-none text-black/70 placeholder-[#9AA4AF]"
               />
             </div>
 
             <div>
-              <label className="block text-[#111827] font-medium mb-2">{t("menu.reportFooterLabel")}</label>
+              <label className="block text-black/70 font-medium mb-2">{t("menu.reportFooterLabel")}</label>
               <textarea
                 name="reportFooter"
                 placeholder={t("menu.enterReportFooter")}
@@ -231,7 +231,7 @@ export default function ClinicReportsPage() {
                 onChange={handleInputChange}
                 rows={4}
                 required
-                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl focus:outline-none text-[#111827] placeholder-[#9AA4AF] resize-none"
+                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl focus:outline-none text-black/70 placeholder-[#9AA4AF] resize-none"
               />
             </div>
           </div>

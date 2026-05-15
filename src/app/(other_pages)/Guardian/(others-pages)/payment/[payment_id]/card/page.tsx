@@ -148,9 +148,9 @@ export default function Page() {
           className="flex h-0 w-fit items-center justify-center rounded-full"
           aria-label="Back"
         >
-          <ChevronLeft className="h-6 w-6 text-[#111827]" />
+          <ChevronLeft className="h-6 w-6 text-black/70" />
         </button>
-        <h1 className="text-[16px] font-medium leading-[20px] text-[#111827]">
+        <h1 className="text-[16px] font-medium leading-[20px] text-black/70">
           {title}
         </h1>
         <div className="h-0 w-10" />
@@ -230,7 +230,7 @@ export default function Page() {
           <button
             type="button"
             onClick={() => router.push(`/Guardian/payment/${encodeURIComponent(paymentId)}/pix`)}
-            className="mt-4 h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-[#111827]"
+            className="mt-4 h-[52px] w-full rounded-full bg-[#F5F6F6] text-[15px] font-medium text-black/70"
           >
             Prefer PIX or boleto
           </button>

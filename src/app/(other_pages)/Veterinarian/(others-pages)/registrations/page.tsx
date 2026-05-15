@@ -686,12 +686,12 @@ function RegistrationsListContent() {
 
         {/* Bottom Add Button - only on Patients tab per design */}
         {activeTab === "patients" ? (
-          <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+92px)] left-4 right-4 z-10">
+          <div className="">
             <Button
               onClick={() => router.push("/Veterinarian/patient")}
-              className="h-[48px] w-full rounded-xl bg-primary text-[15px] font-semibold text-white hover:bg-[#3568C0] shadow-[0_6px_18px_-6px_rgba(63,120,216,0.5)] gap-2"
+              className="h-[30px] w-full rounded-md bg-primary mt-6 text-[13px] font-semibold text-white hover:bg-[#3568C0] shadow-[0_6px_18px_-6px_rgba(63,120,216,0.5)] gap-2"
             >
-              <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
+              <Plus className="h-[14px] w-[14px]" strokeWidth={2.5} />
               {lang === "pt" ? "Adicionar Paciente" : t("registrations.addNewPatientButton")}
             </Button>
           </div>
@@ -712,7 +712,7 @@ function RegistrationsListContent() {
           >
             <div className="mx-auto h-[5px] w-[44px] rounded-full bg-[#E5E7EB]" />
             <div className="relative mt-4 flex items-center justify-center px-4">
-              <div className="text-[18px] font-semibold leading-[22px] text-[#111827]">
+              <div className="text-[18px] font-semibold leading-[22px] text-black/70">
                 {t("registrations.sortBy")}
               </div>
               <button
@@ -738,7 +738,7 @@ function RegistrationsListContent() {
                     key={opt.id}
                     type="button"
                     onClick={() => setSortParam(opt.id)}
-                    className={`flex h-[52px] w-full items-center justify-between rounded-[14px] px-4 text-[14px] font-medium transition-colors ${active ? "bg-[#EEF4FF] text-[#111827]" : "bg-[#F5F6F6] text-[#111827]"
+                    className={`flex h-[52px] w-full items-center justify-between rounded-[14px] px-4 text-[14px] font-medium transition-colors ${active ? "bg-[#EEF4FF] text-black/70" : "bg-[#F5F6F6] text-black/70"
                       }`}
                   >
                     <span>{opt.label}</span>
