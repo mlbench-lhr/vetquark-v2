@@ -133,7 +133,7 @@ export default function SignInForm() {
             placeholder={t("auth.email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0"
+            className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0"
           />
 
           <div className="relative">
@@ -142,7 +142,7 @@ export default function SignInForm() {
               placeholder={t("auth.password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
+              className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
             />
             <button
               type="button"
@@ -158,7 +158,7 @@ export default function SignInForm() {
             <button
               type="button"
               onClick={() => router.push("/forget-password")}
-              className="text-primary text-[14px] font-medium bg-transparent border-0 cursor-pointer"
+              className="text-primary text-[14px] font-bold bg-transparent border-0 cursor-pointer"
             >
               {t("auth.forgotPassword")}
             </button>
@@ -167,7 +167,7 @@ export default function SignInForm() {
           <button
             type="submit"
             disabled={verifying}
-            className="w-full bg-primary text-white font-bold text-[16px] py-[17px] rounded-2xl transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+            className="w-full bg-primary text-white font-bold text-[16px] py-[15px] rounded-xl transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed mt-1 shadow-[0_8px_24px_-8px_rgba(63,120,216,0.5)]"
           >
             {verifying ? (
               <span className="inline-flex items-center justify-center gap-2">

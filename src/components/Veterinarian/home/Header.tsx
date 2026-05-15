@@ -114,7 +114,7 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
           </Link>
           <div>
             <p className="text-xs text-gray-400 leading-tight">{t('dashboard.welcome')}</p>
-            <h1 className="text-sm font-bold text-primary leading-tight">{resolvedName}</h1>
+            <h1 className="text-sm font-bold text-black leading-tight">{resolvedName}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">

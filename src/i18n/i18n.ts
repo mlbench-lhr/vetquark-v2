@@ -1949,7 +1949,7 @@ const resources = {
       home: {
         guardianDetailsTitle: "Detalhes do tutor",
         petProfileTitle: "Perfil do animal",
-        patientProfileTitle: "Perfil do paciente",
+        patientProfileTitle: "Perfil do Paciente",
         informationTab: "Informações",
         progressTab: "Progresso",
         viewPetsTitle: "Ver animais",
@@ -1978,10 +1978,10 @@ const resources = {
           day: "dia",
           days: "dias",
         },
-        newTest: "Novo exame",
+        newTest: "Novo Teste",
         reportsHistory: "Histórico de Laudos",
-        noReportsYet: "Ainda não há relatórios.",
-        viewAllReportsAssociated: "Ver todos os relatórios associados a {{name}}.",
+        noReportsYet: "Ainda não há laudos.",
+        viewAllReportsAssociated: "Visualize todos os laudos associados a {{name}}.",
         contact: {
           mobile: "Telemóvel",
           email: "E-mail",

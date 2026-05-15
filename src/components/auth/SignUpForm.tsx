@@ -71,7 +71,7 @@ const getEmptyFormData = (): SignUpFormData => ({
   veterinarianCode: "",
 });
 
-const INPUT_BASE = "w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0";
+const INPUT_BASE = "w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0";
 const INPUT_ERROR = "w-full px-4 py-[14px] bg-[#FDECEA] rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 text-[#1C1C1E] text-[15px] placeholder-[#C0514A] border-0";
 
 export default function SignUpForm() {
@@ -80,15 +80,15 @@ export default function SignUpForm() {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
-  // 6 steps total
-  // 1: basic info (name, email, phone)
-  // 2: password + confirm
-  // 3: CPF, DOB, CEP, number, state, city, terms → API call
+  // Logical steps:
+  // 1: combined personal info screen (all fields visible). On submit → API call → step 4
   // 4: OTP verification
   // 5: professional registration
   // 6: clinic and reports
+  // The displayed indicator (Passo X/6) on step 1 advances 1→2→3 based on password strength,
+  // matching the design exactly. Internally step is always 1 while on the combined form.
   const FINAL_STEP = 6;
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<1 | 4 | 5 | 6>(1);
   const [profileType] = useState<ProfileType>("veterinarian");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -120,6 +120,10 @@ export default function SignUpForm() {
 
   const passwordStrength = passwordRequirements.filter((r) => r.test(formData.password)).length;
   const passwordStrengthPercent = (passwordStrength / passwordRequirements.length) * 100;
+
+  // Indicator displayed in header (Passo X/6) — for the combined info screen this advances
+  // based on password strength to mirror the design (1/6 empty → 2/6 weak → 3/6 strong).
+  const passwordStrengthForDisplay = passwordStrength;
 
   const expertiseOptions = [
     { value: "acupuncture", text: t("auth.acupuncture"), selected: false },
@@ -324,34 +328,29 @@ export default function SignUpForm() {
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
-    else router.push("/signin");
+    if (step === 1) { router.push("/signin"); return; }
+    if (step === 4) { setStep(1); return; }
+    if (step === 5) { setStep(4); return; }
+    if (step === 6) { setStep(5); return; }
   };
 
-  // Step 1: basic info validation + advance
-  const handleStep1Submit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Combined info step (1/6 → 2/6 → 3/6 visually): full-form validation + API call
+  const handleInfoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!formData.fullName.trim()) { toast.error(t("auth.fullName") + " " + t("common.required")); return; }
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRe.test(formData.email.trim())) { setEmailError(true); toast.error(t("auth.invalidEmail") || "E-mail inválido"); return; }
     const parsedPhone = parsePhoneNumberFromString(String(formData.phone || "").trim());
     if (!parsedPhone?.isValid()) { toast.error(t("auth.invalidPhoneNumber")); return; }
-    setStep(2);
-  };
-
-  // Step 2: password validation + advance
-  const handleStep2Submit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
     if (passwordStrength < passwordRequirements.length) { toast.error(t("auth.passwordReqMinLength")); return; }
     if (formData.password !== formData.confirmPassword) { toast.error(t("auth.passwordsDoNotMatch")); return; }
-    setStep(3);
-  };
-
-  // Step 3: personal details + API call to init signup
-  const handleStep3Submit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    if (!formData.taxId.trim()) { toast.error("CPF"); return; }
+    if (!formData.dateOfBirth.trim()) { toast.error("Data de Nascimento"); return; }
+    if (!formData.postalCode.trim()) { toast.error("CEP"); return; }
+    if (!formData.address.trim()) { toast.error("Número"); return; }
+    if (!formData.state.trim()) { toast.error("Estado"); return; }
+    if (!formData.city.trim()) { toast.error("Cidade"); return; }
     if (!formData.acceptTerms) { toast.error(t("auth.mustAcceptTerms")); return; }
-    const parsedPhone = parsePhoneNumberFromString(String(formData.phone || "").trim());
     const normalizedPhone = parsedPhone?.isValid() ? parsedPhone.number : formData.phone;
     try {
       setSubmitting(true);
@@ -423,24 +422,33 @@ export default function SignUpForm() {
         });
         const loginData = await loginRes.json().catch(() => null);
         if (loginRes.ok && loginData?.profile) dispatch(setUserProfile(loginData.profile));
-      } catch {}
+      } catch { }
       if (!id) { router.push("/Veterinarian/home"); return; }
       router.push(`/upload-profile-picture?userId=${encodeURIComponent(id)}&profileType=veterinarian`);
     } finally { setSubmitting(false); }
   };
 
   const stepTitle = () => {
-    if (step <= 3) return t("auth.createAccount");
+    if (step === 1) return t("auth.createAccount");
     if (step === 4) return t("auth.emailVerification");
     if (step === 5) return t("auth.professionalRegistration");
     return t("auth.clinicReports");
   };
 
+  // Visual indicator number shown to the user in the header.
+  const displayStep = (() => {
+    if (step !== 1) return step;
+    if (!formData.password) return 1;
+    if (passwordStrengthForDisplay < passwordRequirements.length) return 2;
+    return 3;
+  })();
+
   const renderStepContent = () => {
     switch (step) {
       case 1:
         return (
-          <form id="signup-step-1" onSubmit={handleStep1Submit} className="px-5 pt-5 pb-4 space-y-3">
+          <form id="signup-step-1" onSubmit={handleInfoSubmit} className="px-5 pt-4 pb-4 space-y-2.5">
+            {/* Basic info */}
             <input
               type="text" name="fullName" placeholder={`${t("auth.fullName")}*`}
               value={formData.fullName} onChange={handleInputChange} required
@@ -448,7 +456,7 @@ export default function SignUpForm() {
             />
             <input
               type="email" name="email"
-              placeholder={emailError ? `${t("auth.email")} ${t("auth.invalid") || "Inválido"}*` : `${t("auth.email")}*`}
+              placeholder={emailError ? `E-mail Inválido*` : `${t("auth.email")}*`}
               value={formData.email} onChange={handleInputChange} required
               className={emailError ? INPUT_ERROR : INPUT_BASE}
             />
@@ -456,16 +464,12 @@ export default function SignUpForm() {
               name="phone" value={formData.phone}
               onChange={(next) => setFormData((prev) => ({ ...prev, phone: next }))}
               defaultCountry="br" required
-              inputClassName="!w-full !h-[50px] !px-11 !py-3 !bg-[#EBEBF0] !rounded-xl !border-0 !text-[#1C1C1E] placeholder:!text-[#8E8E93] focus:!outline-none focus:!ring-2 focus:!ring-primary text-[15px]"
-              buttonClassName="!h-[50px] !bg-[#EBEBF0] !border-0 !rounded-xl"
+              inputClassName="!w-full !h-[48px] !px-11 !py-3 !bg-[#EBEBF0] !rounded-xl !border-0 !text-[#1C1C1E] placeholder:!text-[#8E8E93] focus:!outline-none focus:!ring-2 focus:!ring-primary text-[15px]"
+              buttonClassName="!h-[48px] !bg-[#EBEBF0] !border-0 !rounded-xl"
               containerClassName="w-full"
             />
-          </form>
-        );
 
-      case 2:
-        return (
-          <form id="signup-step-2" onSubmit={handleStep2Submit} className="px-5 pt-5 pb-4 space-y-3">
+            {/* Password */}
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"} name="password"
@@ -489,20 +493,20 @@ export default function SignUpForm() {
               </button>
             </div>
 
-            {/* Password strength bar + requirements */}
+            {/* Password strength bar + requirements (only when typing) */}
             {(passwordFocused || formData.password) && (
-              <div className="space-y-2 px-1">
+              <div className="space-y-1.5 px-1 pt-0.5">
                 <div className="h-[4px] w-full bg-[#E5E5EA] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${passwordStrengthPercent === 100 ? "bg-primary" : "bg-red-500"}`}
                     style={{ width: `${passwordStrengthPercent}%` }}
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   {passwordRequirements.map((req) => (
-                    <div key={req.key} className="flex items-center gap-2 text-[13px]">
-                      <div className={`w-[16px] h-[16px] rounded-full border flex items-center justify-center shrink-0 ${req.test(formData.password) ? "bg-primary border-primary" : "border-[#C7C7CC]"}`}>
-                        {req.test(formData.password) && <Check size={9} className="text-white" strokeWidth={3} />}
+                    <div key={req.key} className="flex items-center gap-2 text-[12px]">
+                      <div className={`w-[14px] h-[14px] rounded-full border flex items-center justify-center shrink-0 ${req.test(formData.password) ? "bg-primary border-primary" : "border-[#C7C7CC]"}`}>
+                        {req.test(formData.password) && <Check size={8} className="text-white" strokeWidth={3} />}
                       </div>
                       <span className={req.test(formData.password) ? "text-[#1C1C1E]" : "text-[#8E8E93]"}>{req.label}</span>
                     </div>
@@ -511,6 +515,7 @@ export default function SignUpForm() {
               </div>
             )}
 
+            {/* Confirm password */}
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"} name="confirmPassword"
@@ -532,13 +537,9 @@ export default function SignUpForm() {
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-          </form>
-        );
 
-      case 3:
-        return (
-          <form id="signup-step-3" onSubmit={handleStep3Submit} className="px-5 pt-5 pb-4 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            {/* Personal details */}
+            <div className="grid grid-cols-2 gap-2.5">
               <input
                 type="text" name="taxId" placeholder="CPF"
                 value={formData.taxId} onChange={handleInputChange} required
@@ -547,13 +548,13 @@ export default function SignUpForm() {
               <TypedDateInput
                 name="dateOfBirth" value={formData.dateOfBirth}
                 onChange={(nextIsoDate) => setFormData((prev) => ({ ...prev, dateOfBirth: nextIsoDate }))}
-                required max={new Date().toISOString().slice(0, 10)} placeholder="dd/mm/yyyy"
-                className={`${INPUT_BASE} pr-10`}
-                iconClassName="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E8E93] cursor-pointer"
+                required max={new Date().toISOString().slice(0, 10)} placeholder="Data de Nascimento"
+                className={`${INPUT_BASE} text-center pr-8`}
+                iconClassName="absolute right-2 top-1/2 -translate-y-1/2 text-[#8E8E93] cursor-pointer"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <input
                 type="text" name="postalCode" placeholder="CEP"
                 value={formData.postalCode} onChange={handleInputChange} required
@@ -566,27 +567,26 @@ export default function SignUpForm() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <select
-                name="state" value={formData.state}
-                onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
-                required disabled={!formData.country || loadingStates || stateOptions.length === 0}
-                className={`${INPUT_BASE} appearance-none text-center`}
-              >
-                <option value="" disabled>
-                  {!formData.country ? t("auth.selectCountryFirst") : loadingStates ? t("auth.loadingStates") : "Estado"}
-                </option>
-                {stateOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.text}</option>)}
-              </select>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="relative">
+                <select
+                  name="state" value={formData.state}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value, city: "" }))}
+                  required disabled={!formData.country || loadingStates || stateOptions.length === 0}
+                  className={`${INPUT_BASE} appearance-none text-center pr-8 ${formData.state ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}
+                >
+                  <option value="" disabled>Estado</option>
+                  {stateOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.text}</option>)}
+                </select>
+                <svg className="absolute right-2 top-1/2 -translate-y-1/2 text-[#8E8E93] pointer-events-none" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 7.5l5 5 5-5" /></svg>
+              </div>
               {cityOptions.length > 0 ? (
                 <select
                   name="city" value={formData.city} onChange={handleInputChange}
                   required disabled={!formData.state || loadingCities}
-                  className={`${INPUT_BASE} appearance-none text-center`}
+                  className={`${INPUT_BASE} appearance-none text-center ${formData.city ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}
                 >
-                  <option value="" disabled>
-                    {!formData.state ? t("auth.selectStateFirst") : loadingCities ? t("auth.loadingCities") : "Cidade"}
-                  </option>
+                  <option value="" disabled>Cidade</option>
                   {cityOptions.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               ) : (
@@ -633,7 +633,7 @@ export default function SignUpForm() {
                     const firstEmpty = otp.findIndex((d) => !d);
                     if (firstEmpty !== -1 && firstEmpty < index) inputRefs.current[firstEmpty]?.focus();
                   }}
-                  className="w-[48px] h-[52px] text-center text-[18px] font-medium bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] border-0"
+                  className="w-[48px] h-[52px] text-center text-[18px] font-medium bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] border-0"
                   maxLength={1} required autoComplete="off"
                 />
               ))}
@@ -759,7 +759,7 @@ export default function SignUpForm() {
                 name="reportFooter" placeholder="CRVM/RT, POP, observações padrão...."
                 value={formData.reportFooter} onChange={handleInputChange}
                 rows={4} required
-                className="w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 resize-none"
+                className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 resize-none"
               />
               <p className="text-[11px] text-[#8E8E93] mt-1.5">{t("auth.reportFooterHelp")}</p>
             </div>
@@ -786,8 +786,8 @@ export default function SignUpForm() {
             {stepTitle()}
           </h2>
         </div>
-        <div className="text-primary font-semibold text-[14px] shrink-0">
-          {t("auth.step")} {step}/{FINAL_STEP}
+        <div className="text-primary font-bold text-[14px] shrink-0">
+          {t("auth.step")} {displayStep}/{FINAL_STEP}
         </div>
       </div>
 
@@ -802,7 +802,7 @@ export default function SignUpForm() {
           type="submit"
           form={`signup-step-${step}`}
           disabled={submitting || uploadingClinicLogo}
-          className="w-full bg-primary text-white font-bold text-[16px] py-[17px] rounded-2xl transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full bg-primary text-white font-bold text-[16px] py-[15px] rounded-xl transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_8px_24px_-8px_rgba(63,120,216,0.5)]"
         >
           {submitting ? (
             <span className="inline-flex items-center justify-center gap-2">

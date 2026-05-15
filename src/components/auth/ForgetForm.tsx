@@ -252,7 +252,7 @@ export default function ForgetForm() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0"
+                            className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0"
                         />
                     </form>
                 )}
@@ -272,7 +272,7 @@ export default function ForgetForm() {
                                     onChange={(e) => handleOtpChange(index, e.target.value)}
                                     onKeyDown={(e) => handleKeyDown(index, e)}
                                     onClick={() => handleInputClick(index)}
-                                    className="w-[48px] h-[52px] text-center bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[18px] font-medium text-[#1C1C1E] border-0"
+                                    className="w-[48px] h-[52px] text-center bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[18px] font-medium text-[#1C1C1E] border-0"
                                     maxLength={1}
                                     autoComplete="off"
                                 />
@@ -310,7 +310,7 @@ export default function ForgetForm() {
                                 onFocus={() => setPasswordFocused(true)}
                                 onBlur={() => setPasswordFocused(false)}
                                 required
-                                className="w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
+                                className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
                             />
                             <button
                                 type="button"
@@ -351,7 +351,7 @@ export default function ForgetForm() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
-                                className="w-full px-4 py-[17px] bg-[#EBEBF0] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
+                                className="w-full px-4 py-[14px] bg-[#EBEBF0] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-[#1C1C1E] text-[15px] placeholder-[#8E8E93] border-0 pr-12"
                             />
                             <button
                                 type="button"
@@ -371,7 +371,7 @@ export default function ForgetForm() {
                     type="submit"
                     form={`forget-step-${step}`}
                     disabled={submitting}
-                    className="w-full bg-primary text-white font-bold text-[16px] py-[17px] rounded-2xl transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full bg-primary text-white font-bold text-[16px] py-[15px] rounded-xl transition-colors cursor-pointer border-0 disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_8px_24px_-8px_rgba(63,120,216,0.5)]"
                 >
                     {submitting ? (
                         <span className="inline-flex items-center justify-center gap-2">

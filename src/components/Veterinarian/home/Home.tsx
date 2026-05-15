@@ -125,7 +125,7 @@ export default function Home() {
     return (
         <div className="space-y-5 pb-4">
             <Header userName={profile?.fullName} />
-            <SearchBar />
+            {/* <SearchBar /> */}
             <BalanceCard />
 
             <div className="grid grid-cols-2 gap-3">
