@@ -149,8 +149,8 @@ export default function Page() {
         }
     };
 
-    const inputCls = "w-full h-[44px] bg-white border border-[#E5E5EA] rounded-lg px-4 text-[14px] text-black/70 placeholder:text-[#8E8E93] outline-none focus:ring-2 focus:ring-primary";
-    const labelCls = "block text-black/70 text-[14px] font-medium mb-1.5";
+    const inputCls = "";
+    const labelCls = "";
     return (
         <div className="w-full bg-[#F2F2F7] min-h-screen flex flex-col pb-6">
             <Header title={t("wallet.bankDetails") || "Dados Bancários"} />

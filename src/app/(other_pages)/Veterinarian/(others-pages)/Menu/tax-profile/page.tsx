@@ -169,8 +169,8 @@ export default function TaxInfoAndProfessionalProfilePage() {
     }
   };
 
-  const inputCls = "w-full h-[44px] rounded-lg border border-[#E5E5EA] bg-white px-4 text-[14px] leading-[18px] text-black/70 placeholder:text-[#8E8E93] outline-none focus:ring-2 focus:ring-primary";
-  const labelCls = "block text-[14px] font-medium text-black/70 mb-1.5";
+  const inputCls = "";
+  const labelCls = "";
 
   return (
     <div className="w-full bg-[#F2F2F7] min-h-screen flex flex-col">

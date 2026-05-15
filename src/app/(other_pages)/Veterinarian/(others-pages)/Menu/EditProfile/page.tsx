@@ -16,7 +16,7 @@ import Image from "next/image";
 export default function EditProfileCard() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const profile = useAppSelector((s) => s.userProfile.profile);
+    const profile = useAppSelector((s) => (s as any).userProfile.profile);
 
     const fullName = profile?.fullName ?? "";
     const email = profile?.email ?? "";
@@ -178,18 +178,18 @@ export default function EditProfileCard() {
         }
     };
 
-    const inputCls = "h-[48px] w-full rounded-xl border border-[#E5E5EA] bg-white px-4 text-[15px] leading-[18px] text-black/70 placeholder:text-[#8E8E93] shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0";
-    const labelCls = "text-[14px] font-medium leading-[18px] text-black/70 mb-1.5 block";
+    const inputCls = "";
+    const labelCls = "";
     return (
-        <div className="min-h-screen bg-[#F2F2F7] flex flex-col">
+        <div className=" flex flex-col">
             <Header title={t("menu.editProfile")} />
             {/* Avatar Section */}
-            <div className="flex justify-center pt-6 pb-8">
+            <div className="flex justify-center pt-2 pb-4">
                 <div className="relative">
-                    <div className="w-[160px] h-[160px] rounded-full overflow-hidden bg-[#E8E8EE]">
+                    <div className="w-[200px] h-[200px] rounded-full overflow-hidden bg-[#E8E8EE]">
                         <Image
-                            width={320}
-                            height={320}
+                            width={400}
+                            height={400}
                             src={avatarUrl}
                             alt={t('profile.profile')}
                             className="w-full h-full object-cover"
@@ -214,7 +214,7 @@ export default function EditProfileCard() {
             </div>
 
             {/* Form Fields */}
-            <div className="flex-1 space-y-5">
+            <div className="flex-1 space-y-2">
                 <div>
                     <Label className={labelCls}>
                         {t('menu.fullName')}<span className="text-black/70">*</span>
@@ -250,8 +250,8 @@ export default function EditProfileCard() {
                         onChange={setLocalPhone}
                         defaultCountry="br"
                         containerClassName="w-full"
-                        inputClassName="!w-full !h-[48px] !rounded-xl !border !border-[#E5E5EA] !bg-white !pl-[52px] !text-[15px] !leading-[18px] !text-black/70 placeholder:!text-[#8E8E93] focus:!outline-none"
-                        buttonClassName="!h-[48px] !border !border-[#E5E5EA] !border-r-0 !bg-white !rounded-l-xl"
+                        inputClassName="w-full! h-[26px]! w-full rounded-[4px]! bg-[#F6F6F6]! !border !border-[#E5E5EA] !bg-white !text-[12px] !leading-[18px] !text-black/70 placeholder:!text-secondary focus:!outline-none"
+                        buttonClassName="!h-[26px] !border !border-[#E5E5EA] !border-r-0 !bg-[#F6F6F6]"
                     />
                 </div>
 
@@ -269,7 +269,7 @@ export default function EditProfileCard() {
                         <Button
                             type="button"
                             onClick={() => { navigator.clipboard.writeText(localVetCode || ""); toast.success(t("menu.copied")); }}
-                            className="h-[48px] rounded-xl bg-primary text-white px-4 text-[13px] font-semibold hover:bg-[#2f68c8] shadow-none"
+                            className="h-[26px] rounded-[4px] bg-primary text-white/80 px-4 text-[10px] font-normal hover:bg-[#2f68c8] shadow-none"
                         >
                             {t("menu.copy")}
                         </Button>
@@ -277,7 +277,7 @@ export default function EditProfileCard() {
                             type="button"
                             onClick={handleRegenerateCode}
                             disabled={saving}
-                            className="h-[48px] rounded-xl bg-primary text-white px-4 text-[13px] font-semibold hover:bg-[#2f68c8] whitespace-nowrap shadow-none"
+                            className="h-[26px] rounded-[4px] bg-primary text-white/80 px-4 text-[10px] font-normal hover:bg-[#2f68c8] whitespace-nowrap shadow-none"
                         >
                             {t("menu.regenerate")}
                         </Button>
@@ -286,11 +286,11 @@ export default function EditProfileCard() {
             </div>
 
             {/* Save Button */}
-            <div className="pb-8 pt-6">
+            <div className="pb-8 pt-4">
                 <Button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full h-[52px] rounded-xl bg-primary hover:bg-[#2f68c8] text-white font-bold text-[16px] shadow-none"
+                    className="w-full h-[32px]! rounded-md bg-primary hover:bg-[#2f68c8] text-white font-normal text-[12px] shadow-none"
                 >
                     {saving ? t('menu.saving') : t('menu.saveChanges')}
                 </Button>
