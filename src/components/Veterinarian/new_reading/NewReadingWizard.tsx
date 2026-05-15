@@ -58,7 +58,7 @@ export default function NewReadingWizard() {
   const profile = useAppSelector((s: RootState) => s.userProfile.profile)
   const userId = profile?.id || ''
   const [unreadCount, setUnreadCount] = useState(0)
-  const [step, setStep] = useState<NewReadingStep>('timer')
+  const [step, setStep] = useState<NewReadingStep>('identification')
   const [submitting, setSubmitting] = useState(false)
   const [paymentLinkStatus, setPaymentLinkStatus] = useState<"unknown" | "pending" | "paid" | "expired">("unknown")
   const [signatureImageUrl, setSignatureImageUrl] = useState<string>("")
