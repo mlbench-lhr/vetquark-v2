@@ -48,9 +48,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ read
 
     await connectMongo();
     
-    const capturedImages = await ReadingCapturedImage.findOne({ reading: readingId })
-      .populate('reading', 'id')
-      .lean();
+    const capturedImages = await ReadingCapturedImage.findOne({ reading: readingId }).lean();
 
     if (!capturedImages) {
       return NextResponse.json({ images: [] });

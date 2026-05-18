@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import connectMongo from "@/lib/mongodb";
 import Admin from "@/lib/models/Admin";
 import Reading from "@/lib/models/Reading";
+import "@/lib/models/Patient";
+import "@/lib/models/User";
 import { getActivePanels, getPanelVisibleKeys, normalizePanelCode } from "@/lib/panels";
 
 async function requireAdmin(req: NextRequest) {
@@ -138,7 +140,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     };
 
     return NextResponse.json({ reading }, { status: 200 });
-  } catch {
+  } catch (err) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
