@@ -7,6 +7,12 @@ import { CapturedReadingImageDraft, ReviewSelectionMap } from './types'
 import { toast } from 'react-toastify'
 import { useTranslation } from 'react-i18next'
 
+type ExistingImage = {
+  cloudinaryUrl: string
+  captureSecond: number
+  capturedAt: string | null
+}
+
 type Props = {
   selectedSeconds: number
   onChangeSelectedSeconds: (nextSeconds: number) => void
@@ -16,7 +22,9 @@ type Props = {
     rawApiResults: Array<{ atSeconds: number; time: string; response: any }>,
     capturedImages: CapturedReadingImageDraft[],
   ) => void
+  onNextWithExistingImages?: () => void
   onImagesChange?: (images: CapturedReadingImageDraft[]) => void
+  existingImages?: ExistingImage[]
 }
 
 const marks = [30, 40, 60, 120]
@@ -126,7 +134,7 @@ async function getBackCameraStream(): Promise<MediaStream> {
   }
 }
 
-export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, onBack, onAnalyzeAndProceed, onImagesChange }: Props) {
+export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, onBack, onAnalyzeAndProceed, onNextWithExistingImages, onImagesChange, existingImages = [] }: Props) {
   const onImagesChangeRef = useRef(onImagesChange)
   onImagesChangeRef.current = onImagesChange
   const { t } = useTranslation()
@@ -164,6 +172,9 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [qualityOk, setQualityOk] = useState(false)
   const [qualityChecking, setQualityChecking] = useState(false)
   const [qualityIssue, setQualityIssue] = useState<'' | 'dark' | 'bright' | 'focus' | 'motion'>('')
+  const [selectedExistingImageIdx, setSelectedExistingImageIdx] = useState(0)
+  const [reAnalyzing, setReAnalyzing] = useState(false)
+  const [reAnalysisFailed, setReAnalysisFailed] = useState(false)
 
   useEffect(() => {
     analysisSessionRef.current += 1
@@ -688,6 +699,66 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     toast.info(t('reading.timer.analysisCanceled'))
   }, [t])
 
+  const hasExistingImages = existingImages.length > 0
+
+  const handleAnalyzeAgain = async () => {
+    try {
+      setReAnalyzing(true)
+      setReAnalysisFailed(false)
+      analysisSessionRef.current += 1
+      const session = analysisSessionRef.current
+      combinedNumericResultsRef.current = {}
+      combinedMappedResultsRef.current = null
+      rawApiResultsRef.current = []
+      processedAtSetRef.current = new Set()
+
+      const framesToProcess = existingImages.map((img) => ({
+        atSeconds: img.captureSecond,
+        time: String(img.captureSecond),
+        image: img.cloudinaryUrl,
+        isUrl: true,
+      }))
+
+      for (const frame of framesToProcess) {
+        if (session !== analysisSessionRef.current) return
+        const res = await fetch('/api/strip/process_single', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: frame.image, time: frame.time }),
+        })
+        const ct = String(res.headers.get('content-type') || '')
+        const raw = ct.includes('application/json') ? await res.json().catch(() => null) : await res.text().catch(() => '')
+        if (!res.ok) throw new Error((raw as any)?.error || `HTTP ${res.status}`)
+        if (raw?.success === false) throw new Error((raw as any)?.error || 'Analysis failed')
+        const normalized = normalizeSingleResponse(raw, frame.time)
+        rawApiResultsRef.current = [
+          ...rawApiResultsRef.current,
+          { atSeconds: frame.atSeconds, time: frame.time, response: raw },
+        ].sort((a, b) => a.atSeconds - b.atSeconds)
+        const partial = transformTestBoxes(normalized)
+        combinedNumericResultsRef.current = { ...combinedNumericResultsRef.current, ...partial }
+        processedAtSetRef.current.add(frame.atSeconds)
+        combinedMappedResultsRef.current = buildMappedResultsFromNumeric(combinedNumericResultsRef.current)
+      }
+
+      if (session !== analysisSessionRef.current) return
+      const mappedResults = combinedMappedResultsRef.current
+      if (!mappedResults) throw new Error('Analysis failed')
+      const draftImages: CapturedReadingImageDraft[] = existingImages.map((img) => ({
+        atSeconds: img.captureSecond,
+        dataUrl: img.cloudinaryUrl,
+        capturedAt: img.capturedAt || new Date().toISOString(),
+      }))
+      onAnalyzeAndProceed(mappedResults, rawApiResultsRef.current, draftImages)
+    } catch (e) {
+      console.error(e)
+      setReAnalysisFailed(true)
+      toast.error(extractUserFacingErrorMessage(e) || t('reading.timer.failedToAnalyzeImages'))
+    } finally {
+      setReAnalyzing(false)
+    }
+  }
+
   const handleAnalyze = async () => {
     try {
       setAnalysisFailed(false)
@@ -871,19 +942,132 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
 
 
+      {/* Existing images panel — shown when re-entering a reading that already has captures */}
+      {hasExistingImages && (
+        <div className="mt-5 bg-white rounded-[20px] border border-[#E5E7EB] shadow-sm overflow-hidden">
+          <div className="px-5 pt-4 pb-3 border-b border-[#F3F4F6]">
+            <h3 className="text-[15px] font-bold text-black/80">{t('reading.timer.existingImagesTitle', { defaultValue: 'Imagens capturadas anteriormente' })}</h3>
+            <p className="mt-0.5 text-[12px] text-[#6B7280]">{t('reading.timer.existingImagesDesc', { defaultValue: 'Estas imagens foram salvas na sessão anterior.' })}</p>
+          </div>
+
+          {/* Main image preview */}
+          <div className="relative bg-black" style={{ aspectRatio: '4/3' }}>
+            {existingImages[selectedExistingImageIdx] && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={existingImages[selectedExistingImageIdx].cloudinaryUrl}
+                alt={`Captura ${existingImages[selectedExistingImageIdx].captureSecond}s`}
+                className="h-full w-full object-cover"
+              />
+            )}
+            {/* Image counter badge */}
+            <div className="absolute top-3 right-3 bg-black/60 rounded-full px-3 py-1 text-white text-[12px] font-semibold">
+              {selectedExistingImageIdx + 1} / {existingImages.length}
+            </div>
+            {/* Prev/Next navigation */}
+            {existingImages.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSelectedExistingImageIdx((i) => Math.max(0, i - 1))}
+                  disabled={selectedExistingImageIdx === 0}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white disabled:opacity-30"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedExistingImageIdx((i) => Math.min(existingImages.length - 1, i + 1))}
+                  disabled={selectedExistingImageIdx === existingImages.length - 1}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white disabled:opacity-30"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Thumbnail strip */}
+          {existingImages.length > 1 && (
+            <div className="flex gap-2 px-4 py-3 overflow-x-auto">
+              {existingImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedExistingImageIdx(idx)}
+                  className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${idx === selectedExistingImageIdx ? 'border-primary' : 'border-transparent'
+                    }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.cloudinaryUrl} alt={`${img.captureSecond}s`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Capture second labels */}
+          <div className="flex gap-2 px-4 pb-3">
+            {existingImages.map((img, idx) => (
+              <div
+                key={idx}
+                className={`flex-1 text-center text-[11px] font-semibold rounded-full py-1 ${idx === selectedExistingImageIdx ? 'bg-primary text-white' : 'bg-[#F3F4F6] text-[#6B7280]'
+                  }`}
+              >
+                {img.captureSecond}s
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Action buttons */}
       <div className="mt-5 space-y-3">
-        {/* Analisar e Avançar */}
-        <button
-          onClick={handleAnalyze}
-          disabled={!captureProgress.allDone || analyzing}
-          className={`w-full py-[15px] rounded-xl font-bold text-[16px] transition-all shadow-[0_4px_16px_-4px_rgba(63,120,216,0.4)] ${captureProgress.allDone && !analyzing
-            ? 'bg-primary text-white'
-            : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed shadow-none'
-            }`}
-        >
-          {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
-        </button>
+        {/* Analyze Again — only when existing images present */}
+        {hasExistingImages && (
+          <button
+            onClick={handleAnalyzeAgain}
+            disabled={reAnalyzing}
+            className={`w-full py-[15px] rounded-xl font-bold text-[16px] transition-all shadow-[0_4px_16px_-4px_rgba(63,120,216,0.4)] ${reAnalyzing ? 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed shadow-none' : 'bg-primary text-white'
+              }`}
+          >
+            {reAnalyzing ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
+                {t('reading.timer.analyzing')}
+              </span>
+            ) : reAnalysisFailed ? (
+              t('reading.timer.analyzeAgainRetry', { defaultValue: 'Tentar novamente' })
+            ) : (
+              t('reading.timer.analyzeAgain', { defaultValue: 'Analisar novamente' })
+            )}
+          </button>
+        )}
+
+        {/* Next — skip new capture when existing images present */}
+        {hasExistingImages && onNextWithExistingImages && (
+          <button
+            onClick={onNextWithExistingImages}
+            disabled={reAnalyzing}
+            className={`w-full py-[15px] rounded-xl font-bold text-[16px] bg-[#EEF1F5] text-[#374151] transition-all ${reAnalyzing ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+          >
+            {t('reading.timer.nextWithExistingImages', { defaultValue: 'Avançar sem nova captura' })}
+          </button>
+        )}
+
+        {/* Analisar e Avançar — for new captures */}
+        {!hasExistingImages && (
+          <button
+            onClick={handleAnalyze}
+            disabled={!captureProgress.allDone || analyzing}
+            className={`w-full py-[15px] rounded-xl font-bold text-[16px] transition-all shadow-[0_4px_16px_-4px_rgba(63,120,216,0.4)] ${captureProgress.allDone && !analyzing
+              ? 'bg-primary text-white'
+              : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed shadow-none'
+              }`}
+          >
+            {analyzing ? t('reading.timer.analyzing') : t('reading.timer.analyzeProceed')}
+          </button>
+        )}
 
         {/* Reiniciar — shown when started/done/failed */}
         {(captureProgress.allDone || analysisFailed || started) && (
@@ -901,9 +1085,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           onClick={onBack}
           className="w-full mb-4 py-[15px] rounded-xl border border-[#E5E7EB] bg-white text-[#374151] font-semibold text-[16px]"
         >
-          {/* {t('reading.timer.cancel')} */}
-
-          Cancelar        </button>
+          Cancelar
+        </button>
       </div>
     </div>
   )

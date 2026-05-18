@@ -71,7 +71,7 @@ export default function Page() {
   }, [patients, query])
 
   return (
-    <div className="min-h-[100dvh bg-white">
+    <div className="min-h-[100dvh">
       <div className="px- pt-[calc(env(safe-area-inset-top)+14px)] pb-6">
         <div className="relative flex items-center justify-center">
           <button
@@ -146,7 +146,7 @@ export default function Page() {
         ) : null}
       </div>
 
-      <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+24px)] right-4">
+      <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+100px)] right-4">
         <button
           type="button"
           onClick={() => router.push('/Veterinarian/patient')}
