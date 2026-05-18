@@ -228,7 +228,7 @@ export default function ForgetForm() {
     };
 
     return (
-        <div className="min-h-[100dvh] flex flex-col bg-[#F2F2F7]">
+        <div className="min-h-[100dvh] flex flex-col bg-[#FAFAFF]">
             {/* Header */}
             <div className="flex items-center gap-3 px-5 pt-6 pb-2">
                 <button

@@ -772,7 +772,7 @@ export default function SignUpForm() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-[#F2F2F7]">
+    <div className="min-h-[100dvh] flex flex-col bg-[#FAFAFF]">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-6 pb-2">
         <div className="flex items-center gap-3">

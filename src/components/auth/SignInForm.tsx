@@ -107,12 +107,12 @@ export default function SignInForm() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-[#F2F2F7]">
+    <div className="min-h-[100dvh] flex flex-col bg-[#FAFAFF]">
       <div className="flex-1 flex flex-col px-5 pb-10">
         {/* Logo with circular backdrop */}
         <div className=" flex items-center justify-center h-[180px] overflow-hidden mb-4">
-          <div className="absolute -top-[26vw] left-1/2 -translate-x-1/2 w-[100vw]"  >
-            <Image src={"/Ellipse 5.svg"} alt="edit icon" className="w-[100vw] h-[100vw]" width={100} height={100} />
+          <div className="absolute top-[0px] left-1/2 -translate-x-1/2 w-[100vw] h-[100px]!"  >
+            <Image src={"/Ellipse 5.svg"} alt="edit icon" className="w-[100vw] h-[200px]!" width={100} height={100} />
 
           </div>
           <span className="relative text-[32px] font-bold text-black/70 tracking-tight leading-none mt-6">
