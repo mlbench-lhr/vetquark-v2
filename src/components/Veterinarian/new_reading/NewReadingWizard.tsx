@@ -132,6 +132,8 @@ export default function NewReadingWizard() {
   } | null>(null)
   const [processSingleRawResults, setProcessSingleRawResults] = useState<Array<{ atSeconds: number; time: string; response: any }>>([])
   const [capturedImages, setCapturedImages] = useState<CapturedReadingImageDraft[]>([])
+  const [existingCapturedImages, setExistingCapturedImages] = useState<Array<{ cloudinaryUrl: string; captureSecond: number; capturedAt: string | null }>>([])
+  const existingImagesFetchedForRef = useRef<string>('')
 
   const patientIdFromQuery = useMemo(() => (searchParams.get('patientId') || '').trim(), [searchParams])
   const paymentLinkIdFromQuery = useMemo(() => (searchParams.get('paymentLinkId') || '').trim(), [searchParams])
@@ -236,6 +238,8 @@ export default function NewReadingWizard() {
           setDraft(nextDraft)
           setSignatureImageUrl(typeof r?.signatureImageUrl === 'string' ? r.signatureImageUrl : '')
           setCapturedImages([])
+          setExistingCapturedImages([])
+          existingImagesFetchedForRef.current = ''
           const ws = String(r?.wizardStep || '').trim()
           const storedStep =
             ws === 'identification' || ws === 'timer' || ws === 'review' || ws === 'report'
@@ -274,6 +278,8 @@ export default function NewReadingWizard() {
     })
     setSignatureImageUrl('')
     setCapturedImages([])
+    setExistingCapturedImages([])
+    existingImagesFetchedForRef.current = ''
     lastSavedJsonRef.current = ''
     creatingDraftRef.current = false
     setDraftId('')
@@ -464,6 +470,32 @@ export default function NewReadingWizard() {
     }
   }, [paymentLinkId, userId])
 
+  useEffect(() => {
+    if (!draftId) return
+    if (step !== 'timer') return
+    if (existingImagesFetchedForRef.current === draftId) return
+    existingImagesFetchedForRef.current = draftId
+    let mounted = true
+      ; (async () => {
+        try {
+          const res = await fetch(`/api/reading/get_reading_images/${encodeURIComponent(draftId)}`, { method: 'GET' })
+          const data = await res.json().catch(() => null)
+          if (!mounted) return
+          if (!res.ok) return
+          const imgs = Array.isArray(data?.images) ? data.images : []
+          if (imgs.length > 0) {
+            setExistingCapturedImages(imgs.map((img: any) => ({
+              cloudinaryUrl: String(img.cloudinaryUrl || ''),
+              captureSecond: Number(img.captureSecond ?? 0),
+              capturedAt: img.capturedAt ? String(img.capturedAt) : null,
+            })))
+          }
+        } catch {
+        }
+      })()
+    return () => { mounted = false }
+  }, [draftId, step])
+
   const canSubmit = useMemo(() => {
     const i = draft.identification
     return !!i.patientId && !!i.collectionMethod && !!i.collectionAt && !!draft.timer.analysis && draft.results.length > 0 && !!signatureImageUrl
@@ -639,6 +671,7 @@ export default function NewReadingWizard() {
             setDraft((prev) => ({ ...prev, timer: { ...prev.timer, selectedSeconds: next } }))
           }
           onBack={() => setStep('identification')}
+          existingImages={existingCapturedImages}
           onAnalyzeAndProceed={(results: ReviewSelectionMap, rawApiResults, nextCapturedImages) => {
             const dummy = makeDummyAnalysis()
             setDraft((prev) => ({
@@ -664,6 +697,14 @@ export default function NewReadingWizard() {
                 }),
               }).catch(() => { })
             }
+          }}
+          onNextWithExistingImages={() => {
+            const dummy = makeDummyAnalysis()
+            setDraft((prev) => ({
+              ...prev,
+              timer: { ...prev.timer, analyzedAt: dummy.analyzedAt, analysis: dummy.analysis },
+            }))
+            setStep('review')
           }}
           onImagesChange={(imgs) => {
             const id = draftId

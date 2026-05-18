@@ -37,56 +37,57 @@ export default function BottomTabs() {
     const isMiddle = (index: number) => index === 2;
 
     return (
-        <nav className="fixed left-3 right-3 bottom-[calc(env(safe-area-inset-bottom)+10px)] bg-[#D9D9D995] backdrop-blur-sm rounded-full z-50 h-fit">            <div className="flex items-center justify-between px-4 relative h-full">
-            {tabs.map((tab, index) => {
-                const isActive = pathname?.toLowerCase().startsWith(tab.href.toLowerCase()) ?? false;
-                const Icon = isActive ? tab.icon_active : tab.icon;
-                const label = t(tab.labelKey);
-                const middle = isMiddle(index);
+        <nav className="absolute left-3 right-3 bottom-[calc(env(safe-area-inset-bottom)+10px)] bg-white/40 backdrop-blur-md rounded-full z-50">
+            <div className="flex items-center justify-between px-4 relative h-full">
+                {tabs.map((tab, index) => {
+                    const isActive = pathname?.toLowerCase().startsWith(tab.href.toLowerCase()) ?? false;
+                    const Icon = isActive ? tab.icon_active : tab.icon;
+                    const label = t(tab.labelKey);
+                    const middle = isMiddle(index);
 
-                return (
-                    <Link href={tab.href}
-                        key={`${tab.id}-${index}`}
-                        className={`flex flex-col items-center justify-end min-w-0 transition-all flex-1 gap-[3px] ${middle ? '-mt-5' : ''}`}
-                    >
-                        {middle ? (
-                            <div className="w-[78px] h-[78px] flex flex-col justify-center items-center rounded-full bg-[#eeeef1]">
-                                <Image
-                                    src={Icon}
-                                    alt={label}
-                                    width={16}
-                                    height={16}
-                                    className="w-[12px] h-auto"
-                                />
-                                <span
+                    return (
+                        <Link href={tab.href}
+                            key={`${tab.id}-${index}`}
+                            className={`flex flex-col items-center justify-end min-w-0 transition-all flex-1 gap-[3px] ${middle ? '-mt-5' : ''}`}
+                        >
+                            {middle ? (
+                                <div className="w-[78px] h-[78px] flex flex-col justify-center items-center rounded-full bg-[#eeeef1]">
+                                    <Image
+                                        src={Icon}
+                                        alt={label}
+                                        width={16}
+                                        height={16}
+                                        className="w-[12px] h-auto"
+                                    />
+                                    <span
+                                        className={`text-[7px] leading-none transition-colors truncate w-full text-center ${isActive ? "text-primary font-medium" : "text-[#4F5464]"}`}
+                                    >
+                                        {label}
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center w-[24px] h-[24px]">
+                                    <Image
+                                        src={Icon}
+                                        alt={label}
+                                        width={22}
+                                        height={22}
+                                        className="w-[22px] h-[22px] object-contain"
+                                    />
+                                </div>
+                            )}
+                            {
+                                !middle &&
+                                < span
                                     className={`text-[7px] leading-none transition-colors truncate w-full text-center ${isActive ? "text-primary font-medium" : "text-[#4F5464]"}`}
                                 >
                                     {label}
                                 </span>
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-center w-[24px] h-[24px]">
-                                <Image
-                                    src={Icon}
-                                    alt={label}
-                                    width={22}
-                                    height={22}
-                                    className="w-[22px] h-[22px] object-contain"
-                                />
-                            </div>
-                        )}
-                        {
-                            !middle &&
-                            < span
-                                className={`text-[7px] leading-none transition-colors truncate w-full text-center ${isActive ? "text-primary font-medium" : "text-[#4F5464]"}`}
-                            >
-                                {label}
-                            </span>
-                        }
-                    </Link>
-                );
-            })}
-        </div>
+                            }
+                        </Link>
+                    );
+                })}
+            </div>
         </nav >
     );
 }
