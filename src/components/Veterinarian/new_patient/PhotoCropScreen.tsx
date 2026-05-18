@@ -98,10 +98,10 @@ export default function PhotoCropScreen({
     ctx.filter = 'none';
     ctx.restore();
 
-    // --- Clip circle and draw image with pan/zoom ---
+    // --- Clip circle (fixed at canvas center) and draw image with pan/zoom ---
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx + offset.x, cy + offset.y, r, 0, Math.PI * 2);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.clip();
 
     const drawW = img.naturalWidth * scale;
