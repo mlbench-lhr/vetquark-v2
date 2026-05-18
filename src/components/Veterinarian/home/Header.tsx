@@ -119,14 +119,14 @@ const Header: React.FC<HeaderProps> = ({ userName }) => {
         </div>
         <div className="flex items-center gap-2">
           {/* Saldo pill */}
-          <button
+          {/* <button
             type="button"
             onClick={() => setSaldoOpen(true)}
             className="flex items-center border border-primary rounded-full shrink-0 overflow-hidden"
           >
             <span className="text-[10px] font-medium text-primary leading-none pl-1.5 py-1 pr-1 bg-primary/10">Saldo</span>
             <span className="text-[11px] font-bold text-primary leading-none pr-1.5 py-1 pl-1">{walletBalance}</span>
-          </button>
+          </button> */}
 
           <Link href={"/Veterinarian/notifications"} className="relative w-7 h-7 bg-primary rounded-full flex items-center justify-center shrink-0">
             {unreadCount > 0 ? (

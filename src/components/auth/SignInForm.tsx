@@ -125,11 +125,10 @@ export default function SignInForm() {
           <h1 className="text-[38px] font-bold text-primary leading-tight mb-2">
             {t("auth.welcome")}
           </h1>
-          <p className="text-[#6C6C70] text-[15px] leading-[16px] max-w-[220px] mx-auto">
-            {/* {t("auth.accountTypePrompt")} */}
+          {/* <p className="text-[#6C6C70] text-[15px] leading-[16px] max-w-[220px] mx-auto">
             Selecione seu perfil <br />
             e acesse sua conta
-          </p>
+          </p> */}
         </div>
 
         {/* Form */}

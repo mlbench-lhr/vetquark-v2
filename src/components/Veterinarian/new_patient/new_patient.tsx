@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState, ChangeEvent, useRef } from 'react';
-import { RefreshCw, Upload, ChevronDown, ChevronUp, Pencil, Folder, PawPrint, Search, Bell, User, ChevronLeft, Plus } from 'lucide-react';
+import { RefreshCw, ChevronDown, ChevronUp, Pencil, User, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui/modal';
 import TypedDateInput from '@/components/form/input/TypedDateInput';
 import Header from '@/components/common/header';
+import PhotoCropScreen from './PhotoCropScreen';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -314,14 +315,13 @@ export default function AddPatientMultiStep() {
     e.target.value = '';
   };
 
-  const handleCropConfirm = async () => {
+  const handleCropConfirm = async (croppedBlob: Blob) => {
     const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const API_KEY = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
     if (!CLOUD_NAME || !API_KEY) {
       toast.error(t('newPatient.patientForm.photoUploadNotConfigured'));
       return;
     }
-    if (!tempPhotoFile) return;
     setUploadingPhoto(true);
     try {
       const signRes = await fetch(`/api/cloudinary/upload?folder=patients`);
@@ -332,7 +332,7 @@ export default function AddPatientMultiStep() {
       }
       const { timestamp, signature } = signJson;
       const data = new FormData();
-      data.append('file', tempPhotoFile);
+      data.append('file', croppedBlob, 'pet_photo.jpg');
       data.append('api_key', API_KEY);
       data.append('timestamp', String(timestamp));
       data.append('signature', signature);
@@ -442,41 +442,15 @@ export default function AddPatientMultiStep() {
       {/* Hidden file input for change image */}
       <input ref={changeImageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
 
-      {/* Fullscreen Crop Preview Overlay — Image 5 */}
+      {/* Fullscreen Crop Screen */}
       {showCropPreview && tempPhotoUrl && (
-        <div className="fixed inset-0 z-[100] flex flex-col">
-          <div className="absolute inset-0 overflow-hidden">
-            <img src={tempPhotoUrl} alt="preview" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/60" />
-          </div>
-          <button
-            onClick={handleCancelCrop}
-            className="absolute top-14 left-4 z-10 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
-          >
-            <ChevronLeft className="w-5 h-5 text-white" />
-          </button>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-72 h-72 rounded-full overflow-hidden border-4 border-white shadow-2xl">
-              <img src={tempPhotoUrl} alt="crop" className="w-full h-full object-cover" />
-            </div>
-          </div>
-          <div className="absolute bottom-12 left-4 right-4 space-y-3">
-            <button
-              onClick={handleCropConfirm}
-              disabled={uploadingPhoto}
-              className="w-full bg-primary text-white font-bold text-base py-[15px] rounded-2xl disabled:opacity-60 transition-colors"
-            >
-              {uploadingPhoto ? t('auth.uploading') : 'Concluir'}
-            </button>
-            <button
-              onClick={handleChangeImage}
-              disabled={uploadingPhoto}
-              className="w-full bg-white text-[#1D2939] font-bold text-base py-[15px] rounded-2xl border border-[#E8E8E8] disabled:opacity-60 transition-colors"
-            >
-              Alterar imagem
-            </button>
-          </div>
-        </div>
+        <PhotoCropScreen
+          imageUrl={tempPhotoUrl}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCancelCrop}
+          onChangeImage={handleChangeImage}
+          uploading={uploadingPhoto}
+        />
       )}
 
       <Header title={"Adicionar novo paciente"} />
