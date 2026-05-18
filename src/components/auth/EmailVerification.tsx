@@ -86,7 +86,7 @@ export default function EmailVerification({
 
     if (step === "success") {
         return (
-            <div className={mode === "modal" ? "w-full p-5 flex flex-col" : "w-full min-h-[100dvh] bg-[#F2F2F7] flex flex-col"}
+            <div className={mode === "modal" ? "w-full p-5 flex flex-col" : "w-full min-h-[100dvh] bg-[#FAFAFF] flex flex-col"}
             >
                 {mode === "page" && (
                     <div className="flex items-center gap-3 px-5 pt-6 pb-2">
@@ -145,7 +145,7 @@ export default function EmailVerification({
     }
 
     return (
-        <div className={mode === "modal" ? "w-full p-5 flex flex-col" : "w-full flex flex-col min-h-[100dvh] bg-[#F2F2F7]"}>
+        <div className={mode === "modal" ? "w-full p-5 flex flex-col" : "w-full flex flex-col min-h-[100dvh] bg-[#FAFAFF]"}>
             {mode === "page" && (
                 <div className="flex items-center gap-3 px-5 pt-6 pb-2">
                     <button

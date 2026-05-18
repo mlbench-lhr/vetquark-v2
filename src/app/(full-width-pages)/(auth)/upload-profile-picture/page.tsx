@@ -108,7 +108,7 @@ export default function UploadProfilePicturePage() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#F2F2F7] flex flex-col">
+    <div className="min-h-[100dvh] bg-[#FAFAFF] flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 pt-6 pb-2">
         <button

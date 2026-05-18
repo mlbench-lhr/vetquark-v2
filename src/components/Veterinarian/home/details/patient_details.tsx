@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Bell, ChevronLeft, Edit, Eye, FileText, Plus, Search } from 'lucide-react';
+import { Bell, CheckCheck, CheckCheckIcon, CheckCircle, ChevronLeft, Edit, Eye, FileText, Plus, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -35,9 +35,9 @@ const Tabs: React.FC<{ activeTab: string; onTabChange: (t: string) => void }> = 
 }) => {
   const { t } = useTranslation();
   const tabClass = (active: boolean) =>
-    `flex-1 h-[42px] rounded-full text-[14px] font-semibold transition-colors cursor-pointer border-0 ${active
-      ? 'bg-primary text-white shadow-[0_6px_16px_-6px_rgba(63,120,216,0.5)]'
-      : 'bg-white text-black/70 border border-[#E5E7EB]'
+    `flex-1 h-[26px] rounded-full text-[12px] font-medium transition-colors cursor-pointer ${active
+      ? 'bg-primary text-white shadow-[0_6px_16px_-6px_rgba(63,120,216,0.5)] border-0'
+      : 'bg-white text-black/70 border border-primary'
     }`;
   return (
     <div className="flex gap-3 px-1 mt-4 mb-4">
@@ -61,24 +61,28 @@ const PatientInfoSection: React.FC<{
   age: string;
 }> = ({ patientId, name, species, breed, image, sex, age }) => {
   const router = useRouter();
+  console.log(image);
+
   return (
-    <div className="rounded-2xl bg-white border border-[#E5E7EB] overflow-hidden">
-      <div className="relative w-full h-[230px] bg-[#E5E7EB]">
+    <div className="relative rounded-2xl overflow-hidden">
+      <div className="relative w-full h-[350px] rounded-3xl overflow-hidden">
         <Image
           src={image || 'https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png'}
           alt={name}
           fill
           sizes="100vw"
-          className="object-cover"
+          className="object-cover w-full h-full object-bottom"
         />
       </div>
 
-      <div className="px-4 pt-4 pb-5 space-y-4">
+      <div
+        className="absolute left-1/2 w-[100%] -translate-x-1/2 bottom-0 px-4 pt-4 pb-1 space-y-4 rounded-2xl bg-white border border-[#E5E7EB]"
+      >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <h2 className="text-[18px] font-bold text-black/70 leading-none truncate">{name || '-'}</h2>
             {(species || breed) && (
-              <span className="px-3 py-1 rounded-full text-[12px] text-[#6B7280] border border-[#E5E7EB] whitespace-nowrap">
+              <span className="px-3 py- rounded-full text-[12px] text-[#6B7280] border border-primary whitespace-nowrap">
                 {[species, breed].filter(Boolean).join(' - ')}
               </span>
             )}
@@ -89,26 +93,26 @@ const PatientInfoSection: React.FC<{
               if (!patientId) return;
               router.push(`/Veterinarian/patient/new_patient?patientId=${encodeURIComponent(patientId)}`);
             }}
-            className="w-8 h-8 flex items-center justify-center rounded-full border border-[#E5E7EB] bg-white shrink-0 cursor-pointer"
+            className="w-[14px] h-[14px] flex items-center justify-center rounded-full cursor-pointer"
           >
             <Edit size={14} className="text-primary" />
           </button>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-[14px] font-bold text-black/70">Sexo</span>
-            <span className="px-4 py-1.5 rounded-md border border-[#E5E7EB] text-[13px] text-[#6B7280] min-w-[88px] text-center">
+        <div className="space-y-3 grid grid-cols-2 gap-6">
+          <div className="flex items-center justify-between gap-3 flex-wrap col-span-1">
+            <span className="text-[12px] font-bold text-black/70">Sexo</span>
+            <span className="px-4 py-0.5 rounded-sm border border-[#E5E7EB] text-[12px] text-[#6B7280] min-w-[88px] text-center">
               {sex || '-'}
             </span>
-            <span className="text-[14px] font-bold text-black/70">Idade</span>
-            <span className="px-4 py-1.5 rounded-md border border-[#E5E7EB] text-[13px] text-[#6B7280] min-w-[88px] text-center">
+            <span className="text-[12px] font-bold text-black/70">Idade</span>
+            <span className="px-4 py-0.5 rounded-sm border border-[#E5E7EB] text-[12px] text-[#6B7280] min-w-[88px] text-center">
               {age || '-'}
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[14px] font-bold text-black/70">Sexo</span>
-            <span className="px-4 py-1.5 rounded-md border border-[#E5E7EB] text-[13px] text-[#6B7280] min-w-[88px] text-center">
+          <div className="flex items-start justify-between gap-3 col-span-1">
+            <span className="text-[12px] font-bold text-black/70">Sexo</span>
+            <span className="px-4 py-0.5 rounded-sm border border-[#E5E7EB] text-[12px] text-[#6B7280] min-w-[88px] text-center">
               {sex || '-'}
             </span>
           </div>
@@ -132,7 +136,8 @@ const StatusPill: React.FC<{ status: 'signed' | 'pending' }> = ({ status }) => {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#F59E0B]/40 bg-white text-[12px] font-semibold text-[#F59E0B]">
+    <span className="inline-flex items-center gap-1.5 px-3 rounded-full border border-primary bg-white text-[12px] font-semibold">
+      <CheckCircle size={8} className='text-[#2AAD56]' />
       {t('history.pending')}
     </span>
   );
@@ -161,7 +166,7 @@ const ReportsHistorySection: React.FC<{
             if (!patientId) return;
             router.push(`/Veterinarian/new-reading?patientId=${encodeURIComponent(patientId)}`);
           }}
-          className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-primary text-white text-[13px] font-semibold cursor-pointer border-0 shadow-[0_6px_14px_-6px_rgba(63,120,216,0.5)]"
+          className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-white text-[13px] font-semibold cursor-pointer border-0 shadow-[0_6px_14px_-6px_rgba(63,120,216,0.5)]"
         >
           <Plus size={14} strokeWidth={2.5} />
           {t('home.newTest')}
@@ -171,7 +176,7 @@ const ReportsHistorySection: React.FC<{
       <div className="mt-4">
         <div className="grid grid-cols-[1fr_1.2fr_auto] items-center pb-2 border-b border-[#E5E7EB]">
           <span className="text-[12px] font-medium text-[#9CA3AF]">{t('common.date')}</span>
-          <span className="text-[12px] font-medium text-[#9CA3AF] text-center">{t('common.status')}</span>
+          <span className="text-[12px] font-medium text-[#9CA3AF] text-start">{t('common.status')}</span>
           <span className="text-[12px] font-medium text-[#9CA3AF] text-right pr-1">{t('common.actions')}</span>
         </div>
 
@@ -185,24 +190,24 @@ const ReportsHistorySection: React.FC<{
               key={r.id}
               className="grid grid-cols-[1fr_1.2fr_auto] items-center py-3 border-b border-[#F3F4F6] last:border-b-0"
             >
-              <span className="text-[13px] text-black/70">{formatDate(r.date)}</span>
-              <div className="flex justify-center">
+              <span className="text-[12px] font-thin! text-black/70">{formatDate(r.date)}</span>
+              <div className="flex justify-start">
                 <StatusPill status={r.status} />
               </div>
               <div className="flex items-center gap-2 justify-end">
                 <button
                   type="button"
                   onClick={() => router.push(`/Veterinarian/history/detail/${encodeURIComponent(r.id)}`)}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-transparent border-0 cursor-pointer"
+                  className="flex items-center justify-center rounded-full bg-transparent border-0 cursor-pointer"
                 >
-                  <Eye size={16} className="text-[#6B7280]" />
+                  <Eye size={13} className="text-[#6B7280]" />
                 </button>
                 <button
                   type="button"
                   onClick={() => router.push(`/Veterinarian/history/detail/${encodeURIComponent(r.id)}`)}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-transparent border-0 cursor-pointer"
+                  className="flex items-center justify-center rounded-full bg-transparent border-0 cursor-pointer"
                 >
-                  <FileText size={16} className="text-[#6B7280]" />
+                  <FileText size={13} className="text-[#6B7280]" />
                 </button>
               </div>
             </div>

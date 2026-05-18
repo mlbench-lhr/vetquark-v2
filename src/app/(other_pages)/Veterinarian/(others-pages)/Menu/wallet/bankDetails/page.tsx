@@ -152,7 +152,7 @@ export default function Page() {
     const inputCls = "";
     const labelCls = "";
     return (
-        <div className="w-full bg-[#F2F2F7] min-h-screen flex flex-col pb-6">
+        <div className="w-full bg-[#FAFAFF] min-h-screen flex flex-col pb-6">
             <Header title={t("wallet.bankDetails") || "Dados Bancários"} />
 
             {/* Tab Selector */}

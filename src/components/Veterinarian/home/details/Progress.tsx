@@ -1,5 +1,5 @@
 'use client'
-import { TrendingUp, TrendingDown, Clock, ChevronDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, ChevronDown, Calendar1, Calendar } from "lucide-react";
 import {
     Accordion,
     AccordionContent,
@@ -168,7 +168,7 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
     return (
         <div className="flex items-center py-3 border-b border-border/50 last:border-b-0">
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{param.name}</p>
+                <p className="text-sm font-medium text-black/70">{param.name}</p>
                 <p className="text-xs text-muted-foreground">{t("reading.progress.normalColon")} {param.normal}</p>
             </div>
             <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ const ParameterRow = ({ param }: { param: ParameterData }) => {
                 </svg>
 
                 <div className="w-12 text-right">
-                    <p className="text-sm font-semibold text-foreground">{param.value}</p>
+                    <p className="text-sm font-semibold text-black/70">{param.value}</p>
                     <div className={`flex items-center justify-end gap-0.5 text-xs ${getChangeColor()}`}>
                         {getChangeIcon()}
                         <span>{param.change !== undefined ? `${param.change > 0 ? "+" : ""}${param.change}%` : "0%"}</span>
@@ -471,7 +471,7 @@ const ProgressView = ({ patientId, variant = "default" }: { patientId?: string; 
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-lg font-semibold text-foreground">{t("reading.progress.overallProgress")}</h2>
+                    <h2 className="text-lg font-semibold text-black/70">{t("reading.progress.overallProgress")}</h2>
                     <p className="text-xs text-muted-foreground">{lastExamDateLabel ? `${t("reading.progress.lastTest")} ${lastExamDateLabel}` : ""}</p>
                 </div>
                 {patientId ? (
@@ -523,7 +523,7 @@ const ProgressView = ({ patientId, variant = "default" }: { patientId?: string; 
                                     <path d="M9.99125 18.3171C11.537 18.3171 13.0194 17.7031 14.1124 16.6101C15.2054 15.517 15.8194 14.0347 15.8194 12.489C15.8194 10.8237 14.9869 9.24182 13.3216 7.90967C11.6564 6.57753 10.4076 4.57929 9.99125 2.4978C9.57496 4.57929 8.32606 6.57753 6.66087 7.90967C4.99569 9.24182 4.16309 10.8237 4.16309 12.489C4.16309 14.0347 4.77712 15.517 5.87012 16.6101C6.96311 17.7031 8.44553 18.3171 9.99125 18.3171Z" fill="white" />
                                 </svg>
                             </div>
-                            <span className="font-semibold text-foreground">{t("reading.progress.physicalParameters")}</span>
+                            <span className="font-semibold text-black/70">{t("reading.progress.physicalParameters")}</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-3">
@@ -542,7 +542,7 @@ const ProgressView = ({ patientId, variant = "default" }: { patientId?: string; 
                                     <path d="M11.6564 1.66528V6.66085C11.6563 6.94018 11.7265 7.21504 11.8604 7.46015L16.448 15.8527C16.5867 16.1064 16.6571 16.3917 16.6521 16.6807C16.6471 16.9698 16.5669 17.2525 16.4195 17.5012C16.2721 17.7499 16.0625 17.9559 15.8113 18.099C15.56 18.242 15.2759 18.3173 14.9868 18.3172H4.99566C4.70656 18.3173 4.42242 18.242 4.17121 18.099C3.91999 17.9559 3.71036 17.7499 3.56291 17.5012C3.41548 17.2525 3.33531 16.9698 3.33033 16.6807C3.32534 16.3917 3.39569 16.1064 3.53445 15.8527L8.12205 7.46015C8.256 7.21504 8.32615 6.94018 8.32603 6.66085V1.66528" fill="white" />
                                 </svg>
                             </div>
-                            <span className="font-semibold text-foreground">{t("reading.progress.chemicalParameters")}</span>
+                            <span className="font-semibold text-black/70">{t("reading.progress.chemicalParameters")}</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-3">
@@ -561,7 +561,7 @@ const ProgressView = ({ patientId, variant = "default" }: { patientId?: string; 
                                     <path d="M3.33055 11.6564C3.17299 11.657 3.01852 11.6128 2.88507 11.529C2.75163 11.4453 2.64469 11.3253 2.57668 11.1832C2.50867 11.041 2.48238 10.8826 2.50087 10.7261C2.51935 10.5696 2.58187 10.4216 2.68112 10.2993L10.9238 1.8068C10.9856 1.73543 11.0699 1.6872 11.1627 1.67003C11.2556 1.65286 11.3515 1.66776 11.4348 1.7123C11.5181 1.75683 11.5837 1.82836 11.621 1.91512C11.6582 2.00189 11.6649 2.09874 11.6398 2.18979L10.0412 7.20201C9.99413 7.32817 9.9783 7.46388 9.99514 7.5975C10.0119 7.73112 10.061 7.85867 10.1379 7.96919C10.2148 8.07971 10.3175 8.16992 10.4369 8.23207C10.5565 8.29421 10.6892 8.32645 10.8239 8.32602H16.6521C16.8096 8.32548 16.9642 8.36966 17.0976 8.45342C17.231 8.53719 17.338 8.65709 17.406 8.79922C17.4739 8.94134 17.5002 9.09984 17.4817 9.25631C17.4632 9.41278 17.4008 9.56079 17.3015 9.68315L9.0588 18.1756C8.99697 18.2469 8.91272 18.2952 8.81987 18.3124C8.72701 18.3295 8.63109 18.3146 8.54782 18.2701C8.46455 18.2256 8.39891 18.1541 8.36164 18.0673C8.32439 17.9806 8.31773 17.8837 8.34277 17.7926L9.94135 12.7804C9.98849 12.6542 10.0043 12.5186 9.98749 12.3849C9.97065 12.2513 9.92166 12.1238 9.8447 12.0132C9.76774 11.9027 9.66513 11.8125 9.54565 11.7503C9.42616 11.6881 9.29339 11.656 9.15872 11.6564H3.33055Z" fill="white" />
                                 </svg>
                             </div>
-                            <span className="font-semibold text-foreground">{t("reading.progress.microscopicParameters")}</span>
+                            <span className="font-semibold text-black/70">{t("reading.progress.microscopicParameters")}</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-3">
@@ -587,7 +587,7 @@ export default ProgressView;
 
 
 
-import { Download, Calendar } from "lucide-react";
+import { Download, } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Popover,
@@ -605,6 +605,7 @@ import {
     ReferenceLine,
     CartesianGrid,
 } from "recharts";
+import Image from "next/image";
 
 type ViewMode = "graph" | "table";
 
@@ -717,21 +718,21 @@ export function ParameterProgress({
                 <Button
                     variant="outline"
                     className={isEvolution
-                        ? "justify-between rounded-lg border border-gray-200 bg-white text-[13px] font-normal text-gray-700 h-9 px-3 gap-2"
-                        : "w-full justify-between rounded-xl border border-gray-200 bg-white text-sm font-normal text-gray-600 h-10"}
+                        ? "justify-between rounded-sm border bg-[#F6F6F6] text-[10px] font-normal text-gray-700 h-5 px-3 gap-2"
+                        : "w-full justify-between rounded-sm border bg-[#F6F6F6] text-[10px] font-normal text-gray-600 h-5"}
                 >
                     <div className="flex items-center gap-2">
-                        <Calendar className={isEvolution ? "h-3.5 w-3.5 text-gray-500" : "h-4 w-4 text-primary"} />
-                        <span>
+                        <Image alt="" src="/cal icon.svg" width={10} height={10} />
+                        <span className="text-black/70">
                             {dateRange?.from && dateRange.to
                                 ? `${format(dateRange.from, "d MMM, yyyy")} - ${format(dateRange.to, "d MMM, yyyy")}`
                                 : t("reading.progress.selectDates")}
                         </span>
                     </div>
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                    <ChevronDown className="h-1.5 w-1.5 text-gray-400" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-lg z-50" align="start">
+            <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-none z-50" align="start">
                 <CalendarComponent
                     mode="range"
                     selected={{ from: tempRange.from, to: tempRange.to }}
@@ -770,20 +771,20 @@ export function ParameterProgress({
             <div key={param.key} className={isEvolution
                 ? "rounded-2xl border border-gray-200 bg-white p-4"
                 : "rounded-2xl border border-gray-100 bg-white p-4"}>
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center justify-between mb-3">
                     <div>
-                        <h3 className={isEvolution ? "text-[18px] font-extrabold text-gray-900" : "text-sm font-bold text-gray-900"}>{param.name}</h3>
-                        <p className={isEvolution ? "text-[13px] text-gray-500 mt-0.5" : "text-xs text-gray-500"}>
+                        <h3 className={isEvolution ? "text-[16px] font-extrabold text-black/70" : "text-sm font-bold text-black/70"}>{param.name}</h3>
+                        <p className={isEvolution ? "text-[12px] text-gray-500" : "text-xs text-gray-500"}>
                             {t("reading.progress.normalColon")} {param.normalValue}
                         </p>
                     </div>
                     <button
                         onClick={() => handleExport(param)}
                         className={isEvolution
-                            ? "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-                            : "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-blue-50 rounded-full hover:bg-blue-100 transition-colors"}
+                            ? "flex items-center gap-1.5 px-3 py-0.5 text-[10px] font-medium text-gray-700 bg-white border border-gray-200 rounded-sm hover:bg-gray-50 transition-colors"
+                            : "flex items-center gap-1.5 px-3 py-0.5 text-[10px] font-medium text-primary bg-blue-50 rounded-sm hover:bg-blue-100 transition-colors"}
                     >
-                        <Download className="h-3.5 w-3.5" />
+                        <Download className="h-2.5 w-2.5" />
                         {t("reading.progress.export")}
                     </button>
                 </div>
@@ -863,15 +864,15 @@ export function ParameterProgress({
             <div className="w-full space-y-4">
                 {/* Header card */}
                 <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                    <h2 className="text-[20px] font-extrabold text-gray-900 leading-tight">
+                    <h2 className="text-[20px] font-extrabold text-black/70 leading-tight">
                         {t("reading.progress.parameterEvolution")}
                     </h2>
                     <p className="text-[13px] text-gray-500 mt-1 leading-snug">
                         {t("reading.progress.parameterEvolutionDesc")}
                     </p>
-                    <div className="flex items-center justify-between gap-3 mt-3">
+                    <div className="flex items-end justify-between gap-3 mt-3">
                         <div className="flex-1 min-w-0">{datePicker}</div>
-                        <div className="flex items-center gap-3 text-[13px]">
+                        <div className="flex items-center gap-3 text-[10px]">
                             <button
                                 onClick={() => setViewMode("graph")}
                                 className={viewMode === "graph"
@@ -904,7 +905,7 @@ export function ParameterProgress({
         <div className="w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             {/* Header */}
             <div className="mb-4">
-                <h2 className="text-base font-bold text-gray-900">
+                <h2 className="text-base font-bold text-black/70">
                     {t("reading.progress.parameterProgress")}
                 </h2>
                 <p className="text-sm text-gray-500 mt-0.5">
