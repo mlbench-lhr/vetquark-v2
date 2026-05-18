@@ -141,9 +141,9 @@ export async function POST(req: NextRequest) {
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
-    // if (!ok) {
-    //   return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-    // }
+    if (!ok) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
 
     if (user.twoFactorEnabled) {
       const now = Date.now();

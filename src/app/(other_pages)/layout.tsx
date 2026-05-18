@@ -81,7 +81,8 @@ export default function Layout({
         </main>
 
         {/* Bottom Navigation */}
-        {!hasBackButton ? <BottomTabs /> : null}
+        {/* {!hasBackButton ? <BottomTabs /> : null} */}
+        <BottomTabs />
       </div>
     </MobileOnly>
   );

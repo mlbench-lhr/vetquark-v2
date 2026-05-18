@@ -83,7 +83,7 @@ const Header: React.FC<HeaderProps> = ({ title, onBack }) => {
         : '/Veterinarian/notifications';
 
     return (
-        <div className="flex items-center justify-between px-1 py-2">
+        <div className="flex items-center justify-between py-2">
             {/* Left: back button + title */}
             <div className="flex items-center gap-2 flex-1 min-w-0">
                 <button
