@@ -69,7 +69,7 @@ function StatusPill({ isSigned, paymentStatus }: { isSigned: boolean; paymentSta
         <span className="inline-flex h-[10px] w-[10px] shrink-0 items-center justify-center rounded-full bg-[#7C3AED]">
           <Clock className="h-[9px] w-[9px] text-white" strokeWidth={3} />
         </span>
-        {t("history.signed")}
+        {t("history.paymentPending")}
       </span>
     );
   }

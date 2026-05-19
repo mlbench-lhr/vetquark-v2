@@ -5,6 +5,9 @@ const DEFAULT_INTERPRET_URL = 'https://dataset-api-334819527847.europe-west1.run
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const panelType = typeof (body as any)?.panel_type === 'string' ? String((body as any).panel_type).trim() : ''
+  const fastingRaw = (body as any)?.fasting
+  const fasting: string | undefined =
+    fastingRaw === 'fasting' || fastingRaw === 'non-fast' ? fastingRaw : undefined
   const resultsRaw = Array.isArray((body as any)?.results) ? ((body as any).results as any[]) : []
 
   if (!panelType || !resultsRaw.length) {
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
   const upstream = await fetch(url, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ panel_type: panelType, results }),
+    body: JSON.stringify({ panel_type: panelType, ...(fasting !== undefined ? { fasting } : {}), results }),
     cache: 'no-store',
   })
 

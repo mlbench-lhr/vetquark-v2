@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { downloadUrinalysisPdf, openUrinalysisPdf } from "@/utils/urinalysisPdf";
 import { ImagesModal } from "@/components/ImagesModal";
+import ExportReadingsButton from "@/components/ExportReadingsButton";
 
 type RecordsTab = "completed" | "incomplete";
 
@@ -345,7 +346,12 @@ export default function RecordsPage() {
           </button>
         </div>
 
-        <SearchComponent searchQuery={search} onChangeFunc={setSearch} />
+        <div className="w-full flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <SearchComponent searchQuery={search} onChangeFunc={setSearch} />
+          </div>
+          <ExportReadingsButton tab={activeTab} search={search} />
+        </div>
 
         <BoxProviderWithName>
           <ServerPaginationProvider<AdminRecordRow>
