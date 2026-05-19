@@ -2230,7 +2230,7 @@ const resources = {
         addPatient: "+ Paciente",
         newReading: "Nova leitura",
         reports: "Histórico",
-        registrations: "Registos",
+        registrations: "Cadastros",
         pets: "Animais",
         glossary: "Glossário",
         payment: "Pagamento",
