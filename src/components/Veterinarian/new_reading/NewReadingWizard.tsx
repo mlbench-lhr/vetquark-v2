@@ -739,7 +739,7 @@ export default function NewReadingWizard() {
             let nextRecommendation = ''
 
             try {
-              const fasting = draft.identification.isJejum ? 'fasting' : 'non-fast'
+              const fasting = draft.identification.isJejum ? 'fast' : 'non-fast'
               const res = await fetch('/api/strip/interpret', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const panelType = typeof (body as any)?.panel_type === 'string' ? String((body as any).panel_type).trim() : ''
   const fastingRaw = (body as any)?.fasting
   const fasting: string | undefined =
-    fastingRaw === 'fasting' || fastingRaw === 'non-fast' ? fastingRaw : undefined
+    fastingRaw === 'fast' || fastingRaw === 'non-fast' ? fastingRaw : undefined
   const resultsRaw = Array.isArray((body as any)?.results) ? ((body as any).results as any[]) : []
 
   if (!panelType || !resultsRaw.length) {
