@@ -62,6 +62,7 @@ function isNormalByRule(ruleByKey: Record<string, NormalRule | undefined>, key: 
     const n = numeric ?? parseNumericLoose(valueLabel)
     if (n == null) {
       if (/trace/i.test(valueLabel)) return true
+      if (/^normal$/i.test(valueLabel.trim())) return true
       return false
     }
     return n >= rule.low && n <= rule.high

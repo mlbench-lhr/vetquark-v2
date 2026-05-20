@@ -84,7 +84,8 @@ function isNormal(ruleByKey: Record<string, NormalRule | undefined>, key: string
     }
     if (rule.type === "range") {
         const n = numeric ?? parseNumeric(valueLabel);
-        return n != null && n >= rule.low && n <= rule.high;
+        if (n == null) return /^normal$/i.test(valueLabel.trim());
+        return n >= rule.low && n <= rule.high;
     }
     return false;
 }
