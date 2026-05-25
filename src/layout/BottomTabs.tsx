@@ -37,7 +37,7 @@ export default function BottomTabs() {
     const isMiddle = (index: number) => index === 2;
 
     return (
-        <nav className="absolute h-[47px] left-3 right-3 bottom-[calc(env(safe-area-inset-bottom)+10px)] bg-[#F6F8FB] border border-[#E5EAF1] rounded-full z-50">
+        <nav className="h-[47px] left-3 right-3 bottom-[calc(env(safe-area-inset-bottom)+10px)] bg-[#F6F8FB] border border-[#E5EAF1] rounded-full z-50">
             <div className="flex items-center justify-between px-4 relative h-full">
                 {tabs.map((tab, index) => {
                     const isActive = pathname?.toLowerCase().startsWith(tab.href.toLowerCase()) ?? false;
