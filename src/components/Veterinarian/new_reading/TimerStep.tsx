@@ -809,12 +809,12 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       <div className="bg-white rounded-[20px] border border-[#E5E7EB] shadow-sm overflow-hidden">
         {/* Title section */}
         <div className="px-5 pt-5 pb-3">
-          <h2 className="text-[22px] font-bold text-black/80 leading-tight">{t('reading.timer.title')}</h2>
+          <h2 className="text-[18px] font-bold text-black/80 leading-tight">{t('reading.timer.title')}</h2>
           <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">{t('reading.timer.desc')}</p>
         </div>
 
-        {/* Camera view — fills card, no extra gap */}
-        <div className="relative bg-black" style={{ aspectRatio: '4/5' }}>
+        {/* Camera view — shorter on small screens so actions stay visible */}
+        <div className="relative bg-black max-h-[65vh]" style={{ aspectRatio: '4/3' }}>
           <video
             ref={videoRef}
             autoPlay
@@ -826,8 +826,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
           {/* Strip guide overlay */}
           {cameraReady && (
-            <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
-              <div className="w-10 h-[88%] rounded-xl border-2 border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.40)]" />
+            <div className="overflow-hidden absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+              <div className="w-10 h-[86%] -mt-8 rounded-xl border-2 border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.40)]" />
             </div>
           )}
 
@@ -853,8 +853,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
           {/* Quality / camera status badge — amber pill */}
           {cameraReady && !analyzing && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
-              <div className={`px-5 py-[9px] rounded-full text-[13px] font-semibold text-white text-center leading-tight ${qualityOk ? 'bg-[#F5A623]' : 'bg-[#F5A623]/80'}`}>
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
+              <div className={`px-5 py-1.5 rounded-full text-[11px] font-semibold text-white text-center leading-tight ${qualityOk ? 'bg-[#F5A623]' : 'bg-[#F5A623]/80'}`}>
                 {qualityOk
                   ? t('reading.timer.cameraReadyPosition')
                   : cameraError
