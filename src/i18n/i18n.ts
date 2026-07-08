@@ -8,7 +8,7 @@ export const SUPPORTED_LANGUAGES: readonly AppLanguage[] = ["en", "pt"] as const
 export function isAppLanguage(value: unknown): value is AppLanguage {
   return value === "en" || value === "pt";
 }
-
+// 
 const resources = {
   en: {
     translation: {
