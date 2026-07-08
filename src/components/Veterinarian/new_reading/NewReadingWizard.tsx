@@ -8,6 +8,8 @@ import IdentificationStep from './IdentificationStep'
 import TimerStep from './TimerStep'
 import ReviewStep from './ReviewStep'
 import ReportStep from './ReportStep'
+import ImageCaptureStep from './ImageCaptureStep'
+import ImageResultStep from './ImageResultStep'
 import { toast } from 'react-toastify'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -26,6 +28,7 @@ function makeEmptyDraft(panelProductCode?: string): NewReadingDraft {
       collectionAt: '',
       stripLot: '',
       stripExpiry: '',
+      analysisType: 'urine',
     },
     timer: {
       selectedSeconds: 120,
@@ -58,7 +61,7 @@ export default function NewReadingWizard() {
   const profile = useAppSelector((s: RootState) => s.userProfile.profile)
   const userId = profile?.id || ''
   const [unreadCount, setUnreadCount] = useState(0)
-  const [step, setStep] = useState<NewReadingStep>('timer')
+  const [step, setStep] = useState<NewReadingStep>('identification')
   const [submitting, setSubmitting] = useState(false)
   const [paymentLinkStatus, setPaymentLinkStatus] = useState<"unknown" | "pending" | "paid" | "expired">("unknown")
   const [signatureImageUrl, setSignatureImageUrl] = useState<string>("")
@@ -66,6 +69,8 @@ export default function NewReadingWizard() {
   const lastSavedJsonRef = useRef<string>("")
   const saveTimerRef = useRef<any>(null)
   const creatingDraftRef = useRef(false)
+  const [imageAnalysisResult, setImageAnalysisResult] = useState<any>(null)
+  const [imagePreviewDataUrl, setImagePreviewDataUrl] = useState<string>("")
 
   const [draft, setDraft] = useState<NewReadingDraft>(() => ({
     ...makeEmptyDraft(),
@@ -201,6 +206,13 @@ export default function NewReadingWizard() {
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [refreshUnread])
 
+  const analysisType = draft.identification.analysisType || 'urine'
+  const pageTitle = useMemo(() => {
+    if (analysisType === 'eye') return t('reading.wizard.newEyeTest')
+    if (analysisType === 'skin') return t('reading.wizard.newSkinTest')
+    return t('reading.wizard.newUrineTest')
+  }, [analysisType, t])
+
   useEffect(() => {
     setDraftId(draftIdFromQuery)
   }, [draftIdFromQuery])
@@ -230,6 +242,8 @@ export default function NewReadingWizard() {
           nextDraft.identification.collectionAt = r?.identification?.collectionAt ? String(r.identification.collectionAt) : ''
           nextDraft.identification.stripLot = String(r?.identification?.stripLot || '')
           nextDraft.identification.stripExpiry = r?.identification?.stripExpiry ? String(r.identification.stripExpiry) : ''
+          const at = String(r?.identification?.analysisType || '').trim()
+          nextDraft.identification.analysisType = at === 'urine' || at === 'eye' || at === 'skin' ? at : 'urine'
           nextDraft.timer.selectedSeconds = Number(r?.timer?.selectedSeconds || 120)
           nextDraft.timer.analyzedAt = r?.timer?.analyzedAt ? String(r.timer.analyzedAt) : ''
           nextDraft.timer.analysis = r?.timer?.analysis ?? null
@@ -583,7 +597,7 @@ export default function NewReadingWizard() {
       const destinationReadingId = nextId || draftId
       setDraft((prev) => ({
         ...prev,
-        identification: { patientId: "", paymentLinkId: "", collectionMethod: "", collectionAt: "", stripLot: "", stripExpiry: "" },
+        identification: { patientId: "", paymentLinkId: "", collectionMethod: "", collectionAt: "", stripLot: "", stripExpiry: "", analysisType: "urine" },
         timer: { selectedSeconds: 45, analyzedAt: "", analysis: null },
         reviewSelections: {},
         results: [],
@@ -618,6 +632,8 @@ export default function NewReadingWizard() {
                 if (step === 'timer') setStep('identification')
                 else if (step === 'review') setStep('timer')
                 else if (step === 'report') setStep('review')
+                else if (step === 'image_capture') setStep('identification')
+                else if (step === 'image_result') setStep('image_capture')
               }}
               className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 text-gray-700"
             >
@@ -627,7 +643,7 @@ export default function NewReadingWizard() {
             </button>
           )}
           <span className="text-[22px] font-bold text-primary leading-tight">
-            {t('reading.wizard.pageTitle')}
+            {pageTitle}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -651,7 +667,7 @@ export default function NewReadingWizard() {
         </div>
       </div>
 
-      <Stepper active={step} />
+      <Stepper active={step} mode={analysisType === 'urine' ? 'urine' : 'image'} />
 
       {step === 'identification' && (
         <IdentificationStep
@@ -659,7 +675,13 @@ export default function NewReadingWizard() {
           onChange={(patch: Partial<NewReadingDraft["identification"]>) =>
             setDraft((prev) => ({ ...prev, identification: { ...prev.identification, ...patch } }))
           }
-          onNext={() => setStep('timer')}
+          onNext={() => {
+            if (analysisType === 'urine') {
+              setStep('timer')
+            } else {
+              setStep('image_capture')
+            }
+          }}
           paymentLinkStatus={paymentLinkStatus}
         />
       )}
@@ -801,6 +823,44 @@ export default function NewReadingWizard() {
             tradeName: profile.tradeName,
             reportHeaderAddress: profile.reportHeaderAddress,
           } : undefined}
+        />
+      )}
+
+      {step === 'image_capture' && (
+        <ImageCaptureStep
+          analysisType={analysisType === 'eye' ? 'eye' : 'skin'}
+          onBack={() => setStep('identification')}
+          onDone={(payload: any) => {
+            setImagePreviewDataUrl(payload.previewDataUrl)
+            setImageAnalysisResult(payload.result)
+            setStep('image_result')
+          }}
+        />
+      )}
+
+      {step === 'image_result' && (
+        <ImageResultStep
+          analysisType={analysisType === 'eye' ? 'eye' : 'skin'}
+          previewDataUrl={imagePreviewDataUrl}
+          result={imageAnalysisResult}
+          onBack={() => setStep('image_capture')}
+          onFinish={() => {
+            setDraft((prev) => ({
+              ...prev,
+              identification: { patientId: "", paymentLinkId: "", collectionMethod: "", collectionAt: "", stripLot: "", stripExpiry: "", analysisType: "urine" },
+              timer: { selectedSeconds: 45, analyzedAt: "", analysis: null },
+              reviewSelections: {},
+              results: [],
+              report: { summaryAndInterpretation: "", otherInformation: "", veterinarianNotes: "" },
+            }))
+            setSignatureImageUrl("")
+            setCapturedImages([])
+            setImageAnalysisResult(null)
+            setImagePreviewDataUrl("")
+            setStep("identification")
+            setDraftId("")
+            router.push('/Veterinarian/home')
+          }}
         />
       )}
     </div>

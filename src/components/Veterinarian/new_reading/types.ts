@@ -1,4 +1,6 @@
-export type NewReadingStep = "identification" | "timer" | "review" | "report";
+export type AnalysisType = "urine" | "eye" | "skin";
+
+export type NewReadingStep = "identification" | "timer" | "review" | "report" | "image_capture" | "image_result";
 
 export type PatientListItem = {
   id: string;
@@ -29,6 +31,7 @@ export type IdentificationDraft = {
   stripLot: string;
   stripExpiry: string;
   collectionAt: string;
+  analysisType: AnalysisType;
 };
 
 export type TimerAnalysisDraft = {

@@ -1,12 +1,13 @@
 'use client'
 
 import React from 'react'
-import { Check, FileText, Timer, User } from 'lucide-react'
+import { Camera, Check, FileText, Timer, User } from 'lucide-react'
 import { NewReadingStep } from './types'
 import { useTranslation } from 'react-i18next'
 
 type Props = {
   active: NewReadingStep
+  mode?: 'urine' | 'image'
 }
 
 function IdentificationIcon({ className }: { className?: string }) {
@@ -48,20 +49,35 @@ function ReportIcon({ className }: { className?: string }) {
   )
 }
 
+function CameraIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 const stepIcons: Record<NewReadingStep, React.ElementType> = {
   identification: IdentificationIcon,
   timer: TimerIcon,
   review: ReviewIcon,
   report: ReportIcon,
+  image_capture: CameraIcon,
+  image_result: FileText,
 }
 
-export default function Stepper({ active }: Props) {
+export default function Stepper({ active, mode = 'urine' }: Props) {
   const { t } = useTranslation()
-  const steps: Array<{ key: NewReadingStep; label: string; Icon: React.ElementType }> = [
+  const steps: Array<{ key: NewReadingStep; label: string; Icon: React.ElementType }> = mode === 'urine' ? [
     { key: 'identification', label: t('reading.steps.identification'), Icon: stepIcons.identification },
     { key: 'timer', label: t('reading.steps.timer'), Icon: stepIcons.timer },
     { key: 'review', label: t('reading.steps.review'), Icon: stepIcons.review },
     { key: 'report', label: t('reading.steps.report'), Icon: stepIcons.report },
+  ] : [
+    { key: 'identification', label: t('reading.steps.identification'), Icon: stepIcons.identification },
+    { key: 'image_capture', label: t('reading.steps.capture'), Icon: stepIcons.image_capture },
+    { key: 'image_result', label: t('reading.steps.result'), Icon: stepIcons.image_result },
   ]
   const activeIndex = steps.findIndex((s) => s.key === active)
 

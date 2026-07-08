@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, ChevronDown, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import LinkGenerated from './LinkGenerated'
-import { IdentificationDraft, PatientListItem } from './types'
+import { AnalysisType, IdentificationDraft, PatientListItem } from './types'
 import { toast } from 'react-toastify'
 import { useTranslation } from 'react-i18next'
 
@@ -27,6 +27,7 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
   const [sending, setSending] = useState(false)
   const [panelPickerOpen, setPanelPickerOpen] = useState(false)
   const [panels, setPanels] = useState<Array<{ code: string; title: string; description: string; params: string; sortOrder: number }>>([])
+  const analysisType = value.analysisType || 'urine'
 
   const collectionRef = useRef<HTMLInputElement | null>(null)
 
@@ -138,8 +139,11 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
   }
 
   const canProceed = useMemo(() => {
-    return !!value.patientId && !!value.collectionMethod && !!value.collectionAt
-  }, [value.collectionAt, value.collectionMethod, value.patientId])
+    if (analysisType === 'urine') {
+      return !!value.patientId && !!value.collectionMethod && !!value.collectionAt
+    }
+    return !!value.patientId
+  }, [analysisType, value.collectionAt, value.collectionMethod, value.patientId])
 
   const collectionMethods: Array<{ key: IdentificationDraft["collectionMethod"]; label: string }> = [
     { key: 'free_catch', label: t('reading.identification.freeCatch') },
@@ -165,6 +169,10 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
 
   const handleProceed = async () => {
     if (generating) return
+    if (analysisType !== 'urine') {
+      onNext()
+      return
+    }
     const existingId = (value.paymentLinkId || paymentLinkId || "").trim()
     if (existingId) {
       try {
@@ -271,6 +279,33 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
         <p className="mt-1 text-[13px] text-[#6B7280] leading-[18px]">{t("reading.identification.desc")}</p>
 
         <div className="mt-5 space-y-3">
+          {/* Analysis Type */}
+          <div>
+            <div className="text-[14px] font-semibold text-black/70 mb-3">{t("reading.identification.analysisTypeLabel")}</div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { key: 'urine' as AnalysisType, label: t('reading.identification.analysisTypeUrine') },
+                { key: 'skin' as AnalysisType, label: t('reading.identification.analysisTypeSkin') },
+                { key: 'eye' as AnalysisType, label: t('reading.identification.analysisTypeEye') },
+              ].map((type) => {
+                const isSelected = analysisType === type.key
+                return (
+                  <button
+                    key={type.key}
+                    type="button"
+                    onClick={() => onChange({ analysisType: type.key })}
+                    className={`py-3.5 px-3 rounded-lg text-[10px] font-medium text-center border transition-all ${isSelected
+                      ? 'border-primary bg-[#EBF2FF] text-primary'
+                      : 'border-[#E5E7EB] bg-white text-black/80'
+                      }`}
+                  >
+                    {type.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           {/* Patient */}
           <div>
             <div className="text-[14px] font-semibold text-black/70 mb-1.5">{t("reading.identification.patient")}</div>
@@ -300,76 +335,80 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
             </div>
           </div>
 
-          {/* Collection Method */}
-          <div>
-            <div className="text-[14px] font-semibold text-black/70 mb-3">{t("reading.identification.collectionMethod")}</div>
-            <div className="grid grid-cols-2 gap-2">
-              {collectionMethods.map((m) => {
-                const isSelected = value.collectionMethod === m.key
-                return (
-                  <button
-                    key={m.key}
-                    type="button"
-                    onClick={() => onChange({ collectionMethod: m.key })}
-                    className={`py-3.5 px-3 rounded-lg text-[10px] font-medium text-center border transition-all ${isSelected
-                      ? 'border-primary bg-[#EBF2FF] text-primary'
-                      : 'border-[#E5E7EB] bg-white text-black/80'
-                      }`}
-                  >
-                    {m.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Jejum Toggle */}
-          <div className="rounded-lg border border-[#E5E7EB] px-4 py-3.5">
-            <div className="flex items-center justify-between">
+          {analysisType === 'urine' && (
+            <>
+              {/* Collection Method */}
               <div>
-                <div className="text-[14px] font-semibold text-black/70">{t("reading.identification.jejumQuestion")}</div>
-                <div className="text-[12px] text-[#6B7280] mt-0.5">{t("reading.identification.jejumHint")}</div>
+                <div className="text-[14px] font-semibold text-black/70 mb-3">{t("reading.identification.collectionMethod")}</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {collectionMethods.map((m) => {
+                    const isSelected = value.collectionMethod === m.key
+                    return (
+                      <button
+                        key={m.key}
+                        type="button"
+                        onClick={() => onChange({ collectionMethod: m.key })}
+                        className={`py-3.5 px-3 rounded-lg text-[10px] font-medium text-center border transition-all ${isSelected
+                          ? 'border-primary bg-[#EBF2FF] text-primary'
+                          : 'border-[#E5E7EB] bg-white text-black/80'
+                          }`}
+                      >
+                        {m.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => onChange({ isJejum: !value.isJejum })}
-                className={`relative inline-flex w-12 h-6 rounded-full duration-200 transition-colors flex-shrink-0 ${value.isJejum ? 'bg-primary' : 'bg-[#D1D5DB]'}`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm duration-200 transition-all ${value.isJejum ? 'left-[26px]' : 'left-0.5'}`}
-                />
-              </button>
-            </div>
-          </div>
 
-          {/* Collection Date & Time */}
-          <div>
-            <div className="text-[14px] font-semibold text-black/70 mb-1.5">{t("reading.identification.collectionDateTime")}</div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => collectionRef.current?.showPicker?.()}
-                className="flex-1 relative flex items-center gap-3 px-4 py-3.5 bg-[#F5F6F6] rounded-xl text-left"
-              >
-                <Calendar className="w-5 h-5 text-[#9CA3AF] flex-shrink-0" />
-                <span className={`text-[14px] ${value.collectionAt ? 'text-black/70' : 'text-[#9CA3AF]'}`}>
-                  {formattedCollectionDate || t("reading.identification.collectionDateTime")}
-                </span>
-              </button>
-              <div className="relative w-12 h-12 flex-shrink-0 flex items-center justify-center bg-[#EBF2FF] rounded-xl overflow-hidden">
-                <Calendar className="w-5 h-5 text-primary pointer-events-none" />
-                <input
-                  ref={collectionRef}
-                  type="datetime-local"
-                  value={value.collectionAt}
-                  max={new Date().toISOString().slice(0, 16)}
-                  onChange={(e) => onChange({ collectionAt: e.target.value })}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  style={{ colorScheme: 'light' }}
-                />
+              {/* Jejum Toggle */}
+              <div className="rounded-lg border border-[#E5E7EB] px-4 py-3.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[14px] font-semibold text-black/70">{t("reading.identification.jejumQuestion")}</div>
+                    <div className="text-[12px] text-[#6B7280] mt-0.5">{t("reading.identification.jejumHint")}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onChange({ isJejum: !value.isJejum })}
+                    className={`relative inline-flex w-12 h-6 rounded-full duration-200 transition-colors flex-shrink-0 ${value.isJejum ? 'bg-primary' : 'bg-[#D1D5DB]'}`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm duration-200 transition-all ${value.isJejum ? 'left-[26px]' : 'left-0.5'}`}
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
+
+              {/* Collection Date & Time */}
+              <div>
+                <div className="text-[14px] font-semibold text-black/70 mb-1.5">{t("reading.identification.collectionDateTime")}</div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => collectionRef.current?.showPicker?.()}
+                    className="flex-1 relative flex items-center gap-3 px-4 py-3.5 bg-[#F5F6F6] rounded-xl text-left"
+                  >
+                    <Calendar className="w-5 h-5 text-[#9CA3AF] flex-shrink-0" />
+                    <span className={`text-[14px] ${value.collectionAt ? 'text-black/70' : 'text-[#9CA3AF]'}`}>
+                      {formattedCollectionDate || t("reading.identification.collectionDateTime")}
+                    </span>
+                  </button>
+                  <div className="relative w-12 h-12 flex-shrink-0 flex items-center justify-center bg-[#EBF2FF] rounded-xl overflow-hidden">
+                    <Calendar className="w-5 h-5 text-primary pointer-events-none" />
+                    <input
+                      ref={collectionRef}
+                      type="datetime-local"
+                      value={value.collectionAt}
+                      max={new Date().toISOString().slice(0, 16)}
+                      onChange={(e) => onChange({ collectionAt: e.target.value })}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      style={{ colorScheme: 'light' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -382,14 +421,14 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
             : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
             }`}
         >
-          {generating ? t("reading.identification.generating") : (
+          {generating ? t("reading.identification.generating") : analysisType === 'urine' ? (
             <>
               {t("reading.identification.nextTimer")}
               <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </>
-          )}
+          ) : t("common.continue")}
         </button>
       </div>
 
