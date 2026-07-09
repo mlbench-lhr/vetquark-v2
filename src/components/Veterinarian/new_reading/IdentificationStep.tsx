@@ -29,6 +29,9 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
   const [panels, setPanels] = useState<Array<{ code: string; title: string; description: string; params: string; sortOrder: number }>>([])
   const analysisType = value.analysisType || 'urine'
 
+  const EYE_PRODUCT_CODE = "VETQ_EYE_ANALYSIS"
+  const SKIN_PRODUCT_CODE = "VETQ_SKIN_ANALYSIS"
+
   const collectionRef = useRef<HTMLInputElement | null>(null)
 
   const selectedPanelCode = (value.panelProductCode || "").trim() || "VETQ_MASTER_360"
@@ -124,6 +127,26 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
       })()
   }, [patients, value.patientId])
 
+  // Force panelProductCode based on analysisType
+  useEffect(() => {
+    if (analysisType === 'eye') {
+      if (value.panelProductCode !== EYE_PRODUCT_CODE) {
+        onChange({ panelProductCode: EYE_PRODUCT_CODE, paymentLinkId: '' })
+        setPaymentLinkId(null)
+        setPaymentLinkUrl(null)
+        setShowLink(false)
+      }
+    } else if (analysisType === 'skin') {
+      if (value.panelProductCode !== SKIN_PRODUCT_CODE) {
+        onChange({ panelProductCode: SKIN_PRODUCT_CODE, paymentLinkId: '' })
+        setPaymentLinkId(null)
+        setPaymentLinkUrl(null)
+        setShowLink(false)
+      }
+    }
+    // For urine, keep existing behavior (don't change panelProductCode)
+  }, [analysisType, value.panelProductCode, onChange])
+
   useEffect(() => {
     const next = (value.paymentLinkId || '').trim()
     if (!next) return
@@ -169,10 +192,7 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
 
   const handleProceed = async () => {
     if (generating) return
-    if (analysisType !== 'urine') {
-      onNext()
-      return
-    }
+    // Remove the early return for non-urine - all types now use payment links
     const existingId = (value.paymentLinkId || paymentLinkId || "").trim()
     if (existingId) {
       try {
@@ -235,18 +255,23 @@ export default function IdentificationStep({ value, onChange, onNext, paymentLin
           }
           try {
             setSending(true)
+            const identificationPayload: any = {
+              patientId: value.patientId,
+            }
+            if (analysisType === 'urine') {
+              identificationPayload.collectionMethod = value.collectionMethod
+              identificationPayload.collectionAt = value.collectionAt
+              identificationPayload.stripLot = value.stripLot
+              identificationPayload.stripExpiry = value.stripExpiry
+            } else {
+              identificationPayload.analysisType = analysisType
+            }
             const res = await fetch('/api/payment_links/notify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 paymentLinkId,
-                identification: {
-                  patientId: value.patientId,
-                  collectionMethod: value.collectionMethod,
-                  collectionAt: value.collectionAt,
-                  stripLot: value.stripLot,
-                  stripExpiry: value.stripExpiry,
-                },
+                identification: identificationPayload,
               }),
             })
             const data = await res.json().catch(() => null)

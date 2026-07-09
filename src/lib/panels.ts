@@ -143,6 +143,32 @@ const DEFAULT_PANELS: Array<{
     referenceRanges: DEFAULT_REFERENCE_RANGES,
     active: true,
   },
+  {
+    code: "VETQ_EYE_ANALYSIS",
+    title: "Eye Analysis",
+    subtitle: "Ophthalmic Image Analysis",
+    description: "Ophthalmic image analysis",
+    params: "",
+    visibleKeys: null,
+    suggestedPriceBRL: 79.9,
+    commissionPriceBRL: null,
+    sortOrder: 80,
+    referenceRanges: [],
+    active: true,
+  },
+  {
+    code: "VETQ_SKIN_ANALYSIS",
+    title: "Skin Analysis",
+    subtitle: "Dermatological Image Analysis",
+    description: "Dermatological image analysis",
+    params: "",
+    visibleKeys: null,
+    suggestedPriceBRL: 79.9,
+    commissionPriceBRL: null,
+    sortOrder: 90,
+    referenceRanges: [],
+    active: true,
+  },
 ];
 
 async function ensureDefaultPanels() {

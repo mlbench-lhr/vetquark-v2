@@ -3,6 +3,7 @@
 import { Document, Image as PdfImage, Page as PDFPage, StyleSheet, Text, View, pdf } from "@react-pdf/renderer";
 import i18n from "@/i18n/i18n";
 import { translateUrinalysisParameterLabel } from "@/lib/urinalysisParameters";
+import { getLocalizedImageAnalysis } from "@/utils/imageAnalysis";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -18,6 +19,7 @@ type ReadingResult = {
 
 type ReadingDetail = {
   id: string;
+  testType?: "urine" | "eye" | "skin" | string;
   productCode?: string;
   unlockedProductCodes?: string[];
   panelVersion?: number;
@@ -39,6 +41,7 @@ type ReadingDetail = {
   timer: {
     analysis?: { summary?: string; confidence?: number; flags?: string[] };
   } | null;
+  imageAnalysis?: unknown;
   patient: { id: string; name: string; photo: string | null };
   guardian: { id: string; fullName: string };
   veterinarian: {
@@ -153,6 +156,9 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading, t }: { 
     }
   }
   const panelTitle = panelByCode.get(normalizePanelCode(r.productCode))?.title || normalizePanelCode(r.productCode);
+  const testType = String((r as any).testType || "").trim().toLowerCase();
+  const isImageAnalysis = testType === "eye" || testType === "skin" || normalizePanelCode(r.productCode) === "VETQ_EYE_ANALYSIS" || normalizePanelCode(r.productCode) === "VETQ_SKIN_ANALYSIS";
+  const localizedImageAnalysis = isImageAnalysis ? getLocalizedImageAnalysis((r as any).imageAnalysis, String(i18n.language || "pt")) : null;
 
   const reportStyles = StyleSheet.create({
     page: { padding: 14, paddingBottom: 86, fontSize: 10, color: "#111827" },
@@ -215,6 +221,12 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading, t }: { 
     signatureName: { fontSize: 10, fontWeight: 700, color: "#111827" },
     signatureCrmv: { marginTop: 2, fontSize: 8, color: "#6B7280" },
     signatureImage: { width: 160, height: 48, objectFit: "contain" },
+    inlineLabel: { fontSize: 8, color: "#6B7280" },
+    inlineValue: { fontSize: 8, color: "#111827" },
+    bulletRow: { display: "flex", flexDirection: "row", marginTop: 2 },
+    bulletDot: { width: 10, fontSize: 8, color: "#6B7280" },
+    bulletText: { flex: 1, fontSize: 8, color: "#111827", lineHeight: 1.25 },
+    compactBlock: { marginTop: 2 },
   });
 
   const resultsAll = Array.isArray(r.results) ? r.results : [];
@@ -289,7 +301,7 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading, t }: { 
             </View>
             <View style={reportStyles.metaRow}>
               <Text style={reportStyles.metaKey}>{translate("reading.pdf.collectedAt")}</Text>
-              <Text style={reportStyles.metaValue}>{asReportText(r.identification?.collectionAt || "")}</Text>
+              <Text style={reportStyles.metaValue}>{asReportText(formatDateTimeLabel(r.identification?.collectionAt || null))}</Text>
             </View>
             <View style={reportStyles.metaRow}>
               <Text style={reportStyles.metaKey}>{translate("reading.pdf.stripLot")}</Text>
@@ -297,53 +309,138 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading, t }: { 
             </View>
             <View style={reportStyles.metaRow}>
               <Text style={reportStyles.metaKey}>{translate("reading.pdf.stripExpiry")}</Text>
-              <Text style={reportStyles.metaValue}>{asReportText(r.identification?.stripExpiry || "")}</Text>
+              <Text style={reportStyles.metaValue}>{asReportText(formatDateTimeLabel(r.identification?.stripExpiry || null) || (r.identification?.stripExpiry || ""))}</Text>
             </View>
           </View>
         </View>
 
-        <Text style={reportStyles.sectionTitle}>{translate("reading.pdf.results")}</Text>
-        <View style={reportStyles.resultsTable}>
-          <View style={reportStyles.tableHeaderRow}>
-            <View style={reportStyles.colName}>
-              <Text style={reportStyles.tableHeaderText}>{translate("reading.pdf.test")}</Text>
-            </View>
-            <View style={reportStyles.colValue}>
-              <Text style={reportStyles.tableHeaderText}>{translate("reading.pdf.result")}</Text>
-            </View>
-            <View style={reportStyles.colRange}>
-              <Text style={reportStyles.tableHeaderText}>{translate("reading.pdf.reference")}</Text>
-            </View>
-            <View style={reportStyles.colStatus}>
-              <Text style={[reportStyles.tableHeaderText, { textAlign: "right" }]}>{translate("reading.pdf.status")}</Text>
-            </View>
-          </View>
-          {[...physical, ...chemical, ...microscopic].map((it, idx, arr) => (
-            <View key={it.key} style={idx === arr.length - 1 ? [reportStyles.tableRow, reportStyles.tableRowLast] : reportStyles.tableRow}>
-              <View style={reportStyles.colName}>
-                <Text style={reportStyles.tableCellLabel}>
-                  {asReportText(translateUrinalysisParameterLabel(translate, it.key, it.label))}
-                </Text>
+        {isImageAnalysis ? (
+          <>
+            <Text style={reportStyles.sectionTitle}>{testType === "eye" ? translate("history.eyeAnalysis") : translate("history.skinAnalysis")}</Text>
+            {localizedImageAnalysis ? (
+              <View style={reportStyles.compactBlock}>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>{asReportText("Model")}</Text>
+                  <Text style={reportStyles.metaValue}>{asReportText(localizedImageAnalysis.model || "")}</Text>
+                </View>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>{asReportText("Success")}</Text>
+                  <Text style={reportStyles.metaValue}>
+                    {typeof localizedImageAnalysis.success === "boolean" ? String(localizedImageAnalysis.success) : translate("reading.pdf.notAvailable")}
+                  </Text>
+                </View>
+                <View style={reportStyles.metaRow}>
+                  <Text style={reportStyles.metaKey}>{asReportText("Disease detected")}</Text>
+                  <Text style={reportStyles.metaValue}>
+                    {typeof localizedImageAnalysis.disease_detected === "boolean" ? (localizedImageAnalysis.disease_detected ? asReportText("Yes") : asReportText("No")) : translate("reading.pdf.notAvailable")}
+                  </Text>
+                </View>
+
+                {localizedImageAnalysis.leading_hypothesis ? (
+                  <>
+                    <Text style={reportStyles.sectionTitle}>{asReportText("Leading hypothesis")}</Text>
+                    <View style={reportStyles.compactBlock}>
+                      <View style={reportStyles.metaRow}>
+                        <Text style={reportStyles.metaKey}>{asReportText("Name")}</Text>
+                        <Text style={reportStyles.metaValue}>{asReportText(localizedImageAnalysis.leading_hypothesis.name)}</Text>
+                      </View>
+                      <View style={reportStyles.metaRow}>
+                        <Text style={reportStyles.metaKey}>{asReportText("Confidence")}</Text>
+                        <Text style={reportStyles.metaValue}>
+                          {Number.isFinite(localizedImageAnalysis.leading_hypothesis.confidence)
+                            ? String(localizedImageAnalysis.leading_hypothesis.confidence)
+                            : translate("reading.pdf.notAvailable")}
+                        </Text>
+                      </View>
+                      {(localizedImageAnalysis.leading_hypothesis.description || "").trim() ? (
+                        <Text style={reportStyles.blockText}>{asReportText(localizedImageAnalysis.leading_hypothesis.description)}</Text>
+                      ) : null}
+                      {Array.isArray(localizedImageAnalysis.leading_hypothesis.findings) && localizedImageAnalysis.leading_hypothesis.findings.length ? (
+                        <>
+                          <Text style={reportStyles.sectionTitle}>{asReportText("Findings")}</Text>
+                          {localizedImageAnalysis.leading_hypothesis.findings.map((f, idx) => (
+                            <View key={`${idx}-${f}`} style={reportStyles.bulletRow}>
+                              <Text style={reportStyles.bulletDot}>•</Text>
+                              <Text style={reportStyles.bulletText}>{asReportText(f)}</Text>
+                            </View>
+                          ))}
+                        </>
+                      ) : null}
+                    </View>
+                  </>
+                ) : null}
+
+                {Array.isArray(localizedImageAnalysis.differential_diagnoses) && localizedImageAnalysis.differential_diagnoses.length ? (
+                  <>
+                    <Text style={reportStyles.sectionTitle}>{asReportText("Differential diagnoses")}</Text>
+                    {localizedImageAnalysis.differential_diagnoses.map((d, idx) => (
+                      <View key={`${idx}-${d.name}-${d.confidence}`} style={reportStyles.bulletRow}>
+                        <Text style={reportStyles.bulletDot}>•</Text>
+                        <Text style={reportStyles.bulletText}>
+                          {asReportText(d.name)} {Number.isFinite(d.confidence) ? `(${String(d.confidence)})` : ""}
+                        </Text>
+                      </View>
+                    ))}
+                  </>
+                ) : null}
+
+                {localizedImageAnalysis.message ? (
+                  <>
+                    <Text style={reportStyles.sectionTitle}>{asReportText("Message")}</Text>
+                    <Text style={reportStyles.blockText}>{asReportText(localizedImageAnalysis.message)}</Text>
+                  </>
+                ) : null}
               </View>
-              <View style={reportStyles.colValue}>
-                <Text style={reportStyles.tableCellValue}>{asReportText(valueWithUnit(it))}</Text>
+            ) : (
+              <Text style={reportStyles.blockText}>{translate("reading.pdf.notAvailable")}</Text>
+            )}
+          </>
+        ) : (
+          <>
+            <Text style={reportStyles.sectionTitle}>{translate("reading.pdf.results")}</Text>
+            <View style={reportStyles.resultsTable}>
+              <View style={reportStyles.tableHeaderRow}>
+                <View style={reportStyles.colName}>
+                  <Text style={reportStyles.tableHeaderText}>{translate("reading.pdf.test")}</Text>
+                </View>
+                <View style={reportStyles.colValue}>
+                  <Text style={reportStyles.tableHeaderText}>{translate("reading.pdf.result")}</Text>
+                </View>
+                <View style={reportStyles.colRange}>
+                  <Text style={reportStyles.tableHeaderText}>{translate("reading.pdf.reference")}</Text>
+                </View>
+                <View style={reportStyles.colStatus}>
+                  <Text style={[reportStyles.tableHeaderText, { textAlign: "right" }]}>{translate("reading.pdf.status")}</Text>
+                </View>
               </View>
-              <View style={reportStyles.colRange}>
-                <Text style={reportStyles.tableCellRange}>{rangeLabelForKey(it.key)}</Text>
-              </View>
-              <View style={reportStyles.colStatus}>
-                <Text
-                  style={[
-                    reportStyles.tableCellStatus,
-                    it.status === "Normal" ? reportStyles.tableCellStatusNormal : reportStyles.tableCellStatusAbnormal,
-                  ]}
-                >
-                  {it.status === "Normal" ? translate("reading.pdf.normal") : translate("reading.pdf.abnormal")}
-                </Text>
-              </View>
+              {[...physical, ...chemical, ...microscopic].map((it, idx, arr) => (
+                <View key={it.key} style={idx === arr.length - 1 ? [reportStyles.tableRow, reportStyles.tableRowLast] : reportStyles.tableRow}>
+                  <View style={reportStyles.colName}>
+                    <Text style={reportStyles.tableCellLabel}>
+                      {asReportText(translateUrinalysisParameterLabel(translate, it.key, it.label))}
+                    </Text>
+                  </View>
+                  <View style={reportStyles.colValue}>
+                    <Text style={reportStyles.tableCellValue}>{asReportText(valueWithUnit(it))}</Text>
+                  </View>
+                  <View style={reportStyles.colRange}>
+                    <Text style={reportStyles.tableCellRange}>{rangeLabelForKey(it.key)}</Text>
+                  </View>
+                  <View style={reportStyles.colStatus}>
+                    <Text
+                      style={[
+                        reportStyles.tableCellStatus,
+                        it.status === "Normal" ? reportStyles.tableCellStatusNormal : reportStyles.tableCellStatusAbnormal,
+                      ]}
+                    >
+                      {it.status === "Normal" ? translate("reading.pdf.normal") : translate("reading.pdf.abnormal")}
+                    </Text>
+                  </View>
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
+          </>
+        )}
 
         <Text style={reportStyles.sectionTitle}>{translate("reading.pdf.remarks")}</Text>
         <View>
@@ -384,7 +481,7 @@ export async function createUrinalysisPdfObjectUrl({ readingId, reading, t }: { 
 
   const blob = await pdf(buildDocument()).toBlob();
   const url = URL.createObjectURL(blob);
-  const fileName = `urinalysis-report-${r.id}.pdf`;
+  const fileName = `report-${r.id}.pdf`;
   return { url, fileName, blob };
 }
 

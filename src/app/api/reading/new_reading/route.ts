@@ -280,114 +280,182 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid draftId" }, { status: 400 });
     }
 
-    const identification = (body as any).identification || {};
-    const collectionMethod = identification.collectionMethod;
-    const stripLot = String(identification.stripLot || "").trim();
-    const collectionAt = toDate(identification.collectionAt);
-    const stripExpiryRaw = typeof identification.stripExpiry === "string" ? identification.stripExpiry.trim() : "";
-    const stripExpiry = stripExpiryRaw ? toDate(stripExpiryRaw) : null;
-
-    if (!isCollectionMethod(collectionMethod)) {
-      return NextResponse.json({ error: "Invalid collectionMethod" }, { status: 400 });
-    }
-    if (!collectionAt) {
-      return NextResponse.json({ error: "Invalid collectionAt" }, { status: 400 });
-    }
-    if (stripExpiryRaw && !stripExpiry) {
-      return NextResponse.json({ error: "Invalid stripExpiry" }, { status: 400 });
-    }
-    if (stripExpiry) {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const expiryStr = stripExpiry.toISOString().slice(0, 10);
-      if (expiryStr < todayStr) {
-        return NextResponse.json({ error: "Strip expiry must be today or a future date" }, { status: 400 });
+    // Determine testType
+    let testType: "urine" | "eye" | "skin" = "urine";
+    const analysisTypeRaw = String((body as any).analysisType || "").trim();
+    if (analysisTypeRaw === "eye" || analysisTypeRaw === "skin") {
+      testType = analysisTypeRaw;
+    } else if (paymentLinkId) {
+      // Infer from payment link productCode
+      await connectMongo();
+      const link = await PaymentLink.findOne({ _id: paymentLinkId, veterinarian: veterinarianId, patient: patientId })
+        .select("_id productCode")
+        .lean();
+      if (link) {
+        const linkProductCode = String((link as any).productCode || "").trim();
+        if (linkProductCode === "VETQ_EYE_ANALYSIS") testType = "eye";
+        else if (linkProductCode === "VETQ_SKIN_ANALYSIS") testType = "skin";
+      }
+    } else if (draftId) {
+      // Infer from existing draft
+      await connectMongo();
+      const draft = await Reading.findOne({ _id: draftId, veterinarian: veterinarianId }).select("_id testType").lean();
+      if (draft && (draft as any).testType) {
+        const draftTestType = String((draft as any).testType || "").trim();
+        if (draftTestType === "eye" || draftTestType === "skin") testType = draftTestType;
       }
     }
 
-    const timer = (body as any).timer || {};
-    const selectedSeconds = toFiniteNumber(timer.selectedSeconds);
-    const analyzedAt = toDate(timer.analyzedAt) ?? new Date();
-    const analysis = timer.analysis || {};
-    const analysisSummary = String(analysis.summary || "").trim();
-    const analysisConfidence = toFiniteNumber(analysis.confidence);
-    const analysisFlags = Array.isArray(analysis.flags) ? analysis.flags.map((x: any) => String(x || "").trim()).filter(Boolean) : [];
+    // Branch based on testType - declare variables outside for scope
+    let collectionMethod: any = null;
+    let stripLot = "";
+    let collectionAt: Date | null = null;
+    let stripExpiry: Date | null = null;
+    let selectedSeconds: number | null = null;
+    let analyzedAt: Date | null = null;
+    let analysisSummary = "";
+    let analysisConfidence: number | null = null;
+    let analysisFlags: string[] = [];
+    let results: any[] = [];
+    let summaryAndInterpretation = "";
+    let otherInformation = "";
+    let veterinarianNotes = "";
+    let signatureImageUrl = "";
+    let capturedImages: CapturedImageInput[] = [];
+    let imageAnalysis: any = null;
 
-    if (!selectedSeconds || selectedSeconds <= 0) {
-      return NextResponse.json({ error: "Invalid timer.selectedSeconds" }, { status: 400 });
-    }
-    if (!isValidDate(analyzedAt)) {
-      return NextResponse.json({ error: "Invalid timer.analyzedAt" }, { status: 400 });
-    }
-    if (!analysisSummary) {
-      return NextResponse.json({ error: "timer.analysis.summary is required" }, { status: 400 });
-    }
-    if (analysisConfidence === null || analysisConfidence < 0 || analysisConfidence > 1) {
-      return NextResponse.json({ error: "timer.analysis.confidence must be between 0 and 1" }, { status: 400 });
-    }
+    if (testType === "urine") {
+      // EXISTING URINE FLOW - unchanged
+      const identification = (body as any).identification || {};
+      collectionMethod = identification.collectionMethod;
+      stripLot = String(identification.stripLot || "").trim();
+      collectionAt = toDate(identification.collectionAt);
+      const stripExpiryRaw = typeof identification.stripExpiry === "string" ? identification.stripExpiry.trim() : "";
+      stripExpiry = stripExpiryRaw ? toDate(stripExpiryRaw) : null;
 
-    const resultsRaw = (body as any).results;
-    if (!Array.isArray(resultsRaw)) {
-      return NextResponse.json({ error: "results must be an array" }, { status: 400 });
-    }
-
-    const results = resultsRaw.map((r: any) => {
-      const key = String(r?.key || "").trim();
-      const label = String(r?.label || "").trim();
-      const unit = String(r?.unit || "").trim();
-      const status = r?.status;
-      const selectedIndex = toFiniteNumber(r?.selectedIndex);
-      const valueLabel = String(r?.valueLabel || "").trim();
-      const numericValue = r?.numericValue === undefined ? undefined : toFiniteNumber(r?.numericValue);
-
-      return { key, label, unit, status, selectedIndex, valueLabel, numericValue };
-    });
-
-    for (const r of results) {
-      if (!r.key || !r.label || !r.valueLabel) {
-        return NextResponse.json({ error: "Invalid results item" }, { status: 400 });
+      if (!isCollectionMethod(collectionMethod)) {
+        return NextResponse.json({ error: "Invalid collectionMethod" }, { status: 400 });
       }
-      if (!isResultStatus(r.status)) {
-        return NextResponse.json({ error: "Invalid results status" }, { status: 400 });
+      if (!collectionAt) {
+        return NextResponse.json({ error: "Invalid collectionAt" }, { status: 400 });
       }
-      if (r.selectedIndex === null || r.selectedIndex < 0) {
-        return NextResponse.json({ error: "Invalid results selectedIndex" }, { status: 400 });
+      if (stripExpiryRaw && !stripExpiry) {
+        return NextResponse.json({ error: "Invalid stripExpiry" }, { status: 400 });
       }
-      if (r.numericValue === null) {
-        return NextResponse.json({ error: "Invalid results numericValue" }, { status: 400 });
+      if (stripExpiry) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const expiryStr = stripExpiry.toISOString().slice(0, 10);
+        if (expiryStr < todayStr) {
+          return NextResponse.json({ error: "Strip expiry must be today or a future date" }, { status: 400 });
+        }
       }
-    }
 
-    const keys = results.map((r) => r.key);
-    const uniqueKeys = new Set(keys);
-    if (uniqueKeys.size !== keys.length) {
-      return NextResponse.json({ error: "Duplicate results key" }, { status: 400 });
-    }
-    const allowed = new Set<string>(REQUIRED_RESULT_KEYS);
-    const extras = keys.filter((k) => !allowed.has(k));
-    if (extras.length) {
-      return NextResponse.json({ error: "Unexpected results key" }, { status: 400 });
-    }
-    const missing = REQUIRED_RESULT_KEYS.filter((k) => !uniqueKeys.has(k));
-    if (missing.length) {
-      return NextResponse.json({ error: "Missing results key" }, { status: 400 });
-    }
+      const timer = (body as any).timer || {};
+      selectedSeconds = toFiniteNumber(timer.selectedSeconds);
+      analyzedAt = toDate(timer.analyzedAt) ?? new Date();
+      const analysis = timer.analysis || {};
+      analysisSummary = String(analysis.summary || "").trim();
+      analysisConfidence = toFiniteNumber(analysis.confidence);
+      analysisFlags = Array.isArray(analysis.flags) ? analysis.flags.map((x: any) => String(x || "").trim()).filter(Boolean) : [];
 
-    const report = (body as any).report || {};
-    const summaryAndInterpretation = String(report.summaryAndInterpretation || "");
-    const otherInformation = String(report.otherInformation || "");
-    const veterinarianNotes = String(report.veterinarianNotes || "");
+      if (!selectedSeconds || selectedSeconds <= 0) {
+        return NextResponse.json({ error: "Invalid timer.selectedSeconds" }, { status: 400 });
+      }
+      if (!isValidDate(analyzedAt)) {
+        return NextResponse.json({ error: "Invalid timer.analyzedAt" }, { status: 400 });
+      }
+      if (!analysisSummary) {
+        return NextResponse.json({ error: "timer.analysis.summary is required" }, { status: 400 });
+      }
+      if (analysisConfidence === null || analysisConfidence < 0 || analysisConfidence > 1) {
+        return NextResponse.json({ error: "timer.analysis.confidence must be between 0 and 1" }, { status: 400 });
+      }
 
-    const signatureImageUrl = String((body as any).signatureImageUrl || "").trim();
-    if (!signatureImageUrl || !isAllowedCloudinaryUrl(signatureImageUrl)) {
-      return NextResponse.json({ error: "Invalid signatureImageUrl" }, { status: 400 });
-    }
-    const normalizedCapturedImages = normalizeCapturedImages((body as any).capturedImages);
-    if (normalizedCapturedImages.error) {
-      return NextResponse.json({ error: normalizedCapturedImages.error }, { status: 400 });
-    }
-    const capturedImages = normalizedCapturedImages.images;
+      const resultsRaw = (body as any).results;
+      if (!Array.isArray(resultsRaw)) {
+        return NextResponse.json({ error: "results must be an array" }, { status: 400 });
+      }
 
-    await connectMongo();
+      results = resultsRaw.map((r: any) => {
+        const key = String(r?.key || "").trim();
+        const label = String(r?.label || "").trim();
+        const unit = String(r?.unit || "").trim();
+        const status = r?.status;
+        const selectedIndex = toFiniteNumber(r?.selectedIndex);
+        const valueLabel = String(r?.valueLabel || "").trim();
+        const numericValue = r?.numericValue === undefined ? undefined : toFiniteNumber(r?.numericValue);
+
+        return { key, label, unit, status, selectedIndex, valueLabel, numericValue };
+      });
+
+      for (const r of results) {
+        if (!r.key || !r.label || !r.valueLabel) {
+          return NextResponse.json({ error: "Invalid results item" }, { status: 400 });
+        }
+        if (!isResultStatus(r.status)) {
+          return NextResponse.json({ error: "Invalid results status" }, { status: 400 });
+        }
+        if (r.selectedIndex === null || r.selectedIndex < 0) {
+          return NextResponse.json({ error: "Invalid results selectedIndex" }, { status: 400 });
+        }
+        if (r.numericValue === null) {
+          return NextResponse.json({ error: "Invalid results numericValue" }, { status: 400 });
+        }
+      }
+
+      const keys = results.map((r) => r.key);
+      const uniqueKeys = new Set(keys);
+      if (uniqueKeys.size !== keys.length) {
+        return NextResponse.json({ error: "Duplicate results key" }, { status: 400 });
+      }
+      const allowed = new Set<string>(REQUIRED_RESULT_KEYS);
+      const extras = keys.filter((k) => !allowed.has(k));
+      if (extras.length) {
+        return NextResponse.json({ error: "Unexpected results key" }, { status: 400 });
+      }
+      const missing = REQUIRED_RESULT_KEYS.filter((k) => !uniqueKeys.has(k));
+      if (missing.length) {
+        return NextResponse.json({ error: "Missing results key" }, { status: 400 });
+      }
+
+      const report = (body as any).report || {};
+      summaryAndInterpretation = String(report.summaryAndInterpretation || "");
+      otherInformation = String(report.otherInformation || "");
+      veterinarianNotes = String(report.veterinarianNotes || "");
+
+      signatureImageUrl = String((body as any).signatureImageUrl || "").trim();
+      if (!signatureImageUrl || !isAllowedCloudinaryUrl(signatureImageUrl)) {
+        return NextResponse.json({ error: "Invalid signatureImageUrl" }, { status: 400 });
+      }
+      const normalizedCapturedImages = normalizeCapturedImages((body as any).capturedImages);
+      if (normalizedCapturedImages.error) {
+        return NextResponse.json({ error: normalizedCapturedImages.error }, { status: 400 });
+      }
+      capturedImages = normalizedCapturedImages.images;
+
+      await connectMongo();
+    } else {
+      // EYE/SKIN FLOW - different validation
+      const report = (body as any).report || {};
+      summaryAndInterpretation = String(report.summaryAndInterpretation || "");
+      otherInformation = String(report.otherInformation || "");
+      veterinarianNotes = String(report.veterinarianNotes || "");
+
+      signatureImageUrl = String((body as any).signatureImageUrl || "").trim();
+      if (!signatureImageUrl || !isAllowedCloudinaryUrl(signatureImageUrl)) {
+        return NextResponse.json({ error: "Invalid signatureImageUrl" }, { status: 400 });
+      }
+
+      imageAnalysis = (body as any).imageAnalysis;
+      if (!imageAnalysis || typeof imageAnalysis !== "object") {
+        return NextResponse.json({ error: "imageAnalysis is required" }, { status: 400 });
+      }
+
+      // For eye/skin, set collectionAt to now
+      collectionAt = new Date();
+
+      await connectMongo();
+    }
 
     const veterinarian = await User.findById(veterinarianId).select("_id role fullName tradeName").lean();
     if (!veterinarian || veterinarian.role !== "Veterinarian") {
@@ -400,6 +468,7 @@ export async function POST(req: NextRequest) {
     }
     const guardianId = String((patient as any).guardian || "").trim();
     const maybePersistCapturedImages = async (readingId: string) => {
+      if (testType !== "urine") return; // Only persist captured images for urine
       if (!capturedImages.length) return;
       try {
         await persistCapturedImages({
@@ -458,43 +527,56 @@ export async function POST(req: NextRequest) {
     }
 
     if (paymentLinkId && paymentLinkReadingId && mongoose.Types.ObjectId.isValid(paymentLinkReadingId)) {
+      const updateSet: any = {
+        guardian: (patient as any).guardian,
+        patient: patientId,
+        paymentLink: paymentLinkId,
+        paymentStatus,
+        productCode: linkProductCode || "VETQ_MASTER_360",
+        panelVersion: linkPanelVersion || 1,
+        isDraft: false,
+        wizardStep: "report",
+        signatureImageUrl,
+        signedAt: new Date(),
+      };
+
+      if (testType === "urine") {
+        updateSet.identification = {
+          collectionMethod,
+          collectionAt,
+          stripLot,
+          stripExpiry,
+        };
+        updateSet.timer = {
+          selectedSeconds,
+          analyzedAt,
+          analysis: {
+            summary: analysisSummary,
+            confidence: analysisConfidence,
+            flags: analysisFlags,
+          },
+        };
+        updateSet.results = results;
+      } else {
+        // eye/skin
+        updateSet.identification = {
+          collectionMethod: null,
+          collectionAt,
+          stripLot: "",
+          stripExpiry: null,
+        };
+        updateSet.imageAnalysis = imageAnalysis;
+      }
+
+      updateSet.report = {
+        summaryAndInterpretation,
+        otherInformation,
+        veterinarianNotes,
+      };
+
       const updatedReading = await Reading.findOneAndUpdate(
         { _id: paymentLinkReadingId, veterinarian: veterinarianId, $or: [{ signedAt: { $exists: false } }, { signedAt: null }] },
-        {
-          $set: {
-            guardian: (patient as any).guardian,
-            patient: patientId,
-            paymentLink: paymentLinkId,
-            paymentStatus,
-            productCode: linkProductCode || "VETQ_MASTER_360",
-            panelVersion: linkPanelVersion || 1,
-            isDraft: false,
-            wizardStep: "report",
-            identification: {
-              collectionMethod,
-              collectionAt,
-              stripLot,
-              stripExpiry,
-            },
-            timer: {
-              selectedSeconds,
-              analyzedAt,
-              analysis: {
-                summary: analysisSummary,
-                confidence: analysisConfidence,
-                flags: analysisFlags,
-              },
-            },
-            results,
-            report: {
-              summaryAndInterpretation,
-              otherInformation,
-              veterinarianNotes,
-            },
-            signatureImageUrl,
-            signedAt: new Date(),
-          },
-        },
+        { $set: updateSet },
         { new: true }
       ).lean();
 
@@ -547,43 +629,56 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "draftId does not match payment link reading" }, { status: 409 });
       }
 
+      const updateSet: any = {
+        guardian: (patient as any).guardian,
+        patient: patientId,
+        paymentLink: paymentLinkId,
+        paymentStatus,
+        productCode: linkProductCode || "VETQ_MASTER_360",
+        panelVersion: linkPanelVersion || 1,
+        isDraft: false,
+        wizardStep: "report",
+        signatureImageUrl,
+        signedAt: new Date(),
+      };
+
+      if (testType === "urine") {
+        updateSet.identification = {
+          collectionMethod,
+          collectionAt,
+          stripLot,
+          stripExpiry,
+        };
+        updateSet.timer = {
+          selectedSeconds,
+          analyzedAt,
+          analysis: {
+            summary: analysisSummary,
+            confidence: analysisConfidence,
+            flags: analysisFlags,
+          },
+        };
+        updateSet.results = results;
+      } else {
+        // eye/skin
+        updateSet.identification = {
+          collectionMethod: null,
+          collectionAt,
+          stripLot: "",
+          stripExpiry: null,
+        };
+        updateSet.imageAnalysis = imageAnalysis;
+      }
+
+      updateSet.report = {
+        summaryAndInterpretation,
+        otherInformation,
+        veterinarianNotes,
+      };
+
       const updatedReading = await Reading.findOneAndUpdate(
         { _id: draftId, veterinarian: veterinarianId, $or: [{ signedAt: { $exists: false } }, { signedAt: null }] },
-        {
-          $set: {
-            guardian: (patient as any).guardian,
-            patient: patientId,
-            paymentLink: paymentLinkId,
-            paymentStatus,
-            productCode: linkProductCode || "VETQ_MASTER_360",
-            panelVersion: linkPanelVersion || 1,
-            isDraft: false,
-            wizardStep: "report",
-            identification: {
-              collectionMethod,
-              collectionAt,
-              stripLot,
-              stripExpiry,
-            },
-            timer: {
-              selectedSeconds,
-              analyzedAt,
-              analysis: {
-                summary: analysisSummary,
-                confidence: analysisConfidence,
-                flags: analysisFlags,
-              },
-            },
-            results,
-            report: {
-              summaryAndInterpretation,
-              otherInformation,
-              veterinarianNotes,
-            },
-            signatureImageUrl,
-            signedAt: new Date(),
-          },
-        },
+        { $set: updateSet },
         { new: true }
       ).lean();
 
@@ -637,25 +732,35 @@ export async function POST(req: NextRequest) {
     }
 
     const readingId = new mongoose.Types.ObjectId();
-    const created = await Reading.create({
+    const createData: any = {
       _id: readingId,
       veterinarian: veterinarianId,
       guardian: (patient as any).guardian,
       patient: patientId,
       paymentLink: paymentLinkId,
       paymentStatus,
-      testType: "urine",
+      testType,
       productCode: linkProductCode || "VETQ_MASTER_360",
       panelVersion: linkPanelVersion || 1,
       isDraft: false,
       wizardStep: "report",
-      identification: {
+      signatureImageUrl,
+      signedAt: new Date(),
+      report: {
+        summaryAndInterpretation,
+        otherInformation,
+        veterinarianNotes,
+      },
+    };
+
+    if (testType === "urine") {
+      createData.identification = {
         collectionMethod,
         collectionAt,
         stripLot,
         stripExpiry,
-      },
-      timer: {
+      };
+      createData.timer = {
         selectedSeconds,
         analyzedAt,
         analysis: {
@@ -663,16 +768,20 @@ export async function POST(req: NextRequest) {
           confidence: analysisConfidence,
           flags: analysisFlags,
         },
-      },
-      results,
-      report: {
-        summaryAndInterpretation,
-        otherInformation,
-        veterinarianNotes,
-      },
-      signatureImageUrl,
-      signedAt: new Date(),
-    });
+      };
+      createData.results = results;
+    } else {
+      // eye/skin
+      createData.identification = {
+        collectionMethod: null,
+        collectionAt,
+        stripLot: "",
+        stripExpiry: null,
+      };
+      createData.imageAnalysis = imageAnalysis;
+    }
+
+    const created = await Reading.create(createData);
 
     if (paymentLinkId) {
       const updated = await PaymentLink.updateOne(

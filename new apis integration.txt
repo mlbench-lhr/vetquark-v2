@@ -1,0 +1,221 @@
+Implementation complete. TypeScript compilation passes with no errors.
+
+Summary of changes:
+
+Types (types.ts):
+
+Added AnalysisType = "urine" | "eye" | "skin"
+Extended NewReadingStep to include "image_capture" | "image_result"
+Added analysisType: AnalysisType to IdentificationDraft with default "urine"
+IdentificationStep (IdentificationStep.tsx):
+
+Added analysis type selector with 3 chips (Urinalysis, Skin, Eye)
+Conditional UI: urine-specific fields (panel, collection method, fasting, datetime, payment link) only show when analysisType === 'urine'
+For eye/skin: simplified Continue button that calls onNext() directly
+Updated canProceed logic for different analysis types
+API Routes:
+
+Created route.ts - proxies to Cloud Run eye analysis endpoint
+Created route.ts - proxies to Cloud Run skin analysis endpoint
+Both follow same pattern as existing strip API routes with bearer auth and non-JSON response handling
+Stepper (Stepper.tsx):
+
+Added mode prop ("urine" | "image")
+Urine mode: shows identification → timer → review → report
+Image mode: shows identification → capture → result
+New Components:
+
+ImageCaptureStep.tsx - file selection, preview, analyze button with loading state
+ImageResultStep.tsx - displays results, handles disease_detected true/false, copy result button
+NewReadingWizard (NewReadingWizard.tsx):
+
+Added state for image analysis results
+Dynamic header title based on analysis type
+Flow branching: urine → timer, eye/skin → image_capture
+Render blocks for new steps
+i18n (i18n.ts):
+
+Added English and Portuguese strings for all new keys
+Ready for manual testing:
+
+Urine flow regression test
+Eye flow end-to-end test
+Skin flow end-to-end test
+
+
+Feedback submitted
+
+
+
+could you please give a complete detail of what we have done in thsi change so that i could explain to another ide about this change to give it the context
+
+Thought for 1s
+Complete Change Summary: Eye and Skin Analysis Integration
+Objective
+Integrate two new analysis types (Eye and Skin) into the existing Veterinarian "New Reading" flow while preserving the existing Urinalysis flow unchanged. The new flows follow a simplified path: Identification → Capture Image → Loading → Result.
+
+Files Modified
+1. types.ts
+Changes:
+
+Added AnalysisType = "urine" | "eye" | "skin"
+Extended NewReadingStep to include "image_capture" | "image_result"
+Added analysisType: AnalysisType field to IdentificationDraft interface
+2. IdentificationStep.tsx
+Changes:
+
+Added imports: Eye, Microscope icons from lucide-react, AnalysisType from types
+Added analysis type selector UI at top with 3 clickable chips:
+Urinalysis (Microscope icon)
+Dermatology/Skin (Microscope icon)
+Ophthalmology/Eye (Eye icon)
+Wrapped urine-specific fields (panel type, collection method, fasting, datetime, payment link) in conditional rendering: only shown when analysisType === 'urine'
+Updated canProceed logic: urine requires patientId + collectionMethod + collectionAt; eye/skin only require patientId
+Changed bottom button to conditional: urine shows payment link button, eye/skin show simple "Continue" button calling onNext()
+3. NewReadingWizard.tsx
+Changes:
+
+Added imports for ImageCaptureStep and ImageResultStep
+Added state variables: imageAnalysisResult (any), imagePreviewDataUrl (string)
+Updated makeEmptyDraft() to set default analysisType: 'urine'
+Updated draft reset logic to include analysisType: 'urine'
+Changed header title to be dynamic based on draft.identification.analysisType:
+urine → "New Urine Test"
+eye → "New Eye Analysis"
+skin → "New Skin Analysis"
+Updated Stepper usage to pass mode prop based on analysis type
+Updated IdentificationStep onNext to branch: urine → timer, eye/skin → image_capture
+Added render blocks for image_capture and image_result steps
+4. Stepper.tsx
+Changes:
+
+Added Camera icon import
+Added mode?: "urine" | "image" prop (defaults to "urine")
+Extended stepIcons mapping to include image_capture: Camera, image_result: FileText
+Changed steps array to be conditional based on mode:
+urine mode: identification → timer → review → report
+image mode: identification → image_capture → image_result
+5. i18n.ts
+English additions:
+
+reading.wizard.newEyeTest: "New Eye Analysis"
+reading.wizard.newSkinTest: "New Skin Analysis"
+reading.identification.analysisTypeLabel: "Analysis Type"
+reading.identification.analysisTypeUrine: "Urinalysis"
+reading.identification.analysisTypeSkin: "Dermatology (Skin)"
+reading.identification.analysisTypeEye: "Ophthalmology (Eye)"
+reading.image.captureTitle: "Capture image"
+reading.image.captureDescEye: "Take a clear photo of the eye."
+reading.image.captureDescSkin: "Take a clear photo of the skin/coat."
+reading.image.analyzing: "Analyzing..."
+reading.image.analyze: "Analyze"
+reading.image.noDiseaseFallback: "No disease detected based on this image."
+reading.image.copyResult: "Copy result"
+reading.image.finish: "Finish"
+reading.steps.capture: "Capture"
+reading.steps.result: "Result"
+Portuguese additions:
+
+Equivalent translations for all above keys in pt section
+New Files Created
+1. route.ts
+Purpose: Server-side proxy for eye analysis API
+
+Behavior:
+
+POST endpoint accepting { image_base64: string }
+Validates payload (non-empty string)
+Uses env var PET_DISEASE_EYE_URL (default: Cloud Run URL)
+Uses env var PET_DISEASE_EYE_BEARER for Authorization header
+Handles non-JSON upstream responses with 502 error
+Returns upstream JSON response with original status
+2. route.ts
+Purpose: Server-side proxy for skin analysis API
+
+Behavior:
+
+Identical to eye route but uses PET_DISEASE_SKIN_URL and PET_DISEASE_SKIN_BEARER env vars
+Default URL: Cloud Run skin endpoint
+3. ImageCaptureStep.tsx
+Purpose: Image capture and analysis step for eye/skin flows
+
+Props:
+
+analysisType: 'eye' | 'skin'
+onBack: () => void
+onDone: (payload: { previewDataUrl: string; result: any }) => void
+Features:
+
+File input with accept="image/*" and capture="environment"
+File size validation (max 10MB)
+Image preview using FileReader
+"Analyze" button that POSTs to appropriate API endpoint
+Loading state during analysis
+Error handling with toast notifications
+Back button navigation
+4. ImageResultStep.tsx
+Purpose: Display analysis results for eye/skin flows
+
+Props:
+
+analysisType: 'eye' | 'skin'
+previewDataUrl: string
+result: any
+onBack: () => void
+Features:
+
+Displays captured image preview
+Handles disease_detected === false: shows message
+Handles disease_detected === true: shows:
+Leading hypothesis name and confidence (as percentage)
+Description
+Findings as chips
+Differential diagnoses (top 5 sorted by confidence)
+"Copy result" button copies formatted text summary to clipboard
+"Finish" button navigates to /Veterinarian/home
+Technical Architecture
+Flow Branching:
+
+
+
+Identification Step
+├─ analysisType === 'urine' → Timer → Review → Report (existing flow)
+└─ analysisType === 'eye'/'skin' → ImageCapture → ImageResult (new flow)
+API Integration:
+
+Client-side: Components call /api/pet_disease/eye or /api/pet_disease/skin
+Server-side: Next.js API routes proxy to Cloud Run endpoints with bearer auth
+Environment variables for URLs and tokens (no hardcoded secrets)
+State Management:
+
+analysisType stored in IdentificationDraft
+Image analysis results stored in wizard component state (not persisted to draft)
+Preview data URL stored in wizard component state
+Testing Requirements
+Urine Regression Test:
+
+Verify default analysis type is "Urinalysis"
+Confirm all existing fields (panel, collection method, fasting, datetime, payment link) appear
+Verify payment link generation still works
+Confirm timer/capture/review/report flow unchanged
+Eye Flow Test:
+
+Select "Eye" analysis type
+Verify urine-specific fields are hidden
+Verify only patient selector and Continue button shown
+Click Continue → should go to image capture
+Select image → preview should appear
+Click Analyze → should call /api/pet_disease/eye
+Test with disease_detected true response
+Test with disease_detected false response
+Test with API error response
+Verify Copy result button works
+Verify Finish button navigates home
+Skin Flow Test:
+
+Same as Eye flow but calls /api/pet_disease/skin
+Environment Variables Required
+PET_DISEASE_EYE_URL (optional, default provided)
+PET_DISEASE_EYE_BEARER (optional)
+PET_DISEASE_SKIN_URL (optional, default provided)
+PET_DISEASE_SKIN_BEARER (optional)

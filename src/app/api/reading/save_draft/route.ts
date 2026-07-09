@@ -41,8 +41,8 @@ function toDateOrNull(value: unknown): Date | null {
   return d;
 }
 
-function asWizardStep(value: unknown): "identification" | "timer" | "review" | "report" | null {
-  if (value === "identification" || value === "timer" || value === "review" || value === "report") return value;
+function asWizardStep(value: unknown): "identification" | "timer" | "review" | "report" | "image_capture" | "image_result" | null {
+  if (value === "identification" || value === "timer" || value === "review" || value === "report" || value === "image_capture" || value === "image_result") return value;
   return null;
 }
 
@@ -121,12 +121,15 @@ export async function POST(req: NextRequest) {
 
     const wizardStep = asWizardStep((body as any).wizardStep) ?? "identification";
     const productCode = String((body as any).productCode || "VETQ_MASTER_360").trim() || "VETQ_MASTER_360";
+    const analysisTypeRaw = String((body as any).analysisType || "").trim();
+    const analysisType = (analysisTypeRaw === "urine" || analysisTypeRaw === "eye" || analysisTypeRaw === "skin") ? analysisTypeRaw : "urine";
 
     const identification = (body as any).identification || {};
     const collectionMethod = asCollectionMethod(identification.collectionMethod);
     const stripLot = typeof identification.stripLot === "string" ? identification.stripLot : undefined;
     const collectionAt = toDateOrNull(identification.collectionAt);
     const stripExpiry = toDateOrNull(identification.stripExpiry);
+    const imageAnalysis = (body as any).imageAnalysis && typeof (body as any).imageAnalysis === "object" ? (body as any).imageAnalysis : null;
 
     const timer = (body as any).timer || {};
     const selectedSeconds =
@@ -201,7 +204,7 @@ export async function POST(req: NextRequest) {
       patient: resolvedPatientId,
       isDraft: true,
       wizardStep,
-      testType: "urine",
+      testType: analysisType,
       productCode: linkProductCode || productCode || "VETQ_MASTER_360",
       panelVersion: linkPanelVersion || 1,
     };
@@ -211,12 +214,23 @@ export async function POST(req: NextRequest) {
       update.paymentStatus = paymentStatus;
     }
 
-    update.identification = {
-      collectionMethod,
-      collectionAt,
-      stripLot: stripLot ?? "",
-      stripExpiry,
-    };
+    // Handle identification based on testType
+    if (analysisType === "urine") {
+      update.identification = {
+        collectionMethod,
+        collectionAt,
+        stripLot: stripLot ?? "",
+        stripExpiry,
+      };
+    } else {
+      // For eye/skin, only set collectionAt if provided, otherwise keep existing or set null
+      update.identification = {
+        collectionMethod: null,
+        collectionAt: collectionAt || undefined,
+        stripLot: "",
+        stripExpiry: null,
+      };
+    }
 
     if (selectedSeconds !== undefined || analyzedAt || analysis) {
       update.timer = {
@@ -228,6 +242,7 @@ export async function POST(req: NextRequest) {
     if (resultsRaw) update.results = resultsRaw;
     if (report) update.report = report;
     if (signatureImageUrl !== undefined) update.signatureImageUrl = signatureImageUrl;
+    if (imageAnalysis !== null) update.imageAnalysis = imageAnalysis;
 
     let saved: any = null;
     if (targetId) {

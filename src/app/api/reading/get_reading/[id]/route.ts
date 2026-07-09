@@ -168,7 +168,9 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
         (doc as any).wizardStep === "identification" ||
         (doc as any).wizardStep === "timer" ||
         (doc as any).wizardStep === "review" ||
-        (doc as any).wizardStep === "report"
+        (doc as any).wizardStep === "report" ||
+        (doc as any).wizardStep === "image_capture" ||
+        (doc as any).wizardStep === "image_result"
           ? (doc as any).wizardStep
           : "identification",
       signedAt: (doc as any).signedAt ?? null,
@@ -180,6 +182,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       timer: (doc as any).timer ?? null,
       results,
       report: (doc as any).report ?? null,
+      imageAnalysis: (doc as any).imageAnalysis ?? null,
       patient: {
         id: patientId,
         name: (doc as any).patient?.animalName ?? "N/A",
