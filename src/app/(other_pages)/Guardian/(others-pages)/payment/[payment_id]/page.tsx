@@ -127,7 +127,7 @@ export default function Page() {
             Link Generated
           </div>
           <div className="mt-2 text-[14px] leading-[18px] text-[#9AA4AF]">
-            Please proceed to pay to view {safePayment.kind === "upgrade" ? "upgrade" : "urinalysis"} results ({safePayment.panelTitle})
+            Please proceed to pay to {safePayment.kind === "upgrade" ? "activate upgrade" : "view exam results"} ({safePayment.panelTitle})
           </div>
         </div>
 

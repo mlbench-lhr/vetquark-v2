@@ -27,12 +27,12 @@ export interface IReading {
   patient: Schema.Types.ObjectId;
   paymentLink?: Schema.Types.ObjectId | null;
   paymentStatus?: ReadingPaymentStatus | null;
-  testType: "urine";
+  testType: "urine" | "eye" | "skin";
   productCode?: string;
   panelVersion?: number;
   unlockedProductCodes?: string[];
   isDraft?: boolean;
-  wizardStep?: "identification" | "timer" | "review" | "report";
+  wizardStep?: "identification" | "timer" | "review" | "report" | "image_capture" | "image_result";
   identification?: {
     collectionMethod?: CollectionMethod | null;
     collectionAt?: Date | null;
@@ -50,6 +50,7 @@ export interface IReading {
     otherInformation?: string;
     veterinarianNotes?: string;
   } | null;
+  imageAnalysis?: any;
   signatureImageUrl?: string;
   signedAt?: Date;
   viewedAt?: Date;
@@ -77,12 +78,12 @@ const ReadingSchema = new Schema<IReading>(
     patient: { type: Schema.Types.ObjectId, ref: "Patient", required: true, index: true },
     paymentLink: { type: Schema.Types.ObjectId, ref: "PaymentLink", default: null, index: true },
     paymentStatus: { type: String, enum: ["pending", "paid", "expired"], default: null, index: true },
-    testType: { type: String, enum: ["urine"], default: "urine", required: true },
+    testType: { type: String, enum: ["urine", "eye", "skin"], default: "urine", required: true },
     productCode: { type: String, default: "VETQ_MASTER_360", trim: true, index: true },
     panelVersion: { type: Number, default: 1, min: 1 },
     unlockedProductCodes: { type: [String], default: [] },
     isDraft: { type: Boolean, default: true, index: true },
-    wizardStep: { type: String, enum: ["identification", "timer", "review", "report"], default: "identification", index: true },
+    wizardStep: { type: String, enum: ["identification", "timer", "review", "report", "image_capture", "image_result"], default: "identification", index: true },
     identification: {
       collectionMethod: { type: String, enum: ["free_catch", "cystocentesis", "catheter"], default: null },
       collectionAt: { type: Date, default: null },
@@ -104,6 +105,7 @@ const ReadingSchema = new Schema<IReading>(
       otherInformation: { type: String, default: "" },
       veterinarianNotes: { type: String, default: "" },
     },
+    imageAnalysis: { type: Schema.Types.Mixed, default: null },
     signatureImageUrl: { type: String, trim: true, default: "" },
     signedAt: { type: Date },
     viewedAt: { type: Date },

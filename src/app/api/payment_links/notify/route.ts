@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
 
     const identification = body?.identification || null;
     const patientId = String(identification?.patientId || "").trim();
+    const analysisType = String(identification?.analysisType || "").trim();
     const collectionMethod = String(identification?.collectionMethod || "").trim();
     const collectionAtRaw = String(identification?.collectionAt || "").trim();
     const stripLot = String(identification?.stripLot || "").trim();
@@ -34,23 +35,39 @@ export async function POST(req: NextRequest) {
     if (!patientId || !mongoose.Types.ObjectId.isValid(patientId)) {
       return NextResponse.json({ error: "Invalid identification.patientId" }, { status: 400 });
     }
-    if (collectionMethod !== "free_catch" && collectionMethod !== "cystocentesis" && collectionMethod !== "catheter") {
-      return NextResponse.json({ error: "Invalid identification.collectionMethod" }, { status: 400 });
+
+    // Determine testType from identification.analysisType or link.productCode
+    let testType: "urine" | "eye" | "skin" = "urine";
+    if (analysisType === "eye" || analysisType === "skin") {
+      testType = analysisType;
     }
-    const collectionAt = new Date(collectionAtRaw);
-    if (!collectionAtRaw || Number.isNaN(collectionAt.getTime())) {
-      return NextResponse.json({ error: "Invalid identification.collectionAt" }, { status: 400 });
-    }
-    const stripExpiry = stripExpiryRaw ? new Date(stripExpiryRaw) : null;
-    if (stripExpiryRaw && (!stripExpiry || Number.isNaN(stripExpiry.getTime()))) {
-      return NextResponse.json({ error: "Invalid identification.stripExpiry" }, { status: 400 });
-    }
-    if (stripExpiry) {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const expiryStr = stripExpiry.toISOString().slice(0, 10);
-      if (expiryStr < todayStr) {
-        return NextResponse.json({ error: "Strip expiry must be today or a future date" }, { status: 400 });
+
+    // Validate urine-only fields only for urine testType
+    let collectionAt: Date | null = null;
+    let stripExpiry: Date | null = null;
+
+    if (testType === "urine") {
+      if (collectionMethod !== "free_catch" && collectionMethod !== "cystocentesis" && collectionMethod !== "catheter") {
+        return NextResponse.json({ error: "Invalid identification.collectionMethod" }, { status: 400 });
       }
+      collectionAt = new Date(collectionAtRaw);
+      if (!collectionAtRaw || Number.isNaN(collectionAt.getTime())) {
+        return NextResponse.json({ error: "Invalid identification.collectionAt" }, { status: 400 });
+      }
+      stripExpiry = stripExpiryRaw ? new Date(stripExpiryRaw) : null;
+      if (stripExpiryRaw && (!stripExpiry || Number.isNaN(stripExpiry.getTime()))) {
+        return NextResponse.json({ error: "Invalid identification.stripExpiry" }, { status: 400 });
+      }
+      if (stripExpiry) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const expiryStr = stripExpiry.toISOString().slice(0, 10);
+        if (expiryStr < todayStr) {
+          return NextResponse.json({ error: "Strip expiry must be today or a future date" }, { status: 400 });
+        }
+      }
+    } else {
+      // For eye/skin, set collectionAt to now automatically
+      collectionAt = new Date();
     }
 
     await connectMongo();
@@ -67,8 +84,19 @@ export async function POST(req: NextRequest) {
     ).lean();
     if (!link) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+    // Infer testType from link.productCode if not already determined
+    if (testType === "urine") {
+      const linkProductCode = String((link as any).productCode || "").trim();
+      if (linkProductCode === "VETQ_EYE_ANALYSIS") {
+        testType = "eye";
+      } else if (linkProductCode === "VETQ_SKIN_ANALYSIS") {
+        testType = "skin";
+      }
+    }
+
     if (!(link as any).reading) {
       const readingId = new mongoose.Types.ObjectId();
+      const wizardStep = testType === "urine" ? "timer" : "image_capture";
       const created = await Reading.create({
         _id: readingId,
         veterinarian: veterinarianId,
@@ -76,16 +104,16 @@ export async function POST(req: NextRequest) {
         patient: (link as any).patient,
         paymentLink: link._id,
         paymentStatus: "pending",
-        testType: "urine",
+        testType,
         productCode: String((link as any).productCode || "VETQ_MASTER_360"),
         panelVersion: Number((link as any).panelVersion || 1),
         isDraft: true,
-        wizardStep: "timer",
+        wizardStep,
         identification: {
-          collectionMethod,
+          collectionMethod: testType === "urine" ? collectionMethod : null,
           collectionAt,
-          stripLot,
-          stripExpiry,
+          stripLot: testType === "urine" ? stripLot : "",
+          stripExpiry: testType === "urine" ? stripExpiry : null,
         },
         results: [],
         report: {
@@ -93,6 +121,7 @@ export async function POST(req: NextRequest) {
           otherInformation: "",
           veterinarianNotes: "",
         },
+        imageAnalysis: null,
       });
 
       const updated = await PaymentLink.updateOne(
@@ -140,7 +169,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });
-  } catch {
+  } catch (err) {
+    console.log("Internal server error-----", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

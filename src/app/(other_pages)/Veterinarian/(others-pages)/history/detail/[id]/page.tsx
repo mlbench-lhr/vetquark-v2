@@ -7,9 +7,12 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { createUrinalysisPdfObjectUrl, downloadUrinalysisPdf } from "@/utils/urinalysisPdf";
+import { getLocalizedImageAnalysis } from "@/utils/imageAnalysis";
 import { useAppSelector } from "@/store/hooks";
 import type { RootState } from "@/store/store";
 import { translateUrinalysisParameterLabel } from "@/lib/urinalysisParameters";
+import { Copy } from "lucide-react";
+import i18n from "@/i18n/i18n";
 
 type ReadingResultStatus = "Normal" | "Abnormal";
 
@@ -30,7 +33,8 @@ type ReadingDetail = {
   unlockedProductCodes?: string[];
   paymentStatus?: "pending" | "paid" | "expired" | null;
   paymentLinkId?: string;
-  wizardStep?: "identification" | "timer" | "review" | "report";
+  testType?: "urine" | "eye" | "skin";
+  wizardStep?: "identification" | "timer" | "review" | "report" | "image_capture" | "image_result";
   signedAt: string | null;
   createdAt: string | null;
   signatureImageUrl: string | null;
@@ -49,6 +53,7 @@ type ReadingDetail = {
   timer: {
     analysis?: { summary?: string; confidence?: number; flags?: string[] };
   } | null;
+  imageAnalysis?: any;
   patient: { id: string; name: string; photo: string | null };
   guardian: { id: string; fullName: string };
   veterinarian: {
@@ -449,16 +454,18 @@ export default function ReportDetailsPage() {
           <span className="text-[22px] font-bold text-primary leading-tight">{t("history.details")}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label={t("history.downloadPdfAria")}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-[#EBF2FF]"
-            onClick={handleDownloadPdf}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M12 16L7 11M12 16L17 11M12 16V4M6 20H18" stroke="#3F78D8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+          {reading?.testType === 'urine' ? (
+            <button
+              type="button"
+              aria-label={t("history.downloadPdfAria")}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-[#EBF2FF]"
+              onClick={handleDownloadPdf}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 16L7 11M12 16L17 11M12 16V4M6 20H18" stroke="#3F78D8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          ) : null}
           <button
             type="button"
             aria-label={t("history.shareAria")}
@@ -469,7 +476,7 @@ export default function ReportDetailsPage() {
               <path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12M16 6L12 2M12 2L8 6M12 2V15" stroke="#3F78D8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          {isVeterinarian ? (
+          {isVeterinarian && reading?.testType === 'urine' ? (
             <button
               type="button"
               aria-label={t("history.inviteToUpgrade")}
@@ -507,8 +514,119 @@ export default function ReportDetailsPage() {
             </div>
           </div>
 
+          {/* Image Analysis for Eye/Skin */}
+          {reading?.testType !== 'urine' && reading?.imageAnalysis ? (
+            <div className="mt-5">
+              <div className="text-[14px] font-semibold text-black/70 mb-2">
+                {reading.testType === 'eye' ? t("history.eyeAnalysis") : t("history.skinAnalysis")}
+              </div>
+              <div className="bg-white rounded-[16px] border border-[#F3F4F6] px-4 py-4">
+                {(() => {
+                  const analysis = getLocalizedImageAnalysis(reading.imageAnalysis, i18n.language);
+                  if (!analysis) {
+                    return <pre className="text-[13px] text-[#374151] whitespace-pre-wrap break-words">{JSON.stringify(reading.imageAnalysis, null, 2)}</pre>;
+                  }
+                  const handleCopy = () => {
+                    const title = reading.testType === 'eye' ? t("history.eyeAnalysis") : t("history.skinAnalysis");
+                    const diseaseDetectedText = analysis.disease_detected === true ? 'Yes' : 'No';
+                    let text = `${title}\n`;
+                    text += `Disease detected: ${diseaseDetectedText}\n`;
+                    if (analysis.leading_hypothesis) {
+                      const name = analysis.leading_hypothesis.name;
+                      const confidence = `${(analysis.leading_hypothesis.confidence * 100).toFixed(1)}%`;
+                      text += `Leading: ${name} (${confidence})\n`;
+                      if (analysis.leading_hypothesis.description) {
+                        text += `Description: ${analysis.leading_hypothesis.description}\n`;
+                      }
+                      if (analysis.leading_hypothesis.findings.length > 0) {
+                        text += `Findings: ${analysis.leading_hypothesis.findings.join(', ')}\n`;
+                      }
+                    }
+                    if (analysis.differential_diagnoses.length > 0) {
+                      const sorted = [...analysis.differential_diagnoses].sort((a, b) => b.confidence - a.confidence).slice(0, 5);
+                      text += `Differentials: ${sorted.map(d => `${d.name} (${(d.confidence * 100).toFixed(1)}%)`).join(', ')}\n`;
+                    }
+                    if (analysis.message) {
+                      text += `Message: ${analysis.message}\n`;
+                    }
+                    navigator.clipboard.writeText(text).then(() => {
+                      toast.success(t("common.copied"));
+                    }).catch(() => {
+                      toast.error(t("common.error"));
+                    });
+                  };
+                  return (
+                    <div className="space-y-4">
+                      {analysis.disease_detected === true && analysis.leading_hypothesis ? (
+                        <div className="space-y-3">
+                          <div className="p-4 bg-[#EBF2FF] rounded-lg">
+                            <div className="text-[16px] font-semibold text-black/70 mb-2">
+                              {analysis.leading_hypothesis.name}
+                              <span className="ml-2 text-primary">({(analysis.leading_hypothesis.confidence * 100).toFixed(1)}%)</span>
+                            </div>
+                            {analysis.leading_hypothesis.description && (
+                              <p className="text-[14px] text-[#6B7280]">{analysis.leading_hypothesis.description}</p>
+                            )}
+                          </div>
+                          {analysis.leading_hypothesis.findings.length > 0 && (
+                            <div>
+                              <div className="text-[14px] font-semibold text-black/70 mb-2">Findings</div>
+                              <div className="flex flex-wrap gap-2">
+                                {analysis.leading_hypothesis.findings.map((finding, idx) => (
+                                  <span key={idx} className="px-3 py-1 bg-[#F5F6F6] rounded-full text-[12px] text-black/70">
+                                    {finding}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {analysis.differential_diagnoses.length > 0 && (
+                            <div>
+                              <div className="text-[14px] font-semibold text-black/70 mb-2">Differential Diagnoses</div>
+                              <div className="space-y-2">
+                                {[...analysis.differential_diagnoses]
+                                  .sort((a, b) => b.confidence - a.confidence)
+                                  .slice(0, 5)
+                                  .map((diag, idx) => (
+                                    <div key={idx} className="flex items-center justify-between py-2 border-b border-[#E5E7EB]">
+                                      <span className="text-[14px] text-black/70">{diag.name}</span>
+                                      <span className="text-[14px] font-medium text-primary">{(diag.confidence * 100).toFixed(1)}%</span>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-[#F5F6F6] rounded-lg">
+                          <p className="text-[14px] text-[#6B7280]">
+                            {analysis.message || t("reading.image.noDiseaseFallback")}
+                          </p>
+                        </div>
+                      )}
+                      {analysis.message && analysis.disease_detected === true && (
+                        <div>
+                          <div className="text-[13px] font-semibold text-black/70 mb-1">Message</div>
+                          <p className="text-[13px] text-[#374151]">{analysis.message}</p>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleCopy}
+                        className="w-full py-3 rounded-xl font-semibold text-[14px] flex items-center justify-center gap-2 transition-all bg-[#EBF2FF] text-primary"
+                      >
+                        <Copy className="w-4 h-4" />
+                        {t("reading.image.copyResult")}
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          ) : null}
+
           {/* Physical parameters */}
-          {physicalResults.length > 0 ? (
+          {reading?.testType === 'urine' && physicalResults.length > 0 ? (
             <div className="mt-5">
               <div className="text-[14px] font-semibold text-black/70 mb-2">{t("history.physicalParameters")}</div>
               <div className="bg-white rounded-[16px] border border-[#F3F4F6] overflow-hidden">
@@ -520,7 +638,7 @@ export default function ReportDetailsPage() {
           ) : null}
 
           {/* Chemical parameters */}
-          {chemicalResults.length > 0 ? (
+          {reading?.testType === 'urine' && chemicalResults.length > 0 ? (
             <div className="mt-4">
               <div className="text-[14px] font-semibold text-black/70 mb-2">{t("history.chemicalParameters")}</div>
               <div className="bg-white rounded-[16px] border border-[#F3F4F6] overflow-hidden">

@@ -1,0 +1,165 @@
+
+22:43
+Ahmed_8
+"take a look at this file "new apis integration.txt" its our implementation of our new feature, now the task we have to do is that its implemted and and apis are integrated and working perfect but the issue is that the app is not completly dynamic for them like vets are not able to make these (eye and skin type) records signed and complete and do the payment (for setting prices, give the admin to set proices for these two too) and eveything just like it being done in the urine test module. currently i just noticed these things, you can check other things too and have to make these new features completely dynamic"
+
+please write a very detail command to give an ai ide to implement this, make it in a way that even that ai is not so smart even then it should perfectly implement this
+Agent
+Thought process
+new apis integration.txt
+Thought
+Search Agent
+Find urine module patterns
+
+
+
+
+
+
+
+
+
+
+
+
+src/lib/models/Panel.ts
+Thought
+src/app/api/payment_links/generate/route.ts
+src/components/Veterinarian/new_reading/IdentificationStep.tsx
+Thought
+src/app/api/payment_links/notify/route.ts
+Thought
+src/lib/models/Reading.ts
+Search codebase for 'save_draft'
+src/components/Veterinarian/new_reading/NewReadingWizard.tsx
+src/app/api/reading/save_draft/route.ts
+Thought
+src/app/api/admin/readings/route.ts
+Thought
+Search codebase for 'testType'
+Thought
+src/app/api/reading/get_reading/[id]/route.ts
+src/app/api/admin/readings/detail/[id]/route.ts
+Search codebase for 'VETQ_'
+Thought
+src/lib/panels.ts
+src/app/api/reading/save_draft_images/route.ts
+Thought
+Search codebase for 'Schema\.Types\.Mixed|Mixed'
+src/lib/models/User.ts
+Thought
+Search codebase for '**/Veterinarian/history/detail/**'
+Search codebase for '**/history/detail/**/page.tsx'
+src/app/(other_pages)/Veterinarian/(others-pages)/history/detail/[id]/page.tsx
+Search codebase for 'src/app/api/reading/get_reading_images/**/route.ts'
+src/app/api/reading/get_reading_images/[readingId]/route.ts
+Search codebase for 'function ReportStep|export default function ReportStep|ReportStep'
+src/components/Veterinarian/new_reading/ReportStep.tsx
+Thought
+Search codebase for 'panelPrices'
+src/app/(other_pages)/Veterinarian/(others-pages)/Menu/pricing/page.tsx
+Thought
+Search codebase for 'testType|wizardStep|signatureImageUrl|ReadingCapturedImage'
+src/app/api/reading/new_reading/route.ts
+src/components/Veterinarian/new_reading/types.ts
+Thought
+
+
+
+
+
+22:53
+Ahmed_8
+ok we had updated one small thing in the api which is that we have changed its response a bit to apply translations, previously it was like this:
+
+
+{
+    "differential_diagnoses": [
+        {
+            "confidence": 0.0149,
+            "name": "Demodicosis"
+        },
+        {
+            "confidence": 0.0143,
+            "name": "Scabies"
+        }
+    ],
+    "disease_detected": true,
+    "leading_hypothesis": {
+        "confidence": 0.918,
+        "description": "Flea allergy dermatitis (FAD) is an allergic reaction to flea saliva. Even a single flea bite can trigger intense itching, red bumps, scabs, and hair loss, usually concentrated around the base of the tail, hindquarters, and inner thighs.",
+        "findings": [
+            "Redness",
+            "Hair loss",
+            "Scabs"
+        ],
+        "name": "Flea Allergy"
+    },
+    "message": null,
+    "model": "skin",
+    "success": true
+}
+
+
+
+
+but now it will be like this:
+
+{
+    "differential_diagnoses": [
+        {
+            "confidence": 0.0179,
+            "name": "Scabies"
+        },
+        {
+            "confidence": 0.0158,
+            "name": "Flea Allergy"
+        }
+    ],
+    "disease_detected": true,
+    "leading_hypothesis": {
+        "confidence": 0.9039,
+        "description": "Fungal infections such as ringworm (dermatophytosis) cause circular patches of hair loss, scaling, and crusting on the skin. They are highly contagious and can spread to other animals and humans.",
+        "findings": [
+            "Circular patches",
+            "Scaling",
+            "Crusting"
+        ],
+        "name": "Fungal Infection"
+    },
+    "message": null,
+    "model": "skin",
+    "pt": {
+        "differential_diagnoses": [
+            {
+                "confidence": 0.0179,
+                "name": "Sarna"
+            },
+            {
+                "confidence": 0.0158,
+                "name": "Alergia a Pulgas"
+            }
+        ],
+        "leading_hypothesis": {
+            "confidence": 0.9039,
+            "description": "Infecções fúngicas, como a tinha (dermatofitose), causam manchas circulares de queda de pelo, descamação e formação de crostas na pele. São altamente contagiosas e podem se espalhar para outros animais e humanos.",
+            "findings": [
+                "Manchas circulares",
+                "Descamação",
+                "Formação de crostas"
+            ],
+            "name": "Infecção Fúngica"
+        },
+        "message": null
+    },
+    "success": true
+}
+
+
+
+
+please write a command to give an ai ide to implement this, make it in a way that even that ai is not so smart even then it should perfectly implement this
+Agent
+src/components/Veterinarian/new_reading/ImageResultStep.tsx
+Completed
+31%

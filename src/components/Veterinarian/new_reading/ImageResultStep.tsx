@@ -4,6 +4,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
 import { Copy } from 'lucide-react'
+import { getLocalizedImageAnalysis } from '@/utils/imageAnalysis'
 
 type Props = {
   analysisType: 'eye' | 'skin'
@@ -14,12 +15,13 @@ type Props = {
 }
 
 export default function ImageResultStep({ analysisType, previewDataUrl, result, onBack, onFinish }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
-  const diseaseDetected = result?.disease_detected === true
-  const leadingHypothesis = result?.leading_hypothesis
-  const differentialDiagnoses = Array.isArray(result?.differential_diagnoses) ? result.differential_diagnoses : []
-  const message = typeof result?.message === 'string' ? result.message : null
+  const analysis = getLocalizedImageAnalysis(result, i18n.language)
+  const diseaseDetected = analysis?.disease_detected === true
+  const leadingHypothesis = analysis?.leading_hypothesis ?? null
+  const differentialDiagnoses = analysis?.differential_diagnoses ?? []
+  const message = analysis?.message ?? null
 
   const handleCopyResult = () => {
     const analysisTypeLabel = analysisType === 'eye' ? t('reading.identification.analysisTypeEye') : t('reading.identification.analysisTypeSkin')

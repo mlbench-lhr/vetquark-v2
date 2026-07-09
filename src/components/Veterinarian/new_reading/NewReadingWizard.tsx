@@ -306,6 +306,7 @@ export default function NewReadingWizard() {
       paymentLinkId?: string
       wizardStep: NewReadingStep
       productCode?: string
+      analysisType?: string
       identification: {
         collectionMethod: string
         collectionAt: string
@@ -320,6 +321,7 @@ export default function NewReadingWizard() {
       results: any[]
       report: any
       signatureImageUrl: string
+      imageAnalysis?: any
     }) => {
       try {
         const res = await fetch('/api/reading/save_draft', {
@@ -344,15 +346,18 @@ export default function NewReadingWizard() {
     if (draftId) return
     if (creatingDraftRef.current) return
     // Do not save draft if still on step 1 (identification)
-    // Only start saving from step 2 (timer) onwards
-    if (step === 'identification') return
+    // For urine: start saving from timer onwards
+    // For eye/skin: start saving from image_capture onwards
+    if (analysisType === 'urine' && step === 'identification') return
+    if ((analysisType === 'eye' || analysisType === 'skin') && (step === 'identification' || step === 'image_capture')) return
       ; (async () => {
         creatingDraftRef.current = true
-        const createdId = await saveDraftNow({
+        const payload: any = {
           patientId,
           paymentLinkId: (draft.identification.paymentLinkId || '').trim() || undefined,
           wizardStep: step,
           productCode: String((draft.identification.panelProductCode || defaultPanelProductCode || '')).trim(),
+          analysisType,
           identification: {
             collectionMethod: String(draft.identification.collectionMethod || ''),
             collectionAt: String(draft.identification.collectionAt || ''),
@@ -367,7 +372,11 @@ export default function NewReadingWizard() {
           results: Array.isArray(draft.results) ? draft.results : [],
           report: draft.report,
           signatureImageUrl: String(signatureImageUrl || ''),
-        })
+        }
+        if (imageAnalysisResult) {
+          payload.imageAnalysis = imageAnalysisResult
+        }
+        const createdId = await saveDraftNow(payload)
         creatingDraftRef.current = false
         if (!createdId) return
         setDraftId(createdId)
@@ -376,18 +385,19 @@ export default function NewReadingWizard() {
         params.delete('resume')
         // router.replace(`/Veterinarian/new-reading?${params.toString()}`)
       })()
-  }, [draft.identification.patientId, draft.identification.paymentLinkId, draft.identification.panelProductCode, draft.report, draft.results, draft.timer, draftId, router, saveDraftNow, searchParams, signatureImageUrl, step])
+  }, [draft.identification.patientId, draft.identification.paymentLinkId, draft.identification.panelProductCode, draft.report, draft.results, draft.timer, draftId, router, saveDraftNow, searchParams, signatureImageUrl, step, analysisType, imageAnalysisResult])
 
   useEffect(() => {
     const patientId = (draft.identification.patientId || '').trim()
     if (!patientId) return
     if (!draftId) return
-    const payloadObj = {
+    const payloadObj: any = {
       draftId,
       patientId,
       paymentLinkId: (draft.identification.paymentLinkId || '').trim() || undefined,
       wizardStep: step,
       productCode: String((draft.identification.panelProductCode || defaultPanelProductCode || '')).trim(),
+      analysisType,
       identification: {
         collectionMethod: String(draft.identification.collectionMethod || ''),
         collectionAt: String(draft.identification.collectionAt || ''),
@@ -403,6 +413,9 @@ export default function NewReadingWizard() {
       report: draft.report,
       signatureImageUrl: String(signatureImageUrl || ''),
     }
+    if (imageAnalysisResult) {
+      payloadObj.imageAnalysis = imageAnalysisResult
+    }
     const payloadJson = JSON.stringify(payloadObj)
     if (payloadJson === lastSavedJsonRef.current) return
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
@@ -415,7 +428,7 @@ export default function NewReadingWizard() {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [draft, draftId, saveDraftNow, signatureImageUrl, step])
+  }, [draft, draftId, saveDraftNow, signatureImageUrl, step, analysisType, imageAnalysisResult])
 
   useEffect(() => {
     const patientId = draft.identification.patientId
@@ -512,8 +525,13 @@ export default function NewReadingWizard() {
 
   const canSubmit = useMemo(() => {
     const i = draft.identification
-    return !!i.patientId && !!i.collectionMethod && !!i.collectionAt && !!draft.timer.analysis && draft.results.length > 0 && !!signatureImageUrl
-  }, [draft.identification, draft.timer.analysis, draft.results.length, signatureImageUrl])
+    if (analysisType === 'urine') {
+      return !!i.patientId && !!i.collectionMethod && !!i.collectionAt && !!draft.timer.analysis && draft.results.length > 0 && !!signatureImageUrl
+    } else {
+      // eye/skin
+      return !!i.patientId && !!imageAnalysisResult && !!signatureImageUrl
+    }
+  }, [draft.identification, draft.timer.analysis, draft.results.length, signatureImageUrl, analysisType, imageAnalysisResult])
 
   function makeDummyAnalysis(): { analyzedAt: string; analysis: { summary: string; confidence: number; flags: string[] } } {
     const analyzedAt = new Date().toISOString()
@@ -558,33 +576,40 @@ export default function NewReadingWizard() {
     }
     try {
       setSubmitting(true)
+      const payload: any = {
+        draftId: draftId || undefined,
+        patientId: draft.identification.patientId,
+        paymentLinkId: paymentLinkId || undefined,
+        analysisType,
+        report: draft.report,
+        signatureImageUrl,
+      }
+      if (analysisType === 'urine') {
+        payload.identification = {
+          collectionMethod: draft.identification.collectionMethod,
+          collectionAt: draft.identification.collectionAt,
+          stripLot: draft.identification.stripLot,
+          stripExpiry: draft.identification.stripExpiry,
+        }
+        payload.timer = {
+          selectedSeconds: draft.timer.selectedSeconds,
+          analyzedAt: draft.timer.analyzedAt,
+          analysis: draft.timer.analysis,
+        }
+        payload.results = draft.results
+        payload.capturedImages = capturedImages.map((img) => ({
+          atSeconds: Number(img.atSeconds),
+          dataUrl: String(img.dataUrl || ''),
+          capturedAt: String(img.capturedAt || ''),
+        }))
+      } else {
+        // eye/skin
+        payload.imageAnalysis = imageAnalysisResult
+      }
       const res = await fetch("/api/reading/new_reading", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          draftId: draftId || undefined,
-          patientId: draft.identification.patientId,
-          paymentLinkId: paymentLinkId || undefined,
-          identification: {
-            collectionMethod: draft.identification.collectionMethod,
-            collectionAt: draft.identification.collectionAt,
-            stripLot: draft.identification.stripLot,
-            stripExpiry: draft.identification.stripExpiry,
-          },
-          timer: {
-            selectedSeconds: draft.timer.selectedSeconds,
-            analyzedAt: draft.timer.analyzedAt,
-            analysis: draft.timer.analysis,
-          },
-          results: draft.results,
-          report: draft.report,
-          signatureImageUrl,
-          capturedImages: capturedImages.map((img) => ({
-            atSeconds: Number(img.atSeconds),
-            dataUrl: String(img.dataUrl || ''),
-            capturedAt: String(img.capturedAt || ''),
-          })),
-        }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) {
@@ -605,6 +630,8 @@ export default function NewReadingWizard() {
       }))
       setSignatureImageUrl("")
       setCapturedImages([])
+      setImageAnalysisResult(null)
+      setImagePreviewDataUrl("")
       setStep("identification")
       setDraftId("")
       if (destinationReadingId) {
@@ -845,21 +872,8 @@ export default function NewReadingWizard() {
           result={imageAnalysisResult}
           onBack={() => setStep('image_capture')}
           onFinish={() => {
-            setDraft((prev) => ({
-              ...prev,
-              identification: { patientId: "", paymentLinkId: "", collectionMethod: "", collectionAt: "", stripLot: "", stripExpiry: "", analysisType: "urine" },
-              timer: { selectedSeconds: 45, analyzedAt: "", analysis: null },
-              reviewSelections: {},
-              results: [],
-              report: { summaryAndInterpretation: "", otherInformation: "", veterinarianNotes: "" },
-            }))
-            setSignatureImageUrl("")
-            setCapturedImages([])
-            setImageAnalysisResult(null)
-            setImagePreviewDataUrl("")
-            setStep("identification")
-            setDraftId("")
-            router.push('/Veterinarian/home')
+            // Go to report step for signing instead of redirecting home
+            setStep('report')
           }}
         />
       )}
