@@ -59,7 +59,7 @@ export default function SignInForm() {
   };
 
   const verify2FA = async (code: string) => {
-    if (code.length !== 5) {
+    if (code.length !== 6) {
       toast.error(t("auth.verificationFailed"));
       return;
     }
@@ -214,7 +214,7 @@ export default function SignInForm() {
         <EmailVerification
           mode="modal"
           title={t("auth.emailVerification")}
-          codeLength={5}
+          codeLength={6}
           initialTimer={600}
           onSubmit={(code) => verify2FA(code)}
           onResend={() => resend2FA()}

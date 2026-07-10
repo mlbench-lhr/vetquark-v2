@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "If this email exists, a reset code has been sent" }, { status: 200 });
     }
 
-    const otp = String(Math.floor(10000 + Math.random() * 90000));
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     await Admin.updateOne(
