@@ -18,7 +18,7 @@ type Props = {
 export default function EmailVerification({
     mode = "page",
     title,
-    codeLength = 6,
+    codeLength = 5,
     initialTimer = 30,
     onSubmit,
     onResend,
