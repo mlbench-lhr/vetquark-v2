@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Please wait ${remaining}s before resending` }, { status: 429 });
     }
 
-    const otp = String(Math.floor(10000 + Math.random() * 90000)); // 5-digit OTP
+    const otp = String(Math.floor(100000 + Math.random() * 900000)); // 6-digit OTP
     const expiresAt = new Date(now + 10 * 60 * 1000);
 
     await User.updateOne(

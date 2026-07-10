@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Please wait ${remaining}s before resending` }, { status: 429 });
       }
 
-      const code = String(crypto.randomInt(10000, 100000));
+      const code = String(crypto.randomInt(100000, 1000000));
       const otpExpiresAt = new Date(now + 10 * 60 * 1000);
       const cleanupAt = new Date(now + 2 * 60 * 60 * 1000);
 
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
       if (!emailLower) {
         return NextResponse.json({ error: "Email is required" }, { status: 400 });
       }
-      if (!otp || typeof otp !== "string" || otp.length !== 5) {
+      if (!otp || typeof otp !== "string" || otp.length !== 6) {
         return NextResponse.json({ error: "Invalid OTP format" }, { status: 400 });
       }
 
@@ -339,7 +339,7 @@ export async function POST(req: NextRequest) {
 
       const passwordHash = await bcrypt.hash(password, 10);
 
-      const otp = String(Math.floor(10000 + Math.random() * 90000));
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
       type CreatedRef = { _id: unknown };
