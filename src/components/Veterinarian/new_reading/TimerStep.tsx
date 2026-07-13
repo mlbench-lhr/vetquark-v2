@@ -6,6 +6,9 @@ import { RESULT_ROWS } from './ReviewStep'
 import { CapturedReadingImageDraft, ReviewSelectionMap } from './types'
 import { toast } from 'react-toastify'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'next/navigation'
+
+const BUILD_STAMP = 'timer-fix-2026-07-14-a7b3'
 
 type ExistingImage = {
   cloudinaryUrl: string
@@ -138,6 +141,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const onImagesChangeRef = useRef(onImagesChange)
   onImagesChangeRef.current = onImagesChange
   const { t } = useTranslation()
+  const searchParams = useSearchParams()
+  const debugMode = searchParams.get('debug') === '1'
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const analyzeCanvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -175,6 +180,22 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   const [selectedExistingImageIdx, setSelectedExistingImageIdx] = useState(0)
   const [reAnalyzing, setReAnalyzing] = useState(false)
   const [reAnalysisFailed, setReAnalysisFailed] = useState(false)
+  const [networkLog, setNetworkLog] = useState<Array<{
+    id: string
+    timestamp: string
+    atSeconds: number
+    time: string
+    imageType: string
+    imageLen: number
+    imageLenMod4: number
+    previewStart: string
+    previewEnd: string
+    requestHeaders: string
+    status: number | null
+    contentType: string
+    responseBody: string
+  }>>([])
+  const [networkLogExpanded, setNetworkLogExpanded] = useState(false)
 
   useEffect(() => {
     analysisSessionRef.current += 1
@@ -385,6 +406,24 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
     }
   }, [cameraReady, started])
 
+  function normalizeBase64(image: string): string {
+    if (image.startsWith('http://') || image.startsWith('https://')) {
+      return image
+    }
+    let normalized = image
+    if (image.startsWith('data:')) {
+      normalized = image.split(',')[1] || ''
+    }
+    if (normalized) {
+      normalized = normalized.replace(/\s/g, '')
+      normalized = normalized.replace(/-/g, '+').replace(/_/g, '/')
+      while (normalized.length % 4 !== 0) {
+        normalized += '='
+      }
+    }
+    return normalized
+  }
+
   function normalizeSingleResponse(raw: any, fallbackTime: string) {
     if (raw && typeof raw === 'object' && Array.isArray(raw.results) && typeof raw.success === 'boolean') {
       return raw
@@ -451,6 +490,34 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         setAnalyzing(true)
       }
 
+      const logId = `${Date.now()}-${frame.atSeconds}`
+      const imageType = frame.image.startsWith('http') ? 'url' : frame.image.startsWith('data:') ? 'dataUrl' : 'base64'
+      const imageLen = frame.image.length
+      const imageLenMod4 = imageLen % 4
+      const previewStart = frame.image.slice(0, 40)
+      const previewEnd = frame.image.slice(-40)
+
+      if (debugMode) {
+        setNetworkLog((prev) => [
+          {
+            id: logId,
+            timestamp: new Date().toISOString(),
+            atSeconds: frame.atSeconds,
+            time: frame.time,
+            imageType,
+            imageLen,
+            imageLenMod4,
+            previewStart,
+            previewEnd,
+            requestHeaders: 'Content-Type: application/json',
+            status: null,
+            contentType: '',
+            responseBody: 'Pending...',
+          },
+          ...prev.slice(0, 9),
+        ])
+      }
+
       const res = await fetch('/api/strip/process_single', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -460,6 +527,21 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       const ct = String(res.headers.get('content-type') || '')
       const raw = ct.includes('application/json') ? await res.json().catch(() => null) : await res.text().catch(() => '')
+
+      if (debugMode) {
+        setNetworkLog((prev) =>
+          prev.map((log) =>
+            log.id === logId
+              ? {
+                  ...log,
+                  status: res.status,
+                  contentType: ct,
+                  responseBody: typeof raw === 'object' ? JSON.stringify(raw, null, 2) : String(raw).slice(0, 300),
+                }
+              : log
+          )
+        )
+      }
 
       if (!res.ok) {
         throw new Error(extractApiErrorMessage(raw) || `HTTP ${res.status}`)
@@ -492,7 +574,7 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         analyzeAbortRef.current = null
       }
     },
-    [],
+    [debugMode],
   )
 
   const enqueueFrameForProcessing = useCallback(
@@ -535,11 +617,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       const dataUrl = canvas.toDataURL('image/jpeg')
       const storageDataUrl = createStorageDataUrl(canvas)
       const imageBase64 = dataUrl.replace(/^data:image\/\w+;base64,/, '')
-      if (atSeconds === requiredTotalSeconds) {
-        finalFrameRef.current = { atSeconds, time: String(atSeconds), image: imageBase64 }
-      } else {
-        enqueueFrameForProcessing({ atSeconds, time: String(atSeconds), image: imageBase64 })
-      }
+      const normalizedBase64 = normalizeBase64(imageBase64)
+      enqueueFrameForProcessing({ atSeconds, time: String(atSeconds), image: normalizedBase64 })
 
       const nextImages = [
         ...imagesRef.current,
@@ -606,6 +685,10 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       captureImage(at)
     }
   }, [cameraReady, captureImage, running, secondsLeft, selectedSeconds, playBeep, preAlertAtSeconds, t])
+
+  useEffect(() => {
+    setSelectedExistingImageIdx(0)
+  }, [existingImages.length])
 
   const elapsedSeconds = useMemo(() => Math.max(0, selectedSeconds - secondsLeft), [selectedSeconds, secondsLeft])
 
@@ -721,6 +804,35 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
 
       for (const frame of framesToProcess) {
         if (session !== analysisSessionRef.current) return
+
+        const logId = `${Date.now()}-${frame.atSeconds}`
+        const imageType = 'url'
+        const imageLen = frame.image.length
+        const imageLenMod4 = imageLen % 4
+        const previewStart = frame.image.slice(0, 40)
+        const previewEnd = frame.image.slice(-40)
+
+        if (debugMode) {
+          setNetworkLog((prev) => [
+            {
+              id: logId,
+              timestamp: new Date().toISOString(),
+              atSeconds: frame.atSeconds,
+              time: frame.time,
+              imageType,
+              imageLen,
+              imageLenMod4,
+              previewStart,
+              previewEnd,
+              requestHeaders: 'Content-Type: application/json',
+              status: null,
+              contentType: '',
+              responseBody: 'Pending...',
+            },
+            ...prev.slice(0, 9),
+          ])
+        }
+
         const res = await fetch('/api/strip/process_single', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -728,6 +840,22 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
         })
         const ct = String(res.headers.get('content-type') || '')
         const raw = ct.includes('application/json') ? await res.json().catch(() => null) : await res.text().catch(() => '')
+
+        if (debugMode) {
+          setNetworkLog((prev) =>
+            prev.map((log) =>
+              log.id === logId
+                ? {
+                    ...log,
+                    status: res.status,
+                    contentType: ct,
+                    responseBody: typeof raw === 'object' ? JSON.stringify(raw, null, 2) : String(raw).slice(0, 300),
+                  }
+                : log
+            )
+          )
+        }
+
         if (!res.ok) throw new Error((raw as any)?.error || `HTTP ${res.status}`)
         if (raw?.success === false) throw new Error((raw as any)?.error || 'Analysis failed')
         const normalized = normalizeSingleResponse(raw, frame.time)
@@ -764,11 +892,6 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
       setAnalysisFailed(false)
       if (analysisErrorRef.current != null) {
         throw analysisErrorRef.current
-      }
-      const finalFrame = finalFrameRef.current
-      if (finalFrame && !processedAtSetRef.current.has(finalFrame.atSeconds)) {
-        setAnalyzing(true)
-        enqueueFrameForProcessing(finalFrame)
       }
       try {
         await analysisChainRef.current
@@ -1088,6 +1211,66 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
           Cancelar
         </button>
       </div>
+
+      {debugMode && (
+        <div className="mt-4 bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 bg-gray-800">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-green-400">Network Log (process_single)</span>
+              <span className="text-[10px] text-gray-400">{BUILD_STAMP}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setNetworkLog([])}
+                className="px-2 py-1 text-[10px] bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => setNetworkLogExpanded(!networkLogExpanded)}
+                className="px-2 py-1 text-[10px] bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
+              >
+                {networkLogExpanded ? 'Collapse' : 'Expand'}
+              </button>
+            </div>
+          </div>
+          {networkLogExpanded && (
+            <div className="max-h-[400px] overflow-y-auto p-2 space-y-2">
+              {networkLog.length === 0 ? (
+                <div className="text-[11px] text-gray-500 text-center py-4">No API calls yet</div>
+              ) : (
+                networkLog.map((log) => (
+                  <div key={log.id} className="bg-gray-800 rounded p-2 text-[10px] font-mono">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-gray-400">{log.timestamp}</span>
+                      <span className={`px-1 rounded ${log.status === 200 ? 'bg-green-900 text-green-300' : log.status === null ? 'bg-yellow-900 text-yellow-300' : 'bg-red-900 text-red-300'}`}>
+                        {log.status === null ? 'PENDING' : log.status}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 text-gray-300">
+                      <div>atSeconds: {log.atSeconds}</div>
+                      <div>time: {log.time}</div>
+                      <div>imageType: {log.imageType}</div>
+                      <div>imageLen: {log.imageLen}</div>
+                      <div>imageLenMod4: {log.imageLenMod4}</div>
+                      <div>contentType: {log.contentType}</div>
+                    </div>
+                    <div className="mt-1 text-gray-400 break-all">
+                      <div>previewStart: {log.previewStart}</div>
+                      <div>previewEnd: {log.previewEnd}</div>
+                    </div>
+                    <div className="mt-1 bg-gray-900 rounded p-1 text-gray-300 max-h-[150px] overflow-y-auto">
+                      <pre className="whitespace-pre-wrap">{log.responseBody}</pre>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
