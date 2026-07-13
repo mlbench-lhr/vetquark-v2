@@ -505,10 +505,14 @@ export default function NewReadingWizard() {
     let mounted = true
       ; (async () => {
         try {
+          setExistingCapturedImages([])
           const res = await fetch(`/api/reading/get_reading_images/${encodeURIComponent(draftId)}`, { method: 'GET' })
           const data = await res.json().catch(() => null)
           if (!mounted) return
-          if (!res.ok) return
+          if (!res.ok) {
+            setExistingCapturedImages([])
+            return
+          }
           const imgs = Array.isArray(data?.images) ? data.images : []
           if (imgs.length > 0) {
             setExistingCapturedImages(imgs.map((img: any) => ({
@@ -516,8 +520,11 @@ export default function NewReadingWizard() {
               captureSecond: Number(img.captureSecond ?? 0),
               capturedAt: img.capturedAt ? String(img.capturedAt) : null,
             })))
+          } else {
+            setExistingCapturedImages([])
           }
         } catch {
+          setExistingCapturedImages([])
         }
       })()
     return () => { mounted = false }
@@ -704,6 +711,15 @@ export default function NewReadingWizard() {
           }
           onNext={() => {
             if (analysisType === 'urine') {
+              const hasDraftIdInUrl = draftIdFromQuery.length > 0
+              if (!hasDraftIdInUrl) {
+                setDraftId('')
+                setExistingCapturedImages([])
+                existingImagesFetchedForRef.current = ''
+                setCapturedImages([])
+                lastSavedJsonRef.current = ''
+                creatingDraftRef.current = false
+              }
               setStep('timer')
             } else {
               setStep('image_capture')

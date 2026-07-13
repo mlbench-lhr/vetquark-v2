@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+const BUILD_STAMP = 'timer-fix-2026-07-14-a7b3'
 const DEFAULT_PROCESS_SINGLE_URL = 'https://test-strip-app-334819527847.europe-west1.run.app/process_single'
 
 export async function POST(req: NextRequest) {
@@ -9,7 +10,48 @@ export async function POST(req: NextRequest) {
   const time = typeof timeRaw === 'number' || typeof timeRaw === 'string' ? String(timeRaw).trim() : ''
 
   if (!image || !time) {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid payload' }, { status: 400, headers: { 'x-ui-build-stamp': BUILD_STAMP } })
+  }
+
+  let normalizedImage = image
+  const imageLenFromBody = image.length
+  let isUrl = false
+  let hasDataPrefix = false
+
+  if (image.startsWith('http://') || image.startsWith('https://')) {
+    isUrl = true
+  } else if (image.startsWith('data:')) {
+    hasDataPrefix = true
+    normalizedImage = image.split(',')[1] || ''
+    if (normalizedImage) {
+      normalizedImage = normalizedImage.replace(/\s/g, '')
+      normalizedImage = normalizedImage.replace(/-/g, '+').replace(/_/g, '/')
+      while (normalizedImage.length % 4 !== 0) {
+        normalizedImage += '='
+      }
+    }
+  } else {
+    normalizedImage = image.replace(/\s/g, '')
+    normalizedImage = normalizedImage.replace(/-/g, '+').replace(/_/g, '/')
+    while (normalizedImage.length % 4 !== 0) {
+      normalizedImage += '='
+    }
+  }
+
+  if (!normalizedImage) {
+    return NextResponse.json(
+      {
+        error: 'Invalid image after normalization',
+        debug: {
+          buildStamp: BUILD_STAMP,
+          imageLenFromBody,
+          normalizedLen: null,
+          isUrl,
+          hasDataPrefix,
+        },
+      },
+      { status: 400, headers: { 'x-ui-build-stamp': BUILD_STAMP } }
+    )
   }
 
   const url = String(process.env.STRIP_PROCESS_SINGLE_URL || DEFAULT_PROCESS_SINGLE_URL).trim()
@@ -23,7 +65,7 @@ export async function POST(req: NextRequest) {
   const upstream = await fetch(url, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ image, time }),
+    body: JSON.stringify({ image: normalizedImage, time }),
     cache: 'no-store',
   })
 
@@ -35,12 +77,19 @@ export async function POST(req: NextRequest) {
         error: 'Upstream returned non-JSON response',
         status: upstream.status,
         bodySnippet: text.slice(0, 300),
+        debug: {
+          buildStamp: BUILD_STAMP,
+          imageLenFromBody,
+          normalizedLen: normalizedImage.length,
+          isUrl,
+          hasDataPrefix,
+        },
       },
-      { status: 502 },
+      { status: 502, headers: { 'x-ui-build-stamp': BUILD_STAMP } }
     )
   }
 
   const json = await upstream.json().catch(() => null)
-  return NextResponse.json(json, { status: upstream.status })
+  return NextResponse.json(json, { status: upstream.status, headers: { 'x-ui-build-stamp': BUILD_STAMP } })
 }
 
