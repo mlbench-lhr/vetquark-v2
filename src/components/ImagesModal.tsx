@@ -71,7 +71,9 @@ export const ImagesModal: React.FC<ImagesModalProps> = ({
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
+      }
     } catch (error) {
       console.error("Failed to download image:", error);
     }
