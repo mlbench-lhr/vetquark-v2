@@ -46,9 +46,7 @@ export default function LinkGenerated({ amountLabel = 'R$ 5,00', paymentUrl, onS
       input.select()
       input.setSelectionRange(0, input.value.length)
       const ok = document.execCommand('copy')
-      if (document.body.contains(input)) {
-        document.body.removeChild(input)
-      }
+      input.remove()
       if (ok) toast.success(t('reading.identification.paymentLinkCopied'))
       else toast.error(t('reading.identification.unableToCopyPaymentLink'))
     } catch {
