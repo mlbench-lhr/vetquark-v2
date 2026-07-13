@@ -142,7 +142,8 @@ export default function TimerStep({ selectedSeconds, onChangeSelectedSeconds, on
   onImagesChangeRef.current = onImagesChange
   const { t } = useTranslation()
   const searchParams = useSearchParams()
-  const debugMode = searchParams.get('debug') === '1'
+  // const debugMode = searchParams.get('debug') === '1'
+  const debugMode = true
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const analyzeCanvasRef = useRef<HTMLCanvasElement | null>(null)
