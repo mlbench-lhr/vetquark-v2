@@ -8,10 +8,8 @@ import { ToastContainer } from 'react-toastify';
 import { Metadata } from 'next';
 import ReduxProvider from '@/store/ReduxProvider';
 import I18nProvider from '@/i18n/I18nProvider';
-import { Suspense, useEffect } from 'react';
+import { Suspense } from 'react';
 import Image from 'next/image';
-import { setupGlobalErrorHandlers } from '@/utils/errorHandler';
-import ErrorLogViewer from '@/components/ErrorLogViewer';
 
 
 export const metadata: Metadata = {
@@ -23,10 +21,6 @@ export const metadata: Metadata = {
 };
 
 function GlobalLoader() {
-  useEffect(() => {
-    setupGlobalErrorHandlers()
-  }, [])
-  
   return (
     <div className="flex items-center justify-center flex-col gap-1.5 h-[100vh] w-[100vw] bg-primary">
       <Image src={"/Group 1261153125.png"} alt='' width={47} height={42} />
@@ -67,7 +61,6 @@ export default function RootLayout({
                     {children}
                   </Suspense>
                 </SidebarProvider>
-                <ErrorLogViewer />
               </ThemeProvider>
             </UserProvider>
           </I18nProvider>
